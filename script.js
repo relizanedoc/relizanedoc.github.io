@@ -6,7 +6,6 @@
       projectId: "hadjandomrah",
       appId: "1:1034711726559:web:4144ac9a79029c61272c6a"
     };
-
     const i18n = {
       en: {
         memberDashboardTitle: 'Member Dashboard', trackPhoneLabel: 'Phone Number used for booking',
@@ -244,9 +243,7 @@
     firebase.auth().onAuthStateChanged(async (user) => {
       if (user) await syncUserWithBackend(user);
       else localStorage.removeItem('medicalUser');
-      
       updateUserUI();
-
       if (!isAuthInitialized) {
         const hash = window.location.hash.replace('#', '');
         const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(hash) ? hash : 'home';
@@ -254,7 +251,6 @@
         isAuthInitialized = true;
       }
     });
-
     function getCurrentVisibleView() {
       for (const view of ['home', 'add-doctor', 'booking', 'dashboard', 'login']) {
         const el = document.getElementById('view-' + view);
@@ -262,7 +258,6 @@
       }
       return 'home';
     }
-
     async function logoutUser() {
       await firebase.auth().signOut();
       localStorage.removeItem('medicalUser');
@@ -270,7 +265,6 @@
       showToast(t('toastLogout'), 'success');
       router('home');
     }
-
     async function apiGet(action, params = {}) {
       const qs = new URLSearchParams({ action, ...params }).toString();
       const res = await fetch(API_URL + '?' + qs);
@@ -2238,6 +2232,3 @@ window.saveWorkingHours = async function() {
       .then(response => console.log("تم الإرسال: ", response))
       .catch(error => console.error("خطأ في الإرسال: ", error));
     };
-
-//]]>
-  </script>
