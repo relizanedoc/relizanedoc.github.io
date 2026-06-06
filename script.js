@@ -1,4 +1,17 @@
-   const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
+// دالة لتنفيذ الكود بمجرد تحميل الصفحة
+window.addEventListener('load', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const doctorId = urlParams.get('doc'); // هل هناك كود طبيب في الرابط؟
+
+    if (doctorId) {
+        console.log("تم اكتشاف رابط مباشر للطبيب: " + doctorId);
+        
+        // هنا استدعِ الدالة التي تفتح تفاصيل الطبيب في تطبيقك
+        // استبدل 'openDoctorModal' بالدالة التي تستخدمها في تطبيقك لعرض الطبيب
+        openDoctorModal(doctorId); 
+    }
+});
+const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
     const API_URL = 'https://script.google.com/macros/s/AKfycbxOQo7uJX-mGVn_wwbMhjCmS8KUUjb0hNrGBmpticNC1Jtk5sUs3yzBysxR6tqtsWQhXw/exec';
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyCiJmrfmkR03l_fFLr7UJbTteafz08nYTI",
