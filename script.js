@@ -517,7 +517,7 @@ const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
       if (ogDesc) ogDesc.setAttribute('content', pageDesc);
     }
 
-    function handleSEOAndRender() {
+function handleSEOAndRender() {
       const urlParams = new URLSearchParams(window.location.search);
       const targetDocId = urlParams.get('doc');
       if (targetDocId) {
@@ -525,7 +525,15 @@ const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
         if (targetDoc) {
           updateSEOMetaTags(targetDoc);
           renderDoctors([targetDoc]);
-          populateFilters();
+          populateFilters(); // تأكد من استدعاء الفلاتر
+          
+          // === الجزء الجديد: هذا هو السحر الذي سيفتح النافذة تلقائياً ===
+          const doctorName = (currentLang === 'ar' ? 'د. ' : 'Dr. ') + targetDoc.FirstName + ' ' + targetDoc.LastName;
+          setTimeout(() => {
+              openDoctorProfileModal(targetDoc, doctorName);
+          }, 300); // تأخير بسيط لضمان أن الواجهة جاهزة للرسم
+          // ========================================================
+
           let backBtn = document.getElementById('seoBackBtn');
           if(!backBtn) {
              backBtn = document.createElement('button');
