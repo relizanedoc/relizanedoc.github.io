@@ -2441,3 +2441,150 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') handleSend();
     });
 });
+// ========================================================================
+// CHATBOT SYSTEM LOGIC (Multilingual & Fixed RTL Phone Display)
+// ========================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
+    const closeChatBtn = document.getElementById('closeChatBtn');
+    const medicalChatbot = document.getElementById('medicalChatbot');
+    const sendChatBtn = document.getElementById('sendChatBtn');
+    const chatInputText = document.getElementById('chatInputText');
+    const chatMessages = document.getElementById('chatMessages');
+
+    const toggleChat = () => {
+        medicalChatbot.classList.toggle('hidden');
+        if (!medicalChatbot.classList.contains('hidden')) {
+            chatInputText.focus();
+        }
+    };
+    chatbotToggleBtn.addEventListener('click', toggleChat);
+    closeChatBtn.addEventListener('click', toggleChat);
+
+    // توحيد النصوص للغتين
+    const normalizeText = (text) => {
+        if (!text) return "";
+        return text.trim().toLowerCase()
+            .replace(/[أإآ]/g, 'ا')
+            .replace(/ة/g, 'ه')
+            .replace(/[ًٌٍَُِّْ]/g, '') 
+            .replace(/[^a-z0-9ا-ي\s]/g, ''); 
+    };
+
+    const processUserMessage = (rawMsg) => {
+        const cleanMsg = normalizeText(rawMsg);
+        
+        if (!allDoctors || allDoctors.length === 0) {
+            return t('chatLoadingDB');
+        }
+
+        // قواميس البحث بناءً على اللغة الحالية
+        const isAskingForPhone = currentLang === 'ar' ? 
+            /رقم|هاتف|تلفون|موبيل|اتصال/i.test(cleanMsg) : 
+            /phone|number|contact|call/i.test(cleanMsg);
+            
+        const isAskingForLocation = currentLang === 'ar' ? 
+            /عنوان|اين|مكان|موقع|وين/i.test(cleanMsg) : 
+            /address|location|where|place/i.test(cleanMsg);
+
+        let matchedDoctors = [];
+        const availableSpecialties = [...new Set(allDoctors.map(d => d.Specialty).filter(Boolean))];
+        const availableMunicipalities = [...new Set(allDoctors.map(d => d.Municipality).filter(Boolean))];
+
+        let detectedSpecialty = null;
+        let detectedMunicipality = null;
+
+        availableSpecialties.forEach(spec => {
+            if (cleanMsg.includes(normalizeText(t(spec)))) detectedSpecialty = spec;
+        });
+
+        availableMunicipalities.forEach(mun => {
+            if (cleanMsg.includes(normalizeText(t(mun)))) detectedMunicipality = mun;
+        });
+
+        matchedDoctors = allDoctors.filter(doc => {
+            const docNameAr = normalizeText(doc.FirstName + " " + doc.LastName);
+            const docNameEn = normalizeText(doc.FirstName + " " + doc.LastName); // في حال وجود أسماء بالإنجليزية
+            
+            const isNameMatch = cleanMsg.split(' ').some(word => 
+                word.length > 2 && (docNameAr.includes(word) || docNameEn.includes(word))
+            );
+            const isSpecMatch = detectedSpecialty ? doc.Specialty === detectedSpecialty : true;
+            const isMunMatch = detectedMunicipality ? doc.Municipality === detectedMunicipality : true;
+
+            if (isNameMatch && !detectedSpecialty && !detectedMunicipality) return true;
+            if ((detectedSpecialty || detectedMunicipality) && isSpecMatch && isMunMatch) return true;
+
+            return false;
+        });
+
+        if (matchedDoctors.length === 0) {
+            return t('chatNoResults');
+        }
+
+        if (matchedDoctors.length > 3) {
+            return `${t('chatFoundPrefix')} ${matchedDoctors.length} ${t('chatFoundSuffix')}` + 
+                   generateCardsHtml(matchedDoctors.slice(0, 3), isAskingForPhone, isAskingForLocation);
+        }
+
+        return t('chatExactResults') + generateCardsHtml(matchedDoctors, isAskingForPhone, isAskingForLocation);
+    };
+
+    const generateCardsHtml = (doctorsList, focusPhone, focusLocation) => {
+        return doctorsList.map(doc => {
+            const docPrefix = currentLang === 'ar' ? 'د.' : 'Dr.';
+            let infoHtml = `<div class="bot-card-result">`;
+            
+            infoHtml += `<div><strong>${t('chatDoctorLabel')}</strong> ${docPrefix} ${escapeHtml(doc.FirstName)} ${escapeHtml(doc.LastName)}</div>`;
+            infoHtml += `<div><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.Specialty))}</div>`;
+            
+            if (focusPhone || (!focusPhone && !focusLocation)) {
+                // إضافة dir="ltr" مع inline-block لإجبار الرقم على عرض صحيح من اليسار لليمين دون تشويه التخطيط
+                infoHtml += `<div><strong>${t('chatPhoneLabel')}</strong> <span dir="ltr" style="display: inline-block; direction: ltr;">${escapeHtml(formatPhoneNumber(doc.Phone))}</span></div>`;
+            }
+            if (focusLocation || (!focusPhone && !focusLocation)) {
+                infoHtml += `<div><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.Municipality))}</div>`;
+                infoHtml += `<div><strong>${t('chatAddressLabel')}</strong> ${escapeHtml(doc.ExactLocation)}</div>`;
+            }
+            
+            infoHtml += `<button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); openDoctorProfileModal(allDoctors.find(d => d.DoctorID === '${doc.DoctorID}'), '${docPrefix} ${escapeHtml(doc.FirstName)} ${escapeHtml(doc.LastName)}')" style="margin-top: 8px; background: var(--primary-light); color: var(--primary-dark); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: bold; width: 100%; transition: opacity 0.2s;">${t('chatBookDetailsBtn')}</button>`;
+            
+            infoHtml += `</div>`;
+            return infoHtml;
+        }).join('');
+    };
+
+    const appendMessage = (sender, htmlContent) => {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-msg ${sender === 'user' ? 'user-msg' : 'bot-msg'}`;
+        msgDiv.innerHTML = htmlContent;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
+
+    const handleSend = () => {
+        const text = chatInputText.value.trim();
+        if (!text) return;
+
+        appendMessage('user', escapeHtml(text));
+        chatInputText.value = '';
+
+        const typingId = "typing-" + Date.now();
+        const typingHtml = `<div id="${typingId}" class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+        appendMessage('bot', typingHtml);
+
+        setTimeout(() => {
+            const typingIndicator = document.getElementById(typingId);
+            if (typingIndicator) typingIndicator.parentElement.remove();
+            
+            const botResponse = processUserMessage(text);
+            appendMessage('bot', botResponse);
+        }, 800);
+    };
+
+    sendChatBtn.addEventListener('click', handleSend);
+    chatInputText.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSend();
+    });
+});
