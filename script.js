@@ -2253,3 +2253,159 @@ window.saveWorkingHours = async function() {
       .then(response => console.log("تم الإرسال: ", response))
       .catch(error => console.error("خطأ في الإرسال: ", error));
     };
+// ========================================================================
+// CHATBOT SYSTEM LOGIC (Local NLP & Search Engine)
+// ========================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
+    const closeChatBtn = document.getElementById('closeChatBtn');
+    const medicalChatbot = document.getElementById('medicalChatbot');
+    const sendChatBtn = document.getElementById('sendChatBtn');
+    const chatInputText = document.getElementById('chatInputText');
+    const chatMessages = document.getElementById('chatMessages');
+
+    // 1. إدارة ظهور وإخفاء النافذة
+    const toggleChat = () => {
+        medicalChatbot.classList.toggle('hidden');
+        if (!medicalChatbot.classList.contains('hidden')) {
+            chatInputText.focus();
+        }
+    };
+    chatbotToggleBtn.addEventListener('click', toggleChat);
+    closeChatBtn.addEventListener('click', toggleChat);
+
+    // 2. دالة تسوية النصوص (Text Normalization)
+    // السبب: المستخدمون يكتبون "أحمد" أو "احمد"، "غليزان" أو "غليزان". هذه الدالة توحد النص للبحث الدقيق.
+    const normalizeArabicText = (text) => {
+        if (!text) return "";
+        return text.trim().toLowerCase()
+            .replace(/[أإآ]/g, 'ا')
+            .replace(/ة/g, 'ه')
+            .replace(/[ًٌٍَُِّْ]/g, '') // إزالة التشكيل
+            .replace(/[^a-z0-9ا-ي\s]/g, ''); // إزالة الرموز
+    };
+
+    // 3. المحرك الأساسي للبحث ومعالجة الاستعلام
+    const processUserMessage = (rawMsg) => {
+        const cleanMsg = normalizeArabicText(rawMsg);
+        
+        // إذا كان النظام لم يحمل الأطباء بعد
+        if (!allDoctors || allDoctors.length === 0) {
+            return "عذراً، جاري تحميل قاعدة بيانات الأطباء حالياً. يرجى المحاولة بعد لحظات.";
+        }
+
+        // قاموس الكلمات المفتاحية
+        const isAskingForPhone = /رقم|هاتف|تلفون|موبيل|اتصال/i.test(cleanMsg);
+        const isAskingForLocation = /عنوان|اين|مكان|موقع|وين/i.test(cleanMsg);
+
+        // خوارزمية التطابق التقريبي (Fuzzy Matching Logic)
+        let matchedDoctors = [];
+
+        // استخراج جميع الاختصاصات والبلديات المتاحة لتحليل نية المستخدم
+        const availableSpecialties = [...new Set(allDoctors.map(d => d.Specialty).filter(Boolean))];
+        const availableMunicipalities = [...new Set(allDoctors.map(d => d.Municipality).filter(Boolean))];
+
+        let detectedSpecialty = null;
+        let detectedMunicipality = null;
+
+        // البحث عن اختصاص في رسالة المستخدم
+        availableSpecialties.forEach(spec => {
+            if (cleanMsg.includes(normalizeArabicText(t(spec)))) detectedSpecialty = spec;
+        });
+
+        // البحث عن بلدية في رسالة المستخدم
+        availableMunicipalities.forEach(mun => {
+            if (cleanMsg.includes(normalizeArabicText(t(mun)))) detectedMunicipality = mun;
+        });
+
+        // تنفيذ البحث في المصفوفة بناءً على النية (Intent)
+        matchedDoctors = allDoctors.filter(doc => {
+            const docName = normalizeArabicText(doc.FirstName + " " + doc.LastName);
+            const isNameMatch = cleanMsg.split(' ').some(word => word.length > 2 && docName.includes(word));
+            const isSpecMatch = detectedSpecialty ? doc.Specialty === detectedSpecialty : true;
+            const isMunMatch = detectedMunicipality ? doc.Municipality === detectedMunicipality : true;
+
+            // إذا ذكر اسم الطبيب مباشرة
+            if (isNameMatch && !detectedSpecialty && !detectedMunicipality) return true;
+            
+            // إذا ذكر الاختصاص أو البلدية
+            if ((detectedSpecialty || detectedMunicipality) && isSpecMatch && isMunMatch) return true;
+
+            return false;
+        });
+
+        // 4. بناء الرد بناءً على النتائج
+        if (matchedDoctors.length === 0) {
+            return "عذراً، لم أتمكن من العثور على أطباء يطابقون بحثك. حاول كتابة اسم الطبيب بدقة، أو ذكر الاختصاص والبلدية (مثال: طبيب أطفال في غليزان).";
+        }
+
+        if (matchedDoctors.length > 3) {
+            return `وجدت ${matchedDoctors.length} أطباء بناءً على طلبك. إليك أبرز 3 نتائج. للحصول على نتائج أدق، يرجى تحديد البلدية أو اسم الطبيب:` + 
+                   generateCardsHtml(matchedDoctors.slice(0, 3), isAskingForPhone, isAskingForLocation);
+        }
+
+        return `تفضل، لقد وجدت ${matchedDoctors.length} نتيجة مطابقة لسؤالك:` + 
+               generateCardsHtml(matchedDoctors, isAskingForPhone, isAskingForLocation);
+    };
+
+    // دالة لتوليد بطاقات الأطباء في الرد
+    const generateCardsHtml = (doctorsList, focusPhone, focusLocation) => {
+        return doctorsList.map(doc => {
+            let infoHtml = `<div class="bot-card-result">`;
+            infoHtml += `<div><strong>الدكتور(ة):</strong> ${escapeHtml(doc.FirstName)} ${escapeHtml(doc.LastName)}</div>`;
+            infoHtml += `<div><strong>الاختصاص:</strong> ${escapeHtml(t(doc.Specialty))}</div>`;
+            
+            if (focusPhone || (!focusPhone && !focusLocation)) {
+                infoHtml += `<div dir="ltr" style="text-align: right;"><strong>الهاتف:</strong> ${escapeHtml(formatPhoneNumber(doc.Phone))}</div>`;
+            }
+            if (focusLocation || (!focusPhone && !focusLocation)) {
+                infoHtml += `<div><strong>البلدية:</strong> ${escapeHtml(t(doc.Municipality))}</div>`;
+                infoHtml += `<div><strong>العنوان:</strong> ${escapeHtml(doc.ExactLocation)}</div>`;
+            }
+            
+            // زر للذهاب لبروفايل الطبيب للحجز
+            infoHtml += `<button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); openDoctorProfileModal(allDoctors.find(d => d.DoctorID === '${doc.DoctorID}'), 'د. ${escapeHtml(doc.FirstName)} ${escapeHtml(doc.LastName)}')" style="margin-top: 8px; background: var(--primary-light); color: var(--primary-dark); border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.8rem; font-weight: bold;">عرض التفاصيل والحجز</button>`;
+            
+            infoHtml += `</div>`;
+            return infoHtml;
+        }).join('');
+    };
+
+    // 5. واجهة المحادثة (الرسم والإضافة)
+    const appendMessage = (sender, htmlContent) => {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-msg ${sender === 'user' ? 'user-msg' : 'bot-msg'}`;
+        msgDiv.innerHTML = htmlContent;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
+
+    const handleSend = () => {
+        const text = chatInputText.value.trim();
+        if (!text) return;
+
+        // رسم رسالة المستخدم
+        appendMessage('user', escapeHtml(text));
+        chatInputText.value = '';
+
+        // إضافة تأثير جاري الكتابة ...
+        const typingId = "typing-" + Date.now();
+        const typingHtml = `<div id="${typingId}" class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+        appendMessage('bot', typingHtml);
+
+        // تأخير بسيط لمحاكاة الطبيعة البشرية في الرد
+        setTimeout(() => {
+            const typingIndicator = document.getElementById(typingId);
+            if (typingIndicator) typingIndicator.parentElement.remove();
+            
+            const botResponse = processUserMessage(text);
+            appendMessage('bot', botResponse);
+        }, 800);
+    };
+
+    sendChatBtn.addEventListener('click', handleSend);
+    chatInputText.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSend();
+    });
+});
