@@ -480,13 +480,13 @@
   <div id='toastContainer'></div>
  <script src="script.js"></script>
   <!-- نافذة المستشار الآلي -->
-  <div id="medicalChatbot" class="chatbot-container hidden">
+<div id="medicalChatbot" class="chatbot-container hidden">
     <div class="chatbot-header">
       <div style="display: flex; align-items: center; gap: 10px;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"></path></svg>
         <div>
-          <h3 style="font-size: 1rem; margin: 0; color: white;">المستشار الطبي</h3>
-          <span style="font-size: 0.75rem; opacity: 0.8;">متاح للرد الفوري</span>
+          <h3 style="font-size: 1rem; margin: 0; color: white;" data-i18n="chatTitle">المستشار الطبي</h3>
+          <span style="font-size: 0.75rem; opacity: 0.8;" data-i18n="chatSubtitle">متاح للرد الفوري</span>
         </div>
       </div>
       <button id="closeChatBtn" style="background: transparent; border: none; color: white; cursor: pointer;">
@@ -494,23 +494,20 @@
       </button>
     </div>
     <div id="chatMessages" class="chatbot-messages">
-      <!-- الرسالة الترحيبية -->
-      <div class="chat-msg bot-msg">
-        أهلاً بك في دليل أطباء غليزان. أنا مساعدك الآلي 🤖. كيف يمكنني مساعدتك اليوم؟ (مثال: "أريد رقم طبيب عيون في غليزان" أو "ابحث عن الدكتور أمين بن علي")
+      <div class="chat-msg bot-msg" data-i18n="chatWelcome">
+        أهلاً بك في دليل أطباء غليزان. أنا مساعدك الآلي 🤖. كيف يمكنني مساعدتك اليوم؟
       </div>
     </div>
     <div class="chatbot-input">
-      <input type="text" id="chatInputText" placeholder="اكتب سؤالك هنا..." autocomplete="off">
-      <button id="sendChatBtn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: rotate(180deg);"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      <input type="text" id="chatInputText" data-i18n-placeholder="chatInputPlaceholder" placeholder="اكتب سؤالك هنا..." autocomplete="off">
+      <button id="sendChatBtn" style="transform: scaleX(var(--rtl-scale, 1));"> <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
       </button>
     </div>
   </div>
 
-  <!-- زر فتح المستشار -->
   <button id="chatbotToggleBtn" class="chatbot-toggle-btn">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"></path></svg>
-    <span>تحدث معنا</span>
+    <span data-i18n="chatToggleBtn">تحدث معنا</span>
   </button>
 </body>
 </html>
