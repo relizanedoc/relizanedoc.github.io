@@ -15,7 +15,7 @@ const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
     const API_URL = 'https://script.google.com/macros/s/AKfycbxuQvatnWUMoMMSA6QTsbpxhO6r3Qh54yoj8Zrkor_2Icg3n3AVP7_2ajh0NvEPMlTgRw/exec';
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyCvWB0huHg4Wei98dAkQAvRANmB5Xs_GWI",
-      authDomain: "relizane-doc-4dbf2.firebaseapp.com",
+      authDomain: "login.relizane.org",
       projectId: "relizane-doc-4dbf2",
       appId: "1:284439573850:web:9edd0f408e68a511de6f63"
     };
