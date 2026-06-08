@@ -12,7 +12,7 @@ window.addEventListener('load', function() {
     }
 });
 // ✅ ضع هذا بدلاً من كود Firebase:
-const SUPABASE_URL = 'https://iirjtmobphgmkgwkwumc.supabase.co/rest/v1/';
+const SUPABASE_URL = 'https://iirjtmobphgmkgwkwumc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpcmp0bW9icGhnbWtnd2t3dW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA2NjYsImV4cCI6MjA5NjUxNjY2Nn0.Yfa0oEwp_id9tHpSb3h0jf__B4drqXsM-TVs4VTTmp4';
 
 // تهيئة Supabase (بما أنك تستخدم CDN في HTML، سنستخدم window.supabase)
