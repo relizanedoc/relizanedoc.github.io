@@ -3,7 +3,7 @@
 // ========================================================================
 
 // 1. SUPABASE
-const supabaseUrl = 'https://igcvhpzpvwkcwgosjwun.supabase.co';
+const supabaseUrl = 'https://igcvhpzpvwkcwgosjwun.supabase.co/rest/v1/';
 const supabaseKey = 'sb_publishable_nKHnqnilLeWhVGqIZ0jBmg_jBjRbeG2';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
