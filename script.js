@@ -912,29 +912,86 @@ async function loadDoctors() {
         }
     });
 
-    async function handleAddDoctor(e) {
-     e.preventDefault();
-     const user = await getCurrentUser();
-     if (!user) { showToast(t('loginRequired'), 'error'); router('login'); return; }
-     const btn = document.getElementById('addDoctorBtn');
-     setLoading(btn, true);
-     const formData = new FormData(e.target);
-     const data = Object.fromEntries(formData);
-     if (!data.Specialty) { showToast(currentLang === 'ar' ? 'الرجاء اختيار الاختصاص.' : 'Please select a specialty.', 'error'); setLoading(btn, false); return; }
-     if (!data.Municipality) { showToast(currentLang === 'ar' ? 'الرجاء اختيار البلدية.' : 'Please select a municipality.', 'error'); setLoading(btn, false); return; }
-     data.userEmail = user.Email;
-     try {
-        const result = await apiPost('addDoctor', data);
-        if (!result.success) throw new Error(result.error);
-        showToast(t('toastRegisterSuccess') + result.data.DoctorID, 'success');
-        e.target.reset();
-        sessionStorage.removeItem('doctorsCache');
-        sessionStorage.removeItem('doctorsCacheTime');
-        await loadDoctors();
-        setTimeout(() => router('home'), 1500);
-     } catch (err) { showToast(t('toastRegisterError') + err.message, 'error'); } finally { setLoading(btn, false); }
-   }
+    // ✅ دالة إضافة طبيب جديد (محدثة لـ Supabase)
+async function handleAddDoctor(e) {
+  e.preventDefault();
+  const user = await getCurrentUser();
+  if (!user) { 
+    showToast(t('loginRequired'), 'error'); 
+    router('login'); 
+    return; 
+  }
+  
+  const btn = document.getElementById('addDoctorBtn');
+  setLoading(btn, true);
+  
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData);
+  
+  // التحقق من الحقول المطلوبة
+  if (!data.Specialty) { 
+    showToast(currentLang === 'ar' ? 'الرجاء اختيار الاختصاص.' : 'Please select a specialty.', 'error'); 
+    setLoading(btn, false); 
+    return; 
+  }
+  if (!data.Municipality) { 
+    showToast(currentLang === 'ar' ? 'الرجاء اختيار البلدية.' : 'Please select a municipality.', 'error'); 
+    setLoading(btn, false); 
+    return; 
+  }
 
+  try {
+    // 1. تشفير كلمة المرور (استخدمنا رقم الهاتف ككلمة مرور افتراضية للتبسيط)
+    // ملاحظة: في الإنتاج الحقيقي، يجب أن يدخل الطبيب كلمة مرور خاصة به
+    const defaultPassword = data.Phone.replace(/\s/g, ''); 
+    const hashedPassword = await hashPassword(defaultPassword);
+
+    // 2. حفظ البيانات في Supabase
+    const { data: newDoctor, error } = await supabaseClient
+      .from('doctors')
+      .insert([{
+        first_name: data.FirstName.trim(),
+        last_name: data.LastName.trim(),
+        phone: data.Phone.replace(/\s/g, ''),
+        exact_location: data.ExactLocation.trim(),
+        specialty: data.Specialty.trim(),
+        municipality: data.Municipality.trim(),
+        extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '',
+        password_hash: hashedPassword,
+        booking_enabled: false, // يبدأ الحجز وهو مغلق
+        working_days: {} // جدول فارغ افتراضياً
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding doctor:', error);
+      throw new Error(error.message);
+    }
+
+    showToast(t('toastRegisterSuccess') + newDoctor.id, 'success');
+    e.target.reset();
+    
+    // إعادة تحميل قائمة الأطباء
+    await loadDoctors();
+    setTimeout(() => router('home'), 1500);
+    
+  } catch (err) { 
+    showToast(t('toastRegisterError') + err.message, 'error'); 
+  } finally { 
+    setLoading(btn, false); 
+  }
+}
+
+// ✅ دالة مساعدة لتشفير كلمة المرور (SHA-256)
+// هذه دالة بسيطة للتجربة، في الإنتاج استخدم bcrypt عبر Edge Function
+async function hashPassword(password) {
+  const msgUint8 = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
   function generateTimeSlots(startStr, endStr, intervalMins) {
     const slots = [];
     let [startH, startM] = startStr.split(':').map(Number);
