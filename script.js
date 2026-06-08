@@ -318,22 +318,193 @@ chatBookDetailsBtn: 'عرض التفاصيل والحجز',
       showToast(t('toastLogout'), 'success');
       router('home');
     }
-    async function apiGet(action, params = {}) {
-      const qs = new URLSearchParams({ action, ...params }).toString();
-      const res = await fetch(API_URL + '?' + qs);
-      return res.json();
-    }
+    // ========================================================================
+// SUPABASE BACKEND ADAPTER (بديل Google Apps Script)
+// ========================================================================
 
-    async function apiPost(action, data = {}) {
-      if (typeof grecaptcha !== 'undefined' && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_SITE_KEY') {
-        try { data.recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action }); } catch(e) {}
-      }
-      const fbUser = firebase.auth().currentUser;
-      if (fbUser && action !== 'authFirebase') data.idToken = await fbUser.getIdToken();
-      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action, data }) });
-      return res.json();
-    }
+// 1. ضع مفاتيح مشروعك هنا (تأكد من استدعاء مكتبة Supabase في ملف HTML أولاً)
+const SUPABASE_URL = 'ضع_رابط_المشروع_هنا';
+const SUPABASE_KEY = 'ضع_المفتاح_العام_هنا';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// 2. المحولات (Adapters) لاستقبال طلبات موقعك القديمة وتوجيهها لـ Supabase
+async function apiGet(action, params = {}) {
+  return await supabaseBackendAdapter(action, params);
+}
+
+async function apiPost(action, data = {}) {
+  return await supabaseBackendAdapter(action, data);
+}
+
+// 3. المحرك الرئيسي لمعالجة البيانات
+async function supabaseBackendAdapter(action, payload) {
+  try {
+    switch (action) {
+      
+      // --- جلب قائمة الأطباء ---
+      case 'getDoctors':
+        const { data: doctors, error: errDocs } = await supabase
+          .from('directory')
+          .select('*')
+          .eq('is_active', true);
+        
+        if (errDocs) throw errDocs;
+
+        // تحويل أسماء الأعمدة من قاعدة البيانات (snake_case) إلى ما يتوقعه كودك (PascalCase)
+        const mappedDoctors = doctors.map(doc => ({
+          DoctorID: doc.doctor_id,
+          FirstName: doc.first_name,
+          LastName: doc.last_name,
+          Specialty: doc.specialty,
+          Municipality: doc.municipality,
+          Phone: doc.phone,
+          ExactLocation: doc.exact_location,
+          ExtraInfo: doc.extra_info,
+          WorkingDays: doc.working_days || '{}',
+          BookingEnabled: doc.booking_enabled ? 'TRUE' : 'FALSE'
+        }));
+        return { success: true, data: mappedDoctors };
+
+      // --- إضافة طبيب جديد ---
+      case 'addDoctor':
+        const newDocId = 'DOC-' + Date.now();
+        const { error: errAdd } = await supabase
+          .from('directory')
+          .insert([{
+            doctor_id: newDocId,
+            first_name: payload.FirstName,
+            last_name: payload.LastName,
+            specialty: payload.Specialty,
+            municipality: payload.Municipality,
+            phone: payload.Phone,
+            exact_location: payload.ExactLocation,
+            extra_info: payload.ExtraInfo || '',
+            password: '0000', // كلمة مرور افتراضية (يمكنك تطوير واجهة لإضافتها لاحقاً)
+            booking_enabled: true
+          }]);
+        
+        if (errAdd) throw errAdd;
+        return { success: true, data: { DoctorID: newDocId } };
+
+      // --- حجز موعد ---
+      case 'bookAppointment':
+        const { data: booked, error: errBook } = await supabase
+          .from('bookings')
+          .insert([{
+            doctor_id: payload.DoctorID,
+            patient_name: payload.PatientName,
+            patient_phone: payload.PatientPhone,
+            user_email: payload.userEmail || null,
+            appointment_date: payload.AppointmentDate,
+            appointment_time: payload.AppointmentTime,
+            status: 'قيد الانتظار'
+          }])
+          .select('booking_id')
+          .single();
+        
+        if (errBook) throw errBook;
+        return { success: true, data: { BookingID: booked.booking_id } };
+
+      // --- تسجيل دخول الطبيب للوحة التحكم ---
+      case 'doctorLogin':
+        const { data: loginData, error: errLogin } = await supabase
+          .from('directory')
+          .select('*')
+          .eq('doctor_id', payload.doctorId)
+          .eq('phone', payload.phone)
+          .single();
+        
+        if (errLogin || !loginData || loginData.password !== payload.password) {
+           throw new Error('بيانات الدخول غير صحيحة');
+        }
+        
+        // جلب مواعيد الطبيب لعرضها في لوحته
+        const { data: appts } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('doctor_id', payload.doctorId)
+          .order('appointment_date', { ascending: true });
+
+        return {
+          success: true,
+          data: {
+            sessionToken: 'token_' + Date.now(),
+            doctorName: loginData.first_name + ' ' + loginData.last_name,
+            workingDays: loginData.working_days,
+            bookingEnabled: loginData.booking_enabled,
+            appointments: (appts || []).map(a => ({
+              BookingID: a.booking_id,
+              PatientName: a.patient_name,
+              PatientPhone: a.patient_phone,
+              AppointmentDate: a.appointment_date,
+              AppointmentTime: a.appointment_time,
+              Status: a.status,
+              UserEmail: a.user_email
+            }))
+          }
+        };
+
+      // --- تحديث حالة الحجز (من قبل الطبيب) ---
+      case 'updateBookingStatus':
+        const { error: errUpdate } = await supabase
+          .from('bookings')
+          .update({ status: payload.newStatus })
+          .eq('booking_id', payload.bookingId);
+        
+        if (errUpdate) throw errUpdate;
+        return { success: true };
+
+      // --- إيقاف/تفعيل الحجوزات (من قبل الطبيب) ---
+      case 'toggleBooking':
+        const { error: errToggle } = await supabase
+          .from('directory')
+          .update({ booking_enabled: payload.status })
+          .eq('doctor_id', payload.doctorId);
+        
+        if (errToggle) throw errToggle;
+        return { success: true };
+
+      // --- حفظ أيام وأوقات العمل ---
+      case 'updateDoctorHours':
+        const { error: errHours } = await supabase
+          .from('directory')
+          .update({ working_days: payload.workingDays })
+          .eq('doctor_id', payload.doctorId);
+        
+        if (errHours) throw errHours;
+        return { success: true };
+
+      // --- تتبع حالة الحجز (من قبل المريض) ---
+      case 'getBookingStatus':
+        const { data: trackData, error: errTrack } = await supabase
+          .from('bookings')
+          .select('booking_id, patient_name, appointment_date, appointment_time, status')
+          .eq('booking_id', payload.bookingId)
+          .eq('patient_phone', payload.phone)
+          .single();
+        
+        if (errTrack || !trackData) throw new Error('لا يوجد حجز مطابق لهذه البيانات');
+        
+        return {
+          success: true,
+          data: {
+            bookingId: trackData.booking_id,
+            patientName: trackData.patient_name,
+            date: trackData.appointment_date,
+            time: trackData.appointment_time,
+            status: trackData.status
+          }
+        };
+
+      default:
+        console.warn('تم طلب إجراء غير معرف بعد:', action);
+        return { success: false, error: 'الإجراء غير متوفر حالياً' };
+    }
+  } catch (err) {
+    console.error('Supabase Database Error:', err);
+    return { success: false, error: err.message };
+  }
+}
     async function handleGoogleSignIn() {
       if (isAccountLocked()) return;
       const provider = new firebase.auth.GoogleAuthProvider();
