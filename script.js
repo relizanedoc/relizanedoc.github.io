@@ -615,37 +615,47 @@ function handleSEOAndRender() {
       populateFilters();
     }
 
-    async function loadDoctors() {
-      const container = document.getElementById('doctorsList');
-      const cachedData = sessionStorage.getItem('doctorsCache');
-      const cacheTime = sessionStorage.getItem('doctorsCacheTime');
-      const CACHE_DURATION = 5 * 60 * 1000; 
-      if (cachedData && cacheTime && (Date.now() - parseInt(cacheTime) < CACHE_DURATION)) {
-          allDoctors = JSON.parse(cachedData);
-          handleSEOAndRender();
-          return; 
-      }
-      let skeletonHtml = '';
-      for(let i=0; i<6; i++) {
-        skeletonHtml += `
-          <div class="skeleton-card">
-            <div class="s-header"><div class="s-avatar"></div><div style="flex:1;"><div class="s-line s-w-75" style="height: 16px;"></div><div class="s-line s-w-50"></div></div></div>
-            <div class="s-line s-w-100"></div><div class="s-line s-w-100"></div><div class="s-line s-w-100" style="height: 40px; margin-top: 1.5rem;"></div>
-          </div>`;
-      }
-      container.innerHTML = skeletonHtml;
-      try {
-        const result = await apiGet('getDoctors');
-        if (!result.success) throw new Error(result.error);
-        allDoctors = result.data || [];
-        sessionStorage.setItem('doctorsCache', JSON.stringify(allDoctors));
-        sessionStorage.setItem('doctorsCacheTime', Date.now().toString());
-        handleSEOAndRender();
-      } catch (err) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>' + t('loadingError') + '</div></div>';
-        showToast(t('toastLoadError'), 'error');
-      }
+    // ✅ الدالة الجديدة باستخدام Supabase
+async function loadDoctors() {
+  const container = document.getElementById('doctorsList');
+  
+  // إظهار Skeleton Loading (موجود في الكود القديم)
+  let skeletonHtml = '';
+  for(let i=0; i<6; i++) {
+    skeletonHtml += `
+      <div class="skeleton-card">
+        <div class="s-header"><div class="s-avatar"></div><div style="flex:1;"><div class="s-line s-w-75" style="height: 16px;"></div><div class="s-line s-w-50"></div></div></div>
+        <div class="s-line s-w-100"></div><div class="s-line s-w-100"></div><div class="s-line s-w-100" style="height: 40px; margin-top: 1.5rem;"></div>
+      </div>`;
+  }
+  container.innerHTML = skeletonHtml;
+  
+  try {
+    // ✅ جلب البيانات من Supabase
+    const { data, error } = await supabaseClient
+      .from('doctors')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error loading doctors:', error);
+      throw new Error(error.message);
     }
+    
+    // حفظ البيانات في المتغير العام
+    allDoctors = data || [];
+    
+    console.log('✅ تم تحميل الأطباء:', allDoctors.length);
+    
+    // عرض البيانات
+    handleSEOAndRender();
+    
+  } catch (err) {
+    console.error('Failed to load doctors:', err);
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>' + t('loadingError') + '</div></div>';
+    showToast(t('toastLoadError'), 'error');
+  }
+}
 
     function formatPhoneNumber(phone) {
       if (!phone) return '';
