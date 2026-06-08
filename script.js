@@ -851,112 +851,131 @@ async function loadDoctors() {
     return slots;
   }
 
-  function openBooking(doctorId) {
-    currentDoctor = allDoctors.find(d => d.DoctorID === doctorId);
-    if (!currentDoctor) return;
-    document.getElementById('bookingDoctorId').value = doctorId;
-    let infoHtml = `
-      <div class="doctor-header"><div class="avatar">${(currentDoctor.FirstName?.[0]||'')+(currentDoctor.LastName?.[0]||'')}</div>
-      <div><div class="font-bold text-lg">Dr. ${escapeHtml(currentDoctor.FirstName)} ${escapeHtml(currentDoctor.LastName)}</div>
-      <div class="text-sm text-gray">${escapeHtml(t(currentDoctor.Specialty))} • ${escapeHtml(t(currentDoctor.Municipality))}</div></div></div>`;
-    let scheduleHtml = '';
-    let wd = {};
-    if (currentDoctor.WorkingDays) {
-       try {
-          wd = JSON.parse(currentDoctor.WorkingDays);
-          const daysKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-          let activeDaysHtml = '';
-          for(let i=0; i<=6; i++) {
-             if(wd[i] && wd[i].active) {
-                 activeDaysHtml += `<div style="display:flex; justify-content:space-between; padding: 0.375rem 0; border-bottom: 1px dashed var(--border); font-size: 0.875rem;">
-                     <span class="font-semibold" style="color: var(--text);" data-i18n="${daysKeys[i]}">${t(daysKeys[i])}</span>
-                     <span dir="ltr" style="color: var(--primary); font-weight: 600;">${wd[i].start} - ${wd[i].end}</span>
-                 </div>`;
-             }
-          }
-          if(activeDaysHtml !== '') {
-              scheduleHtml = `
-              <div style="margin-top: 1.25rem; padding: 1rem; background: var(--bg); border-radius: var(--radius); border: 1px solid var(--border);">
-                 <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom: 0.75rem;">
-                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                   <h4 style="font-size: 0.95rem; font-weight: bold; color: var(--text); margin:0;" data-i18n="scheduleTitle">${t('scheduleTitle')}</h4>
-                 </div>
-                 ${activeDaysHtml}
-              </div>`;
-          }
-       } catch(e) { }
-    }
-    if (scheduleHtml === '') {
-       const st = currentDoctor.StartTime ? currentDoctor.StartTime.substring(0, 5) : '08:00';
-       const et = currentDoctor.EndTime ? currentDoctor.EndTime.substring(0, 5) : '16:00';
-       scheduleHtml = `
-          <div style="margin-top: 1.25rem; padding: 1rem; background: var(--bg); border-radius: var(--radius); border: 1px solid var(--border);">
-             <h4 style="font-size: 0.95rem; font-weight: bold; color: var(--text); margin-bottom: 0.5rem;" data-i18n="fallbackTitle">${t('fallbackTitle')}</h4>
-             <div style="font-size: 0.875rem; color: var(--primary); font-weight: 600;" dir="ltr"><span data-i18n="dailyTxt">${t('dailyTxt')}</span> ${st} - ${et}</div>
-          </div>`;
-    }
-    document.getElementById('bookingDoctorInfo').innerHTML = infoHtml + scheduleHtml;
-    const dateInput = document.getElementById('apptDateInput');
-    const timeContainer = document.getElementById('timeSlotsContainer');
-    let timeInputHidden = document.getElementById('apptTimeInput');
-    if (!timeInputHidden) {
-        timeInputHidden = document.createElement('input');
-        timeInputHidden.type = 'hidden';
-        timeInputHidden.id = 'apptTimeInput';
-        timeInputHidden.name = 'AppointmentTime';
-        timeInputHidden.required = true;
-        document.querySelector('#bookingForm .grid').appendChild(timeInputHidden);
-    }
-    dateInput.value = '';
-    if (timeContainer) timeContainer.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="selectDateFirst">${t('selectDateFirst')}</div>`;
-    timeInputHidden.value = '';
-    dateInput.onchange = function() {
-       const container = document.getElementById('timeSlotsContainer');
-       const timeInput = document.getElementById('apptTimeInput');
-       if (container) container.innerHTML = ''; 
-       if (timeInput) timeInput.value = ''; 
-       if (!this.value) { if (container) container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="selectDateFirst">${t('selectDateFirst')}</div>`; return; }
-       const selectedDate = new Date(this.value);
-       if (isNaN(selectedDate.getTime())) { if (container) container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="invalidDate">${t('invalidDate')}</div>`; return; }
-       const dayNum = selectedDate.getDay(); 
-       let isWorking = true;
-       let shiftStart = currentDoctor.StartTime ? currentDoctor.StartTime.substring(0, 5) : '08:00';
-       let shiftEnd = currentDoctor.EndTime ? currentDoctor.EndTime.substring(0, 5) : '16:00';
-       if (Object.keys(wd).length > 0) {
-           if (!wd[dayNum] || !wd[dayNum].active) isWorking = false;
-           else { shiftStart = wd[dayNum].start; shiftEnd = wd[dayNum].end; }
-       }
-       if (!isWorking) {
-           showToast(t('doctorOff'), 'error');
-           this.value = '';
-           if (container) container.innerHTML = `<div class="text-sm text-danger" style="grid-column: 1 / -1; color: var(--danger);" data-i18n="doctorOff">${t('doctorOff')}</div>`;
-           return;
-       }
-       const interval = 30; 
-       const slots = generateTimeSlots(shiftStart, shiftEnd, interval);
-       if (slots.length === 0) { if (container) container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="noSlots">${t('noSlots')}</div>`; return; }
-       if (container) {
-           const morningDiv = document.createElement('div');
-           morningDiv.style.cssText = 'grid-column: 1 / -1; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; background: var(--surface);';
-           morningDiv.innerHTML = `<h4 style="font-size:0.95rem; color:var(--text); margin-bottom:0.75rem; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.25rem; display: inline-block;">☀️ <span data-i18n="morningSession">${t('morningSession')}</span></h4><div class="slots-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap:0.5rem;"></div>`;
-           const eveningDiv = document.createElement('div');
-           eveningDiv.style.cssText = 'grid-column: 1 / -1; margin-bottom: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; background: var(--surface);';
-           eveningDiv.innerHTML = `<h4 style="font-size:0.95rem; color:var(--text); margin-bottom:0.75rem; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.25rem; display: inline-block;">🌙 <span data-i18n="eveningSession">${t('eveningSession')}</span></h4><div class="slots-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap:0.5rem;"></div>`;
-           slots.forEach(slot => {
-               const btn = document.createElement('div');
-               btn.className = 'time-slot-btn';
-               btn.textContent = slot;
-               btn.onclick = () => { document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); timeInput.value = slot; };
-               const hour = parseInt(slot.split(':')[0]);
-               if (hour < 12) morningDiv.querySelector('.slots-grid').appendChild(btn);
-               else eveningDiv.querySelector('.slots-grid').appendChild(btn);
-           });
-           if (morningDiv.querySelector('.slots-grid').hasChildNodes()) container.appendChild(morningDiv);
-           if (eveningDiv.querySelector('.slots-grid').hasChildNodes()) container.appendChild(eveningDiv);
-       }
-    };
-    router('booking');
+ // ✅ الدالة الجديدة لفتح نموذج الحجز
+function openBooking(doctorId) {
+  // البحث عن الطبيب باستخدام UUID
+  currentDoctor = allDoctors.find(d => d.id === doctorId);
+  if (!currentDoctor) {
+    console.error('Doctor not found:', doctorId);
+    showToast(currentLang === 'ar' ? 'الطبيب غير موجود' : 'Doctor not found', 'error');
+    return;
   }
+  
+  // تعيين معرف الطبيب في النموذج
+  document.getElementById('bookingDoctorId').value = doctorId;
+  
+  // معلومات الطبيب
+  let infoHtml = `
+    <div class="doctor-header">
+      <div class="avatar">
+        ${(currentDoctor.first_name?.[0]||'')+(currentDoctor.last_name?.[0]||'')}
+      </div>
+      <div>
+        <div class="font-bold text-lg">
+          Dr. ${escapeHtml(currentDoctor.first_name)} ${escapeHtml(currentDoctor.last_name)}
+        </div>
+        <div class="text-sm text-gray">
+          ${escapeHtml(t(currentDoctor.specialty))} • ${escapeHtml(t(currentDoctor.municipality))}
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // جدول العمل
+  let scheduleHtml = '';
+  let wd = {};
+  if (currentDoctor.working_days) {
+    try {
+      wd = typeof currentDoctor.working_days === 'string' 
+        ? JSON.parse(currentDoctor.working_days) 
+        : currentDoctor.working_days;
+      
+      const daysKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+      let activeDaysHtml = '';
+      
+      for(let i=0; i<=6; i++) {
+        if(wd[i] && wd[i].active) {
+          activeDaysHtml += `
+            <div style="display:flex; justify-content:space-between; padding: 0.375rem 0; border-bottom: 1px dashed var(--border); font-size: 0.875rem;">
+              <span class="font-semibold" style="color: var(--text);" data-i18n="${daysKeys[i]}">
+                ${t(daysKeys[i])}
+              </span>
+              <span dir="ltr" style="color: var(--primary); font-weight: 600;">
+                ${wd[i].start} - ${wd[i].end}
+              </span>
+            </div>
+          `;
+        }
+      }
+      
+      if(activeDaysHtml !== '') {
+        scheduleHtml = `
+          <div style="margin-top: 1.25rem; padding: 1rem; background: var(--bg); border-radius: var(--radius); border: 1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom: 0.75rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <h4 style="font-size: 0.95rem; font-weight: bold; color: var(--text); margin:0;" data-i18n="scheduleTitle">
+                ${t('scheduleTitle')}
+              </h4>
+            </div>
+            ${activeDaysHtml}
+          </div>
+        `;
+      }
+    } catch(e) {
+      console.error('Error parsing working days:', e);
+    }
+  }
+  
+  // إذا لم يكن هناك جدول، استخدم الأوقات الافتراضية
+  if (scheduleHtml === '') {
+    const st = currentDoctor.working_days ? '08:00' : (currentDoctor.StartTime ? currentDoctor.StartTime.substring(0, 5) : '08:00');
+    const et = currentDoctor.working_days ? '16:00' : (currentDoctor.EndTime ? currentDoctor.EndTime.substring(0, 5) : '16:00');
+    scheduleHtml = `
+      <div style="margin-top: 1.25rem; padding: 1rem; background: var(--bg); border-radius: var(--radius); border: 1px solid var(--border);">
+        <h4 style="font-size: 0.95rem; font-weight: bold; color: var(--text); margin-bottom: 0.5rem;" data-i18n="fallbackTitle">
+          ${t('fallbackTitle')}
+        </h4>
+        <div style="font-size: 0.875rem; color: var(--primary); font-weight: 600;" dir="ltr">
+          <span data-i18n="dailyTxt">${t('dailyTxt')}</span> ${st} - ${et}
+        </div>
+      </div>
+    `;
+  }
+  
+  document.getElementById('bookingDoctorInfo').innerHTML = infoHtml + scheduleHtml;
+  
+  // إعداد حقول التاريخ والوقت
+  const dateInput = document.getElementById('apptDateInput');
+  const timeContainer = document.getElementById('timeSlotsContainer');
+  let timeInputHidden = document.getElementById('apptTimeInput');
+  
+  if (!timeInputHidden) {
+    timeInputHidden = document.createElement('input');
+    timeInputHidden.type = 'hidden';
+    timeInputHidden.id = 'apptTimeInput';
+    timeInputHidden.name = 'AppointmentTime';
+    timeInputHidden.required = true;
+    document.querySelector('#bookingForm .grid').appendChild(timeInputHidden);
+  }
+  
+  // تصفير الحقول
+  dateInput.value = '';
+  if (timeContainer) timeContainer.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="selectDateFirst">${t('selectDateFirst')}</div>`;
+  timeInputHidden.value = '';
+  
+  // حدث تغيير التاريخ
+  dateInput.onchange = function() {
+    handleDateSelection(this.value, wd);
+  };
+  
+  // الانتقال لصفحة الحجز
+  router('booking');
+}
 
   function confirmBooking() {
     const form = document.getElementById('bookingForm');
