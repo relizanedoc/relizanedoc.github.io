@@ -493,89 +493,159 @@ function renderDoctors(doctors) {
     container.appendChild(card);
   });
 }
-    function openDoctorProfileModal(doc, doctorName) {
-      const modal = document.getElementById('doctorProfileModal');
-      const content = document.getElementById('dpModalContent');
-      const profileUrl = `${window.location.origin}${window.location.pathname}?doc=${doc.DoctorID}`;
-      const shareText = currentLang === 'ar' ? 'مشاركة الرابط' : 'Share Link';
-      const isBookingEnabled = String(doc.BookingEnabled).toUpperCase() === 'TRUE';
-      let scheduleHtml = '';
-      if (doc.WorkingDays) {
-         try {
-            const wd = JSON.parse(doc.WorkingDays);
-            const daysNames = currentLang === 'ar' ? ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'] : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            for(let i=0; i<=6; i++) {
-                if(wd[i] && wd[i].active) {
-                    scheduleHtml += `<div style="display:flex; justify-content:space-between; padding: 0.25rem 0; font-size: 0.9rem;">
-                        <span style="color: var(--text-secondary);">${daysNames[i]}</span>
-                        <span dir="ltr" style="color: var(--text); font-weight: 600;">${wd[i].start} - ${wd[i].end}</span>
-                    </div>`;
-                }
-            }
-         } catch(e) {}
+    // ✅ الدالة الجديدة لعرض تفاصيل الطبيب
+function openDoctorProfileModal(doc, doctorName) {
+  const modal = document.getElementById('doctorProfileModal');
+  const content = document.getElementById('dpModalContent');
+  
+  // إنشاء رابط المشاركة (يستخدم UUID الآن)
+  const profileUrl = `${window.location.origin}${window.location.pathname}?doc=${doc.id}`;
+  const shareText = currentLang === 'ar' ? 'مشاركة الرابط' : 'Share Link';
+  const isBookingEnabled = doc.booking_enabled === true;
+  
+  // بناء جدول العمل
+  let scheduleHtml = '';
+  if (doc.working_days && Object.keys(doc.working_days).length > 0) {
+    try {
+      const wd = typeof doc.working_days === 'string' ? JSON.parse(doc.working_days) : doc.working_days;
+      const daysNames = currentLang === 'ar' 
+        ? ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'] 
+        : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      
+      for(let i=0; i<=6; i++) {
+        if(wd[i] && wd[i].active) {
+          scheduleHtml += `<div style="display:flex; justify-content:space-between; padding: 0.25rem 0; font-size: 0.9rem;">
+            <span style="color: var(--text-secondary);">${daysNames[i]}</span>
+            <span dir="ltr" style="color: var(--text); font-weight: 600;">${wd[i].start} - ${wd[i].end}</span>
+          </div>`;
+        }
       }
-      if(!scheduleHtml) scheduleHtml = `<div class="text-sm text-gray">${currentLang === 'ar' ? 'غير متوفر' : 'Not available'}</div>`;
-      content.innerHTML = `
-        <div class="dp-header">
-            <button class="dp-close" onclick="document.getElementById('doctorProfileModal').classList.add('hidden')">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            <div class="avatar" style="width: 64px; height: 64px; font-size: 1.5rem; background: white; color: var(--primary); box-shadow: none;">${(doc.FirstName?.[0] || '') + (doc.LastName?.[0] || '')}</div>
-            <div>
-                <h2 style="margin: 0; font-size: 1.25rem; font-weight: bold;">${doctorName}</h2>
-                <div style="opacity: 0.9; font-size: 0.9rem;">${escapeHtml(t(doc.Specialty))}</div>
-            </div>
-        </div>
-        <div class="dp-body">
-            <div class="dp-info-row">
-                <div class="dp-info-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
-                <div>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem;">${currentLang === 'ar' ? 'العنوان الدقيق' : 'Exact Location'}</div>
-                    <div style="font-weight: 600; color: var(--text);">${escapeHtml(doc.ExactLocation)}, ${escapeHtml(t(doc.Municipality))}</div>
-                </div>
-            </div>
-            <div class="dp-info-row">
-                <div class="dp-info-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
-                <div>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem;">${currentLang === 'ar' ? 'رقم العيادة' : 'Clinic Phone'}</div>
-                    <div style="font-weight: 600; color: var(--text);" dir="ltr">${escapeHtml(formatPhoneNumber(doc.Phone))}</div>
-                </div>
-            </div>
-            <div class="dp-info-row">
-                <div class="dp-info-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
-                <div style="flex: 1;">
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem;">${currentLang === 'ar' ? 'أوقات العمل المتاحة' : 'Available Working Hours'}</div>
-                    <div style="background: var(--surface); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border);">
-                        ${scheduleHtml}
-                    </div>
-                </div>
-            </div>
-            ${doc.ExtraInfo ? `
-            <div class="dp-info-row">
-                <div class="dp-info-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>
-                <div>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem;">${currentLang === 'ar' ? 'معلومات إضافية' : 'Extra Information'}</div>
-                    <div style="color: var(--text); font-size: 0.9rem; line-height: 1.5;">${escapeHtml(doc.ExtraInfo)}</div>
-                </div>
-            </div>` : ''}
-            <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
-                <button class="btn btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;" onclick="openReviewsModal('${doc.DoctorID}', '${escapeHtml(doc.FirstName)} ${escapeHtml(doc.LastName)}')">
-                    <span style="color: #b45309; margin-inline-end: 4px;">★</span> ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
-                </button>
-                <button class="btn btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;" onclick="navigator.clipboard.writeText('${profileUrl}'); showToast(currentLang==='ar'?'تم النسخ':'Copied', 'success');">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    ${shareText}
-                </button>
-            </div>
-        </div>
-        <div class="dp-footer">
-            <button class="btn ${isBookingEnabled ? 'btn-success' : 'btn-secondary'} btn-block" ${isBookingEnabled ? `onclick="document.getElementById('doctorProfileModal').classList.add('hidden'); openBooking('${doc.DoctorID}')"` : 'disabled'}>
-                ${isBookingEnabled ? (currentLang === 'ar' ? 'تأكيد وحجز موعد' : 'Confirm & Book') : (currentLang === 'ar' ? 'الحجوزات مغلقة' : 'Bookings Closed')}
-            </button>
-        </div>
-      `;
-      modal.classList.remove('hidden');
+    } catch(e) {
+      console.error('Error parsing working days:', e);
     }
+  }
+  
+  if(!scheduleHtml) {
+    scheduleHtml = `<div class="text-sm text-gray">${currentLang === 'ar' ? 'غير متوفر' : 'Not available'}</div>`;
+  }
+  
+  // محتوى النافذة
+  content.innerHTML = `
+    <div class="dp-header">
+      <button class="dp-close" onclick="document.getElementById('doctorProfileModal').classList.add('hidden')">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div class="avatar" style="width: 64px; height: 64px; font-size: 1.5rem; background: white; color: var(--primary); box-shadow: none;">
+        ${(doc.first_name?.[0] || '') + (doc.last_name?.[0] || '')}
+      </div>
+      <div>
+        <h2 style="margin: 0; font-size: 1.25rem; font-weight: bold;">${doctorName}</h2>
+        <div style="opacity: 0.9; font-size: 0.9rem;">${escapeHtml(t(doc.specialty))}</div>
+      </div>
+    </div>
+    
+    <div class="dp-body">
+      <div class="dp-info-row">
+        <div class="dp-info-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem;">
+            ${currentLang === 'ar' ? 'العنوان الدقيق' : 'Exact Location'}
+          </div>
+          <div style="font-weight: 600; color: var(--text);">
+            ${escapeHtml(doc.exact_location)}, ${escapeHtml(t(doc.municipality))}
+          </div>
+        </div>
+      </div>
+      
+      <div class="dp-info-row">
+        <div class="dp-info-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem;">
+            ${currentLang === 'ar' ? 'رقم العيادة' : 'Clinic Phone'}
+          </div>
+          <div style="font-weight: 600; color: var(--text);" dir="ltr">
+            ${escapeHtml(formatPhoneNumber(doc.phone))}
+          </div>
+        </div>
+      </div>
+      
+      <div class="dp-info-row">
+        <div class="dp-info-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem;">
+            ${currentLang === 'ar' ? 'أوقات العمل المتاحة' : 'Available Working Hours'}
+          </div>
+          <div style="background: var(--surface); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border);">
+            ${scheduleHtml}
+          </div>
+        </div>
+      </div>
+      
+      ${doc.extra_info ? `
+      <div class="dp-info-row">
+        <div class="dp-info-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem;">
+            ${currentLang === 'ar' ? 'معلومات إضافية' : 'Extra Information'}
+          </div>
+          <div style="color: var(--text); font-size: 0.9rem; line-height: 1.5;">
+            ${escapeHtml(doc.extra_info)}
+          </div>
+        </div>
+      </div>` : ''}
+      
+      <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+        <button class="btn btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;" 
+          onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
+          <span style="color: #b45309; margin-inline-end: 4px;">★</span> 
+          ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
+        </button>
+        <button class="btn btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;" 
+          onclick="navigator.clipboard.writeText('${profileUrl}'); showToast(currentLang==='ar'?'تم النسخ':'Copied', 'success');">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 4px;">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          ${shareText}
+        </button>
+      </div>
+    </div>
+    
+    <div class="dp-footer">
+      <button class="btn ${isBookingEnabled ? 'btn-success' : 'btn-secondary'} btn-block" 
+        ${isBookingEnabled ? `onclick="document.getElementById('doctorProfileModal').classList.add('hidden'); openBooking('${doc.id}')"` : 'disabled'}>
+        ${isBookingEnabled ? (currentLang === 'ar' ? 'تأكيد وحجز موعد' : 'Confirm & Book') : (currentLang === 'ar' ? 'الحجوزات مغلقة' : 'Bookings Closed')}
+      </button>
+    </div>
+  `;
+  
+  modal.classList.remove('hidden');
+}
 
     function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
 
