@@ -2599,3 +2599,137 @@ async function testSupabaseConnection() {
 
 // تشغيل الاختبار عند تحميل الصفحة
 window.addEventListener('load', testSupabaseConnection);
+// ✅ دالة جديدة لمعالجة اختيار التاريخ
+async function handleDateSelection(selectedDateStr, workingDays) {
+  const container = document.getElementById('timeSlotsContainer');
+  const timeInput = document.getElementById('apptTimeInput');
+  
+  if (container) container.innerHTML = '';
+  if (timeInput) timeInput.value = '';
+  
+  if (!selectedDateStr) {
+    if (container) container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="selectDateFirst">${t('selectDateFirst')}</div>`;
+    return;
+  }
+  
+  const selectedDate = new Date(selectedDateStr);
+  if (isNaN(selectedDate.getTime())) {
+    if (container) container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="invalidDate">${t('invalidDate')}</div>`;
+    return;
+  }
+  
+  const dayNum = selectedDate.getDay();
+  
+  // التحقق من يوم العمل
+  let isWorking = true;
+  let shiftStart = '08:00';
+  let shiftEnd = '16:00';
+  
+  if (Object.keys(workingDays).length > 0) {
+    if (!workingDays[dayNum] || !workingDays[dayNum].active) {
+      isWorking = false;
+    } else {
+      shiftStart = workingDays[dayNum].start;
+      shiftEnd = workingDays[dayNum].end;
+    }
+  }
+  
+  if (!isWorking) {
+    showToast(t('doctorOff'), 'error');
+    document.getElementById('apptDateInput').value = '';
+    if (container) container.innerHTML = `<div class="text-sm text-danger" style="grid-column: 1 / -1; color: var(--danger);" data-i18n="doctorOff">${t('doctorOff')}</div>`;
+    return;
+  }
+  
+  // جلب الأوقات المحجوزة من Supabase
+  try {
+    const { data: bookedSlots, error } = await supabaseClient
+      .from('appointments')
+      .select('appointment_time')
+      .eq('doctor_id', currentDoctor.id)
+      .eq('appointment_date', selectedDateStr)
+      .neq('status', 'cancelled');
+    
+    if (error) throw error;
+    
+    const bookedTimes = bookedSlots.map(s => s.appointment_time);
+    
+    // توليد الأوقات المتاحة
+    const slots = generateTimeSlots(shiftStart, shiftEnd, 30);
+    const availableSlots = slots.filter(slot => !bookedTimes.includes(slot));
+    
+    if (availableSlots.length === 0) {
+      if (container) container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="noSlots">${t('noSlots')}</div>`;
+      return;
+    }
+    
+    // عرض الأوقات
+    displayTimeSlots(container, availableSlots, timeInput);
+    
+  } catch (err) {
+    console.error('Error fetching booked slots:', err);
+    showToast(currentLang === 'ar' ? 'خطأ في جلب الأوقات' : 'Error fetching available times', 'error');
+  }
+}
+// ✅ توليد الأوقات
+function generateTimeSlots(startStr, endStr, intervalMins) {
+  const slots = [];
+  let [startH, startM] = startStr.split(':').map(Number);
+  let [endH, endM] = endStr.split(':').map(Number);
+  let current = startH * 60 + startM;
+  const end = endH * 60 + endM;
+  
+  while (current < end) {
+    let h = Math.floor(current / 60);
+    let m = current % 60;
+    slots.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
+    current += intervalMins;
+  }
+  return slots;
+}
+
+// ✅ عرض الأوقات
+function displayTimeSlots(container, slots, timeInput) {
+  const morningDiv = document.createElement('div');
+  morningDiv.style.cssText = 'grid-column: 1 / -1; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; background: var(--surface);';
+  morningDiv.innerHTML = `
+    <h4 style="font-size:0.95rem; color:var(--text); margin-bottom:0.75rem; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.25rem; display: inline-block;">
+      ☀️ <span data-i18n="morningSession">${t('morningSession')}</span>
+    </h4>
+    <div class="slots-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap:0.5rem;"></div>
+  `;
+  
+  const eveningDiv = document.createElement('div');
+  eveningDiv.style.cssText = 'grid-column: 1 / -1; margin-bottom: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; background: var(--surface);';
+  eveningDiv.innerHTML = `
+    <h4 style="font-size:0.95rem; color:var(--text); margin-bottom:0.75rem; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.25rem; display: inline-block;">
+      🌙 <span data-i18n="eveningSession">${t('eveningSession')}</span>
+    </h4>
+    <div class="slots-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap:0.5rem;"></div>
+  `;
+  
+  slots.forEach(slot => {
+    const btn = document.createElement('div');
+    btn.className = 'time-slot-btn';
+    btn.textContent = slot;
+    btn.onclick = () => {
+      document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      timeInput.value = slot;
+    };
+    
+    const hour = parseInt(slot.split(':')[0]);
+    if (hour < 12) {
+      morningDiv.querySelector('.slots-grid').appendChild(btn);
+    } else {
+      eveningDiv.querySelector('.slots-grid').appendChild(btn);
+    }
+  });
+  
+  if (morningDiv.querySelector('.slots-grid').hasChildNodes()) {
+    container.appendChild(morningDiv);
+  }
+  if (eveningDiv.querySelector('.slots-grid').hasChildNodes()) {
+    container.appendChild(eveningDiv);
+  }
+}
