@@ -11,14 +11,22 @@ window.addEventListener('load', function() {
         openDoctorModal(doctorId); 
     }
 });
-// ✅ ضع هذا بدلاً من كود Firebase:
+// 1. تهيئة Firebase (مؤقت - لا تحذفه الآن)
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCvWB0huHg4Wei98dAkQAvRANmB5Xs_GWI",
+  authDomain: "relizane-doc-4dbf2.firebaseapp.com",
+  projectId: "relizane-doc-4dbf2",
+  appId: "1:284439573850:web:9edd0f408e68a511de6f63"
+};
+
+firebase.initializeApp(FIREBASE_CONFIG);
+
+// 2. تهيئة Supabase (جديد)
 const SUPABASE_URL = 'https://iirjtmobphgmkgwkwumc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpcmp0bW9icGhnbWtnd2t3dW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA2NjYsImV4cCI6MjA5NjUxNjY2Nn0.Yfa0oEwp_id9tHpSb3h0jf__B4drqXsM-TVs4VTTmp4';
 
-// تهيئة Supabase (بما أنك تستخدم CDN في HTML، سنستخدم window.supabase)
 const { createClient } = window.supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 // دالة مساعدة لتحل محل firebase.auth().currentUser
 async function getCurrentSupabaseUser() {
   const { data: { user } } = await supabaseClient.auth.getUser();
