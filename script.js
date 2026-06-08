@@ -351,6 +351,7 @@ async function handleGoogleSignIn() {
 }
 
 // ✅ الكود الجديد لتسجيل الدخول بالإيميل:
+// ✅ الكود الجديد لتسجيل الدخول بالإيميل (مع التحقق من التأكيد)
 async function handleEmailAuth() {
   if (isAccountLocked()) return;
   const email = document.getElementById('authEmail').value.trim();
@@ -363,7 +364,11 @@ async function handleEmailAuth() {
   
   try {
     if (isSignUp) {
-      if (!name) { showToast(t('fullName') + ' required', 'error'); setLoading(btn, false); return; }
+      if (!name) { 
+        showToast(t('fullName') + ' required', 'error'); 
+        setLoading(btn, false); 
+        return; 
+      }
       
       // ✅ تسجيل حساب جديد في Supabase
       const { data, error } = await supabaseClient.auth.signUp({ 
@@ -371,9 +376,19 @@ async function handleEmailAuth() {
         password: password,
         options: { data: { name: name, display_name: name } }
       });
+      
       if (error) throw error;
-      resetLoginAttempts();
-      showToast('تم إنشاء الحساب! يرجى التحقق من بريدك الإلكتروني.', 'success');
+      
+      // ✅ التحقق من حالة التأكيد
+      if (data.user && data.user.confirmed_at) {
+        // الحساب مؤكد فوراً (autoconfirm مفعّل)
+        resetLoginAttempts();
+        showToast('تم إنشاء الحساب بنجاح! ' + t('toastAuthSuccess') + name, 'success');
+        setTimeout(() => router('user-dashboard'), 500);
+      } else {
+        // الحساب يحتاج تأكيد (autoconfirm معطّل)
+        showToast('تم إنشاء الحساب! يرجى التحقق من بريدك الإلكتروني.', 'success');
+      }
       
     } else {
       // ✅ تسجيل دخول بحساب موجود
@@ -381,20 +396,25 @@ async function handleEmailAuth() {
         email: email,
         password: password
       });
+      
       if (error) throw error;
       resetLoginAttempts();
+      showToast(t('toastAuthSuccess') + (data.user.user_metadata?.name || email), 'success');
       setTimeout(() => router('user-dashboard'), 500);
     }
   } catch (err) {
     recordFailedAttempt();
     let msg = err.message;
-    // يمكنك تخصيص الرسائل هنا
+    if (err.code === 'auth/weak-password') msg = t('weakPassword');
+    else if (err.code === 'auth/invalid-email') msg = t('invalidEmail');
+    else if (err.code === 'auth/user-not-found') msg = t('userNotFound');
+    else if (err.code === 'auth/wrong-password') msg = t('wrongPassword');
+    else if (err.code === 'auth/email-already-in-use') msg = t('emailInUse');
     showToast(t('toastAuthError') + msg, 'error');
   } finally { 
     setLoading(btn, false); 
   }
 }
-
     function toggleAuthMode() {
       isSignUp = !isSignUp;
       document.getElementById('nameFieldGroup').classList.toggle('hidden', !isSignUp);
