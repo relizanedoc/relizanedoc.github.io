@@ -2452,3 +2452,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') handleSend();
     });
 });
+// 🧪 اختبار الاتصال - احذف هذا بعد التأكد
+async function testSupabaseConnection() {
+  try {
+    console.log('🔍 جاري اختبار الاتصال بـ Supabase...');
+    
+    const { data, error } = await supabaseClient
+      .from('doctors')
+      .select('*')
+      .limit(1);
+    
+    if (error) {
+      console.error('❌ خطأ في الاتصال:', error.message);
+      showToast('فشل الاتصال بـ Supabase: ' + error.message, 'error');
+    } else {
+      console.log('✅ نجح الاتصال! البيانات:', data);
+      showToast('✅ تم الاتصال بـ Supabase بنجاح!', 'success');
+    }
+  } catch (err) {
+    console.error('❌ خطأ غير متوقع:', err);
+    showToast('خطأ غير متوقع: ' + err.message, 'error');
+  }
+}
+
+// تشغيل الاختبار عند تحميل الصفحة
+window.addEventListener('load', testSupabaseConnection);
