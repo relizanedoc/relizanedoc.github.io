@@ -428,56 +428,71 @@ async function handleEmailAuth() {
       overlay.onclick = (e) => { if (e.target === overlay) closeModal(); }; 
     }
 
-    function renderDoctors(doctors) {
-      const container = document.getElementById('doctorsList');
-      container.innerHTML = '';
-      if (!doctors.length) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon" style="opacity: 1; color: var(--text-secondary); margin-bottom: 1rem; display: flex; justify-content: center;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div><div>' + t('noDoctorsFound') + '</div></div>';
-        return;
-      }
-      doctors.forEach(doc => {
-        const card = document.createElement('div');
-        card.className = 'card doctor-card card-hover';
-        card.style.cssText = 'cursor: pointer;';
-        const avatar = document.createElement('div');
-        avatar.className = 'avatar';
-        avatar.textContent = (doc.FirstName?.[0] || '') + (doc.LastName?.[0] || '');
-        const docPrefix = currentLang === 'ar' ? 'د.' : 'Dr.';
-        const doctorName = `${docPrefix} ${escapeHtml(doc.FirstName)} ${escapeHtml(doc.LastName)}`;
-        const headerRight = document.createElement('div');
-        headerRight.style.cssText = 'flex: 1; min-width: 0;'; 
-        headerRight.innerHTML = `
-          <div class="font-bold text-lg" style="display: flex; align-items: center; gap: 4px; overflow: hidden; margin-bottom: 0.3rem; color: var(--primary-dark);">
-            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${doctorName}</span>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#0ea5e9" stroke="white" stroke-width="2" style="flex-shrink: 0;"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1.177-7.86l-2.765-2.767L7 12.431l3.823 3.823 7.177-7.177-1.06-1.061-6.117 6.12z"></path></svg>
-          </div>
-          <div class="text-sm" style="display: flex; align-items: center; gap: 6px; margin-bottom: 0.3rem; color: var(--text);">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500;">${escapeHtml(t(doc.Specialty))}</span>
-          </div>
-          <div class="text-sm font-semibold" style="display: flex; align-items: center; gap: 6px; color: var(--text-secondary);">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(t(doc.Municipality))}</span>
-          </div>
-        `;
-        const doctorHeader = document.createElement('div');
-        doctorHeader.className = 'doctor-header';
-        doctorHeader.appendChild(avatar);
-        doctorHeader.appendChild(headerRight); 
-        const isBookingEnabled = String(doc.BookingEnabled).toUpperCase() === 'TRUE';
-        const actionBtn = document.createElement('button');
-        actionBtn.className = 'btn ' + (isBookingEnabled ? 'btn-primary' : 'btn-secondary') + ' btn-block';
-        actionBtn.style.cssText = 'margin-top: 1rem; padding: 0.6rem; border-radius: 8px; transition: all 0.2s;';
-        actionBtn.innerHTML = isBookingEnabled ? 
-            (currentLang === 'ar' ? 'عرض التفاصيل والحجز' : 'View Details & Book') : 
-            (currentLang === 'ar' ? 'الحجوزات مغلقة حالياً' : 'Bookings Currently Closed');
-        card.appendChild(doctorHeader);
-        card.appendChild(actionBtn);
-        card.onclick = () => openDoctorProfileModal(doc, doctorName);
-        container.appendChild(card);
-      });
-    }
-
+    // ✅ الدالة الجديدة لعرض الأطباء
+function renderDoctors(doctors) {
+  const container = document.getElementById('doctorsList');
+  container.innerHTML = '';
+  
+  if (!doctors || doctors.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon" style="opacity: 1; color: var(--text-secondary); margin-bottom: 1rem; display: flex; justify-content: center;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div><div>' + t('noDoctorsFound') + '</div></div>';
+    return;
+  }
+  
+  doctors.forEach(doc => {
+    const card = document.createElement('div');
+    card.className = 'card doctor-card card-hover';
+    card.style.cssText = 'cursor: pointer;';
+    
+    // إنشاء Avatar
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = (doc.first_name?.[0] || '') + (doc.last_name?.[0] || '');
+    
+    // اسم الطبيب
+    const docPrefix = currentLang === 'ar' ? 'د.' : 'Dr.';
+    const doctorName = `${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}`;
+    
+    // الرأس (Avatar + المعلومات)
+    const headerRight = document.createElement('div');
+    headerRight.style.cssText = 'flex: 1; min-width: 0;'; 
+    headerRight.innerHTML = `
+      <div class="font-bold text-lg" style="display: flex; align-items: center; gap: 4px; overflow: hidden; margin-bottom: 0.3rem; color: var(--primary-dark);">
+        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${doctorName}</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#0ea5e9" stroke="white" stroke-width="2" style="flex-shrink: 0;"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1.177-7.86l-2.765-2.767L7 12.431l3.823 3.823 7.177-7.177-1.06-1.061-6.117 6.12z"></path></svg>
+      </div>
+      <div class="text-sm" style="display: flex; align-items: center; gap: 6px; margin-bottom: 0.3rem; color: var(--text);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500;">${escapeHtml(t(doc.specialty))}</span>
+      </div>
+      <div class="text-sm font-semibold" style="display: flex; align-items: center; gap: 6px; color: var(--text-secondary);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(t(doc.municipality))}</span>
+      </div>
+    `;
+    
+    const doctorHeader = document.createElement('div');
+    doctorHeader.className = 'doctor-header';
+    doctorHeader.appendChild(avatar);
+    doctorHeader.appendChild(headerRight);
+    
+    // زر الحجز
+    const isBookingEnabled = doc.booking_enabled === true;
+    const actionBtn = document.createElement('button');
+    actionBtn.className = 'btn ' + (isBookingEnabled ? 'btn-primary' : 'btn-secondary') + ' btn-block';
+    actionBtn.style.cssText = 'margin-top: 1rem; padding: 0.6rem; border-radius: 8px; transition: all 0.2s;';
+    actionBtn.innerHTML = isBookingEnabled ? 
+        (currentLang === 'ar' ? 'عرض التفاصيل والحجز' : 'View Details & Book') : 
+        (currentLang === 'ar' ? 'الحجوزات مغلقة حالياً' : 'Bookings Currently Closed');
+    
+    card.appendChild(doctorHeader);
+    card.appendChild(actionBtn);
+    
+    // فتح نافذة التفاصيل عند النقر
+    card.onclick = () => openDoctorProfileModal(doc, doctorName);
+    
+    container.appendChild(card);
+  });
+}
     function openDoctorProfileModal(doc, doctorName) {
       const modal = document.getElementById('doctorProfileModal');
       const content = document.getElementById('dpModalContent');
