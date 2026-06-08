@@ -11,14 +11,19 @@ window.addEventListener('load', function() {
         openDoctorModal(doctorId); 
     }
 });
-const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxuQvatnWUMoMMSA6QTsbpxhO6r3Qh54yoj8Zrkor_2Icg3n3AVP7_2ajh0NvEPMlTgRw/exec';
-    const FIREBASE_CONFIG = {
-      apiKey: "AIzaSyCvWB0huHg4Wei98dAkQAvRANmB5Xs_GWI",
-      authDomain: "relizane-doc-4dbf2.firebaseapp.com",
-      projectId: "relizane-doc-4dbf2",
-      appId: "1:284439573850:web:9edd0f408e68a511de6f63"
-    };
+// ✅ ضع هذا بدلاً من كود Firebase:
+const SUPABASE_URL = 'ضع_هنا_رابط_Supabase_URL';
+const SUPABASE_ANON_KEY = 'ضع_هنا_مفتاح_anon_public';
+
+// تهيئة Supabase (بما أنك تستخدم CDN في HTML، سنستخدم window.supabase)
+const { createClient } = window.supabase;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// دالة مساعدة لتحل محل firebase.auth().currentUser
+async function getCurrentSupabaseUser() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  return user;
+}
     const i18n = {
       en: {
         memberDashboardTitle: 'Member Dashboard', trackPhoneLabel: 'Phone Number used for booking',
@@ -219,11 +224,6 @@ chatBookDetailsBtn: 'عرض التفاصيل والحجز',
     }
 
     function resetLoginAttempts() { localStorage.removeItem(ATTEMPTS_KEY); localStorage.removeItem(LOCKOUT_KEY); }
-
-    firebase.initializeApp(FIREBASE_CONFIG);
-    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-      .then(() => {})
-      .catch((error) => console.error("فشل تفعيل الاستمرارية:", error));
 
     async function syncUserWithBackend(firebaseUser) {
       if (!firebaseUser) return null;
