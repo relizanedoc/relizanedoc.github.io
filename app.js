@@ -16,22 +16,28 @@ const FIREBASE_CONFIG = {
 
 // المحولات لتوجيه الطلبات القديمة إلى Supabase
 // المحرك الرئيسي لمعالجة البيانات (Supabase Backend Adapter)
+// المحرك الرئيسي لمعالجة البيانات (مُحدث ليتحمل الأخطاء)
 async function supabaseBackendAdapter(action, payload) {
   try {
+    // التحقق من أن supabase معرف
+    if (!supabase) throw new Error("Supabase غير متصل!");
+
     switch (action) {
       case 'getDoctors':
-        const { data: doctors, error: errDocs } = await supabase
-          .from('directory')
-          .select('*')
-          .eq('is_active', true);
+        const { data: doctors, error: errDocs } = await supabase.from('directory').select('*').eq('is_active', true);
         if (errDocs) throw errDocs;
-        const mappedDoctors = doctors.map(doc => ({
-          DoctorID: doc.doctor_id, FirstName: doc.first_name, LastName: doc.last_name,
-          Specialty: doc.specialty, Municipality: doc.municipality, Phone: doc.phone,
-          ExactLocation: doc.exact_location, ExtraInfo: doc.extra_info,
-          WorkingDays: doc.working_days || '{}', BookingEnabled: doc.booking_enabled ? 'TRUE' : 'FALSE'
-        }));
-        return { success: true, data: mappedDoctors };
+        // ... (بقية الكود الخاص بـ getDoctors كما هو)
+        return { success: true, data: doctors.map(doc => ({...})) }; // تأكد من استبدال الـ map كما في الكود السابق
+
+      // (أضف باقي الـ cases بنفس طريقتك السابقة)
+      default:
+        return { success: false, error: 'الإجراء غير معرف' };
+    }
+  } catch (err) {
+    console.error('خطأ في الاتصال بقاعدة البيانات:', err.message);
+    return { success: false, error: err.message };
+  }
+}
 
       case 'addDoctor':
         const newDocId = 'DOC-' + Date.now();
