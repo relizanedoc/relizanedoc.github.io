@@ -326,46 +326,66 @@ chatBookDetailsBtn: 'عرض التفاصيل والحجز',
       return res.json();
     }
 
-    async function handleGoogleSignIn() {
-      if (isAccountLocked()) return;
-      const provider = new firebase.auth.GoogleAuthProvider();
-      try {
-        await firebase.auth().signInWithPopup(provider);
-        resetLoginAttempts();
-        setTimeout(() => router('user-dashboard'), 500);
-      } catch (err) { recordFailedAttempt(); showToast(t('toastAuthError') + err.message, 'error'); }
-    }
+    // ✅ الكود الجديد لتسجيل الدخول بـ Google:
+async function handleGoogleSignIn() {
+  if (isAccountLocked()) return;
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
+    });
+    if (error) throw error;
+    resetLoginAttempts();
+  } catch (err) { 
+    recordFailedAttempt(); 
+    showToast(t('toastAuthError') + err.message, 'error'); 
+  }
+}
 
-    async function handleEmailAuth() {
-      if (isAccountLocked()) return;
-      const email = document.getElementById('authEmail').value.trim();
-      const password = document.getElementById('authPassword').value;
-      const name = document.getElementById('authName').value.trim();
-      const btn = document.getElementById('authSubmitBtn');
-      if (!email || !password) return;
-      setLoading(btn, true);
-      try {
-        if (isSignUp) {
-          if (!name) { showToast(t('fullName') + ' required', 'error'); setLoading(btn, false); return; }
-          const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
-          await cred.user.updateProfile({ displayName: name });
-          resetLoginAttempts();
-        } else {
-          await firebase.auth().signInWithEmailAndPassword(email, password);
-          resetLoginAttempts();
-        }
-        setTimeout(() => router('user-dashboard'), 500);
-      } catch (err) {
-        recordFailedAttempt();
-        let msg = err.message;
-        if (err.code === 'auth/weak-password') msg = t('weakPassword');
-        else if (err.code === 'auth/invalid-email') msg = t('invalidEmail');
-        else if (err.code === 'auth/user-not-found') msg = t('userNotFound');
-        else if (err.code === 'auth/wrong-password') msg = t('wrongPassword');
-        else if (err.code === 'auth/email-already-in-use') msg = t('emailInUse');
-        showToast(t('toastAuthError') + msg, 'error');
-      } finally { setLoading(btn, false); }
+// ✅ الكود الجديد لتسجيل الدخول بالإيميل:
+async function handleEmailAuth() {
+  if (isAccountLocked()) return;
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const name = document.getElementById('authName').value.trim();
+  const btn = document.getElementById('authSubmitBtn');
+  
+  if (!email || !password) return;
+  setLoading(btn, true);
+  
+  try {
+    if (isSignUp) {
+      if (!name) { showToast(t('fullName') + ' required', 'error'); setLoading(btn, false); return; }
+      
+      // ✅ تسجيل حساب جديد في Supabase
+      const { data, error } = await supabaseClient.auth.signUp({ 
+        email: email, 
+        password: password,
+        options: { data: { name: name, display_name: name } }
+      });
+      if (error) throw error;
+      resetLoginAttempts();
+      showToast('تم إنشاء الحساب! يرجى التحقق من بريدك الإلكتروني.', 'success');
+      
+    } else {
+      // ✅ تسجيل دخول بحساب موجود
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+      if (error) throw error;
+      resetLoginAttempts();
+      setTimeout(() => router('user-dashboard'), 500);
     }
+  } catch (err) {
+    recordFailedAttempt();
+    let msg = err.message;
+    // يمكنك تخصيص الرسائل هنا
+    showToast(t('toastAuthError') + msg, 'error');
+  } finally { 
+    setLoading(btn, false); 
+  }
+}
 
     function toggleAuthMode() {
       isSignUp = !isSignUp;
