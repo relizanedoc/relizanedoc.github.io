@@ -984,26 +984,61 @@ dateInput.min = today;
   router('booking');
 }
 
-  function confirmBooking() {
-    const form = document.getElementById('bookingForm');
-    if (!form.checkValidity()) { form.reportValidity(); return; }
-    const patientName = form.elements['PatientName'].value.trim();
-    const apptDate = form.elements['AppointmentDate'].value;
-    const apptTime = form.elements['AppointmentTime'].value;
-    const selectedDate = new Date(apptDate);
-    const dayNum = selectedDate.getDay();
-    let wd = {};
-    if (currentDoctor.WorkingDays) { try { wd = JSON.parse(currentDoctor.WorkingDays); } catch(err) {} }
-    if (wd[dayNum] && wd[dayNum].active) {
-        if (apptTime < wd[dayNum].start || apptTime > wd[dayNum].end) {
-           showToast(currentLang === 'ar' ? `الوقت متاح فقط بين ${wd[dayNum].start} و ${wd[dayNum].end}` : `Time only available between ${wd[dayNum].start} and ${wd[dayNum].end}`, 'error');
-           return; 
-        }
-    }
-    const doctorName = currentDoctor ? `Dr. ${currentDoctor.FirstName} ${currentDoctor.LastName}` : '';
-    document.getElementById('confirmDialogBody').textContent = (currentLang === 'ar' ? `المريض: ${patientName} | الطبيب: ${doctorName} | التاريخ: ${apptDate} ${apptTime}` : `Patient: ${patientName} | Doctor: ${doctorName} | Date: ${apptDate} at ${apptTime}`);
-    document.getElementById('confirmDialog').classList.remove('hidden');
+  // ✅ دالة تأكيد الحجز (قبل الإرسال)
+function confirmBooking() {
+  const form = document.getElementById('bookingForm');
+  
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
   }
+  
+  const patientName = form.elements['PatientName'].value.trim();
+  const apptDate = form.elements['AppointmentDate'].value;
+  const apptTime = form.elements['AppointmentTime'].value;
+  
+  // التحقق من اختيار الوقت
+  if (!apptTime) {
+    showToast(currentLang === 'ar' ? 'يرجى اختيار وقت الموعد' : 'Please select appointment time', 'error');
+    return;
+  }
+  
+  // التحقق من أن الوقت ضمن نطاق العمل
+  const selectedDate = new Date(apptDate);
+  const dayNum = selectedDate.getDay();
+  let wd = {};
+  if (currentDoctor.working_days) {
+    try {
+      wd = typeof currentDoctor.working_days === 'string' 
+        ? JSON.parse(currentDoctor.working_days) 
+        : currentDoctor.working_days;
+    } catch(err) {}
+  }
+  
+  if (wd[dayNum] && wd[dayNum].active) {
+    if (apptTime < wd[dayNum].start || apptTime > wd[dayNum].end) {
+      showToast(
+        currentLang === 'ar' 
+          ? `الوقت متاح فقط بين ${wd[dayNum].start} و ${wd[dayNum].end}` 
+          : `Time only available between ${wd[dayNum].start} and ${wd[dayNum].end}`,
+        'error'
+      );
+      return;
+    }
+  }
+  
+  // إظهار نافذة التأكيد
+  const doctorName = currentDoctor 
+    ? `${currentDoctor.first_name} ${currentDoctor.last_name}` 
+    : '';
+  
+  document.getElementById('confirmDialogBody').textContent = 
+    (currentLang === 'ar' 
+      ? `المريض: ${patientName} | الطبيب: د. ${doctorName} | التاريخ: ${apptDate} ${apptTime}` 
+      : `Patient: ${patientName} | Doctor: Dr. ${doctorName} | Date: ${apptDate} at ${apptTime}`);
+  
+  document.getElementById('confirmDialog').classList.remove('hidden');
+}
 
   function closeConfirmDialog() { document.getElementById('confirmDialog').classList.add('hidden'); }
 
