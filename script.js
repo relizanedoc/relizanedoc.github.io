@@ -1966,115 +1966,160 @@ window.saveWorkingHours = async function() {
     }
 
    // 3. دالة جلب التقييمات من قاعدة البيانات
-    async function loadReviews(doctorId) {
-        const list = document.getElementById('reviewsList');
-        list.innerHTML = `<div class='p-4 text-center text-gray text-sm'>${currentLang === 'ar' ? 'جاري تحميل التقييمات...' : 'Loading reviews...'}</div>`;
-        try {
-            // جلب المستخدم الحالي للتحقق من ملكية التقييمات
-            const currentUser = await getCurrentUser();
-            const emailParam = currentUser ? currentUser.Email : '';
-
-            const res = await apiGet('getReviews', { doctorId: doctorId, userEmail: emailParam });
-            if (!res.success) throw new Error(res.error);
-            
-            const reviews = res.data || [];
-            if (reviews.length === 0) {
-                list.innerHTML = `<div class='p-4 text-center text-gray text-sm'>${currentLang === 'ar' ? 'لا توجد تقييمات بعد. كن أول من يقيّم!' : 'No reviews yet. Be the first to review!'}</div>`;
-                return;
-            }
-            
-            list.innerHTML = reviews.map(r => `
-                <div class="review-item" id="review-${r.reviewId}">
-                    <div class="review-header">
-                        <div>
-                            <span class="review-author">${escapeHtml(r.patientName)}</span>
-                            <span class="review-date" dir="ltr" style="margin: 0 0.5rem;">${r.date}</span>
-                        </div>
-                        ${r.isOwner ? `<button onclick="deleteReview('${r.reviewId}', '${doctorId}')" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:0.2rem; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>${currentLang === 'ar' ? 'حذف' : 'Delete'}</button>` : ''}
-                    </div>
-                    <div class="star-display">
-                        ${'★'.repeat(r.rating)}<span style="color:var(--border)">${'★'.repeat(5 - r.rating)}</span>
-                    </div>
-                    <div class="review-text">${escapeHtml(r.comment)}</div>
-                </div>
-            `).join('');
-        } catch (err) {
-            list.innerHTML = `<div class='p-4 text-center text-danger text-sm'>${currentLang === 'ar' ? 'خطأ في جلب التقييمات' : 'Error loading reviews'}</div>`;
-        }
+    // ✅ جلب التقييمات من Supabase مباشرة
+async function loadReviews(doctorId) {
+  const list = document.getElementById('reviewsList');
+  list.innerHTML = `<div class='p-4 text-center text-gray text-sm'>${currentLang === 'ar' ? 'جاري تحميل التقييمات...' : 'Loading reviews...'}</div>`;
+  
+  try {
+    // جلب المستخدم الحالي
+    const currentUser = await getCurrentUser();
+    
+    // ✅ جلب التقييمات من Supabase
+    const { data: reviews, error } = await supabaseClient
+      .from('reviews')
+      .select('*')
+      .eq('doctor_id', doctorId)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    console.log('✅ التقييمات:', reviews);
+    
+    if (!reviews || reviews.length === 0) {
+      list.innerHTML = `<div class='p-4 text-center text-gray text-sm'>${currentLang === 'ar' ? 'لا توجد تقييمات بعد. كن أول من يقيّم!' : 'No reviews yet. Be the first to review!'}</div>`;
+      return;
     }
+    
+    list.innerHTML = reviews.map(r => `
+      <div class="review-item" id="review-${r.id}">
+        <div class="review-header">
+          <div>
+            <span class="review-author">${escapeHtml(r.patient_name || 'مستخدم')}</span>
+            <span class="review-date" dir="ltr" style="margin: 0 0.5rem;">
+              ${new Date(r.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-DZ' : 'en-US')}
+            </span>
+          </div>
+          ${currentUser && r.user_id === currentUser.UserID ? `
+            <button onclick="deleteReview('${r.id}', '${doctorId}')" 
+              style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:0.2rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+              </svg>
+              ${currentLang === 'ar' ? 'حذف' : 'Delete'}
+            </button>
+          ` : ''}
+        </div>
+        <div class="star-display">
+          ${'★'.repeat(r.rating)}<span style="color:var(--border)">${'★'.repeat(5 - r.rating)}</span>
+        </div>
+        <div class="review-text">${escapeHtml(r.comment)}</div>
+      </div>
+    `).join('');
+    
+  } catch (err) {
+    console.error('❌ خطأ في جلب التقييمات:', err);
+    list.innerHTML = `<div class='p-4 text-center text-danger text-sm'>${currentLang === 'ar' ? 'خطأ في جلب التقييمات' : 'Error loading reviews'}</div>`;
+  }
+}
 
-    // 5. دالة حذف التقييم
-    window.deleteReview = async function(reviewId, doctorId) {
-        if (!confirm(currentLang === 'ar' ? 'هل أنت متأكد أنك تريد حذف تقييمك بشكل نهائي؟' : 'Are you sure you want to delete your review?')) return;
+    // ✅ حذف التقييم من Supabase
+window.deleteReview = async function(reviewId, doctorId) {
+  if (!confirm(currentLang === 'ar' ? 'هل أنت متأكد أنك تريد حذف تقييمك بشكل نهائي؟' : 'Are you sure you want to delete your review?')) 
+    return;
 
-        try {
-            const fbUser = firebase.auth().currentUser;
-            if (!fbUser) return;
-            const idToken = await fbUser.getIdToken();
+  try {
+    const reviewDiv = document.getElementById('review-' + reviewId);
+    if(reviewDiv) reviewDiv.style.opacity = '0.5';
 
-            // تحويل الزر إلى حالة تحميل بصرياً لتجربة مستخدم أفضل
-            const reviewDiv = document.getElementById('review-' + reviewId);
-            if(reviewDiv) reviewDiv.style.opacity = '0.5';
+    // ✅ تحديث حالة التقييم إلى deleted
+    const { error } = await supabaseClient
+      .from('reviews')
+      .update({ status: 'deleted' })
+      .eq('id', reviewId);
+    
+    if (error) throw error;
 
-            const res = await apiPost('deleteReview', {
-                reviewId: reviewId,
-                idToken: idToken
-            });
-
-            if (!res.success) throw new Error(res.error);
-
-            showToast(currentLang === 'ar' ? 'تم حذف التقييم بنجاح' : 'Review deleted successfully', 'success');
-            loadReviews(doctorId); // إعادة جلب التقييمات لتحديث الواجهة وإخفاء التقييم المحذوف
-        } catch (err) {
-            showToast(currentLang === 'ar' ? 'خطأ: ' + err.message : 'Error: ' + err.message, 'error');
-            const reviewDiv = document.getElementById('review-' + reviewId);
-            if(reviewDiv) reviewDiv.style.opacity = '1';
+    showToast(currentLang === 'ar' ? 'تم حذف التقييم بنجاح' : 'Review deleted successfully', 'success');
+    loadReviews(doctorId);
+    
+  } catch (err) {
+    console.error('❌ خطأ في حذف التقييم:', err);
+    showToast(currentLang === 'ar' ? 'خطأ: ' + err.message : 'Error: ' + err.message, 'error');
+    const reviewDiv = document.getElementById('review-' + reviewId);
+    if(reviewDiv) reviewDiv.style.opacity = '1';
+  }
+};
+// ✅ إرسال تقييم جديد إلى Supabase
+document.addEventListener('submit', async function(e) {
+  if (e.target && e.target.id === 'reviewForm') {
+    e.preventDefault();
+    
+    const btn = document.getElementById('submitReviewBtn');
+    const doctorId = document.getElementById('reviewDoctorId').value;
+    const rating = document.getElementById('ratingValue').value;
+    const comment = document.getElementById('reviewComment').value;
+    
+    if (!rating || rating === "0") {
+      showToast(currentLang === 'ar' ? 'الرجاء اختيار التقييم بالنجوم' : 'Please select a star rating', 'error');
+      return;
+    }
+    if (!comment.trim()) {
+      showToast(currentLang === 'ar' ? 'الرجاء كتابة تجربتك' : 'Please write your review', 'error');
+      return;
+    }
+    
+    setLoading(btn, true);
+    
+    try {
+      // ✅ الحصول على المستخدم الحالي من Supabase
+      const user = await getCurrentUser();
+      
+      if (!user) {
+        showToast(currentLang === 'ar' ? 'يجب تسجيل الدخول أولاً' : 'Please login first', 'error');
+        setLoading(btn, false);
+        return;
+      }
+      
+      // ✅ إضافة التقييم في Supabase
+      const { data, error } = await supabaseClient
+        .from('reviews')
+        .insert([{
+          doctor_id: doctorId,
+          user_id: user.UserID,
+          patient_name: user.Name || user.Email.split('@')[0],
+          rating: parseInt(rating),
+          comment: comment.trim(),
+          status: 'approved'
+        }])
+        .select()
+        .single();
+      
+      if (error) {
+        // إذا كان الخطأ بسبب التقييم المكرر
+        if (error.code === '23505') {
+          showToast(currentLang === 'ar' ? 'لقد قمت بتقييم هذا الطبيب مسبقاً!' : 'You have already reviewed this doctor!', 'error');
+        } else {
+          throw error;
         }
-    };
-// 4. دالة إرسال تقييم جديد (التي كانت مفقودة)
-    document.addEventListener('submit', async function(e) {
-        if (e.target && e.target.id === 'reviewForm') {
-            e.preventDefault();
-            const btn = document.getElementById('submitReviewBtn');
-            const doctorId = document.getElementById('reviewDoctorId').value;
-            const rating = document.getElementById('ratingValue').value;
-            const comment = document.getElementById('reviewComment').value;
-            
-            if (!rating || rating === "0") {
-                showToast(currentLang === 'ar' ? 'الرجاء اختيار التقييم بالنجوم' : 'Please select a star rating', 'error');
-                return;
-            }
-            if (!comment.trim()) {
-                showToast(currentLang === 'ar' ? 'الرجاء كتابة تجربتك' : 'Please write your review', 'error');
-                return;
-            }
-            
-            setLoading(btn, true);
-            try {
-                const user = await getCurrentUser();
-                const res = await apiPost('addReview', {
-                    doctorId: doctorId,
-                    patientName: user.Name || user.Email.split('@')[0],
-                    rating: parseInt(rating),
-                    comment: comment
-                });
-                
-                if (!res.success) throw new Error(res.error);
-                
-                showToast(currentLang === 'ar' ? 'تم إضافة تقييمك بنجاح' : 'Review added successfully', 'success');
-                e.target.reset(); // تفريغ الحقول
-                currentReviewRating = 0;
-                document.getElementById('ratingValue').value = '';
-                document.querySelectorAll('#starRatingInput .star').forEach(s => s.style.color = 'var(--border)');
-                
-                loadReviews(doctorId); // تحديث القائمة فوراً
-            } catch (err) {
-                showToast(currentLang === 'ar' ? 'خطأ: ' + err.message : 'Error: ' + err.message, 'error');
-            } finally {
-                setLoading(btn, false, currentLang === 'ar' ? 'نشر التقييم' : 'Submit Review');
-            }
-        }
-    });
+      } else {
+        showToast(currentLang === 'ar' ? 'تم إضافة تقييمك بنجاح' : 'Review added successfully', 'success');
+        e.target.reset();
+        currentReviewRating = 0;
+        document.getElementById('ratingValue').value = '';
+        document.querySelectorAll('#starRatingInput .star').forEach(s => s.style.color = 'var(--border)');
+        loadReviews(doctorId);
+      }
+      
+    } catch (err) {
+      console.error('❌ خطأ في إضافة التقييم:', err);
+      showToast(currentLang === 'ar' ? 'خطأ: ' + err.message : 'Error: ' + err.message, 'error');
+    } finally {
+      setLoading(btn, false, currentLang === 'ar' ? 'نشر التقييم' : 'Submit Review');
+    }
+  }
+});
     // ========================================================================
 
     // INITIALIZATION
