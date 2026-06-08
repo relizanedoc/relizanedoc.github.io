@@ -15,18 +15,6 @@ const FIREBASE_CONFIG = {
 };
 
 // المحولات لتوجيه الطلبات القديمة إلى Supabase
-async function apiGet(action, params = {}) {
-  return await supabaseBackendAdapter(action, params);
-}
-
-async function apiPost(action, payload = {}) {
-  const fbUser = firebase.auth().currentUser;
-  if (fbUser && action !== 'authFirebase') {
-     payload.idToken = await fbUser.getIdToken();
-  }
-  return await supabaseBackendAdapter(action, payload);
-}
-
 // المحرك الرئيسي لمعالجة البيانات (Supabase Backend Adapter)
 async function supabaseBackendAdapter(action, payload) {
   try {
