@@ -380,8 +380,8 @@ async function handleEmailAuth() {
       if (error) throw error;
       
       // ✅ التحقق من حالة التأكيد
-      if (data.user && data.user.confirmed_at) {
-        // الحساب مؤكد فوراً (autoconfirm مفعّل)
+if (data.user) {  // تجاهل confirmed_at
+    // الحساب مؤكد فوراً (autoconfirm مفعّل)
         resetLoginAttempts();
         showToast('تم إنشاء الحساب بنجاح! ' + t('toastAuthSuccess') + name, 'success');
         setTimeout(() => router('user-dashboard'), 500);
