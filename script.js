@@ -969,9 +969,16 @@ function openBooking(doctorId) {
   timeInputHidden.value = '';
   
   // حدث تغيير التاريخ
-  dateInput.onchange = function() {
-    handleDateSelection(this.value, wd);
-  };
+ // ✅ تصحيح حدث تغيير التاريخ
+dateInput.onchange = function() {
+  console.log('📅 تاريخ مختار:', this.value);
+  console.log('🕐 workingDays:', wd);
+  handleDateSelection(this.value, wd);
+};
+
+// أيضاً أضف هذا للتأكد من أن التاريخ لا يمكن أن يكون في الماضي
+const today = new Date().toISOString().split('T')[0];
+dateInput.min = today;
   
   // الانتقال لصفحة الحجز
   router('booking');
@@ -2600,32 +2607,43 @@ async function testSupabaseConnection() {
 // تشغيل الاختبار عند تحميل الصفحة
 window.addEventListener('load', testSupabaseConnection);
 // ✅ دالة جديدة لمعالجة اختيار التاريخ
+// ✅ دالة معالجة اختيار التاريخ (مع تحسينات)
 async function handleDateSelection(selectedDateStr, workingDays) {
+  console.log('🔍 handleDateSelection called with:', { selectedDateStr, workingDays });
+  
   const container = document.getElementById('timeSlotsContainer');
   const timeInput = document.getElementById('apptTimeInput');
   
-  if (container) container.innerHTML = '';
+  if (!container) {
+    console.error('❌ timeSlotsContainer not found');
+    return;
+  }
+  
+  // مسح المحتوى السابق
+  container.innerHTML = '';
   if (timeInput) timeInput.value = '';
   
   if (!selectedDateStr) {
-    if (container) container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="selectDateFirst">${t('selectDateFirst')}</div>`;
+    container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="selectDateFirst">${t('selectDateFirst')}</div>`;
     return;
   }
   
   const selectedDate = new Date(selectedDateStr);
   if (isNaN(selectedDate.getTime())) {
-    if (container) container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="invalidDate">${t('invalidDate')}</div>`;
+    container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="invalidDate">${t('invalidDate')}</div>`;
     return;
   }
   
   const dayNum = selectedDate.getDay();
+  console.log('📅 يوم الأسبوع:', dayNum);
   
   // التحقق من يوم العمل
   let isWorking = true;
   let shiftStart = '08:00';
   let shiftEnd = '16:00';
   
-  if (Object.keys(workingDays).length > 0) {
+  if (workingDays && Object.keys(workingDays).length > 0) {
+    console.log('📋 التحقق من workingDays:', workingDays[dayNum]);
     if (!workingDays[dayNum] || !workingDays[dayNum].active) {
       isWorking = false;
     } else {
@@ -2634,15 +2652,19 @@ async function handleDateSelection(selectedDateStr, workingDays) {
     }
   }
   
+  console.log('⏰ وقت العمل:', shiftStart, 'إلى', shiftEnd);
+  
   if (!isWorking) {
     showToast(t('doctorOff'), 'error');
     document.getElementById('apptDateInput').value = '';
-    if (container) container.innerHTML = `<div class="text-sm text-danger" style="grid-column: 1 / -1; color: var(--danger);" data-i18n="doctorOff">${t('doctorOff')}</div>`;
+    container.innerHTML = `<div class="text-sm text-danger" style="grid-column: 1 / -1; color: var(--danger);" data-i18n="doctorOff">${t('doctorOff')}</div>`;
     return;
   }
   
   // جلب الأوقات المحجوزة من Supabase
   try {
+    console.log('🔌 جلب الأوقات المحجوزة من Supabase...');
+    
     const { data: bookedSlots, error } = await supabaseClient
       .from('appointments')
       .select('appointment_time')
@@ -2650,16 +2672,24 @@ async function handleDateSelection(selectedDateStr, workingDays) {
       .eq('appointment_date', selectedDateStr)
       .neq('status', 'cancelled');
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ خطأ في جلب الأوقات:', error);
+      throw error;
+    }
+    
+    console.log('✅ الأوقات المحجوزة:', bookedSlots);
     
     const bookedTimes = bookedSlots.map(s => s.appointment_time);
     
     // توليد الأوقات المتاحة
     const slots = generateTimeSlots(shiftStart, shiftEnd, 30);
+    console.log('🕐 جميع الأوقات المولدة:', slots);
+    
     const availableSlots = slots.filter(slot => !bookedTimes.includes(slot));
+    console.log('✅ الأوقات المتاحة:', availableSlots);
     
     if (availableSlots.length === 0) {
-      if (container) container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="noSlots">${t('noSlots')}</div>`;
+      container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="noSlots">${t('noSlots')}</div>`;
       return;
     }
     
@@ -2667,8 +2697,9 @@ async function handleDateSelection(selectedDateStr, workingDays) {
     displayTimeSlots(container, availableSlots, timeInput);
     
   } catch (err) {
-    console.error('Error fetching booked slots:', err);
-    showToast(currentLang === 'ar' ? 'خطأ في جلب الأوقات' : 'Error fetching available times', 'error');
+    console.error('❌ خطأ في جلب الأوقات المتاحة:', err);
+    showToast(currentLang === 'ar' ? 'خطأ في جلب الأوقات: ' + err.message : 'Error fetching available times', 'error');
+    container.innerHTML = `<div class="text-sm text-danger">خطأ: ${err.message}</div>`;
   }
 }
 // ✅ توليد الأوقات
