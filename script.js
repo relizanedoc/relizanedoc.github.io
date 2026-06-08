@@ -27,6 +27,45 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const { createClient } = window.supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ✅ الاستماع لتغيير حالة المصادقة (Supabase)
+let isAuthInitialized = false;
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  console.log('🔄 حدث المصادقة:', event);
+  
+  if (event === 'SIGNED_IN' && session) {
+    console.log('✅ تم تسجيل الدخول:', session.user);
+    updateUserUI(session.user);
+  } else if (event === 'SIGNED_OUT') {
+    console.log('❌ تم تسجيل الخروج');
+    updateUserUI(null);
+  } else if (event === 'USER_UPDATED') {
+    if (session) updateUserUI(session.user);
+  } else if (event === 'TOKEN_REFRESHED') {
+    if (session) updateUserUI(session.user);
+  }
+  
+  if (!isAuthInitialized) {
+    const hash = window.location.hash.replace('#', '');
+    const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(hash) ? hash : 'home';
+    router(startView, false);
+    isAuthInitialized = true;
+  }
+});
+
+// ✅ التحقق من الجلسة الحالية عند تحميل الصفحة
+window.addEventListener('load', async () => {
+  console.log('🔍 التحقق من الجلسة الحالية...');
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  
+  if (session) {
+    console.log('✅ جلسة موجودة، تحديث الواجهة');
+    updateUserUI(session.user);
+  } else {
+    console.log('❌ لا توجد جلسة');
+    updateUserUI(null);
+  }
+});
 // دالة مساعدة لتحل محل firebase.auth().currentUser
 async function getCurrentSupabaseUser() {
   const { data: { user } } = await supabaseClient.auth.getUser();
@@ -270,50 +309,59 @@ async function getCurrentUser() {
   };
 }
 
-    function updateUserUI() {
-      const fbUser = firebase.auth().currentUser;
-      const pill = document.getElementById('userPill');
-      const loginBtn = document.getElementById('navLoginBtn');
-      const nameDisplay = document.getElementById('userNameDisplay');
-      
-      if (fbUser) {
-        pill.classList.remove('hidden');
-        loginBtn.classList.add('hidden');
-        const stored = localStorage.getItem('medicalUser');
-        const displayName = stored ? (JSON.parse(stored).Name || fbUser.displayName || fbUser.email) : (fbUser.displayName || fbUser.email);
-        
-        nameDisplay.textContent = displayName;
-        nameDisplay.style.cursor = 'pointer';
-        nameDisplay.style.textDecoration = 'underline';
-        nameDisplay.title = currentLang === 'ar' ? 'الذهاب للوحة التحكم' : 'Go to Dashboard';
-        nameDisplay.onclick = () => router('user-dashboard');
-
-        const dashName = document.getElementById('memberDashName');
-        const dashEmail = document.getElementById('memberDashEmail');
-        const dashAvatar = document.getElementById('memberDashAvatar');
-        
-        if (dashName) dashName.textContent = displayName;
-        if (dashEmail) dashEmail.textContent = fbUser.email;
-        if (dashAvatar) dashAvatar.textContent = displayName.charAt(0).toUpperCase();
-      } else {
-        pill.classList.add('hidden');
-        loginBtn.classList.remove('hidden');
-        localStorage.removeItem('medicalUser');
-      }
+    // ✅ تحديث واجهة المستخدم حسب حالة تسجيل الدخول (Supabase)
+function updateUserUI(user) {
+  console.log('🎨 updateUserUI called with:', user);
+  
+  const pill = document.getElementById('userPill');
+  const loginBtn = document.getElementById('navLoginBtn');
+  const nameDisplay = document.getElementById('userNameDisplay');
+  
+  if (user) {
+    // المستخدم مسجل دخول
+    console.log('✅ عرض واجهة المستخدم المسجل');
+    
+    if (pill) pill.classList.remove('hidden');
+    if (loginBtn) loginBtn.classList.add('hidden');
+    
+    const displayName = user.user_metadata?.name || user.email.split('@')[0];
+    
+    if (nameDisplay) {
+      nameDisplay.textContent = displayName;
+      nameDisplay.style.cursor = 'pointer';
+      nameDisplay.style.textDecoration = 'underline';
+      nameDisplay.title = currentLang === 'ar' ? 'الذهاب للوحة التحكم' : 'Go to Dashboard';
+      nameDisplay.onclick = () => router('user-dashboard');
     }
 
-    let isAuthInitialized = false;
-    firebase.auth().onAuthStateChanged(async (user) => {
-      if (user) await syncUserWithBackend(user);
-      else localStorage.removeItem('medicalUser');
-      updateUserUI();
-      if (!isAuthInitialized) {
-        const hash = window.location.hash.replace('#', '');
-        const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(hash) ? hash : 'home';
-        router(startView, false);
-        isAuthInitialized = true;
-      }
-    });
+    // تحديث لوحة التحكم
+    const dashName = document.getElementById('memberDashName');
+    const dashEmail = document.getElementById('memberDashEmail');
+    const dashAvatar = document.getElementById('memberDashAvatar');
+    
+    if (dashName) dashName.textContent = displayName;
+    if (dashEmail) dashEmail.textContent = user.email;
+    if (dashAvatar) dashAvatar.textContent = displayName.charAt(0).toUpperCase();
+    
+    // حفظ المستخدم في localStorage
+    const userData = {
+      UserID: user.id,
+      Email: user.email,
+      Name: displayName,
+      Provider: user.app_metadata?.provider || 'supabase',
+      Role: 'member'
+    };
+    localStorage.setItem('medicalUser', JSON.stringify(userData));
+    
+  } else {
+    // المستخدم غير مسجل دخول
+    console.log('❌ عرض واجهة الزائر');
+    
+    if (pill) pill.classList.add('hidden');
+    if (loginBtn) loginBtn.classList.remove('hidden');
+    localStorage.removeItem('medicalUser');
+  }
+}
     function getCurrentVisibleView() {
       for (const view of ['home', 'add-doctor', 'booking', 'dashboard', 'login']) {
         const el = document.getElementById('view-' + view);
@@ -321,13 +369,21 @@ async function getCurrentUser() {
       }
       return 'home';
     }
-    async function logoutUser() {
-      await firebase.auth().signOut();
-      localStorage.removeItem('medicalUser');
-      updateUserUI();
-      showToast(t('toastLogout'), 'success');
-      router('home');
-    }
+    // ✅ تسجيل الخروج (Supabase)
+async function logoutUser() {
+  try {
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) throw error;
+    
+    localStorage.removeItem('medicalUser');
+    updateUserUI(null);
+    showToast(t('toastLogout'), 'success');
+    router('home');
+  } catch (err) {
+    console.error('خطأ في تسجيل الخروج:', err);
+    showToast('خطأ في تسجيل الخروج: ' + err.message, 'error');
+  }
+}
     async function apiGet(action, params = {}) {
       const qs = new URLSearchParams({ action, ...params }).toString();
       const res = await fetch(API_URL + '?' + qs);
