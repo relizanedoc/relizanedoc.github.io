@@ -249,16 +249,26 @@ chatBookDetailsBtn: 'عرض التفاصيل والحجز',
       }
     }
 
-    async function getCurrentUser() {
-      const fbUser = firebase.auth().currentUser;
-      if (!fbUser) return null;
-      const stored = localStorage.getItem('medicalUser');
-      let userData = stored ? JSON.parse(stored) : null;
-      if (!userData || userData.Email !== fbUser.email) {
-        userData = await syncUserWithBackend(fbUser);
-      }
-      return userData;
-    }
+    // ✅ الحصول على المستخدم الحالي
+async function getCurrentUser() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  
+  if (!session) {
+    console.log('❌ لا توجد جلسة');
+    return null;
+  }
+  
+  console.log('✅ المستخدم الحالي:', session.user);
+  
+  // إرجاع بيانات متوافقة مع الكود القديم
+  return {
+    UserID: session.user.id,
+    Email: session.user.email,
+    Name: session.user.user_metadata?.name || session.user.email.split('@')[0],
+    Provider: session.user.app_metadata?.provider || 'supabase',
+    Role: 'member'
+  };
+}
 
     function updateUserUI() {
       const fbUser = firebase.auth().currentUser;
@@ -363,45 +373,56 @@ async function handleEmailAuth() {
   setLoading(btn, true);
   
   try {
-    if (isSignUp) {
-      if (!name) { 
-        showToast(t('fullName') + ' required', 'error'); 
-        setLoading(btn, false); 
-        return; 
-      }
-      
-      // ✅ تسجيل حساب جديد في Supabase
-      const { data, error } = await supabaseClient.auth.signUp({ 
-        email: email, 
-        password: password,
-        options: { data: { name: name, display_name: name } }
-      });
-      
-      if (error) throw error;
-      
-      // ✅ التحقق من حالة التأكيد
-if (data.user) {  // تجاهل confirmed_at
-    // الحساب مؤكد فوراً (autoconfirm مفعّل)
-        resetLoginAttempts();
-        showToast('تم إنشاء الحساب بنجاح! ' + t('toastAuthSuccess') + name, 'success');
-        setTimeout(() => router('user-dashboard'), 500);
-      } else {
-        // الحساب يحتاج تأكيد (autoconfirm معطّل)
-        showToast('تم إنشاء الحساب! يرجى التحقق من بريدك الإلكتروني.', 'success');
-      }
-      
+  if (isSignUp) {
+  if (!name) { 
+    showToast(t('fullName') + ' required', 'error'); 
+    setLoading(btn, false); 
+    return; 
+  }
+  
+  // ✅ تسجيل حساب جديد
+  const { data, error } = await supabaseClient.auth.signUp({ 
+    email: email, 
+    password: password,
+    options: { 
+      data: { name: name, display_name: name },
+      emailRedirectTo: window.location.origin
+    }
+  });
+  
+  if (error) throw error;
+  
+  resetLoginAttempts();
+  
+  // ✅ تسجيل الدخول تلقائياً حتى لو لم يؤكد البريد
+  if (data.user) {
+    // محاولة تسجيل الدخول مباشرة
+    const { error: loginError } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+    
+    if (loginError && loginError.message.includes('Email not confirmed')) {
+      // البريد غير مؤكد، لكن نعرض رسالة نجاح فقط
+      showToast('تم إنشاء الحساب! يمكنك تسجيل الدخول الآن.', 'success');
     } else {
-      // ✅ تسجيل دخول بحساب موجود
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-      
-      if (error) throw error;
-      resetLoginAttempts();
-      showToast(t('toastAuthSuccess') + (data.user.user_metadata?.name || email), 'success');
+      showToast('تم إنشاء الحساب بنجاح! ' + t('toastAuthSuccess') + name, 'success');
       setTimeout(() => router('user-dashboard'), 500);
     }
+  }
+  
+} else {
+  // تسجيل دخول
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+  
+  if (error) throw error;
+  resetLoginAttempts();
+  showToast(t('toastAuthSuccess') + (data.user.user_metadata?.name || email), 'success');
+  setTimeout(() => router('user-dashboard'), 500);
+}
   } catch (err) {
     recordFailedAttempt();
     let msg = err.message;
