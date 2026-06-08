@@ -97,7 +97,9 @@ async function supabaseBackendAdapter(action, payload) {
       default:
         return { success: false, error: 'الإجراء غير متوفر' };
     }
-  } catch (err) { return { success: false, error: err.message }; }
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 }
       case 'addDoctor':
         const newDocId = 'DOC-' + Date.now();
