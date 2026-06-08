@@ -1,3 +1,11 @@
+// 1. ضع الرابط والمفتاح العام هنا
+const supabaseUrl = 'https://igcvhpzpvwkcwgosjwun.supabase.co/rest/v1/';
+const supabaseKey = 'sb_publishable_nKHnqnilLeWhVGqIZ0jBmg_jBjRbeG2';
+
+// 2. إنشاء كائن الاتصال
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+
 // دالة لتنفيذ الكود بمجرد تحميل الصفحة
 window.addEventListener('load', function() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -2432,3 +2440,37 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') handleSend();
     });
 });
+/**
+ * دالة غير متزامنة لجلب بيانات الدليل من Supabase
+ */
+async function fetchDirectoryData() {
+  try {
+    // جلب البيانات من جدول directory مع جلب أسماء التخصص والبلدية المرتبطة
+    const { data, error } = await supabase
+      .from('directory')
+      .select(`
+        id,
+        name,
+        phone,
+        address,
+        specialties ( name ),
+        municipalities ( name )
+      `)
+      .eq('is_active', true); // فلترة: جلب الحسابات المفعلة فقط
+
+    // إذا حدث خطأ من الخادم، قم برميه لالتقاطه
+    if (error) throw error;
+
+    // طباعة البيانات في الكونسول للتأكد من نجاح الاتصال
+    console.log('بيانات الدليل المستلمة:', data);
+    
+    // ملاحظة: هنا سنقوم لاحقاً بكتابة كود بناء الواجهة (البطاقات أو الجداول) 
+    // renderDataToHTML(data);
+
+  } catch (error) {
+    console.error('حدث خطأ أثناء جلب البيانات:', error.message);
+  }
+}
+
+// استدعاء الدالة بمجرد تحميل الصفحة
+fetchDirectoryData();
