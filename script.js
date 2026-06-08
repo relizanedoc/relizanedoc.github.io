@@ -1007,89 +1007,119 @@ dateInput.min = today;
 
   function closeConfirmDialog() { document.getElementById('confirmDialog').classList.add('hidden'); }
 
-  async function submitBooking() {
-    closeConfirmDialog();
-    const btn = document.getElementById('bookingBtn');
-    setLoading(btn, true);
-    const form = document.getElementById('bookingForm');
-    const data = Object.fromEntries(new FormData(form));
-    const currentUser = await getCurrentUser();
-          if (currentUser) { data.userEmail = currentUser.Email; }
-      // -------------------------------------------------
-      
-
-      try {
-
-        const result = await apiPost('bookAppointment', data);
-
-        if (!result.success) throw new Error(result.error);
-
-        
-
-        // مسح الفورم
-
-        form.reset();
-
-        
-
-        // تصفير حاوية الأوقات لكي لا تبقى الأزرار ظاهرة للمريض بعد نجاح الحجز
-
-        const timeContainer = document.getElementById('timeSlotsContainer');
-
-        if (timeContainer) timeContainer.innerHTML = '<div class="text-sm text-gray" style="grid-column: 1 / -1;">يرجى تحديد تاريخ الموعد أولاً لعرض الأوقات المتاحة...</div>';
-
-        
-
-        /// --- بناء التذكرة الإلكترونية (E-Ticket) ---
-        const bId = result.data.BookingID;
-        const bName = data.PatientName; // الاسم الذي أدخله المريض
-        const bDate = data.AppointmentDate;
-        const bTime = data.AppointmentTime;
-        const bDoctor = currentDoctor ? currentDoctor.FirstName + ' ' + currentDoctor.LastName : '';
-        const bSpec = currentDoctor ? t(currentDoctor.Specialty) : '';
-        
-        // إنشاء رابط الـ QR Code (توليد مباشر بدون مكتبات)
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${bId}&color=0ea5e9`;
-        
-        const ticketHtml = `
-          <div class="e-ticket">
-            <div class="e-ticket-top">
-              <div style="font-size: 2rem; margin-bottom: 0.25rem;">✅</div>
-              <h3 style="margin: 0; font-size: 1.15rem; color: white;">تم تأكيد الحجز</h3>
-              <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">${currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(bDoctor)}</div>
-            </div>
-            <div class="e-ticket-divider"></div>
-            <div class="e-ticket-bottom">
-              <div class="e-ticket-info">
-                <span class="e-ticket-label">${currentLang === 'ar' ? 'رقم الحجز' : 'Booking ID'}</span>
-                <span class="e-ticket-value" style="color: var(--primary); letter-spacing: 1px;">${bId}</span>
-              </div>
-              <div class="e-ticket-info">
-                <span class="e-ticket-label">${currentLang === 'ar' ? 'المريض' : 'Patient'}</span>
-                <span class="e-ticket-value">${escapeHtml(bName)}</span>
-              </div>
-              <div class="e-ticket-info">
-                <span class="e-ticket-label">${currentLang === 'ar' ? 'التاريخ والوقت' : 'Date & Time'}</span>
-                <span class="e-ticket-value" dir="ltr">${bDate} | ${bTime}</span>
-              </div>
-              <div class="e-ticket-qr">
-                <img src="${qrUrl}" alt="QR Code" />
-              </div>
-            </div>
-          </div>
-        `;
-        
-        // حقن التذكرة في الواجهة وإظهارها
-        document.getElementById('eTicketContainer').innerHTML = ticketHtml;
-        document.getElementById('successDialog').classList.remove('hidden');
-        
-      } catch (err) {
-        showToast(t('toastBookingError') + err.message, 'error'); 
-      } finally { 
-        setLoading(btn, false); 
-      }
-
+ // ✅ دالة حفظ الحجز في Supabase
+async function submitBooking() {
+  closeConfirmDialog();
+  
+  const btn = document.getElementById('bookingBtn');
+  setLoading(btn, true);
+  
+  const form = document.getElementById('bookingForm');
+  const data = Object.fromEntries(new FormData(form));
+  
+  // التحقق من البيانات
+  if (!data.PatientName || !data.PatientPhone || !data.AppointmentDate || !data.AppointmentTime) {
+    showToast(currentLang === 'ar' ? 'يرجى ملء جميع الحقول' : 'Please fill all fields', 'error');
+    setLoading(btn, false);
+    return;
+  }
+  
+  try {
+    // الحصول على المستخدم الحالي (إن وجد)
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    
+    // ✅ حفظ الحجز في Supabase
+    const { data: booking, error } = await supabaseClient
+      .from('appointments')
+      .insert([{
+        doctor_id: data.DoctorID,
+        patient_name: data.PatientName.trim(),
+        patient_phone: data.PatientPhone.trim(),
+        appointment_date: data.AppointmentDate,
+        appointment_time: data.AppointmentTime,
+        status: 'pending',
+        user_id: user ? user.id : null
+      }])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('❌ خطأ في الحجز:', error);
+      throw new Error(error.message);
     }
+    
+    console.log('✅ تم الحجز بنجاح:', booking);
+    
+    // مسح النموذج
+    form.reset();
+    
+    // تصفير حاوية الأوقات
+    const timeContainer = document.getElementById('timeSlotsContainer');
+    if (timeContainer) {
+      timeContainer.innerHTML = '<div class="text-sm text-gray" style="grid-column: 1 / -1;">يرجى تحديد تاريخ الموعد أولاً لعرض الأوقات المتاحة...</div>';
+    }
+    
+    // --- بناء التذكرة الإلكترونية (E-Ticket) ---
+    const bId = booking.id;
+    const bName = data.PatientName;
+    const bDate = data.AppointmentDate;
+    const bTime = data.AppointmentTime;
+    const bDoctor = currentDoctor ? currentDoctor.first_name + ' ' + currentDoctor.last_name : '';
+    
+    // إنشاء رابط الـ QR Code
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${bId}&color=0ea5e9`;
+    
+    const ticketHtml = `
+      <div class="e-ticket">
+        <div class="e-ticket-top">
+          <div style="font-size: 2rem; margin-bottom: 0.25rem;">✅</div>
+          <h3 style="margin: 0; font-size: 1.15rem; color: white;">
+            ${currentLang === 'ar' ? 'تم تأكيد الحجز' : 'Booking Confirmed'}
+          </h3>
+          <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">
+            ${currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(bDoctor)}
+          </div>
+        </div>
+        <div class="e-ticket-divider"></div>
+        <div class="e-ticket-bottom">
+          <div class="e-ticket-info">
+            <span class="e-ticket-label">
+              ${currentLang === 'ar' ? 'رقم الحجز' : 'Booking ID'}
+            </span>
+            <span class="e-ticket-value" style="color: var(--primary); letter-spacing: 1px; font-size: 0.85rem;">
+              ${bId.substring(0, 8)}...
+            </span>
+          </div>
+          <div class="e-ticket-info">
+            <span class="e-ticket-label">
+              ${currentLang === 'ar' ? 'المريض' : 'Patient'}
+            </span>
+            <span class="e-ticket-value">${escapeHtml(bName)}</span>
+          </div>
+          <div class="e-ticket-info">
+            <span class="e-ticket-label">
+              ${currentLang === 'ar' ? 'التاريخ والوقت' : 'Date & Time'}
+            </span>
+            <span class="e-ticket-value" dir="ltr">${bDate} | ${bTime}</span>
+          </div>
+          <div class="e-ticket-qr">
+            <img src="${qrUrl}" alt="QR Code" />
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // إظهار التذكرة
+    document.getElementById('eTicketContainer').innerHTML = ticketHtml;
+    document.getElementById('successDialog').classList.remove('hidden');
+    
+  } catch (err) {
+    console.error('❌ خطأ في الحجز:', err);
+    showToast(t('toastBookingError') + err.message, 'error');
+  } finally {
+    setLoading(btn, false);
+  }
+}
 
 
 
