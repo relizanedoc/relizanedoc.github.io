@@ -12,8 +12,8 @@ window.addEventListener('load', function() {
     }
 });
 // ✅ ضع هذا بدلاً من كود Firebase:
-const SUPABASE_URL = 'ضع_هنا_رابط_Supabase_URL';
-const SUPABASE_ANON_KEY = 'ضع_هنا_مفتاح_anon_public';
+const SUPABASE_URL = 'https://iirjtmobphgmkgwkwumc.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'sb_publishable_081qVP7bk5hOmngDq2Wmzg_vvb-OrZt';
 
 // تهيئة Supabase (بما أنك تستخدم CDN في HTML، سنستخدم window.supabase)
 const { createClient } = window.supabase;
