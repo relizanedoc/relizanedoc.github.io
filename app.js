@@ -1,105 +1,88 @@
-// ========================================================================
-// CONFIGURATION & INITIALIZATION
-// ========================================================================
-
-// 1. SUPABASE
-const supabaseUrl = 'https://igcvhpzpvwkcwgosjwun.supabase.co/rest/v1/';
+// 1. CONFIGURATION
+const supabaseUrl = 'https://igcvhpzpvwkcwgosjwun.supabase.co';
 const supabaseKey = 'sb_publishable_nKHnqnilLeWhVGqIZ0jBmg_jBjRbeG2';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// 2. FIREBASE & RECAPTCHA
-const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCvWB0huHg4Wei98dAkQAvRANmB5Xs_GWI",
-  authDomain: "relizane-doc-4dbf2.firebaseapp.com",
-  projectId: "relizane-doc-4dbf2",
-  appId: "1:284439573850:web:524c3a32d2e6d87dde6f63"
-};
-
-firebase.initializeApp(FIREBASE_CONFIG);
-firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
-// ========================================================================
-// 3. ADAPTER (بديل Google Apps Script)
-// ========================================================================
+// 2. ADAPTERS (تأكد من عدم وجود apiGet أو apiPost أخرى في ملفك)
 async function apiGet(action, params = {}) { return await supabaseBackendAdapter(action, params); }
 async function apiPost(action, payload = {}) {
-  const fbUser = firebase.auth().currentUser;
-  if (fbUser && action !== 'authFirebase') payload.idToken = await fbUser.getIdToken();
-  return await supabaseBackendAdapter(action, payload);
+    const fbUser = firebase.auth().currentUser;
+    if (fbUser && action !== 'authFirebase') payload.idToken = await fbUser.getIdToken();
+    return await supabaseBackendAdapter(action, payload);
 }
 
+// 3. MAIN ADAPTER FUNCTION
 async function supabaseBackendAdapter(action, payload) {
-  try {
-    switch (action) {
-      case 'getDoctors':
-        const { data: doctors, error: errDocs } = await supabase.from('directory').select('*').eq('is_active', true);
-        if (errDocs) throw errDocs;
-        return { success: true, data: doctors.map(doc => ({ DoctorID: doc.doctor_id, FirstName: doc.first_name, LastName: doc.last_name, Specialty: doc.specialty, Municipality: doc.municipality, Phone: doc.phone, ExactLocation: doc.exact_location, ExtraInfo: doc.extra_info, WorkingDays: doc.working_days || '{}', BookingEnabled: doc.booking_enabled ? 'TRUE' : 'FALSE' })) };
+    try {
+        switch (action) {
+            case 'getDoctors':
+                const { data: doctors, error: errDocs } = await supabase.from('directory').select('*').eq('is_active', true);
+                if (errDocs) throw errDocs;
+                return { success: true, data: doctors.map(doc => ({ DoctorID: doc.doctor_id, FirstName: doc.first_name, LastName: doc.last_name, Specialty: doc.specialty, Municipality: doc.municipality, Phone: doc.phone, ExactLocation: doc.exact_location, ExtraInfo: doc.extra_info, WorkingDays: doc.working_days || '{}', BookingEnabled: doc.booking_enabled ? 'TRUE' : 'FALSE' })) };
 
-      case 'addDoctor':
-        const newDocId = 'DOC-' + Date.now();
-        const { error: errAdd } = await supabase.from('directory').insert([{ doctor_id: newDocId, first_name: payload.FirstName, last_name: payload.LastName, specialty: payload.Specialty, municipality: payload.Municipality, phone: payload.Phone, exact_location: payload.ExactLocation, extra_info: payload.ExtraInfo || '', password: '0000', booking_enabled: true }]);
-        if (errAdd) throw errAdd;
-        return { success: true, data: { DoctorID: newDocId } };
+            case 'addDoctor':
+                const newDocId = 'DOC-' + Date.now();
+                const { error: errAdd } = await supabase.from('directory').insert([{ doctor_id: newDocId, first_name: payload.FirstName, last_name: payload.LastName, specialty: payload.Specialty, municipality: payload.Municipality, phone: payload.Phone, exact_location: payload.ExactLocation, extra_info: payload.ExtraInfo || '', password: '0000', booking_enabled: true }]);
+                if (errAdd) throw errAdd;
+                return { success: true, data: { DoctorID: newDocId } };
 
-      case 'bookAppointment':
-        const { data: booked, error: errBook } = await supabase.from('bookings').insert([{ doctor_id: payload.DoctorID, patient_name: payload.PatientName, patient_phone: payload.PatientPhone, user_email: payload.userEmail || null, appointment_date: payload.AppointmentDate, appointment_time: payload.AppointmentTime, status: 'قيد الانتظار' }]).select('booking_id').single();
-        if (errBook) throw errBook;
-        return { success: true, data: { BookingID: booked.booking_id } };
+            case 'bookAppointment':
+                const { data: booked, error: errBook } = await supabase.from('bookings').insert([{ doctor_id: payload.DoctorID, patient_name: payload.PatientName, patient_phone: payload.PatientPhone, user_email: payload.userEmail || null, appointment_date: payload.AppointmentDate, appointment_time: payload.AppointmentTime, status: 'قيد الانتظار' }]).select('booking_id').single();
+                if (errBook) throw errBook;
+                return { success: true, data: { BookingID: booked.booking_id } };
 
-      case 'doctorLogin':
-        const { data: loginData, error: errLogin } = await supabase.from('directory').select('*').eq('doctor_id', payload.doctorId).eq('phone', payload.phone).single();
-        if (errLogin || !loginData || loginData.password !== payload.password) throw new Error('بيانات الدخول غير صحيحة');
-        const { data: appts } = await supabase.from('bookings').select('*').eq('doctor_id', payload.doctorId).order('appointment_date', { ascending: true });
-        return { success: true, data: { sessionToken: 'token_' + Date.now(), doctorName: loginData.first_name + ' ' + loginData.last_name, workingDays: loginData.working_days, bookingEnabled: loginData.booking_enabled, appointments: (appts || []).map(a => ({ BookingID: a.booking_id, PatientName: a.patient_name, PatientPhone: a.patient_phone, AppointmentDate: a.appointment_date, AppointmentTime: a.appointment_time, Status: a.status, UserEmail: a.user_email })) } };
+            case 'doctorLogin':
+                const { data: loginData, error: errLogin } = await supabase.from('directory').select('*').eq('doctor_id', payload.doctorId).eq('phone', payload.phone).single();
+                if (errLogin || !loginData || loginData.password !== payload.password) throw new Error('بيانات الدخول غير صحيحة');
+                const { data: appts } = await supabase.from('bookings').select('*').eq('doctor_id', payload.doctorId).order('appointment_date', { ascending: true });
+                return { success: true, data: { sessionToken: 'token_' + Date.now(), doctorName: loginData.first_name + ' ' + loginData.last_name, workingDays: loginData.working_days, bookingEnabled: loginData.booking_enabled, appointments: (appts || []).map(a => ({ BookingID: a.booking_id, PatientName: a.patient_name, PatientPhone: a.patient_phone, AppointmentDate: a.appointment_date, AppointmentTime: a.appointment_time, Status: a.status, UserEmail: a.user_email })) } };
 
-      case 'updateBookingStatus':
-        const { error: errUpdate } = await supabase.from('bookings').update({ status: payload.newStatus }).eq('booking_id', payload.bookingId);
-        if (errUpdate) throw errUpdate;
-        return { success: true };
+            case 'updateBookingStatus':
+                const { error: errUpdate } = await supabase.from('bookings').update({ status: payload.newStatus }).eq('booking_id', payload.bookingId);
+                if (errUpdate) throw errUpdate;
+                return { success: true };
 
-      case 'toggleBooking':
-        const { error: errToggle } = await supabase.from('directory').update({ booking_enabled: payload.status }).eq('doctor_id', payload.doctorId);
-        if (errToggle) throw errToggle;
-        return { success: true };
+            case 'toggleBooking':
+                const { error: errToggle } = await supabase.from('directory').update({ booking_enabled: payload.status }).eq('doctor_id', payload.doctorId);
+                if (errToggle) throw errToggle;
+                return { success: true };
 
-      case 'updateDoctorHours':
-        const { error: errHours } = await supabase.from('directory').update({ working_days: payload.workingDays }).eq('doctor_id', payload.doctorId);
-        if (errHours) throw errHours;
-        return { success: true };
+            case 'updateDoctorHours':
+                const { error: errHours } = await supabase.from('directory').update({ working_days: payload.workingDays }).eq('doctor_id', payload.doctorId);
+                if (errHours) throw errHours;
+                return { success: true };
 
-      case 'getBookingStatus':
-        const { data: trackData, error: errTrack } = await supabase.from('bookings').select('booking_id, patient_name, appointment_date, appointment_time, status').eq('booking_id', payload.bookingId).eq('patient_phone', payload.phone).single();
-        if (errTrack || !trackData) throw new Error('لا يوجد حجز مطابق لهذه البيانات');
-        return { success: true, data: { bookingId: trackData.booking_id, patientName: trackData.patient_name, date: trackData.appointment_date, time: trackData.appointment_time, status: trackData.status } };
+            case 'getBookingStatus':
+                const { data: trackData, error: errTrack } = await supabase.from('bookings').select('booking_id, patient_name, appointment_date, appointment_time, status').eq('booking_id', payload.bookingId).eq('patient_phone', payload.phone).single();
+                if (errTrack || !trackData) throw new Error('لا يوجد حجز مطابق لهذه البيانات');
+                return { success: true, data: { bookingId: trackData.booking_id, patientName: trackData.patient_name, date: trackData.appointment_date, time: trackData.appointment_time, status: trackData.status } };
 
-      case 'getReviews':
-        const { data: revData, error: errRev } = await supabase.from('reviews').select('*').eq('doctor_id', payload.doctorId).order('created_at', { ascending: false });
-        if (errRev) throw errRev;
-        return { success: true, data: (revData || []).map(r => ({ reviewId: r.review_id, patientName: r.patient_name, rating: r.rating, comment: r.comment, date: new Date(r.created_at).toLocaleDateString(), isOwner: (payload.userEmail && r.user_email === payload.userEmail) })) };
+            case 'getReviews':
+                const { data: revData, error: errRev } = await supabase.from('reviews').select('*').eq('doctor_id', payload.doctorId).order('created_at', { ascending: false });
+                if (errRev) throw errRev;
+                return { success: true, data: (revData || []).map(r => ({ reviewId: r.review_id, patientName: r.patient_name, rating: r.rating, comment: r.comment, date: new Date(r.created_at).toLocaleDateString(), isOwner: (payload.userEmail && r.user_email === payload.userEmail) })) };
 
-      case 'addReview':
-        const { error: errAddRev } = await supabase.from('reviews').insert([{ doctor_id: payload.doctorId, patient_name: payload.patientName, user_email: payload.userEmail || 'anonymous', rating: payload.rating, comment: payload.comment }]);
-        if (errAddRev) throw errAddRev;
-        return { success: true };
+            case 'addReview':
+                const { error: errAddRev } = await supabase.from('reviews').insert([{ doctor_id: payload.doctorId, patient_name: payload.patientName, user_email: payload.userEmail || 'anonymous', rating: payload.rating, comment: payload.comment }]);
+                if (errAddRev) throw errAddRev;
+                return { success: true };
 
-      case 'deleteReview':
-        const { error: errDelRev } = await supabase.from('reviews').delete().eq('review_id', payload.reviewId);
-        if (errDelRev) throw errDelRev;
-        return { success: true };
+            case 'deleteReview':
+                const { error: errDelRev } = await supabase.from('reviews').delete().eq('review_id', payload.reviewId);
+                if (errDelRev) throw errDelRev;
+                return { success: true };
 
-      case 'getUserBookings':
-        const { data: uBookings, error: errUBook } = await supabase.from('bookings').select('booking_id, doctor_id, patient_name, appointment_date, appointment_time, status, directory(first_name, last_name)').eq('user_email', payload.userEmail || payload.idToken);
-        if (errUBook) throw errUBook;
-        return { success: true, data: (uBookings || []).map(b => ({ bookingId: b.booking_id, patientName: b.patient_name, date: b.appointment_date, time: b.appointment_time, status: b.status, doctorName: b.directory ? (b.directory.first_name + ' ' + b.directory.last_name) : 'طبيب' })) };
+            case 'getUserBookings':
+                const { data: uBookings, error: errUBook } = await supabase.from('bookings').select('booking_id, doctor_id, patient_name, appointment_date, appointment_time, status, directory(first_name, last_name)').eq('user_email', payload.userEmail || payload.idToken);
+                if (errUBook) throw errUBook;
+                return { success: true, data: (uBookings || []).map(b => ({ bookingId: b.booking_id, patientName: b.patient_name, date: b.appointment_date, time: b.appointment_time, status: b.status, doctorName: b.directory ? (b.directory.first_name + ' ' + b.directory.last_name) : 'طبيب' })) };
 
-      default:
-        return { success: false, error: 'الإجراء غير متوفر' };
+            default:
+                return { success: false, error: 'Action not found' };
+        }
+    } catch (err) {
+        return { success: false, error: err.message };
     }
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
 }
       case 'addDoctor':
         const newDocId = 'DOC-' + Date.now();
