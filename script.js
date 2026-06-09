@@ -1505,7 +1505,34 @@ function renderDashboardUI(data, doctorId) {
   }).join('');
 }
 // 2. دالة تسجيل الدخول اليدوي المحدثة
+// ✅ دالة جلب وتجهيز بيانات لوحة تحكم الطبيب
+async function fillDashboardData(doctor) {
+    try {
+        let fullDoctor = doctor;
+        // جلب البيانات الكاملة إذا كانت ناقصة
+        if (!doctor.working_days || doctor.booking_enabled === undefined) {
+            const { data, error } = await supabaseClient.from('doctors').select('*').eq('id', doctor.id).single();
+            if (error) throw error;
+            fullDoctor = data;
+        }
 
+        // تجهيز البيانات لتناسب دالة renderDashboardUI
+        const dashboardData = {
+            doctorName: `${fullDoctor.first_name} ${fullDoctor.last_name}`,
+            workingDays: typeof fullDoctor.working_days === 'string' ? fullDoctor.working_days : JSON.stringify(fullDoctor.working_days || {}),
+            bookingEnabled: fullDoctor.booking_enabled,
+            appointments: []
+        };
+
+        // رسم واجهة لوحة التحكم
+        renderDashboardUI(dashboardData, fullDoctor.id);
+        // تحميل المواعيد
+        await loadDoctorAppointments(fullDoctor.id);
+    } catch (err) {
+        console.error('Error filling dashboard data:', err);
+        showToast('خطأ في تحميل بيانات لوحة التحكم: ' + err.message, 'error');
+    }
+}
 // ✅ تسجيل دخول الطبيب (هاتف + كلمة مرور فقط)
 async function handleDashboardLogin(e) {
   if (e && e.preventDefault) e.preventDefault();
@@ -1880,13 +1907,14 @@ async function loadUserBookings() {
       if (viewName === 'home') loadDoctors();
       if (viewName === 'user-dashboard') loadUserBookings();
 
-      // إخفاء اسم العضو من الشريط العلوي إذا كنا داخل لوحة الطبيب لمنع التضارب البصري
-      const pill = document.getElementById('userPill');
-      if (viewName === 'dashboard') {
-          if(pill) pill.classList.add('hidden');
-      } else {
-          updateUserUI(); // إعادة إظهار الاسم في باقي الصفحات إذا كان مسجل الدخول
-      }
+    // إخفاء اسم العضو من الشريط العلوي إذا كنا داخل لوحة الطبيب لمنع التضارب البصري
+const pill = document.getElementById('userPill');
+if (viewName === 'dashboard') {
+    if(pill) pill.classList.add('hidden');
+} else {
+    // ✅ الإصلاح: جلب المستخدم الحالي ثم تحديث الواجهة
+    getCurrentUser().then(user => updateUserUI(user)); 
+}
     }
   function setLang(lang) {
       currentLang = lang;
@@ -3025,4 +3053,39 @@ async function loadDoctorAppointments(doctorId) {
     console.error('Error loading appointments:', err);
     container.innerHTML = '<div style="text-align:center; color: var(--danger); padding: 1rem;">خطأ في التحميل</div>';
   }
+}
+// ✅ دالة حفظ أوقات العمل في Supabase
+window.saveWorkingHours = async function() {
+    const sessionStr = localStorage.getItem('doctorSession');
+    if (!sessionStr) { showToast('يرجى تسجيل الدخول', 'error'); return; }
+    const session = JSON.parse(sessionStr);
+
+    const workingDays = {};
+    for (let i = 0; i <= 6; i++) {
+        const active = document.getElementById(`day_active_${i}`).checked;
+        const start = document.getElementById(`day_start_${i}`).value;
+        const end = document.getElementById(`day_end_${i}`).value;
+        workingDays[i] = { active, start, end };
+    }
+
+    const btn = document.getElementById('saveHoursBtn');
+    setLoading(btn, true);
+
+    try {
+        const { error } = await supabaseClient
+            .from('doctors')
+            .update({ working_days: workingDays })
+            .eq('id', session.doctorId);
+
+        if (error) throw error;
+        showToast(currentLang === 'ar' ? 'تم حفظ أوقات العمل بنجاح' : 'Working hours saved', 'success');
+        
+        // تحديث البيانات في الذاكرة
+        const docIndex = allDoctors.findIndex(d => d.id === session.doctorId);
+        if (docIndex > -1) allDoctors[docIndex].working_days = workingDays;
+    } catch (err) {
+        showToast('خطأ في حفظ الأوقات: ' + err.message, 'error');
+    } finally {
+        setLoading(btn, false, currentLang === 'ar' ? 'حفظ الأوقات' : 'Save Hours');
+    }
 }
