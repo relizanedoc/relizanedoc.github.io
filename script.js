@@ -11,52 +11,68 @@ window.addEventListener('load', function() {
         openDoctorModal(doctorId); 
     }
 });
-// ==========================================
-// 1. تهيئة Supabase (الأساس)
-// ==========================================
+// 1. تهيئة Firebase (مؤقت - لا تحذفه الآن)
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCvWB0huHg4Wei98dAkQAvRANmB5Xs_GWI",
+  authDomain: "relizane-doc-4dbf2.firebaseapp.com",
+  projectId: "relizane-doc-4dbf2",
+  appId: "1:284439573850:web:9edd0f408e68a511de6f63"
+};
+
+firebase.initializeApp(FIREBASE_CONFIG);
+
+// 2. تهيئة Supabase (جديد)
 const SUPABASE_URL = 'https://iirjtmobphgmkgwkwumc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpcmp0bW9icGhnbWtnd2t3dW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA2NjYsImV4cCI6MjA5NjUxNjY2Nn0.Yfa0oEwp_id9tHpSb3h0jf__B4drqXsM-TVs4VTTmp4';
+
 const { createClient } = window.supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
-
-// ==========================================
-// 2. الاستماع لتغيير حالة المصادقة (Supabase)
-// ==========================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbxuQvatnWUMoMMSA6QTsbpxhO6r3Qh54yoj8Zrkor_2Icg3n3AVP7_2ajh0NvEPMlTgRw/exec';
+// ✅ الاستماع لتغيير حالة المصادقة (Supabase)
 let isAuthInitialized = false;
-supabaseClient.auth.onAuthStateChange((event, session) => {
-    console.log('🔄 حدث المصادقة:', event);
-    if (event === 'SIGNED_IN' && session) {
-        console.log('✅ تم تسجيل الدخول:', session.user);
-        updateUserUI(session.user);
-    } else if (event === 'SIGNED_OUT') {
-        console.log('❌ تم تسجيل الخروج');
-        updateUserUI(null);
-    } else if (event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-        if (session) updateUserUI(session.user);
-    }
 
-    if (!isAuthInitialized) {
-        const hash = window.location.hash.replace('#', '');
-        const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(hash) ? hash : 'home';
-        router(startView, false);
-        isAuthInitialized = true;
-    }
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  console.log('🔄 حدث المصادقة:', event);
+
+  if (event === 'SIGNED_IN' && session) {
+    console.log('✅ تم تسجيل الدخول:', session.user);
+    updateUserUI(session.user);
+  } else if (event === 'SIGNED_OUT') {
+    console.log('❌ تم تسجيل الخروج');
+    updateUserUI(null);
+  } else if (event === 'USER_UPDATED') {
+    if (session) updateUserUI(session.user);
+  } else if (event === 'TOKEN_REFRESHED') {
+    if (session) updateUserUI(session.user);
+  }
+
+  if (!isAuthInitialized) {
+    const hash = window.location.hash.replace('#', '');
+    const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(hash) ? hash : 'home';
+    router(startView, false);
+    isAuthInitialized = true;
+  }
 });
 
 // ✅ التحقق من الجلسة الحالية عند تحميل الصفحة
 window.addEventListener('load', async () => {
-    console.log('🔍 التحقق من الجلسة الحالية...');
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) {
-        console.log('✅ جلسة موجودة، تحديث الواجهة');
-        updateUserUI(session.user);
-    } else {
-        console.log('❌ لا توجد جلسة');
-        updateUserUI(null);
-    }
+  console.log('🔍 التحقق من الجلسة الحالية...');
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if (session) {
+    console.log('✅ جلسة موجودة، تحديث الواجهة');
+    updateUserUI(session.user);
+  } else {
+    console.log('❌ لا توجد جلسة');
+    updateUserUI(null);
+  }
 });
+// دالة مساعدة لتحل محل firebase.auth().currentUser
+async function getCurrentSupabaseUser() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  return user;
+}
     const i18n = {
       en: {
         memberDashboardTitle: 'Member Dashboard', trackPhoneLabel: 'Phone Number used for booking',
@@ -258,7 +274,22 @@ chatBookDetailsBtn: 'عرض التفاصيل والحجز',
 
     function resetLoginAttempts() { localStorage.removeItem(ATTEMPTS_KEY); localStorage.removeItem(LOCKOUT_KEY); }
 
-    
+    async function syncUserWithBackend(firebaseUser) {
+      if (!firebaseUser) return null;
+      try {
+        const idToken = await firebaseUser.getIdToken();
+        const result = await apiPost('authFirebase', { idToken, provider: firebaseUser.providerData[0]?.providerId || 'firebase' });
+        if (result.success) {
+          const userData = result.data;
+          localStorage.setItem('medicalUser', JSON.stringify(userData));
+          return userData;
+        } else throw new Error(result.error);
+      } catch (err) {
+        console.error('Sync user failed:', err);
+        return null;
+      }
+    }
+
     // ✅ الحصول على المستخدم الحالي
 async function getCurrentUser() {
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -355,78 +386,21 @@ async function logoutUser() {
     showToast('خطأ في تسجيل الخروج: ' + err.message, 'error');
   }
 }
-    // ========================================================================
-// تحديث ميزة تتبع الحجز لتعمل مع Supabase مباشرة
-// ========================================================================
-// === تتبع الحجز (محدث لـ Supabase) ===
-const trackForm = document.getElementById('trackBookingForm');
-if (trackForm) {
-    trackForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('trackBtn');
-        const bookingIdInput = document.getElementById('trackBookingId').value.trim();
-        const phoneStr = document.getElementById('trackPhone').value.trim();
-        const resultDiv = document.getElementById('trackResult');
-        
-        setLoading(btn, true);
-        resultDiv.classList.add('hidden');
+    async function apiGet(action, params = {}) {
+      const qs = new URLSearchParams({ action, ...params }).toString();
+      const res = await fetch(API_URL + '?' + qs);
+      return res.json();
+    }
 
-        try {
-            const { data, error } = await supabaseClient
-                .from('appointments')
-                .select(`id, patient_name, appointment_date, appointment_time, status, doctors (first_name, last_name)`)
-                .ilike('id', `%${bookingIdInput}%`)
-                .eq('patient_phone', phoneStr)
-                .single();
-
-            if (error || !data) {
-                throw new Error(currentLang === 'ar' ? 'لم يتم العثور على الحجز. تأكد من رقم الحجز ورقم الهاتف.' : 'Booking not found.');
-            }
-
-            let statusStyle = 'background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1;';
-            let displayStatus = data.status === 'pending' ? (currentLang === 'ar' ? 'قيد الانتظار' : 'Pending') : 
-                                data.status === 'confirmed' ? (currentLang === 'ar' ? 'مؤكد' : 'Confirmed') : 
-                                (currentLang === 'ar' ? 'ملغى' : 'Cancelled');
-
-            if (data.status === 'confirmed') statusStyle = 'background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;';
-            else if (data.status === 'cancelled') statusStyle = 'background: #fef2f2; color: #ef4444; border: 1px solid #fecaca;';
-
-            const docName = data.doctors ? `${data.doctors.first_name} ${data.doctors.last_name}` : (currentLang === 'ar' ? 'غير محدد' : 'N/A');
-            const shortId = data.id.substring(0, 8).toUpperCase();
-
-            resultDiv.innerHTML = `
-                <h4 class="font-bold mb-3" style="color: var(--primary);">${currentLang === 'ar' ? 'تفاصيل الحجز:' : 'Booking Details:'}</h4>
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
-                    <span style="color: var(--text-secondary);">${currentLang === 'ar' ? 'رقم الحجز:' : 'Booking ID:'}</span> 
-                    <strong style="font-family: monospace; letter-spacing: 1px;">${shortId}...</strong>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
-                    <span style="color: var(--text-secondary);">${currentLang === 'ar' ? 'المريض:' : 'Patient Name:'}</span> 
-                    <strong>${escapeHtml(data.patient_name)}</strong>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
-                    <span style="color: var(--text-secondary);">${currentLang === 'ar' ? 'الطبيب:' : 'Doctor:'}</span> 
-                    <strong>${currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(docName)}</strong>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:1rem; font-size: 0.95rem;">
-                    <span style="color: var(--text-secondary);">${currentLang === 'ar' ? 'التاريخ والوقت:' : 'Date & Time:'}</span> 
-                    <strong dir="ltr">${escapeHtml(data.appointment_date)} | ${escapeHtml(data.appointment_time)}</strong>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem;">
-                    <span style="font-weight: bold;">${currentLang === 'ar' ? 'الحالة الحالية:' : 'Current Status:'}</span>
-                    <span class="badge" style="${statusStyle}; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 600;">${escapeHtml(displayStatus)}</span>
-                </div>
-            `;
-            resultDiv.classList.remove('hidden');
-
-        } catch (err) {
-            console.error('Track Booking Error:', err);
-            showToast(err.message || (currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection Error'), 'error');
-        } finally {
-            setLoading(btn, false, currentLang === 'ar' ? 'بحث عن الحجز' : 'Search Booking');
-        }
-    });
-}
+    async function apiPost(action, data = {}) {
+      if (typeof grecaptcha !== 'undefined' && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_SITE_KEY') {
+        try { data.recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action }); } catch(e) {}
+      }
+      const fbUser = firebase.auth().currentUser;
+      if (fbUser && action !== 'authFirebase') data.idToken = await fbUser.getIdToken();
+      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action, data }) });
+      return res.json();
+    }
 
     // ✅ الكود الجديد لتسجيل الدخول بـ Google:
 async function handleGoogleSignIn() {
@@ -1520,141 +1494,125 @@ function renderDashboardUI(data, doctorId) {
     `;
   }).join('');
 }
-// ✅ جلب بيانات لوحة التحكم
-async function loadDoctorDashboardData(doctorId) {
-    try {
-        const { data: doctor, error: docError } = await supabaseClient
-            .from('doctors')
-            .select('first_name, last_name, phone, working_days, booking_enabled')
-            .eq('id', doctorId)
-            .single();
-        
-        if (docError) throw docError;
-        
-        const { data: appointments, error: apptError } = await supabaseClient
-            .from('appointments')
-            .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
-            .eq('doctor_id', doctorId)
-            .order('appointment_date', { ascending: false });
-        
-        if (apptError) throw apptError;
-        
-        const dashboardData = {
-            doctorName: `${doctor.first_name} ${doctor.last_name}`,
-            workingDays: JSON.stringify(doctor.working_days || {}),
-            bookingEnabled: doctor.booking_enabled,
-            appointments: appointments || []
-        };
-        
-        renderDashboardUI(dashboardData, doctorId);
-    } catch (err) {
-        console.error('Error loading dashboard:', err);
-        showToast(currentLang === 'ar' ? 'خطأ في تحميل البيانات' : 'Error loading data', 'error');
-    }
-}
-// ✅ تسجيل دخول الطبيب (مباشر عبر قاعدة البيانات)
+// 2. دالة تسجيل الدخول اليدوي المحدثة
+
+// ✅ تسجيل دخول الطبيب (يتصل بـ Edge Function)
 async function handleDashboardLogin(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    if (isAccountLocked()) return;
-    
-    const btn = document.getElementById('dashboardLoginBtn');
-    const phone = document.getElementById('loginPhone').value.trim();
-    const password = document.getElementById('loginDoctorPassword').value.trim();
-    
-    if (!phone || !password) {
-        showToast(currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف وكلمة المرور' : 'Please enter phone and password', 'error');
-        return;
-    }
-    
-    setLoading(btn, true);
-    
-    try {
-        // تشفير كلمة المرور
-        const hashedPassword = await hashPassword(password);
-        
-        // البحث عن الطبيب مباشرة في قاعدة البيانات
-        const { data: doctor, error } = await supabaseClient
-            .from('doctors')
-            .select('id, first_name, last_name, phone, working_days, booking_enabled')
-            .eq('phone', phone)
-            .eq('password_hash', hashedPassword)
-            .single();
-        
-        if (error || !doctor) {
-            throw new Error(currentLang === 'ar' ? 'بيانات الدخول غير صحيحة' : 'Invalid login credentials');
-        }
-        
-        // حفظ الجلسة
-        localStorage.setItem('doctorSession', JSON.stringify({
-            doctorId: doctor.id,
-            phone: doctor.phone
-        }));
-        
-        resetLoginAttempts();
-        
-        // إظهار لوحة التحكم
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('dashboardSection').classList.remove('hidden');
-        
-        // جلب وعرض البيانات
-        await loadDoctorDashboardData(doctor.id);
-        
-    } catch (err) {
-        recordFailedAttempt();
-        showToast(t('toastLoginError') + err.message, 'error');
-    } finally {
-        setLoading(btn, false);
-    }
+  if (e && e.preventDefault) e.preventDefault();
+  if (isAccountLocked()) return;
+
+  const btn = document.getElementById('dashboardLoginBtn');
+  setLoading(btn, true);
+
+  const doctorId = document.getElementById('loginDoctorId').value.trim();
+  const phone = document.getElementById('loginPhone').value.trim();
+  const password = document.getElementById('loginDoctorPassword').value.trim();
+
+  try {
+    // ✅ الاتصال بـ Edge Function للتحقق من بيانات الطبيب
+    const { data, error } = await supabaseClient.functions.invoke('doctor-auth', {
+      body: { 
+        action: 'login', 
+        doctorId: doctorId, 
+        phone: phone, 
+        password: password 
+      }
+    });
+
+    if (error) throw new Error(error.message);
+    if (!data.success) throw new Error(data.error || 'بيانات الدخول غير صحيحة');
+
+    resetLoginAttempts();
+
+    // حفظ الجلسة
+    localStorage.setItem('doctorSession', JSON.stringify({
+      doctorId: doctorId,
+      phone: phone,
+      sessionToken: data.sessionToken
+    }));
+
+    document.getElementById('loginSection').classList.add('hidden');
+    document.getElementById('dashboardSection').classList.remove('hidden');
+
+    // استدعاء دالة الرسم
+    renderDashboardUI(data, doctorId);
+
+  } catch (err) {
+    recordFailedAttempt();
+    showToast(t('toastLoginError') + err.message, 'error');
+  } finally {
+    setLoading(btn, false);
+  }
 }
-   function logoutDashboard() {
-    localStorage.removeItem('doctorSession'); // مسح المفكرة
-    document.getElementById('loginSection').classList.remove('hidden');
-    document.getElementById('dashboardSection').classList.add('hidden');
-    
-    // ✅ تم حذف السطر الخاص بـ loginDoctorId لأنه غير موجود في HTML
-    document.getElementById('loginPhone').value = '';
-    document.getElementById('loginDoctorPassword').value = '';
-}
- // ✅ تغيير حالة الحجز (محدّثة ومبسطة تماماً لـ Supabase)
+    function logoutDashboard() {
+
+
+
+      localStorage.removeItem('doctorSession'); // مسح المفكرة
+
+
+
+      document.getElementById('loginSection').classList.remove('hidden');
+
+
+
+      document.getElementById('dashboardSection').classList.add('hidden');
+      document.getElementById('loginDoctorId').value = '';
+      document.getElementById('loginPhone').value = '';
+      document.getElementById('loginDoctorPassword').value = ''; 
+    }
+ // ✅ تغيير حالة الحجز (محدّثة لـ Supabase)
 window.changeBookingStatus = async function(bookingId, newStatus, patientEmail, doctorName, apptDate) {
-    if (!confirm('تأكيد تغيير حالة الحجز إلى: ' + (newStatus === 'confirmed' ? 'مؤكد' : 'ملغى') + '؟')) return;
-    
-    const sessionStr = localStorage.getItem('doctorSession');
-    if (!sessionStr) { 
-        showToast('يرجى تسجيل الدخول مجدداً', 'error'); 
-        return; 
+  if (!confirm('تأكيد تغيير حالة الحجز إلى: ' + (newStatus === 'confirmed' ? 'مؤكد' : 'ملغى') + '؟')) return;
+
+  const sessionStr = localStorage.getItem('doctorSession');
+  if (!sessionStr) { showToast('يرجى تسجيل الدخول مجدداً', 'error'); return; }
+  const session = JSON.parse(sessionStr);
+
+  try {
+    // ✅ تحديث الحالة مباشرة في Supabase
+    const { error } = await supabaseClient
+      .from('appointments')
+      .update({ status: newStatus })
+      .eq('id', bookingId)
+      .eq('doctor_id', session.doctorId);
+
+    if (error) throw error;
+
+    showToast('تم التحديث بنجاح', 'success');
+
+    // إرسال الإيميل التلقائي
+    if (patientEmail && patientEmail !== 'undefined' && patientEmail !== '') {
+      window.sendBookingEmail(patientEmail, doctorName, apptDate, newStatus);
     }
-    
-    const session = JSON.parse(sessionStr);
-    
-    try {
-        // 1. تحديث الحالة مباشرة في Supabase
-        const { error } = await supabaseClient
-            .from('appointments')
-            .update({ status: newStatus })
-            .eq('id', bookingId)
-            .eq('doctor_id', session.doctorId);
-            
-        if (error) throw error;
-        
-        showToast('تم التحديث بنجاح', 'success');
-        
-        // 2. إرسال الإيميل التلقائي (إذا كان مفعلاً)
-        if (patientEmail && patientEmail !== 'undefined' && patientEmail !== '') {
-            window.sendBookingEmail(patientEmail, doctorName, apptDate, newStatus);
-        }
-        
-        // 3. إعادة تحميل بيانات لوحة التحكم مباشرة (أسرع وأضمن من استخدام Edge Function)
-        await loadDoctorDashboardData(session.doctorId);
-        
-    } catch (err) {
-        console.error('Error updating status:', err);
-        showToast('خطأ: ' + err.message, 'error');
-    }
+
+    // إعادة تحميل البيانات
+    refreshDoctorDashboard(session.doctorId, session.phone, session.sessionToken);
+
+  } catch (err) {
+    showToast('خطأ: ' + err.message, 'error');
+  }
 };
-// ✅ إعادة تحميل لوحة التحكم مباشرة
+
+// ✅ دالة مساعدة لإعادة تحميل لوحة التحكم
 async function refreshDoctorDashboard(doctorId, phone, sessionToken) {
-    await loadDoctorDashboardData(doctorId);
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('doctor-auth', {
+      body: { 
+        action: 'getAppointments', 
+        doctorId: doctorId, 
+        phone: phone, 
+        sessionToken: sessionToken 
+      }
+    });
+
+    if (error) throw error;
+    if (data.success) {
+      renderDashboardUI(data, doctorId);
+    }
+  } catch (err) {
+    console.error('خطأ في تحديث لوحة التحكم:', err);
+  }
 }
 
 window.toggleWorkingHours = function() {
@@ -2253,92 +2211,123 @@ document.addEventListener('submit', async function(e) {
       window.tsAddSpecialty = new TomSelect('select[name="Specialty"]', tsSettings);
       window.tsAddMunicipality = new TomSelect('select[name="Municipality"]', tsSettings);
 
-// === تتبع الحجز (محدث لـ Supabase) ===
-const trackForm = document.getElementById('trackBookingForm');
-if (trackForm) {
-    trackForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('trackBtn');
-        const bookingIdInput = document.getElementById('trackBookingId').value.trim();
-        const phoneStr = document.getElementById('trackPhone').value.trim();
-        const resultDiv = document.getElementById('trackResult');
-        
-        setLoading(btn, true);
-        resultDiv.classList.add('hidden');
 
-        try {
-            // ✅ الاستعلام المباشر من جدول appointments في Supabase
-            const { data, error } = await supabaseClient
-                .from('appointments')
-                .select(`
-                    id,
-                    patient_name,
-                    appointment_date,
-                    appointment_time,
-                    status,
-                    doctors (first_name, last_name)
-                `)
-                .ilike('id', `%${bookingIdInput}%`) 
-                .eq('patient_phone', phoneStr)
-                .single();
+     // === تتبع الحجز ===
+      const trackForm = document.getElementById('trackBookingForm');
+      if (trackForm) {
+        trackForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById('trackBtn');
+          const bookingId = document.getElementById('trackBookingId').value.trim();
+          const phoneStr = document.getElementById('trackPhone').value.trim(); // التقاط رقم الهاتف
+          const resultDiv = document.getElementById('trackResult');
 
-            if (error || !data) {
-                throw new Error(currentLang === 'ar' ? 'لم يتم العثور على الحجز. تأكد من رقم الحجز ورقم الهاتف.' : 'Booking not found. Please check the ID and phone number.');
+          setLoading(btn, true);
+          resultDiv.classList.add('hidden');
+
+          try {
+            // إرسال الهاتف مع رقم الحجز للتحقق الأمني
+            const result = await apiPost('getBookingStatus', { bookingId: bookingId, phone: phoneStr });
+
+            if (result.success) {
+
+              const data = result.data;
+
+
+
+              // 1. تحديد الألوان
+
+              let statusStyle = 'background: #f1f5f9; color: #64748b;';
+
+              if (data.status === 'مؤكد') statusStyle = 'background: #ecfdf5; color: #10b981;';
+
+              if (data.status === 'ملغى') statusStyle = 'background: #fef2f2; color: #ef4444;';
+
+
+
+              // 2. ترجمة كلمة الحالة (Status)
+
+              let displayStatus = data.status;
+
+              if (currentLang === 'en') {
+
+                 if (data.status === 'مؤكد') displayStatus = 'Confirmed';
+
+                 else if (data.status === 'ملغى') displayStatus = 'Cancelled';
+
+                 else displayStatus = 'Pending';
+
+              }
+
+
+
+              // 3. نصوص الواجهة المترجمة ديناميكياً
+
+              const detailsTxt = currentLang === 'ar' ? 'تفاصيل الحجز:' : 'Booking Details:';
+
+              const idTxt = currentLang === 'ar' ? 'رقم الحجز:' : 'Booking ID:';
+
+              const nameTxt = currentLang === 'ar' ? 'الاسم:' : 'Patient Name:';
+
+              const dateTimeTxt = currentLang === 'ar' ? 'التاريخ والوقت:' : 'Date & Time:';
+
+              const currentStatusTxt = currentLang === 'ar' ? 'الحالة الحالية:' : 'Current Status:';
+
+
+
+              // 4. بناء النتيجة
+
+              resultDiv.innerHTML = `
+
+                <h4 class="font-bold mb-2">${detailsTxt}</h4>
+
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${idTxt}</span> <strong>${escapeHtml(data.bookingId)}</strong></div>
+
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${nameTxt}</span> <strong>${escapeHtml(data.patientName)}</strong></div>
+
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${dateTimeTxt}</span> <strong dir="ltr">${escapeHtml(data.date)} ${escapeHtml(data.time)}</strong></div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem;">
+
+                  <span>${currentStatusTxt}</span> 
+
+                  <span class="badge" style="${statusStyle}">${escapeHtml(displayStatus)}</span>
+
+                </div>
+
+              `;
+
+              resultDiv.classList.remove('hidden');
+
+            } else {
+
+              showToast(currentLang === 'ar' ? result.error : 'Booking not found', 'error');
+
             }
 
-            // تحديد الألوان والحالة
-            let statusStyle = 'background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1;';
-            let displayStatus = data.status === 'pending' ? (currentLang === 'ar' ? 'قيد الانتظار' : 'Pending') : 
-                                data.status === 'confirmed' ? (currentLang === 'ar' ? 'مؤكد' : 'Confirmed') : 
-                                (currentLang === 'ar' ? 'ملغى' : 'Cancelled');
+          } catch (err) {
 
-            if (data.status === 'confirmed') statusStyle = 'background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;';
-            else if (data.status === 'cancelled') statusStyle = 'background: #fef2f2; color: #ef4444; border: 1px solid #fecaca;';
+            showToast(currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection Error', 'error');
 
-            const detailsTxt = currentLang === 'ar' ? 'تفاصيل الحجز:' : 'Booking Details:';
-            const idTxt = currentLang === 'ar' ? 'رقم الحجز:' : 'Booking ID:';
-            const nameTxt = currentLang === 'ar' ? 'المريض:' : 'Patient Name:';
-            const doctorTxt = currentLang === 'ar' ? 'الطبيب:' : 'Doctor:';
-            const dateTimeTxt = currentLang === 'ar' ? 'التاريخ والوقت:' : 'Date & Time:';
-            const currentStatusTxt = currentLang === 'ar' ? 'الحالة الحالية:' : 'Current Status:';
+          } finally {
 
-            const docName = data.doctors ? `${data.doctors.first_name} ${data.doctors.last_name}` : (currentLang === 'ar' ? 'غير محدد' : 'N/A');
-            const shortId = data.id.substring(0, 8).toUpperCase();
-
-            resultDiv.innerHTML = `
-                <h4 class="font-bold mb-3" style="color: var(--primary);">${detailsTxt}</h4>
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
-                    <span style="color: var(--text-secondary);">${idTxt}</span> 
-                    <strong style="font-family: monospace; letter-spacing: 1px;">${shortId}...</strong>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
-                    <span style="color: var(--text-secondary);">${nameTxt}</span> 
-                    <strong>${escapeHtml(data.patient_name)}</strong>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
-                    <span style="color: var(--text-secondary);">${doctorTxt}</span> 
-                    <strong>${currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(docName)}</strong>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:1rem; font-size: 0.95rem;">
-                    <span style="color: var(--text-secondary);">${dateTimeTxt}</span> 
-                    <strong dir="ltr">${escapeHtml(data.appointment_date)} | ${escapeHtml(data.appointment_time)}</strong>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem;">
-                    <span style="font-weight: bold;">${currentStatusTxt}</span>
-                    <span class="badge" style="${statusStyle}; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 600;">${escapeHtml(displayStatus)}</span>
-                </div>
-            `;
-            resultDiv.classList.remove('hidden');
-
-        } catch (err) {
-            console.error('Track Booking Error:', err);
-            showToast(err.message || (currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection Error'), 'error');
-        } finally {
             setLoading(btn, false, currentLang === 'ar' ? 'بحث عن الحجز' : 'Search Booking');
-        }
-    });
-}
+
+          }
+
+        });
+
+      }
+
+
+
       // ===================================================
+
+
+
+
+
+
 
       // === إجبار حقول الهاتف على قبول 10 أرقام فقط (بدون مسافات أو حروف) ===
 
@@ -2525,44 +2514,152 @@ if (trackForm) {
 
 
       window.onpopstate = (e) => { const view = (e.state && e.state.view) ? e.state.view : 'home'; router(view, false); };
-// === كود تسجيل الدخول التلقائي ===
-const savedSession = localStorage.getItem('doctorSession');
-if (savedSession) {
-    try {
+
+
+
+
+
+
+
+    // === كود تسجيل الدخول التلقائي الآمن للطبيب ===
+
+    const savedSession = localStorage.getItem('doctorSession');
+
+    if (savedSession) {
+
+      try {
+
         const session = JSON.parse(savedSession);
-        if (session.doctorId) {
-            // التحقق من وجود الطبيب
-            const { data, error } = await supabaseClient
-                .from('doctors')
-                .select('id')
-                .eq('id', session.doctorId)
-                .single();
-            
-            if (data && !error) {
+
+
+
+        if(document.getElementById('loginDoctorId')) document.getElementById('loginDoctorId').value = session.doctorId || '';
+
+        if(document.getElementById('loginPhone')) document.getElementById('loginPhone').value = session.phone || '';
+
+        if(document.getElementById('loginDoctorPassword')) document.getElementById('loginDoctorPassword').value = ''; 
+
+
+
+        const btn = document.getElementById('dashboardLoginBtn');
+
+        if (btn) setLoading(btn, true);
+
+
+
+        apiPost('doctorLogin', { 
+
+            doctorId: session.doctorId, 
+
+            phone: session.phone, 
+
+            sessionToken: session.sessionToken 
+
+        }).then(result => {
+
+            if (result && result.success) {
+
+                localStorage.setItem('doctorSession', JSON.stringify({ 
+
+                    doctorId: session.doctorId, 
+
+                    phone: session.phone, 
+
+                    sessionToken: result.data.sessionToken 
+
+                }));
+
+
+
                 document.getElementById('loginSection').classList.add('hidden');
+
                 document.getElementById('dashboardSection').classList.remove('hidden');
-                await loadDoctorDashboardData(session.doctorId);
+
+
+
+                // === التعديل هنا: استدعاء دالة الرسم بدلاً من التعليق الناقص ===
+
+                renderDashboardUI(result.data, session.doctorId);
+
+
+
             } else {
+
                 localStorage.removeItem('doctorSession');
+
             }
-        }
-    } catch(e) {
+
+            if (btn) setLoading(btn, false);
+
+        }).catch(() => {
+
+            if (btn) setLoading(btn, false);
+
+        });
+
+
+
+     } catch(e) {
         localStorage.removeItem('doctorSession');
+      }
     }
-}
-   // ========================================================================
-// نظام إرسال الإشعارات عبر البريد (محدث لـ Supabase Edge Function)
-// ========================================================================
-// ✅ إرسال الإشعارات (مؤقت - يمكن تفعيله لاحقاً)
-window.sendBookingEmail = async function(recipientEmail, doctorName, appointmentDate, status) {
-    if (!recipientEmail || recipientEmail === 'undefined' || recipientEmail === '') return;
-    
-    console.log(`📧 Email would be sent to: ${recipientEmail}`);
-    console.log(`Status: ${status}, Doctor: ${doctorName}, Date: ${appointmentDate}`);
-    
-    // ملاحظة: هنا يمكنك إضافة Edge Function لاحقاً
-    // حالياً فقط نسجل في console
-};
+    // =======================================
+    });
+
+    // ========================================================================
+    // نظام إرسال الإشعارات عبر البريد (Google Apps Script)
+    // ========================================================================
+   window.sendBookingEmail = function(recipientEmail, doctorName, appointmentDate, status) {
+      var subject = "";
+      var htmlBody = "";
+
+      // ألوان وتصميم متناسق مع منصتك
+      var primaryColor = "#0ea5e9";
+      var containerStyle = "font-family: Arial, sans-serif; direction: rtl; text-align: right; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;";
+      var headerStyle = "background-color: " + primaryColor + "; color: white; padding: 20px; text-align: center; font-size: 1.25rem; font-weight: bold;";
+      var bodyStyle = "padding: 20px; color: #0f172a; line-height: 1.6;";
+      var footerStyle = "background-color: #f8fafc; padding: 15px; text-align: center; color: #64748b; font-size: 0.85rem; border-top: 1px solid #e2e8f0;";
+
+      if (status === "confirm" || status === "مؤكد") {
+        subject = "تأكيد موعدك الطبي - دليل أطباء غليزان";
+        htmlBody = `
+          <div style="${containerStyle}">
+            <div style="${headerStyle}">تأكيد الموعد الطبي</div>
+            <div style="${bodyStyle}">
+              <p>مرحباً بك،</p>
+              <p>يسعدنا إعلامك بأنه تم <strong>تأكيد</strong> موعدك الطبي بنجاح عبر منصة "دليل أطباء غليزان".</p>
+              <div style="background-color: #f8fafc; border-right: 4px solid ${primaryColor}; padding: 15px; margin: 20px 0;">
+                <p style="margin: 0 0 10px 0;"><strong>الطبيب المَعني:</strong> ${doctorName}</p>
+                <p style="margin: 0;"><strong>تاريخ الموعد:</strong> <span dir="ltr">${appointmentDate}</span></p>
+              </div>
+              <p>يرجى الحضور إلى العيادة في الموعد المحدد. نتمنى لك دوام الصحة والعافية.</p>
+            </div>
+            <div style="${footerStyle}">© 2026 دليل أطباء ولاية غليزان. جميع الحقوق محفوظة.</div>
+          </div>
+        `;
+      } else if (status === "cancel" || status === "ملغى") {
+        subject = "إشعار بإلغاء موعدك الطبي - دليل أطباء غليزان";
+        htmlBody = `
+          <div style="${containerStyle}">
+            <div style="background-color: #ef4444; color: white; padding: 20px; text-align: center; font-size: 1.25rem; font-weight: bold;">إلغاء الموعد الطبي</div>
+            <div style="${bodyStyle}">
+              <p>مرحباً بك،</p>
+              <p>نعتذر بشدة لإعلامك بأنه قد تم <strong>إلغاء</strong> موعدك الطبي المجدول مع <strong>${doctorName}</strong> في تاريخ <span dir="ltr">${appointmentDate}</span>.</p>
+              <p>قد يعود سبب الإلغاء لظرف طارئ خارج عن إرادة الطبيب. ندعوك لزيارة المنصة مجدداً لحجز موعد في وقت آخر يناسبك.</p>
+            </div>
+            <div style="${footerStyle}">© 2026 دليل أطباء ولاية غليزان. جميع الحقوق محفوظة.</div>
+          </div>
+        `;
+      }
+
+      apiPost('sendEmail', {
+        recipient: recipientEmail,
+        subject: subject,
+        htmlBody: htmlBody
+      })
+      .then(response => console.log("تم الإرسال: ", response))
+      .catch(error => console.error("خطأ في الإرسال: ", error));
+    };
 // ========================================================================
 // CHATBOT SYSTEM LOGIC (Multilingual & Fixed RTL Phone Display)
 // ========================================================================
