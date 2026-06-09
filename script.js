@@ -2546,36 +2546,39 @@ document.addEventListener('submit', async function(e) {
       window.onpopstate = (e) => { const view = (e.state && e.state.view) ? e.state.view : 'home'; router(view, false); };
 
 // === كود تسجيل الدخول التلقائي الآمن للطبيب ===
-const savedSession = localStorage.getItem('doctorSession');
-if (savedSession) {
-  try {
-    const session = JSON.parse(savedSession);
-    
-    if (session.doctorId) {
-      // التحقق من أن الطبيب لا يزال مفعّلاً
-      const { data: doctor } = await supabaseClient
-        .from('doctors')
-        .select('is_active, working_days, booking_enabled')
-        .eq('id', session.doctorId)
-        .single();
-      
-      if (doctor && doctor.is_active) {
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('dashboardSection').classList.remove('hidden');
-        
-        // ملء البيانات
-        const fullDoctor = { ...doctor, first_name: session.doctorName.split(' ')[0], last_name: session.doctorName.split(' ')[1] };
-        await fillDashboardData(fullDoctor);
-      } else {
-        localStorage.removeItem('doctorSession');
-      }
+(async () => {  // ✅ جعلنا الدالة async
+    const savedSession = localStorage.getItem('doctorSession');
+    if (savedSession) {
+        try {
+            const session = JSON.parse(savedSession);
+            if (session.doctorId) {
+                // التحقق من أن الطبيب لا يزال مفعّلاً
+                const { data: doctor, error } = await supabaseClient
+                    .from('doctors')
+                    .select('is_active, working_days, booking_enabled')
+                    .eq('id', session.doctorId)
+                    .single();
+                
+                if (doctor && doctor.is_active) {
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('dashboardSection').classList.remove('hidden');
+                    // ملء البيانات
+                    const fullDoctor = { 
+                        ...doctor, 
+                        first_name: session.doctorName.split(' ')[0], 
+                        last_name: session.doctorName.split(' ')[1] 
+                    };
+                    await fillDashboardData(fullDoctor);
+                } else {
+                    localStorage.removeItem('doctorSession');
+                }
+            }
+        } catch(e) {
+            console.error('Error auto-logging in doctor:', e);
+            localStorage.removeItem('doctorSession');
+        }
     }
-  } catch(e) {
-    localStorage.removeItem('doctorSession');
-  }
-}
-    // =======================================
-    });
+})();  // ✅ استدعاء الدالة فوراً
 
     // ========================================================================
     // نظام إرسال الإشعارات عبر البريد (Google Apps Script)
