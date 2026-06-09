@@ -1500,30 +1500,58 @@ async function handleDashboardLogin(e) {
     if (isAccountLocked()) return;
 
     const btn = document.getElementById('dashboardLoginBtn');
-    setLoading(btn, true); // يظهر "جاري المعالجة..."
+    if (!btn) {
+        console.error('❌ زر تسجيل الدخول غير موجود');
+        return;
+    }
+    
+    setLoading(btn, true);
 
-    const doctorId = document.getElementById('loginDoctorId').value.trim();
-    const phone = document.getElementById('loginPhone').value.trim();
-    const password = document.getElementById('loginDoctorPassword').value.trim();
+    // ✅ التحقق من وجود العناصر قبل الوصول إليها
+    const doctorIdInput = document.getElementById('loginDoctorId');
+    const phoneInput = document.getElementById('loginPhone');
+    const passwordInput = document.getElementById('loginDoctorPassword');
+
+    if (!doctorIdInput || !phoneInput || !passwordInput) {
+        console.error('❌ أحد حقول الإدخال غير موجود:', {
+            doctorIdInput: !!doctorIdInput,
+            phoneInput: !!phoneInput,
+            passwordInput: !!passwordInput
+        });
+        setLoading(btn, false);
+        showToast('خطأ في النموذج. يرجى تحديث الصفحة والمحاولة مرة أخرى.', 'error');
+        return;
+    }
+
+    const doctorId = doctorIdInput.value.trim();
+    const phone = phoneInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    // ✅ التحقق من أن الحقول ليست فارغة
+    if (!doctorId || !phone || !password) {
+        setLoading(btn, false);
+        showToast('يرجى ملء جميع الحقول', 'error');
+        return;
+    }
 
     try {
-        // 1. تشفير كلمة المرور المدخلة لمطابقتها مع المخزنة في قاعدة البيانات
+        // 1. تشفير كلمة المرور
         const hashedInputPassword = await hashPassword(password);
 
-        // 2. التحقق من بيانات الطبيب مباشرة من جدول doctors
+        // 2. التحقق من بيانات الطبيب من قاعدة البيانات
         const { data: doctor, error: doctorError } = await supabaseClient
             .from('doctors')
             .select('id, first_name, last_name, phone, working_days, booking_enabled')
             .eq('id', doctorId)
             .eq('phone', phone)
             .eq('password_hash', hashedInputPassword)
-            .maybeSingle(); // استخدام maybeSingle لتجنب الأخطاء إذا لم يوجد سجل
+            .maybeSingle();
 
         if (doctorError || !doctor) {
-            throw new Error('بيانات الدخول غير صحيحة (تحقق من معرف الطبيب، الهاتف، أو كلمة المرور)');
+            throw new Error('بيانات الدخول غير صحيحة');
         }
 
-        // 3. جلب المواعيد الخاصة بهذا الطبيب لعرضها في لوحة التحكم
+        // 3. جلب المواعيد
         const { data: appointments, error: apptError } = await supabaseClient
             .from('appointments')
             .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
@@ -1537,7 +1565,6 @@ async function handleDashboardLogin(e) {
         // 4. نجاح تسجيل الدخول
         resetLoginAttempts();
 
-        // حفظ الجلسة في المتصفح
         const sessionData = {
             doctorId: doctor.id,
             phone: doctor.phone,
@@ -1545,7 +1572,6 @@ async function handleDashboardLogin(e) {
         };
         localStorage.setItem('doctorSession', JSON.stringify(sessionData));
 
-        // تجهيز البيانات بالصيغة التي تتوقعها دالة renderDashboardUI
         const dashboardData = {
             doctorName: `${doctor.first_name} ${doctor.last_name}`,
             workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : doctor.working_days,
@@ -1554,8 +1580,11 @@ async function handleDashboardLogin(e) {
         };
 
         // 5. تحديث الواجهة
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('dashboardSection').classList.remove('hidden');
+        const loginSection = document.getElementById('loginSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        
+        if (loginSection) loginSection.classList.add('hidden');
+        if (dashboardSection) dashboardSection.classList.remove('hidden');
         
         renderDashboardUI(dashboardData, doctor.id);
         showToast('تم تسجيل الدخول بنجاح', 'success');
@@ -1565,7 +1594,6 @@ async function handleDashboardLogin(e) {
         recordFailedAttempt();
         showToast(t('toastLoginError') + (err.message || 'تحقق من البيانات المدخلة'), 'error');
     } finally {
-        // ضمان إلغاء حالة التحميل مهما حدث (يمنع تعليق الزر للأبد)
         setLoading(btn, false);
     }
 }
