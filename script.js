@@ -1621,39 +1621,43 @@ async function handleDashboardLogin(e) {
       document.getElementById('loginPhone').value = '';
       document.getElementById('loginDoctorPassword').value = ''; 
     }
- // ✅ تغيير حالة الحجز (محدّثة لـ Supabase)
+ // ✅ تغيير حالة الحجز (محدّثة ومبسطة تماماً لـ Supabase)
 window.changeBookingStatus = async function(bookingId, newStatus, patientEmail, doctorName, apptDate) {
-  if (!confirm('تأكيد تغيير حالة الحجز إلى: ' + (newStatus === 'confirmed' ? 'مؤكد' : 'ملغى') + '؟')) return;
-
-  const sessionStr = localStorage.getItem('doctorSession');
-  if (!sessionStr) { showToast('يرجى تسجيل الدخول مجدداً', 'error'); return; }
-  const session = JSON.parse(sessionStr);
-
-  try {
-    // ✅ تحديث الحالة مباشرة في Supabase
-    const { error } = await supabaseClient
-      .from('appointments')
-      .update({ status: newStatus })
-      .eq('id', bookingId)
-      .eq('doctor_id', session.doctorId);
-
-    if (error) throw error;
-
-    showToast('تم التحديث بنجاح', 'success');
-
-    // إرسال الإيميل التلقائي
-    if (patientEmail && patientEmail !== 'undefined' && patientEmail !== '') {
-      window.sendBookingEmail(patientEmail, doctorName, apptDate, newStatus);
+    if (!confirm('تأكيد تغيير حالة الحجز إلى: ' + (newStatus === 'confirmed' ? 'مؤكد' : 'ملغى') + '؟')) return;
+    
+    const sessionStr = localStorage.getItem('doctorSession');
+    if (!sessionStr) { 
+        showToast('يرجى تسجيل الدخول مجدداً', 'error'); 
+        return; 
     }
-
-    // إعادة تحميل البيانات
-    refreshDoctorDashboard(session.doctorId, session.phone, session.sessionToken);
-
-  } catch (err) {
-    showToast('خطأ: ' + err.message, 'error');
-  }
+    
+    const session = JSON.parse(sessionStr);
+    
+    try {
+        // 1. تحديث الحالة مباشرة في Supabase
+        const { error } = await supabaseClient
+            .from('appointments')
+            .update({ status: newStatus })
+            .eq('id', bookingId)
+            .eq('doctor_id', session.doctorId);
+            
+        if (error) throw error;
+        
+        showToast('تم التحديث بنجاح', 'success');
+        
+        // 2. إرسال الإيميل التلقائي (إذا كان مفعلاً)
+        if (patientEmail && patientEmail !== 'undefined' && patientEmail !== '') {
+            window.sendBookingEmail(patientEmail, doctorName, apptDate, newStatus);
+        }
+        
+        // 3. إعادة تحميل بيانات لوحة التحكم مباشرة (أسرع وأضمن من استخدام Edge Function)
+        await loadDoctorDashboardData(session.doctorId);
+        
+    } catch (err) {
+        console.error('Error updating status:', err);
+        showToast('خطأ: ' + err.message, 'error');
+    }
 };
-
 // ✅ دالة مساعدة لإعادة تحميل لوحة التحكم
 async function refreshDoctorDashboard(doctorId, phone, sessionToken) {
   try {
