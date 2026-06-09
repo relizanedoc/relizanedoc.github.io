@@ -11,68 +11,52 @@ window.addEventListener('load', function() {
         openDoctorModal(doctorId); 
     }
 });
-// 1. تهيئة Firebase (مؤقت - لا تحذفه الآن)
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCvWB0huHg4Wei98dAkQAvRANmB5Xs_GWI",
-  authDomain: "relizane-doc-4dbf2.firebaseapp.com",
-  projectId: "relizane-doc-4dbf2",
-  appId: "1:284439573850:web:9edd0f408e68a511de6f63"
-};
-
-firebase.initializeApp(FIREBASE_CONFIG);
-
-// 2. تهيئة Supabase (جديد)
+// ==========================================
+// 1. تهيئة Supabase (الأساس)
+// ==========================================
 const SUPABASE_URL = 'https://iirjtmobphgmkgwkwumc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpcmp0bW9icGhnbWtnd2t3dW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA2NjYsImV4cCI6MjA5NjUxNjY2Nn0.Yfa0oEwp_id9tHpSb3h0jf__B4drqXsM-TVs4VTTmp4';
-
 const { createClient } = window.supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
-const API_URL = 'https://script.google.com/macros/s/AKfycbxuQvatnWUMoMMSA6QTsbpxhO6r3Qh54yoj8Zrkor_2Icg3n3AVP7_2ajh0NvEPMlTgRw/exec';
-// ✅ الاستماع لتغيير حالة المصادقة (Supabase)
+
+// ==========================================
+// 2. الاستماع لتغيير حالة المصادقة (Supabase)
+// ==========================================
 let isAuthInitialized = false;
-
 supabaseClient.auth.onAuthStateChange((event, session) => {
-  console.log('🔄 حدث المصادقة:', event);
+    console.log('🔄 حدث المصادقة:', event);
+    if (event === 'SIGNED_IN' && session) {
+        console.log('✅ تم تسجيل الدخول:', session.user);
+        updateUserUI(session.user);
+    } else if (event === 'SIGNED_OUT') {
+        console.log('❌ تم تسجيل الخروج');
+        updateUserUI(null);
+    } else if (event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+        if (session) updateUserUI(session.user);
+    }
 
-  if (event === 'SIGNED_IN' && session) {
-    console.log('✅ تم تسجيل الدخول:', session.user);
-    updateUserUI(session.user);
-  } else if (event === 'SIGNED_OUT') {
-    console.log('❌ تم تسجيل الخروج');
-    updateUserUI(null);
-  } else if (event === 'USER_UPDATED') {
-    if (session) updateUserUI(session.user);
-  } else if (event === 'TOKEN_REFRESHED') {
-    if (session) updateUserUI(session.user);
-  }
-
-  if (!isAuthInitialized) {
-    const hash = window.location.hash.replace('#', '');
-    const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(hash) ? hash : 'home';
-    router(startView, false);
-    isAuthInitialized = true;
-  }
+    if (!isAuthInitialized) {
+        const hash = window.location.hash.replace('#', '');
+        const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(hash) ? hash : 'home';
+        router(startView, false);
+        isAuthInitialized = true;
+    }
 });
 
 // ✅ التحقق من الجلسة الحالية عند تحميل الصفحة
 window.addEventListener('load', async () => {
-  console.log('🔍 التحقق من الجلسة الحالية...');
-  const { data: { session } } = await supabaseClient.auth.getSession();
-
-  if (session) {
-    console.log('✅ جلسة موجودة، تحديث الواجهة');
-    updateUserUI(session.user);
-  } else {
-    console.log('❌ لا توجد جلسة');
-    updateUserUI(null);
-  }
+    console.log('🔍 التحقق من الجلسة الحالية...');
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+        console.log('✅ جلسة موجودة، تحديث الواجهة');
+        updateUserUI(session.user);
+    } else {
+        console.log('❌ لا توجد جلسة');
+        updateUserUI(null);
+    }
 });
-// دالة مساعدة لتحل محل firebase.auth().currentUser
-async function getCurrentSupabaseUser() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  return user;
-}
     const i18n = {
       en: {
         memberDashboardTitle: 'Member Dashboard', trackPhoneLabel: 'Phone Number used for booking',
