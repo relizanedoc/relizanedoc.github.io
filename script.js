@@ -1521,54 +1521,96 @@ function renderDashboardUI(data, doctorId) {
   }).join('');
 }
 // 2. دالة تسجيل الدخول اليدوي المحدثة
+// ✅ دالة مساعدة لجلب بيانات لوحة تحكم الطبيب من Supabase
+async function loadDoctorDashboardData(doctorId) {
+    try {
+        // جلب بيانات الطبيب الأساسية
+        const { data: doctor, error: docError } = await supabaseClient
+            .from('doctors')
+            .select('first_name, last_name, phone, working_days, booking_enabled')
+            .eq('id', doctorId)
+            .single();
 
-// ✅ تسجيل دخول الطبيب (يتصل بـ Edge Function)
+        if (docError) throw docError;
+
+        // جلب مواعيد هذا الطبيب
+        const { data: appointments, error: apptError } = await supabaseClient
+            .from('appointments')
+            .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
+            .eq('doctor_id', doctorId)
+            .order('appointment_date', { ascending: false });
+
+        if (apptError) throw apptError;
+
+        // تهيئة البيانات بالصيغة التي تتوقعها دالة renderDashboardUI
+        const dashboardData = {
+            doctorName: `${doctor.first_name} ${doctor.last_name}`,
+            workingDays: JSON.stringify(doctor.working_days || {}),
+            bookingEnabled: doctor.booking_enabled,
+            appointments: appointments || []
+        };
+
+        renderDashboardUI(dashboardData, doctorId);
+
+    } catch (err) {
+        console.error('Error loading dashboard data:', err);
+        showToast(currentLang === 'ar' ? 'خطأ في تحميل بيانات لوحة التحكم' : 'Error loading dashboard data', 'error');
+    }
+}
+// ✅ تسجيل دخول الطبيب (مبسط ومباشر عبر Supabase)
 async function handleDashboardLogin(e) {
-  if (e && e.preventDefault) e.preventDefault();
-  if (isAccountLocked()) return;
+    if (e && e.preventDefault) e.preventDefault();
+    if (isAccountLocked()) return;
 
-  const btn = document.getElementById('dashboardLoginBtn');
-  setLoading(btn, true);
+    const btn = document.getElementById('dashboardLoginBtn');
+    // ✅ ملاحظة: نستخدم phone و password فقط لأنهما الموجودان في HTML
+    const phone = document.getElementById('loginPhone').value.trim();
+    const password = document.getElementById('loginDoctorPassword').value.trim();
 
-  const doctorId = document.getElementById('loginDoctorId').value.trim();
-  const phone = document.getElementById('loginPhone').value.trim();
-  const password = document.getElementById('loginDoctorPassword').value.trim();
+    if (!phone || !password) {
+        showToast(currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف وكلمة المرور' : 'Please enter phone and password', 'error');
+        return;
+    }
 
-  try {
-    // ✅ الاتصال بـ Edge Function للتحقق من بيانات الطبيب
-    const { data, error } = await supabaseClient.functions.invoke('doctor-auth', {
-      body: { 
-        action: 'login', 
-        doctorId: doctorId, 
-        phone: phone, 
-        password: password 
-      }
-    });
+    setLoading(btn, true);
 
-    if (error) throw new Error(error.message);
-    if (!data.success) throw new Error(data.error || 'بيانات الدخول غير صحيحة');
+    try {
+        // 1. تشفير كلمة المرور المدخلة لمطابقتها مع المخزنة
+        const hashedPassword = await hashPassword(password);
 
-    resetLoginAttempts();
+        // 2. البحث عن الطبيب في جدول doctors مباشرة
+        const { data: doctor, error } = await supabaseClient
+            .from('doctors')
+            .select('id, first_name, last_name, phone, working_days, booking_enabled')
+            .eq('phone', phone)
+            .eq('password_hash', hashedPassword)
+            .single();
 
-    // حفظ الجلسة
-    localStorage.setItem('doctorSession', JSON.stringify({
-      doctorId: doctorId,
-      phone: phone,
-      sessionToken: data.sessionToken
-    }));
+        if (error || !doctor) {
+            throw new Error(currentLang === 'ar' ? 'بيانات الدخول غير صحيحة' : 'Invalid login credentials');
+        }
 
-    document.getElementById('loginSection').classList.add('hidden');
-    document.getElementById('dashboardSection').classList.remove('hidden');
+        // 3. حفظ الجلسة (تبسيط: نحتاج فقط doctorId و phone)
+        localStorage.setItem('doctorSession', JSON.stringify({
+            doctorId: doctor.id,
+            phone: doctor.phone
+        }));
 
-    // استدعاء دالة الرسم
-    renderDashboardUI(data, doctorId);
+        resetLoginAttempts();
+        
+        // 4. التبديل إلى لوحة التحكم
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('dashboardSection').classList.remove('hidden');
 
-  } catch (err) {
-    recordFailedAttempt();
-    showToast(t('toastLoginError') + err.message, 'error');
-  } finally {
-    setLoading(btn, false);
-  }
+        // 5. جلب وعرض بيانات لوحة التحكم
+        await loadDoctorDashboardData(doctor.id);
+
+    } catch (err) {
+        recordFailedAttempt();
+        showToast(t('toastLoginError') + err.message, 'error');
+    } finally {
+        setLoading(btn, false);
+    }
 }
     function logoutDashboard() {
 
@@ -2509,46 +2551,29 @@ if (trackForm) {
 
 
       window.onpopstate = (e) => { const view = (e.state && e.state.view) ? e.state.view : 'home'; router(view, false); };
-// === كود تسجيل الدخول التلقائي الآمن للطبيب (محدث لـ Supabase) ===
+// === كود تسجيل الدخول التلقائي الآمن للطبيب (محدث ومبسط) ===
 const savedSession = localStorage.getItem('doctorSession');
 if (savedSession) {
     try {
         const session = JSON.parse(savedSession);
-        if(document.getElementById('loginDoctorId')) document.getElementById('loginDoctorId').value = session.doctorId || '';
-        if(document.getElementById('loginPhone')) document.getElementById('loginPhone').value = session.phone || '';
-        if(document.getElementById('loginDoctorPassword')) document.getElementById('loginDoctorPassword').value = '';
-        
-        const btn = document.getElementById('dashboardLoginBtn');
-        if (btn) setLoading(btn, true);
+        if (session.doctorId) {
+            // التحقق من أن الطبيب لا يزال موجوداً في قاعدة البيانات
+            const { data, error } = await supabaseClient
+                .from('doctors')
+                .select('id')
+                .eq('id', session.doctorId)
+                .single();
 
-        // ✅ استبدال apiPost بـ Supabase Edge Function
-        supabaseClient.functions.invoke('doctor-auth', {
-            body: {
-                action: 'getAppointments',
-                doctorId: session.doctorId,
-                phone: session.phone,
-                sessionToken: session.sessionToken
-            }
-        }).then(({ data: result, error }) => {
-            if (btn) setLoading(btn, false);
-            
-            if (result && result.success) {
-                localStorage.setItem('doctorSession', JSON.stringify({
-                    doctorId: session.doctorId,
-                    phone: session.phone,
-                    sessionToken: result.sessionToken || session.sessionToken
-                }));
+            if (data && !error) {
+                // الجلسة صالحة، انتقل مباشرة للوحة التحكم
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('dashboardSection').classList.remove('hidden');
-                renderDashboardUI(result, session.doctorId);
+                await loadDoctorDashboardData(session.doctorId);
             } else {
-                // إذا فشلت المصادقة (مثلاً انتهت الجلسة)، امسحها ليتمكن من الدخول يدوياً
+                // الجلسة منتهية أو الطبيب محذوف
                 localStorage.removeItem('doctorSession');
             }
-        }).catch(() => {
-            if (btn) setLoading(btn, false);
-            localStorage.removeItem('doctorSession');
-        });
+        }
     } catch(e) {
         localStorage.removeItem('doctorSession');
     }
