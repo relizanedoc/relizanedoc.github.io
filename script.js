@@ -1742,47 +1742,8 @@ async function handleToggleBooking(e) {
 
 
         textEl.textContent = isEnabled ? t('disableBooking') : t('enableBooking');
-
-
-
       }
-
-
-
     }
-// ✅ تفعيل/إيقاف الحجوزات
-async function handleToggleBooking(e) {
-  const isChecked = e.target.checked;
-  const sessionStr = localStorage.getItem('doctorSession');
-  if (!sessionStr) { showToast('يرجى تسجيل الدخول', 'error'); return; }
-  const session = JSON.parse(sessionStr);
-  
-  const toggleSwitch = document.getElementById('bookingToggleSwitch');
-  toggleSwitch.disabled = true;
-  
-  try {
-    const { error } = await supabaseClient
-      .from('doctors')
-      .update({ booking_enabled: isChecked })
-      .eq('id', session.doctorId);
-    
-    if (error) throw error;
-    
-    showToast(t('toastToggleSuccess'), 'success');
-    updateToggleText(isChecked);
-    
-    const docIndex = allDoctors.findIndex(d => d.id === session.doctorId);
-    if (docIndex > -1) {
-      allDoctors[docIndex].booking_enabled = isChecked;
-    }
-    
-  } catch (err) {
-    e.target.checked = !isChecked;
-    showToast(t('toastToggleError') + ': ' + err.message, 'error');
-  } finally {
-    toggleSwitch.disabled = false;
-  }
-}
 // ========================================================================
     // جلب حجوزات العضو
     // ========================================================================
@@ -2968,12 +2929,6 @@ function displayTimeSlots(container, slots, timeInput) {
     container.appendChild(eveningDiv);
   }
 }
-// ✅ ملء بيانات لوحة تحكم الطبيب
-async function fillDashboardData(doctor) {
-  // تحديث العنوان
-  document.getElementById('dashboardSubtitle').textContent = 
-    currentLang === 'ar' ? `د. ${doctor.first_name} ${doctor.last_name}` : `Dr. ${doctor.first_name} ${doctor.last_name}`;
-  
   // ✅ ملء أوقات العمل
   let savedDays = {};
   try { 
