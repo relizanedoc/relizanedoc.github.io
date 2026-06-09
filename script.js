@@ -3093,4 +3093,4 @@ window.saveWorkingHours = async function() {
     }
 }
 
-});  // ✅✅✅ أضف هذا السطر هنا لإغلاق DOMContentLoaded
+});  // إغلاق document.addEventListener('DOMContentLoaded'
