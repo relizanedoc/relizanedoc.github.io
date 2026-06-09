@@ -2897,8 +2897,7 @@ function displayTimeSlots(container, slots, timeInput) {
   }
   if (eveningDiv.querySelector('.slots-grid').hasChildNodes()) {
     container.appendChild(eveningDiv);
-  }
-}
+
 // ✅ جلب مواعيد الطبيب
 async function loadDoctorAppointments(doctorId) {
     const container = document.getElementById('appointmentsTable');
