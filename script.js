@@ -748,19 +748,6 @@ function openDoctorProfileModal(doc, doctorName) {
 
     function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
 
-    function updateSEOMetaTags(doc) {
-      if (!doc) return;
-      const pageTitle = currentLang === 'ar' ? `د. ${doc.FirstName} ${doc.LastName} | ${doc.Specialty} في ${doc.Municipality}` : `Dr. ${doc.FirstName} ${doc.LastName} | ${doc.Specialty} in ${doc.Municipality}`;
-      const pageDesc = currentLang === 'ar' ? `احجز موعدك مع د. ${doc.FirstName} ${doc.LastName}، أخصائي ${doc.Specialty} في ${doc.Municipality}، ولاية غليزان. العنوان: ${doc.ExactLocation}` : `Book an appointment with Dr. ${doc.FirstName} ${doc.LastName}, ${doc.Specialty} in ${doc.Municipality}, Relizane.`;
-      document.title = pageTitle;
-      let metaDesc = document.querySelector('meta[name="description"]');
-      if (metaDesc) metaDesc.setAttribute('content', pageDesc);
-      let ogTitle = document.querySelector('meta[property="og:title"]');
-      if (ogTitle) ogTitle.setAttribute('content', pageTitle);
-      let ogDesc = document.querySelector('meta[property="og:description"]');
-      if (ogDesc) ogDesc.setAttribute('content', pageDesc);
-    }
-
    // ✅ تحديث updateSEOMetaTags لأسماء أعمدة Supabase
 function updateSEOMetaTags(doc) {
   if (!doc) return;
@@ -776,40 +763,6 @@ function updateSEOMetaTags(doc) {
 }
 // ✅ تحديث handleSEOAndRender لأسماء أعمدة Supabase
 function handleSEOAndRender() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const targetDocId = urlParams.get('doc');
-      if (targetDocId) {
-        const targetDoc = allDoctors.find(d => d.DoctorID === targetDocId);
-        if (targetDoc) {
-          updateSEOMetaTags(targetDoc);
-          renderDoctors([targetDoc]);
-          populateFilters(); // تأكد من استدعاء الفلاتر
-          
-          // === الجزء الجديد: هذا هو السحر الذي سيفتح النافذة تلقائياً ===
-          const doctorName = (currentLang === 'ar' ? 'د. ' : 'Dr. ') + targetDoc.FirstName + ' ' + targetDoc.LastName;
-          setTimeout(() => {
-              openDoctorProfileModal(targetDoc, doctorName);
-          }, 300); // تأخير بسيط لضمان أن الواجهة جاهزة للرسم
-          // ========================================================
-
-          let backBtn = document.getElementById('seoBackBtn');
-          if(!backBtn) {
-             backBtn = document.createElement('button');
-             backBtn.id = 'seoBackBtn';
-             backBtn.className = 'btn btn-secondary btn-block mb-4';
-             backBtn.innerHTML = currentLang === 'ar' ? '&#8594; عرض جميع الأطباء المتاحين' : '&#8592; View All Available Doctors';
-             backBtn.onclick = () => {
-                 window.history.pushState({}, document.title, window.location.pathname);
-                 document.title = currentLang === 'ar' ? 'دليل أطباء ولاية غليزان' : 'Relizane Medical Directory';
-                 renderDoctors(allDoctors);
-                 backBtn.remove();
-             };
-             document.getElementById('doctorsList').insertAdjacentElement('beforebegin', backBtn);
-          }
-          return;
-        }
-      }
-      renderDoctors(allDoctors);
   const urlParams = new URLSearchParams(window.location.search);
   const targetDocId = urlParams.get('doc');
   if (targetDocId) {
@@ -818,7 +771,7 @@ function handleSEOAndRender() {
       updateSEOMetaTags(targetDoc);
       renderDoctors([targetDoc]);
       populateFilters();
-      
+
       const doctorName = (currentLang === 'ar' ? 'د. ' : 'Dr. ') + targetDoc.first_name + ' ' + targetDoc.last_name;
       setTimeout(() => {
           openDoctorProfileModal(targetDoc, doctorName);
@@ -894,23 +847,6 @@ async function loadDoctors() {
       return cleaned || phone; 
     }
 
-    function populateFilters() {
-      const specs = [...new Set(allDoctors.map(d => d.Specialty).filter(Boolean))].sort();
-      const muns = [...new Set(allDoctors.map(d => d.Municipality).filter(Boolean))].sort();
-      const specSel = document.getElementById('specialtyFilter');
-      const munSel = document.getElementById('municipalityFilter');
-      const prevSpec = specSel.value;
-      const prevMun = munSel.value;
-      specSel.innerHTML = '<option value="">' + t('allSpecialties') + '</option>';
-      munSel.innerHTML = '<option value="">' + t('allMunicipalities') + '</option>';
-      specs.forEach(s => { const opt = document.createElement('option'); opt.value = s; opt.textContent = t(s); specSel.appendChild(opt); });
-      muns.forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.textContent = t(m); munSel.appendChild(opt); });
-      if (prevSpec && specs.includes(prevSpec)) specSel.value = prevSpec;
-      if (prevMun && muns.includes(prevMun)) munSel.value = prevMun;
-      if (window.tsSpecialtyFilter) { window.tsSpecialtyFilter.clearOptions(); Array.from(specSel.options).forEach(opt => window.tsSpecialtyFilter.addOption({value: opt.value, text: opt.text})); window.tsSpecialtyFilter.setValue(prevSpec); }
-      if (window.tsMunicipalityFilter) { window.tsMunicipalityFilter.clearOptions(); Array.from(munSel.options).forEach(opt => window.tsMunicipalityFilter.addOption({value: opt.value, text: opt.text})); window.tsMunicipalityFilter.setValue(prevMun); }
-      filterDoctors();
-    }
     // ✅ تحديث populateFilters لأسماء أعمدة Supabase
 function populateFilters() {
   const specs = [...new Set(allDoctors.map(d => d.specialty).filter(Boolean))].sort();
@@ -930,35 +866,6 @@ function populateFilters() {
   filterDoctors();
 }
 
-    function filterDoctors() {
-      const searchInput = document.getElementById('searchInput');
-      const search = searchInput.value.toLowerCase().trim();
-      const spec = document.getElementById('specialtyFilter').value;
-      const mun = document.getElementById('municipalityFilter').value;
-      const suggestionsDropdown = document.getElementById('searchSuggestions');
-      const filtered = allDoctors.filter(doc => {
-        const text = `${doc.FirstName||''} ${doc.LastName||''} ${doc.Specialty||''} ${doc.Municipality||''} ${doc.ExactLocation||''}`.toLowerCase();
-        return (!search || text.includes(search)) && (!spec || doc.Specialty === spec) && (!mun || doc.Municipality === mun);
-      });
-      renderDoctors(filtered);
-      if (!suggestionsDropdown) return;
-      if (search.length < 2) { suggestionsDropdown.classList.add('hidden'); return; }
-      const suggestionsHtml = filtered.slice(0, 5).map(doc => {
-          const avatarText = (doc.FirstName?.[0] || '') + (doc.LastName?.[0] || '');
-          const doctorName = escapeHtml(doc.FirstName) + ' ' + escapeHtml(doc.LastName);
-          const specialtyStr = escapeHtml(t(doc.Specialty));
-          return `
-            <div class="suggestion-item" onclick="selectSuggestion('${doc.DoctorID}')">
-              <div class="sugg-avatar">${avatarText}</div>
-              <div style="flex: 1; min-width: 0;">
-                <div style="font-weight: bold; font-size: 0.95rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${currentLang === 'ar' ? 'د.' : 'Dr.'} ${doctorName}</div>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${specialtyStr} - ${escapeHtml(t(doc.Municipality))}</div>
-              </div>
-            </div>`;
-      }).join('');
-      if (suggestionsHtml) { suggestionsDropdown.innerHTML = suggestionsHtml; suggestionsDropdown.classList.remove('hidden'); } 
-      else { suggestionsDropdown.innerHTML = `<div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">${t('noDoctorsFound')}</div>`; suggestionsDropdown.classList.remove('hidden'); }
-    }
     // ✅ تحديث filterDoctors لأسماء أعمدة Supabase
 function filterDoctors() {
   const searchInput = document.getElementById('searchInput');
@@ -990,14 +897,6 @@ function filterDoctors() {
   else { suggestionsDropdown.innerHTML = `<div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">${t('noDoctorsFound')}</div>`; suggestionsDropdown.classList.remove('hidden'); }
 }
 
-    window.selectSuggestion = function(doctorId) {
-        const doc = allDoctors.find(d => d.DoctorID === doctorId);
-        if (doc) {
-            document.getElementById('searchInput').value = doc.FirstName + ' ' + doc.LastName;
-            document.getElementById('searchSuggestions').classList.add('hidden');
-            renderDoctors([doc]);
-        }
-    };
 // ✅ تحديث selectSuggestion لأسماء أعمدة Supabase
 window.selectSuggestion = function(doctorId) {
     const doc = allDoctors.find(d => d.id === doctorId);
@@ -1607,7 +1506,7 @@ function renderDashboardUI(data, doctorId) {
 }
 // 2. دالة تسجيل الدخول اليدوي المحدثة
 
-// ✅ تسجيل دخول الطبيب (يتصل بـ Edge Function)
+// ✅ تسجيل دخول الطبيب (هاتف + كلمة مرور فقط)
 async function handleDashboardLogin(e) {
   if (e && e.preventDefault) e.preventDefault();
   if (isAccountLocked()) return;
@@ -1615,38 +1514,56 @@ async function handleDashboardLogin(e) {
   const btn = document.getElementById('dashboardLoginBtn');
   setLoading(btn, true);
 
-  const doctorId = document.getElementById('loginDoctorId').value.trim();
   const phone = document.getElementById('loginPhone').value.trim();
   const password = document.getElementById('loginDoctorPassword').value.trim();
 
-  try {
-    // ✅ الاتصال بـ Edge Function للتحقق من بيانات الطبيب
-    const { data, error } = await supabaseClient.functions.invoke('doctor-auth', {
-      body: { 
-        action: 'login', 
-        doctorId: doctorId, 
-        phone: phone, 
-        password: password 
-      }
-    });
+  if (!phone || !password) {
+    showToast(currentLang === 'ar' ? 'يرجى إدخال الهاتف وكلمة المرور' : 'Please enter phone and password', 'error');
+    setLoading(btn, false);
+    return;
+  }
 
-    if (error) throw new Error(error.message);
-    if (!data.success) throw new Error(data.error || 'بيانات الدخول غير صحيحة');
+  try {
+    // ✅ تشفير كلمة المرور المدخلة للمقارنة
+    const msgUint8 = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashHex = Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // ✅ البحث عن الطبيب في Supabase
+    const { data: doctor, error } = await supabaseClient
+      .from('doctors')
+      .select('*')
+      .eq('phone', phone)
+      .eq('password_hash', hashHex)
+      .single();
+
+    if (error || !doctor) {
+      throw new Error(currentLang === 'ar' ? 'رقم الهاتف أو كلمة المرور غير صحيحة' : 'Invalid phone or password');
+    }
+
+    // ✅ التحقق من أن الحساب مفعّل (أنت من تفعّله يدوياً)
+    if (!doctor.is_active) {
+      throw new Error(currentLang === 'ar' ? 'حسابك غير مفعّل بعد. يرجى التواصل مع الإدارة.' : 'Your account is not active yet. Please contact admin.');
+    }
 
     resetLoginAttempts();
 
-    // حفظ الجلسة
+    // ✅ حفظ الجلسة
     localStorage.setItem('doctorSession', JSON.stringify({
-      doctorId: doctorId,
+      doctorId: doctor.id,
       phone: phone,
-      sessionToken: data.sessionToken
+      doctorName: `${doctor.first_name} ${doctor.last_name}`
     }));
 
     document.getElementById('loginSection').classList.add('hidden');
     document.getElementById('dashboardSection').classList.remove('hidden');
 
-    // استدعاء دالة الرسم
-    renderDashboardUI(data, doctorId);
+    // ✅ ملء بيانات لوحة التحكم
+    fillDashboardData(doctor);
+    await fillDashboardData(doctor);
+
+    showToast(currentLang === 'ar' ? 'أهلاً د. ' + doctor.first_name : 'Welcome Dr. ' + doctor.first_name, 'success');
 
   } catch (err) {
     recordFailedAttempt();
@@ -1655,33 +1572,72 @@ async function handleDashboardLogin(e) {
     setLoading(btn, false);
   }
 }
+// ✅ ملء بيانات لوحة تحكم الطبيب
+async function fillDashboardData(doctor) {
+  // تحديث العنوان
+  document.getElementById('dashboardSubtitle').textContent = 
+    currentLang === 'ar' ? `د. ${doctor.first_name} ${doctor.last_name}` : `Dr. ${doctor.first_name} ${doctor.last_name}`;
+  
+  // ✅ ملء أوقات العمل
+  let savedDays = {};
+  try { 
+    savedDays = typeof doctor.working_days === 'string' ? JSON.parse(doctor.working_days) : (doctor.working_days || {}); 
+  } catch(e) {}
+  
+  const daysNames = currentLang === 'ar' 
+    ? ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
+    : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  
+  const container = document.getElementById('daysListContainer');
+  container.innerHTML = '';
+  for (let i = 0; i <= 6; i++) {
+    const dayData = savedDays[i.toString()] || { active: false, start: '08:00', end: '16:00' };
+    const row = document.createElement('div');
+    row.style.cssText = 'display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; background: var(--bg); padding: 0.75rem; border-radius: var(--radius); border: 1px solid var(--border);';
+    row.innerHTML = `
+      <div style="flex: 1; min-width: 100px; display: flex; align-items: center; gap: 0.5rem;">
+        <input type="checkbox" id="day_active_${i}" ${dayData.active ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+        <label for="day_active_${i}" style="margin: 0; cursor: pointer; font-weight: bold;">${daysNames[i]}</label>
+      </div>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="time" id="day_start_${i}" value="${dayData.start}" style="padding: 0.4rem; max-width: 110px;">
+        <span>-</span>
+        <input type="time" id="day_end_${i}" value="${dayData.end}" style="padding: 0.4rem; max-width: 110px;">
+      </div>
+    `;
+    container.appendChild(row);
+  }
+  
+  // ✅ تحديث زر الحجوزات
+  const toggleSwitch = document.getElementById('bookingToggleSwitch');
+  if (toggleSwitch) toggleSwitch.checked = !!doctor.booking_enabled;
+  updateToggleText(!!doctor.booking_enabled);
+  
+  // ✅ جلب المواعيد
+  await loadDoctorAppointments(doctor.id);
+}
     function logoutDashboard() {
+  localStorage.removeItem('doctorSession');
+  document.getElementById('loginSection').classList.remove('hidden');
+  document.getElementById('dashboardSection').classList.add('hidden');
+  document.getElementById('loginPhone').value = '';
+  document.getElementById('loginDoctorPassword').value = '';
+  showToast(t('toastLogout'), 'success');
+}
+ // ✅ تغيير حالة الحجز (مباشرة مع Supabase)
+// ✅ تغيير حالة الحجز (مباشرة مع Supabase)
+window.changeBookingStatus = async function(bookingId, newStatus) {
+  const statusText = newStatus === 'confirmed' 
+    ? (currentLang === 'ar' ? 'مؤكد' : 'Confirmed') 
+    : (currentLang === 'ar' ? 'ملغى' : 'Cancelled');
 
-
-
-      localStorage.removeItem('doctorSession'); // مسح المفكرة
-
-
-
-      document.getElementById('loginSection').classList.remove('hidden');
-
-
-
-      document.getElementById('dashboardSection').classList.add('hidden');
-      document.getElementById('loginDoctorId').value = '';
-      document.getElementById('loginPhone').value = '';
-      document.getElementById('loginDoctorPassword').value = ''; 
-    }
- // ✅ تغيير حالة الحجز (محدّثة لـ Supabase)
-window.changeBookingStatus = async function(bookingId, newStatus, patientEmail, doctorName, apptDate) {
-  if (!confirm('تأكيد تغيير حالة الحجز إلى: ' + (newStatus === 'confirmed' ? 'مؤكد' : 'ملغى') + '؟')) return;
+  if (!confirm(currentLang === 'ar' ? `تأكيد تغيير الحالة إلى: ${statusText}؟` : `Change status to ${statusText}?`)) return;
 
   const sessionStr = localStorage.getItem('doctorSession');
-  if (!sessionStr) { showToast('يرجى تسجيل الدخول مجدداً', 'error'); return; }
+  if (!sessionStr) { showToast('يرجى تسجيل الدخول', 'error'); return; }
   const session = JSON.parse(sessionStr);
 
   try {
-    // ✅ تحديث الحالة مباشرة في Supabase
     const { error } = await supabaseClient
       .from('appointments')
       .update({ status: newStatus })
@@ -1690,15 +1646,10 @@ window.changeBookingStatus = async function(bookingId, newStatus, patientEmail, 
 
     if (error) throw error;
 
-    showToast('تم التحديث بنجاح', 'success');
+    showToast(currentLang === 'ar' ? 'تم التحديث بنجاح' : 'Updated successfully', 'success');
 
-    // إرسال الإيميل التلقائي
-    if (patientEmail && patientEmail !== 'undefined' && patientEmail !== '') {
-      window.sendBookingEmail(patientEmail, doctorName, apptDate, newStatus);
-    }
-
-    // إعادة تحميل البيانات
-    refreshDoctorDashboard(session.doctorId, session.phone, session.sessionToken);
+    // إعادة تحميل المواعيد
+    await loadDoctorAppointments(session.doctorId);
 
   } catch (err) {
     showToast('خطأ: ' + err.message, 'error');
@@ -1743,15 +1694,19 @@ window.toggleWorkingHours = function() {
 
 
 
-// ✅ حفظ أوقات العمل (محدّثة لـ Supabase)
+// ✅ حفظ أوقات العمل
 window.saveWorkingHours = async function() {
+// ✅ تفعيل/إيقاف الحجوزات
+async function handleToggleBooking(e) {
+  const isChecked = e.target.checked;
   const sessionStr = localStorage.getItem('doctorSession');
   if (!sessionStr) return;
+  if (!sessionStr) { showToast('يرجى تسجيل الدخول', 'error'); return; }
   const session = JSON.parse(sessionStr);
 
   const btn = document.getElementById('saveHoursBtn');
   setLoading(btn, true, 'حفظ الأوقات');
-
+  
   const workingDaysData = {};
   for (let i = 0; i <= 6; i++) {
     const active = document.getElementById(`day_active_${i}`).checked;
@@ -1759,32 +1714,40 @@ window.saveWorkingHours = async function() {
     const end = document.getElementById(`day_end_${i}`).value;
     workingDaysData[i.toString()] = { active, start, end };
   }
+  const toggleSwitch = document.getElementById('bookingToggleSwitch');
+  toggleSwitch.disabled = true;
 
   try {
-    // ✅ تحديث أوقات العمل مباشرة في Supabase
     const { error } = await supabaseClient
       .from('doctors')
       .update({ working_days: workingDaysData })
-      .eq('id', session.doctorId)
-      .eq('phone', session.phone);
+      .update({ booking_enabled: isChecked })
+      .eq('id', session.doctorId);
 
     if (error) throw error;
 
-    showToast('تم حفظ أوقات وأيام العمل بنجاح', 'success');
+    showToast(currentLang === 'ar' ? 'تم حفظ أوقات العمل بنجاح' : 'Working hours saved', 'success');
+    showToast(t('toastToggleSuccess'), 'success');
+    updateToggleText(isChecked);
 
     // تحديث المصفوفة المحلية
     const docIndex = allDoctors.findIndex(d => d.id === session.doctorId);
-    if(docIndex > -1) {
+    if (docIndex > -1) {
       allDoctors[docIndex].working_days = workingDaysData;
+      allDoctors[docIndex].booking_enabled = isChecked;
     }
 
-  } catch(err) {
+  } catch (err) {
     showToast('خطأ: ' + err.message, 'error');
+    e.target.checked = !isChecked;
+    showToast(t('toastToggleError') + ': ' + err.message, 'error');
   } finally {
     setLoading(btn, false, 'حفظ الأوقات');
+    toggleSwitch.disabled = false;
   }
 };
 
+}
     // ========================================================================
 
     // ROUTER & LANGUAGE
@@ -1817,10 +1780,7 @@ window.saveWorkingHours = async function() {
 
 
     }
-
-
-
-   // ✅ تفعيل/إيقاف الحجوزات (محدّثة لـ Supabase)
+// ✅ تفعيل/إيقاف الحجوزات
 async function handleToggleBooking(e) {
   const isChecked = e.target.checked;
   const sessionStr = localStorage.getItem('doctorSession');
@@ -1831,19 +1791,16 @@ async function handleToggleBooking(e) {
   toggleSwitch.disabled = true;
 
   try {
-    // ✅ تحديث حالة الحجوزات مباشرة في Supabase
     const { error } = await supabaseClient
       .from('doctors')
       .update({ booking_enabled: isChecked })
-      .eq('id', session.doctorId)
-      .eq('phone', session.phone);
+      .eq('id', session.doctorId);
 
     if (error) throw error;
 
     showToast(t('toastToggleSuccess'), 'success');
     updateToggleText(isChecked);
 
-    // تحديث المصفوفة المحلية
     const docIndex = allDoctors.findIndex(d => d.id === session.doctorId);
     if (docIndex > -1) {
       allDoctors[docIndex].booking_enabled = isChecked;
@@ -2642,7 +2599,7 @@ document.addEventListener('submit', async function(e) {
 
         const session = JSON.parse(savedSession);
 
-
+        
 
         if(document.getElementById('loginDoctorId')) document.getElementById('loginDoctorId').value = session.doctorId || '';
 
@@ -2650,7 +2607,7 @@ document.addEventListener('submit', async function(e) {
 
         if(document.getElementById('loginDoctorPassword')) document.getElementById('loginDoctorPassword').value = ''; 
 
-
+        
 
         const btn = document.getElementById('dashboardLoginBtn');
 
@@ -2680,13 +2637,13 @@ document.addEventListener('submit', async function(e) {
 
                 }));
 
-
+                
 
                 document.getElementById('loginSection').classList.add('hidden');
 
                 document.getElementById('dashboardSection').classList.remove('hidden');
 
-
+                
 
                 // === التعديل هنا: استدعاء دالة الرسم بدلاً من التعليق الناقص ===
 
@@ -2708,12 +2665,37 @@ document.addEventListener('submit', async function(e) {
 
         });
 
+// === كود تسجيل الدخول التلقائي الآمن للطبيب ===
+const savedSession = localStorage.getItem('doctorSession');
+if (savedSession) {
+  try {
+    const session = JSON.parse(savedSession);
+    
+    if (session.doctorId) {
+      // التحقق من أن الطبيب لا يزال مفعّلاً
+      const { data: doctor } = await supabaseClient
+        .from('doctors')
+        .select('is_active, working_days, booking_enabled')
+        .eq('id', session.doctorId)
+        .single();
+      
+      if (doctor && doctor.is_active) {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('dashboardSection').classList.remove('hidden');
 
 
      } catch(e) {
+        // ملء البيانات
+        const fullDoctor = { ...doctor, first_name: session.doctorName.split(' ')[0], last_name: session.doctorName.split(' ')[1] };
+        await fillDashboardData(fullDoctor);
+      } else {
         localStorage.removeItem('doctorSession');
       }
     }
+  } catch(e) {
+    localStorage.removeItem('doctorSession');
+  }
+}
     // =======================================
     });
 
@@ -2802,133 +2784,62 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/[^a-z0-9ا-ي\s]/g, ''); 
     };
 
-    const processUserMessage = (rawMsg) => {
-        const cleanMsg = normalizeText(rawMsg);
-        
-        if (!allDoctors || allDoctors.length === 0) {
-            return t('chatLoadingDB');
-        }
-
-        // قواميس البحث بناءً على اللغة الحالية
-        const isAskingForPhone = currentLang === 'ar' ? 
-            /رقم|هاتف|تلفون|موبيل|اتصال/i.test(cleanMsg) : 
-            /phone|number|contact|call/i.test(cleanMsg);
-            
-        const isAskingForLocation = currentLang === 'ar' ? 
-            /عنوان|اين|مكان|موقع|وين/i.test(cleanMsg) : 
-            /address|location|where|place/i.test(cleanMsg);
     // ✅ تحديث Chatbot لأسماء أعمدة Supabase
 const processUserMessage = (rawMsg) => {
     const cleanMsg = normalizeText(rawMsg);
-    
+
     if (!allDoctors || allDoctors.length === 0) {
         return t('chatLoadingDB');
     }
 
-        let matchedDoctors = [];
-        const availableSpecialties = [...new Set(allDoctors.map(d => d.Specialty).filter(Boolean))];
-        const availableMunicipalities = [...new Set(allDoctors.map(d => d.Municipality).filter(Boolean))];
     const isAskingForPhone = currentLang === 'ar' ? 
         /رقم|هاتف|تلفون|موبيل|اتصال/i.test(cleanMsg) : 
         /phone|number|contact|call/i.test(cleanMsg);
-        
+
     const isAskingForLocation = currentLang === 'ar' ? 
         /عنوان|اين|مكان|موقع|وين/i.test(cleanMsg) : 
         /address|location|where|place/i.test(cleanMsg);
 
-        let detectedSpecialty = null;
-        let detectedMunicipality = null;
     let matchedDoctors = [];
     const availableSpecialties = [...new Set(allDoctors.map(d => d.specialty).filter(Boolean))];
     const availableMunicipalities = [...new Set(allDoctors.map(d => d.municipality).filter(Boolean))];
 
-        availableSpecialties.forEach(spec => {
-            if (cleanMsg.includes(normalizeText(t(spec)))) detectedSpecialty = spec;
-        });
     let detectedSpecialty = null;
     let detectedMunicipality = null;
 
-        availableMunicipalities.forEach(mun => {
-            if (cleanMsg.includes(normalizeText(t(mun)))) detectedMunicipality = mun;
-        });
     availableSpecialties.forEach(spec => {
         if (cleanMsg.includes(normalizeText(t(spec)))) detectedSpecialty = spec;
     });
 
-        matchedDoctors = allDoctors.filter(doc => {
-            const docNameAr = normalizeText(doc.FirstName + " " + doc.LastName);
-            const docNameEn = normalizeText(doc.FirstName + " " + doc.LastName); // في حال وجود أسماء بالإنجليزية
-            
-            const isNameMatch = cleanMsg.split(' ').some(word => 
-                word.length > 2 && (docNameAr.includes(word) || docNameEn.includes(word))
-            );
-            const isSpecMatch = detectedSpecialty ? doc.Specialty === detectedSpecialty : true;
-            const isMunMatch = detectedMunicipality ? doc.Municipality === detectedMunicipality : true;
     availableMunicipalities.forEach(mun => {
         if (cleanMsg.includes(normalizeText(t(mun)))) detectedMunicipality = mun;
     });
 
-            if (isNameMatch && !detectedSpecialty && !detectedMunicipality) return true;
-            if ((detectedSpecialty || detectedMunicipality) && isSpecMatch && isMunMatch) return true;
     matchedDoctors = allDoctors.filter(doc => {
         const docNameAr = normalizeText(doc.first_name + " " + doc.last_name);
         const docNameEn = normalizeText(doc.first_name + " " + doc.last_name);
-        
+
         const isNameMatch = cleanMsg.split(' ').some(word => 
             word.length > 2 && (docNameAr.includes(word) || docNameEn.includes(word))
         );
         const isSpecMatch = detectedSpecialty ? doc.specialty === detectedSpecialty : true;
         const isMunMatch = detectedMunicipality ? doc.municipality === detectedMunicipality : true;
 
-            return false;
-        });
         if (isNameMatch && !detectedSpecialty && !detectedMunicipality) return true;
         if ((detectedSpecialty || detectedMunicipality) && isSpecMatch && isMunMatch) return true;
 
-        if (matchedDoctors.length === 0) {
-            return t('chatNoResults');
-        }
         return false;
     });
 
-        if (matchedDoctors.length > 3) {
-            return `${t('chatFoundPrefix')} ${matchedDoctors.length} ${t('chatFoundSuffix')}` + 
-                   generateCardsHtml(matchedDoctors.slice(0, 3), isAskingForPhone, isAskingForLocation);
-        }
     if (matchedDoctors.length === 0) {
         return t('chatNoResults');
     }
 
-        return t('chatExactResults') + generateCardsHtml(matchedDoctors, isAskingForPhone, isAskingForLocation);
-    };
     if (matchedDoctors.length > 3) {
         return `${t('chatFoundPrefix')} ${matchedDoctors.length} ${t('chatFoundSuffix')}` + 
                generateCardsHtml(matchedDoctors.slice(0, 3), isAskingForPhone, isAskingForLocation);
     }
 
-    const generateCardsHtml = (doctorsList, focusPhone, focusLocation) => {
-        return doctorsList.map(doc => {
-            const docPrefix = currentLang === 'ar' ? 'د.' : 'Dr.';
-            let infoHtml = `<div class="bot-card-result">`;
-            
-            infoHtml += `<div><strong>${t('chatDoctorLabel')}</strong> ${docPrefix} ${escapeHtml(doc.FirstName)} ${escapeHtml(doc.LastName)}</div>`;
-            infoHtml += `<div><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.Specialty))}</div>`;
-            
-            if (focusPhone || (!focusPhone && !focusLocation)) {
-                // إضافة dir="ltr" مع inline-block لإجبار الرقم على عرض صحيح من اليسار لليمين دون تشويه التخطيط
-                infoHtml += `<div><strong>${t('chatPhoneLabel')}</strong> <span dir="ltr" style="display: inline-block; direction: ltr;">${escapeHtml(formatPhoneNumber(doc.Phone))}</span></div>`;
-            }
-            if (focusLocation || (!focusPhone && !focusLocation)) {
-                infoHtml += `<div><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.Municipality))}</div>`;
-                infoHtml += `<div><strong>${t('chatAddressLabel')}</strong> ${escapeHtml(doc.ExactLocation)}</div>`;
-            }
-            
-            infoHtml += `<button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); openDoctorProfileModal(allDoctors.find(d => d.DoctorID === '${doc.DoctorID}'), '${docPrefix} ${escapeHtml(doc.FirstName)} ${escapeHtml(doc.LastName)}')" style="margin-top: 8px; background: var(--primary-light); color: var(--primary-dark); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: bold; width: 100%; transition: opacity 0.2s;">${t('chatBookDetailsBtn')}</button>`;
-            
-            infoHtml += `</div>`;
-            return infoHtml;
-        }).join('');
-    };
     return t('chatExactResults') + generateCardsHtml(matchedDoctors, isAskingForPhone, isAskingForLocation);
 };
 
@@ -2937,10 +2848,10 @@ const generateCardsHtml = (doctorsList, focusPhone, focusLocation) => {
     return doctorsList.map(doc => {
         const docPrefix = currentLang === 'ar' ? 'د.' : 'Dr.';
         let infoHtml = `<div class="bot-card-result">`;
-        
+
         infoHtml += `<div><strong>${t('chatDoctorLabel')}</strong> ${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}</div>`;
         infoHtml += `<div><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.specialty))}</div>`;
-        
+
         if (focusPhone || (!focusPhone && !focusLocation)) {
             infoHtml += `<div><strong>${t('chatPhoneLabel')}</strong> <span dir="ltr" style="display: inline-block; direction: ltr;">${escapeHtml(formatPhoneNumber(doc.phone))}</span></div>`;
         }
@@ -2948,9 +2859,9 @@ const generateCardsHtml = (doctorsList, focusPhone, focusLocation) => {
             infoHtml += `<div><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.municipality))}</div>`;
             infoHtml += `<div><strong>${t('chatAddressLabel')}</strong> ${escapeHtml(doc.exact_location)}</div>`;
         }
-        
+
         infoHtml += `<button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); openDoctorProfileModal(allDoctors.find(d => d.id === '${doc.id}'), '${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')" style="margin-top: 8px; background: var(--primary-light); color: var(--primary-dark); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: bold; width: 100%; transition: opacity 0.2s;">${t('chatBookDetailsBtn')}</button>`;
-        
+
         infoHtml += `</div>`;
         return infoHtml;
     }).join('');
@@ -3169,5 +3080,238 @@ function displayTimeSlots(container, slots, timeInput) {
   }
   if (eveningDiv.querySelector('.slots-grid').hasChildNodes()) {
     container.appendChild(eveningDiv);
+  }
+}
+// ✅ ملء بيانات لوحة تحكم الطبيب
+async function fillDashboardData(doctor) {
+  // تحديث العنوان
+  document.getElementById('dashboardSubtitle').textContent = 
+    currentLang === 'ar' ? `د. ${doctor.first_name} ${doctor.last_name}` : `Dr. ${doctor.first_name} ${doctor.last_name}`;
+
+  // ✅ ملء أوقات العمل
+  let savedDays = {};
+  try { 
+    savedDays = typeof doctor.working_days === 'string' ? JSON.parse(doctor.working_days) : (doctor.working_days || {}); 
+  } catch(e) {}
+
+  const daysNames = currentLang === 'ar' 
+    ? ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
+    : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  const container = document.getElementById('daysListContainer');
+  container.innerHTML = '';
+  for (let i = 0; i <= 6; i++) {
+    const dayData = savedDays[i.toString()] || { active: false, start: '08:00', end: '16:00' };
+    const row = document.createElement('div');
+    row.style.cssText = 'display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; background: var(--bg); padding: 0.75rem; border-radius: var(--radius); border: 1px solid var(--border);';
+    row.innerHTML = `
+      <div style="flex: 1; min-width: 100px; display: flex; align-items: center; gap: 0.5rem;">
+        <input type="checkbox" id="day_active_${i}" ${dayData.active ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+        <label for="day_active_${i}" style="margin: 0; cursor: pointer; font-weight: bold;">${daysNames[i]}</label>
+      </div>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="time" id="day_start_${i}" value="${dayData.start}" style="padding: 0.4rem; max-width: 110px;">
+        <span>-</span>
+        <input type="time" id="day_end_${i}" value="${dayData.end}" style="padding: 0.4rem; max-width: 110px;">
+      </div>
+    `;
+    container.appendChild(row);
+  }
+
+  // ✅ تحديث زر الحجوزات
+  const toggleSwitch = document.getElementById('bookingToggleSwitch');
+  if (toggleSwitch) toggleSwitch.checked = !!doctor.booking_enabled;
+  updateToggleText(!!doctor.booking_enabled);
+
+  // ✅ جلب المواعيد
+  await loadDoctorAppointments(doctor.id);
+}
+
+// ✅ جلب مواعيد الطبيب
+async function loadDoctorAppointments(doctorId) {
+  const container = document.getElementById('appointmentsTable');
+  const empty = document.getElementById('noAppointments');
+
+  container.innerHTML = '<div style="text-align:center; padding: 1rem;">جاري التحميل...</div>';
+  empty.classList.add('hidden');
+
+  try {
+    const { data: appointments, error } = await supabaseClient
+      .from('appointments')
+      .select('*')
+      .eq('doctor_id', doctorId)
+      .order('appointment_date', { ascending: true });
+
+    if (error) throw error;
+
+    if (!appointments || appointments.length === 0) {
+      container.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    const confirmTxt = currentLang === 'ar' ? 'تأكيد' : 'Confirm';
+    const cancelTxt = currentLang === 'ar' ? 'إلغاء' : 'Cancel';
+
+    container.innerHTML = appointments.map(a => {
+      let displayStatus = a.status || 'pending';
+      let statusStyle = 'background: #f1f5f9; color: #64748b;';
+      let statusIndicator = '#f59e0b';
+
+      if (a.status === 'confirmed') {
+        statusStyle = 'background: #ecfdf5; color: #10b981;';
+        statusIndicator = '#10b981';
+        displayStatus = currentLang === 'ar' ? 'مؤكد' : 'Confirmed';
+      } else if (a.status === 'cancelled') {
+        statusStyle = 'background: #fef2f2; color: #ef4444;';
+        statusIndicator = '#ef4444';
+        displayStatus = currentLang === 'ar' ? 'ملغى' : 'Cancelled';
+      } else {
+        displayStatus = currentLang === 'ar' ? 'قيد الانتظار' : 'Pending';
+      }
+
+      const actionsHtml = (a.status === 'pending') ? `
+        <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #ecfdf5; border: 1px solid #10b981; color: #10b981; border-radius: 6px;"
+          onclick="changeBookingStatus('${a.id}', 'confirmed')">
+          ${confirmTxt}
+        </button>
+        <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #fef2f2; border: 1px solid #ef4444; color: #ef4444; border-radius: 6px;"
+          onclick="changeBookingStatus('${a.id}', 'cancelled')">
+          ${cancelTxt}
+        </button>
+      ` : `<span class="badge" style="${statusStyle}">${displayStatus}</span>`;
+
+      return `
+        <div class="card-hover" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 1rem;">
+          <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: ${statusIndicator};"></div>
+          <div style="padding-right: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary); background: var(--bg); padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
+                ${a.id.substring(0, 8)}...
+              </span>
+              <span class="badge" style="${statusStyle}">${displayStatus}</span>
+            </div>
+            <h4 style="font-size: 1.15rem; font-weight: bold; color: var(--text); margin-bottom: 0.25rem;">${escapeHtml(a.patient_name)}</h4>
+            <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--primary); font-size: 0.95rem; font-weight: 600; direction: ltr; margin-bottom: 1rem;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              ${escapeHtml(formatPhoneNumber(a.patient_phone))}
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-top: 1px dashed var(--border); padding-top: 0.75rem;">
+              <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.9rem;">
+                <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect></svg>
+                  <span dir="ltr">${escapeHtml(a.appointment_date)}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>
+                  <span dir="ltr">${escapeHtml(a.appointment_time)}</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                ${actionsHtml}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (err) {
+    console.error('Error loading appointments:', err);
+    container.innerHTML = '<div style="text-align:center; color: var(--danger); padding: 1rem;">خطأ في التحميل</div>';
+  }
+}
+// ✅ جلب مواعيد الطبيب
+async function loadDoctorAppointments(doctorId) {
+  const container = document.getElementById('appointmentsTable');
+  const empty = document.getElementById('noAppointments');
+  
+  container.innerHTML = '<div style="text-align:center; padding: 1rem;">جاري التحميل...</div>';
+  empty.classList.add('hidden');
+  
+  try {
+    const { data: appointments, error } = await supabaseClient
+      .from('appointments')
+      .select('*')
+      .eq('doctor_id', doctorId)
+      .order('appointment_date', { ascending: true });
+    
+    if (error) throw error;
+    
+    if (!appointments || appointments.length === 0) {
+      container.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    
+    const confirmTxt = currentLang === 'ar' ? 'تأكيد' : 'Confirm';
+    const cancelTxt = currentLang === 'ar' ? 'إلغاء' : 'Cancel';
+    
+    container.innerHTML = appointments.map(a => {
+      let displayStatus = a.status || 'pending';
+      let statusStyle = 'background: #f1f5f9; color: #64748b;';
+      let statusIndicator = '#f59e0b';
+      
+      if (a.status === 'confirmed') {
+        statusStyle = 'background: #ecfdf5; color: #10b981;';
+        statusIndicator = '#10b981';
+        displayStatus = currentLang === 'ar' ? 'مؤكد' : 'Confirmed';
+      } else if (a.status === 'cancelled') {
+        statusStyle = 'background: #fef2f2; color: #ef4444;';
+        statusIndicator = '#ef4444';
+        displayStatus = currentLang === 'ar' ? 'ملغى' : 'Cancelled';
+      } else {
+        displayStatus = currentLang === 'ar' ? 'قيد الانتظار' : 'Pending';
+      }
+      
+      const actionsHtml = (a.status === 'pending') ? `
+        <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #ecfdf5; border: 1px solid #10b981; color: #10b981; border-radius: 6px;"
+          onclick="changeBookingStatus('${a.id}', 'confirmed')">
+          ${confirmTxt}
+        </button>
+        <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #fef2f2; border: 1px solid #ef4444; color: #ef4444; border-radius: 6px;"
+          onclick="changeBookingStatus('${a.id}', 'cancelled')">
+          ${cancelTxt}
+        </button>
+      ` : `<span class="badge" style="${statusStyle}">${displayStatus}</span>`;
+      
+      return `
+        <div class="card-hover" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 1rem;">
+          <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: ${statusIndicator};"></div>
+          <div style="padding-right: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary); background: var(--bg); padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
+                ${a.id.substring(0, 8).toUpperCase()}
+              </span>
+              <span class="badge" style="${statusStyle}">${displayStatus}</span>
+            </div>
+            <h4 style="font-size: 1.15rem; font-weight: bold; color: var(--text); margin-bottom: 0.25rem;">${escapeHtml(a.patient_name)}</h4>
+            <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--primary); font-size: 0.95rem; font-weight: 600; direction: ltr; margin-bottom: 1rem;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              ${escapeHtml(formatPhoneNumber(a.patient_phone))}
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-top: 1px dashed var(--border); padding-top: 0.75rem;">
+              <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.9rem;">
+                <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect></svg>
+                  <span dir="ltr">${escapeHtml(a.appointment_date)}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>
+                  <span dir="ltr">${escapeHtml(a.appointment_time)}</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                ${actionsHtml}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+  } catch (err) {
+    console.error('Error loading appointments:', err);
+    container.innerHTML = '<div style="text-align:center; color: var(--danger); padding: 1rem;">خطأ في التحميل</div>';
   }
 }
