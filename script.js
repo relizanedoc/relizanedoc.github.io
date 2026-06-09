@@ -258,22 +258,7 @@ chatBookDetailsBtn: 'عرض التفاصيل والحجز',
 
     function resetLoginAttempts() { localStorage.removeItem(ATTEMPTS_KEY); localStorage.removeItem(LOCKOUT_KEY); }
 
-    async function syncUserWithBackend(firebaseUser) {
-      if (!firebaseUser) return null;
-      try {
-        const idToken = await firebaseUser.getIdToken();
-        const result = await apiPost('authFirebase', { idToken, provider: firebaseUser.providerData[0]?.providerId || 'firebase' });
-        if (result.success) {
-          const userData = result.data;
-          localStorage.setItem('medicalUser', JSON.stringify(userData));
-          return userData;
-        } else throw new Error(result.error);
-      } catch (err) {
-        console.error('Sync user failed:', err);
-        return null;
-      }
-    }
-
+    
     // ✅ الحصول على المستخدم الحالي
 async function getCurrentUser() {
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -373,6 +358,7 @@ async function logoutUser() {
     // ========================================================================
 // تحديث ميزة تتبع الحجز لتعمل مع Supabase مباشرة
 // ========================================================================
+// === تتبع الحجز (محدث لـ Supabase) ===
 const trackForm = document.getElementById('trackBookingForm');
 if (trackForm) {
     trackForm.addEventListener('submit', async (e) => {
@@ -386,72 +372,48 @@ if (trackForm) {
         resultDiv.classList.add('hidden');
 
         try {
-            // ✅ الاستعلام المباشر من جدول appointments في Supabase
-            // نستخدم ilike للبحث عن المعرف حتى لو أدخل المستخدم جزءاً منه أو المعرف الكامل
             const { data, error } = await supabaseClient
                 .from('appointments')
-                .select(`
-                    id,
-                    patient_name,
-                    appointment_date,
-                    appointment_time,
-                    status,
-                    doctors (first_name, last_name)
-                `)
-                .ilike('id', `%${bookingIdInput}%`) 
+                .select(`id, patient_name, appointment_date, appointment_time, status, doctors (first_name, last_name)`)
+                .ilike('id', `%${bookingIdInput}%`)
                 .eq('patient_phone', phoneStr)
                 .single();
 
             if (error || !data) {
-                throw new Error(currentLang === 'ar' ? 'لم يتم العثور على الحجز. تأكد من رقم الحجز ورقم الهاتف.' : 'Booking not found. Please check the ID and phone number.');
+                throw new Error(currentLang === 'ar' ? 'لم يتم العثور على الحجز. تأكد من رقم الحجز ورقم الهاتف.' : 'Booking not found.');
             }
 
-            // 1. تحديد الألوان بناءً على الحالة
             let statusStyle = 'background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1;';
             let displayStatus = data.status === 'pending' ? (currentLang === 'ar' ? 'قيد الانتظار' : 'Pending') : 
                                 data.status === 'confirmed' ? (currentLang === 'ar' ? 'مؤكد' : 'Confirmed') : 
                                 (currentLang === 'ar' ? 'ملغى' : 'Cancelled');
 
-            if (data.status === 'confirmed') {
-                statusStyle = 'background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;';
-            } else if (data.status === 'cancelled') {
-                statusStyle = 'background: #fef2f2; color: #ef4444; border: 1px solid #fecaca;';
-            }
+            if (data.status === 'confirmed') statusStyle = 'background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;';
+            else if (data.status === 'cancelled') statusStyle = 'background: #fef2f2; color: #ef4444; border: 1px solid #fecaca;';
 
-            // 2. نصوص الواجهة المترجمة ديناميكياً
-            const detailsTxt = currentLang === 'ar' ? 'تفاصيل الحجز:' : 'Booking Details:';
-            const idTxt = currentLang === 'ar' ? 'رقم الحجز:' : 'Booking ID:';
-            const nameTxt = currentLang === 'ar' ? 'المريض:' : 'Patient Name:';
-            const doctorTxt = currentLang === 'ar' ? 'الطبيب:' : 'Doctor:';
-            const dateTimeTxt = currentLang === 'ar' ? 'التاريخ والوقت:' : 'Date & Time:';
-            const currentStatusTxt = currentLang === 'ar' ? 'الحالة الحالية:' : 'Current Status:';
-
-            // استخراج اسم الطبيب بأمان
             const docName = data.doctors ? `${data.doctors.first_name} ${data.doctors.last_name}` : (currentLang === 'ar' ? 'غير محدد' : 'N/A');
-            // أخذ أول 8 أحرف من المعرف للعرض بشكل أنيق
             const shortId = data.id.substring(0, 8).toUpperCase();
 
-            // 3. بناء نتيجة العرض
             resultDiv.innerHTML = `
-                <h4 class="font-bold mb-3" style="color: var(--primary);">${detailsTxt}</h4>
+                <h4 class="font-bold mb-3" style="color: var(--primary);">${currentLang === 'ar' ? 'تفاصيل الحجز:' : 'Booking Details:'}</h4>
                 <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
-                    <span style="color: var(--text-secondary);">${idTxt}</span> 
+                    <span style="color: var(--text-secondary);">${currentLang === 'ar' ? 'رقم الحجز:' : 'Booking ID:'}</span> 
                     <strong style="font-family: monospace; letter-spacing: 1px;">${shortId}...</strong>
                 </div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
-                    <span style="color: var(--text-secondary);">${nameTxt}</span> 
+                    <span style="color: var(--text-secondary);">${currentLang === 'ar' ? 'المريض:' : 'Patient Name:'}</span> 
                     <strong>${escapeHtml(data.patient_name)}</strong>
                 </div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
-                    <span style="color: var(--text-secondary);">${doctorTxt}</span> 
+                    <span style="color: var(--text-secondary);">${currentLang === 'ar' ? 'الطبيب:' : 'Doctor:'}</span> 
                     <strong>${currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(docName)}</strong>
                 </div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:1rem; font-size: 0.95rem;">
-                    <span style="color: var(--text-secondary);">${dateTimeTxt}</span> 
+                    <span style="color: var(--text-secondary);">${currentLang === 'ar' ? 'التاريخ والوقت:' : 'Date & Time:'}</span> 
                     <strong dir="ltr">${escapeHtml(data.appointment_date)} | ${escapeHtml(data.appointment_time)}</strong>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem;">
-                    <span style="font-weight: bold;">${currentStatusTxt}</span>
+                    <span style="font-weight: bold;">${currentLang === 'ar' ? 'الحالة الحالية:' : 'Current Status:'}</span>
                     <span class="badge" style="${statusStyle}; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 600;">${escapeHtml(displayStatus)}</span>
                 </div>
             `;
@@ -2547,95 +2509,50 @@ if (trackForm) {
 
 
       window.onpopstate = (e) => { const view = (e.state && e.state.view) ? e.state.view : 'home'; router(view, false); };
-
-
-
-
-
-
-
-    // === كود تسجيل الدخول التلقائي الآمن للطبيب ===
-
-    const savedSession = localStorage.getItem('doctorSession');
-
-    if (savedSession) {
-
-      try {
-
+// === كود تسجيل الدخول التلقائي الآمن للطبيب (محدث لـ Supabase) ===
+const savedSession = localStorage.getItem('doctorSession');
+if (savedSession) {
+    try {
         const session = JSON.parse(savedSession);
-
-
-
         if(document.getElementById('loginDoctorId')) document.getElementById('loginDoctorId').value = session.doctorId || '';
-
         if(document.getElementById('loginPhone')) document.getElementById('loginPhone').value = session.phone || '';
-
-        if(document.getElementById('loginDoctorPassword')) document.getElementById('loginDoctorPassword').value = ''; 
-
-
-
+        if(document.getElementById('loginDoctorPassword')) document.getElementById('loginDoctorPassword').value = '';
+        
         const btn = document.getElementById('dashboardLoginBtn');
-
         if (btn) setLoading(btn, true);
 
-
-
-        apiPost('doctorLogin', { 
-
-            doctorId: session.doctorId, 
-
-            phone: session.phone, 
-
-            sessionToken: session.sessionToken 
-
-        }).then(result => {
-
-            if (result && result.success) {
-
-                localStorage.setItem('doctorSession', JSON.stringify({ 
-
-                    doctorId: session.doctorId, 
-
-                    phone: session.phone, 
-
-                    sessionToken: result.data.sessionToken 
-
-                }));
-
-
-
-                document.getElementById('loginSection').classList.add('hidden');
-
-                document.getElementById('dashboardSection').classList.remove('hidden');
-
-
-
-                // === التعديل هنا: استدعاء دالة الرسم بدلاً من التعليق الناقص ===
-
-                renderDashboardUI(result.data, session.doctorId);
-
-
-
-            } else {
-
-                localStorage.removeItem('doctorSession');
-
+        // ✅ استبدال apiPost بـ Supabase Edge Function
+        supabaseClient.functions.invoke('doctor-auth', {
+            body: {
+                action: 'getAppointments',
+                doctorId: session.doctorId,
+                phone: session.phone,
+                sessionToken: session.sessionToken
             }
-
+        }).then(({ data: result, error }) => {
             if (btn) setLoading(btn, false);
-
+            
+            if (result && result.success) {
+                localStorage.setItem('doctorSession', JSON.stringify({
+                    doctorId: session.doctorId,
+                    phone: session.phone,
+                    sessionToken: result.sessionToken || session.sessionToken
+                }));
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                renderDashboardUI(result, session.doctorId);
+            } else {
+                // إذا فشلت المصادقة (مثلاً انتهت الجلسة)، امسحها ليتمكن من الدخول يدوياً
+                localStorage.removeItem('doctorSession');
+            }
         }).catch(() => {
-
             if (btn) setLoading(btn, false);
-
+            localStorage.removeItem('doctorSession');
         });
-
-
-
-     } catch(e) {
+    } catch(e) {
         localStorage.removeItem('doctorSession');
-      }
     }
+}
     // =======================================
     });
    // ========================================================================
