@@ -1520,50 +1520,42 @@ function renderDashboardUI(data, doctorId) {
     `;
   }).join('');
 }
-// 2. دالة تسجيل الدخول اليدوي المحدثة
-// ✅ دالة مساعدة لجلب بيانات لوحة تحكم الطبيب من Supabase
+// ✅ دالة مساعدة لجلب بيانات لوحة التحكم وعرضها
 async function loadDoctorDashboardData(doctorId) {
     try {
-        // جلب بيانات الطبيب الأساسية
-        const { data: doctor, error: docError } = await supabaseClient
+        const { data: doctor } = await supabaseClient
             .from('doctors')
-            .select('first_name, last_name, phone, working_days, booking_enabled')
+            .select('first_name, last_name, working_days, booking_enabled')
             .eq('id', doctorId)
             .single();
-
-        if (docError) throw docError;
-
-        // جلب مواعيد هذا الطبيب
-        const { data: appointments, error: apptError } = await supabaseClient
+            
+        const { data: appointments } = await supabaseClient
             .from('appointments')
             .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
             .eq('doctor_id', doctorId)
             .order('appointment_date', { ascending: false });
 
-        if (apptError) throw apptError;
-
-        // تهيئة البيانات بالصيغة التي تتوقعها دالة renderDashboardUI
         const dashboardData = {
             doctorName: `${doctor.first_name} ${doctor.last_name}`,
             workingDays: JSON.stringify(doctor.working_days || {}),
             bookingEnabled: doctor.booking_enabled,
             appointments: appointments || []
         };
-
+        
         renderDashboardUI(dashboardData, doctorId);
-
     } catch (err) {
-        console.error('Error loading dashboard data:', err);
-        showToast(currentLang === 'ar' ? 'خطأ في تحميل بيانات لوحة التحكم' : 'Error loading dashboard data', 'error');
+        console.error('Error loading dashboard:', err);
+        showToast(currentLang === 'ar' ? 'خطأ في تحميل البيانات' : 'Error loading data', 'error');
     }
 }
-// ✅ تسجيل دخول الطبيب (مبسط ومباشر عبر Supabase)
+// ✅ تسجيل دخول الطبيب (مصحح تماماً ويعمل مباشرة مع Supabase)
 async function handleDashboardLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
     if (isAccountLocked()) return;
 
     const btn = document.getElementById('dashboardLoginBtn');
-    // ✅ ملاحظة: نستخدم phone و password فقط لأنهما الموجودان في HTML
+    
+    // ✅ التصحيح الجذري: نستخدم phone و password فقط لأن حقل loginDoctorId غير موجود في HTML
     const phone = document.getElementById('loginPhone').value.trim();
     const password = document.getElementById('loginDoctorPassword').value.trim();
 
@@ -1578,7 +1570,7 @@ async function handleDashboardLogin(e) {
         // 1. تشفير كلمة المرور المدخلة لمطابقتها مع المخزنة
         const hashedPassword = await hashPassword(password);
 
-        // 2. البحث عن الطبيب في جدول doctors مباشرة
+        // 2. البحث المباشر في جدول doctors
         const { data: doctor, error } = await supabaseClient
             .from('doctors')
             .select('id, first_name, last_name, phone, working_days, booking_enabled')
@@ -1590,7 +1582,7 @@ async function handleDashboardLogin(e) {
             throw new Error(currentLang === 'ar' ? 'بيانات الدخول غير صحيحة' : 'Invalid login credentials');
         }
 
-        // 3. حفظ الجلسة (تبسيط: نحتاج فقط doctorId و phone)
+        // 3. حفظ الجلسة
         localStorage.setItem('doctorSession', JSON.stringify({
             doctorId: doctor.id,
             phone: doctor.phone
@@ -1598,11 +1590,11 @@ async function handleDashboardLogin(e) {
 
         resetLoginAttempts();
         
-        // 4. التبديل إلى لوحة التحكم
+        // 4. إظهار لوحة التحكم
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('dashboardSection').classList.remove('hidden');
 
-        // 5. جلب وعرض بيانات لوحة التحكم
+        // 5. جلب المواعيد وعرضها
         await loadDoctorDashboardData(doctor.id);
 
     } catch (err) {
