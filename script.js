@@ -2107,7 +2107,7 @@ htmlBody: htmlBody
 // ========================================================================
 // CHATBOT SYSTEM LOGIC (Multilingual & Fixed RTL Phone Display)
 // ========================================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
 const closeChatBtn = document.getElementById('closeChatBtn');
 const medicalChatbot = document.getElementById('medicalChatbot');
