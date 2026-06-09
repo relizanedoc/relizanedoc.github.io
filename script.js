@@ -3093,5 +3093,4 @@ window.saveWorkingHours = async function() {
     }
 }
 
-});  // ✅ هذا السطر مفقود - يجب إضافته!
-
+});  // ✅✅✅ أضف هذا السطر هنا لإغلاق DOMContentLoaded
