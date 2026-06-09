@@ -2027,34 +2027,37 @@ window.onscroll = () => { const btn = document.getElementById('backToTop'); if (
 document.getElementById('backToTop').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 window.onpopstate = (e) => { const view = (e.state && e.state.view) ? e.state.view : 'home'; router(view, false); };
 // === كود تسجيل الدخول التلقائي الآمن للطبيب ===
-const savedSession = localStorage.getItem('doctorSession');
-if (savedSession) {
-try {
-const session = JSON.parse(savedSession);
-if (session.doctorId) {
-// التحقق من أن الطبيب لا يزال مفعّلاً
-const { data: doctor } = await supabaseClient
-.from('doctors')
-.select('is_active, working_days, booking_enabled')
-.eq('id', session.doctorId)
-.single();
-if (doctor && doctor.is_active) {
-document.getElementById('loginSection').classList.add('hidden');
-document.getElementById('dashboardSection').classList.remove('hidden');
-// ملء البيانات
-const fullDoctor = { ...doctor, first_name: session.doctorName.split(' ')[0], last_name: session.doctorName.split(' ')[1] };
-await fillDashboardData(fullDoctor);
-} else {
-localStorage.removeItem('doctorSession');
-}
-}
-} catch(e) {
-localStorage.removeItem('doctorSession');
-}
-}
+(async function() {
+  const savedSession = localStorage.getItem('doctorSession');
+  if (savedSession) {
+    try {
+      const session = JSON.parse(savedSession);
+      
+      if (session.doctorId) {
+        // التحقق من أن الطبيب لا يزال مفعّلاً
+        const { data: doctor } = await supabaseClient
+          .from('doctors')
+          .select('is_active, working_days, booking_enabled')
+          .eq('id', session.doctorId)
+          .single();
+        
+        if (doctor && doctor.is_active) {
+          document.getElementById('loginSection').classList.add('hidden');
+          document.getElementById('dashboardSection').classList.remove('hidden');
+          
+          // ملء البيانات
+          const fullDoctor = { ...doctor, first_name: session.doctorName.split(' ')[0], last_name: session.doctorName.split(' ')[1] };
+          await fillDashboardData(fullDoctor);
+        } else {
+          localStorage.removeItem('doctorSession');
+        }
+      }
+    } catch(e) {
+      localStorage.removeItem('doctorSession');
+    }
+  }
+})();
 // =======================================
-});
-// ========================================================================
 // نظام إرسال الإشعارات عبر البريد (Google Apps Script)
 // ========================================================================
 window.sendBookingEmail = function(recipientEmail, doctorName, appointmentDate, status) {
