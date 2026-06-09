@@ -3,7 +3,6 @@
 window.addEventListener('load', function() {
     const urlParams = new URLSearchParams(window.location.search);
     const doctorId = urlParams.get('doc'); // هل هناك كود طبيب في الرابط؟
-
     if (doctorId) {
         console.log("تم اكتشاف رابط مباشر للطبيب: " + doctorId);
 
