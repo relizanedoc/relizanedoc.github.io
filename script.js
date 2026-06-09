@@ -2552,7 +2552,6 @@ document.addEventListener('submit', async function(e) {
         try {
             const session = JSON.parse(savedSession);
             if (session.doctorId) {
-                // التحقق من أن الطبيب لا يزال مفعّلاً
                 const { data: doctor, error } = await supabaseClient
                     .from('doctors')
                     .select('is_active, working_days, booking_enabled')
@@ -2562,12 +2561,13 @@ document.addEventListener('submit', async function(e) {
                 if (doctor && doctor.is_active) {
                     document.getElementById('loginSection').classList.add('hidden');
                     document.getElementById('dashboardSection').classList.remove('hidden');
-                    // ملء البيانات
+                    
                     const fullDoctor = { 
                         ...doctor, 
                         first_name: session.doctorName.split(' ')[0], 
                         last_name: session.doctorName.split(' ')[1] 
                     };
+                    
                     await fillDashboardData(fullDoctor);
                 } else {
                     localStorage.removeItem('doctorSession');
@@ -2579,7 +2579,6 @@ document.addEventListener('submit', async function(e) {
         }
     }
 })();  // ✅ استدعاء الدالة فوراً
-
     // ========================================================================
     // نظام إرسال الإشعارات عبر البريد (Google Apps Script)
     // ========================================================================
