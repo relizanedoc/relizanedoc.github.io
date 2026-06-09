@@ -2540,38 +2540,34 @@ if (trackForm) {
 
       window.onpopstate = (e) => { const view = (e.state && e.state.view) ? e.state.view : 'home'; router(view, false); };
 // === كود تسجيل الدخول التلقائي الآمن للطبيب (محدث ومبسط) ===
-const savedSession = localStorage.getItem('doctorSession');
-if (savedSession) {
-    try {
-        const session = JSON.parse(savedSession);
-        if (session.doctorId) {
-            // التحقق من أن الطبيب لا يزال موجوداً في قاعدة البيانات
-            supabaseClient
-                .from('doctors')
-                .select('id')
-                .eq('id', session.doctorId)
-                .single()
-                .then(({ data, error }) => {
-                    if (data && !error) {
-                        // الجلسة صالحة، انتقل مباشرة للوحة التحكم
-                        document.getElementById('loginSection').classList.add('hidden');
-                        document.getElementById('dashboardSection').classList.remove('hidden');
-                        loadDoctorDashboardData(session.doctorId);
-                    } else {
-                        // الجلسة منتهية أو الطبيب محذوف
-                        localStorage.removeItem('doctorSession');
-                    }
-                })
-                .catch(() => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const savedSession = localStorage.getItem('doctorSession');
+    if (savedSession) {
+        try {
+            const session = JSON.parse(savedSession);
+            if (session.doctorId) {
+                // التحقق من أن الطبيب لا يزال موجوداً في قاعدة البيانات
+                const { data, error } = await supabaseClient
+                    .from('doctors')
+                    .select('id')
+                    .eq('id', session.doctorId)
+                    .single();
+
+                if (data && !error) {
+                    // الجلسة صالحة، انتقل مباشرة للوحة التحكم
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('dashboardSection').classList.remove('hidden');
+                    await loadDoctorDashboardData(session.doctorId);
+                } else {
+                    // الجلسة منتهية أو الطبيب محذوف
                     localStorage.removeItem('doctorSession');
-                });
+                }
+            }
+        } catch(e) {
+            localStorage.removeItem('doctorSession');
         }
-    } catch(e) {
-        localStorage.removeItem('doctorSession');
     }
-}
-    // =======================================
-    });
+});
    // ========================================================================
 // نظام إرسال الإشعارات عبر البريد (محدث لـ Supabase Edge Function)
 // ========================================================================
