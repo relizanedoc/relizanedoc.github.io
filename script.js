@@ -1502,46 +1502,51 @@ async function handleDashboardLogin(e) {
   if (isAccountLocked()) return;
 
   const btn = document.getElementById('dashboardLoginBtn');
+  if (!btn) return;
+
   setLoading(btn, true);
 
-  const doctorId = document.getElementById('loginDoctorId').value.trim();
-  const phone = document.getElementById('loginPhone').value.trim();
-  const password = document.getElementById('loginDoctorPassword').value.trim();
-
   try {
-    // ✅ الاتصال بـ Edge Function للتحقق من بيانات الطبيب
-    const { data, error } = await supabaseClient.functions.invoke('doctor-auth', {
-      body: { 
-        action: 'login', 
-        doctorId: doctorId, 
-        phone: phone, 
-        password: password 
-      }
-    });
+    const phoneInput = document.getElementById('loginPhone');
+    const passwordInput = document.getElementById('loginDoctorPassword');
 
-    if (error) throw new Error(error.message);
-    if (!data.success) throw new Error(data.error || 'بيانات الدخول غير صحيحة');
+    if (!phoneInput || !passwordInput) {
+      throw new Error(currentLang === 'ar' ? 'حقول تسجيل الدخول مفقودة' : 'Login fields missing');
+    }
 
+    const phone = phoneInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!phone || !password) {
+      throw new Error(currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف وكلمة المرور' : 'Please enter phone and password');
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const { data: doctor, error } = await supabaseClient
+      .from('doctors')
+      .select('id, first_name, last_name, phone, working_days, booking_enabled')
+      .eq('phone', phone)
+      .eq('password_hash', hashedPassword)
+      .single();
+
+    if (error || !doctor) {
+      throw new Error(currentLang === 'ar' ? 'رقم الهاتف أو كلمة المرور غير صحيحة' : 'Invalid credentials');
+    }
+
+    localStorage.setItem('doctorSession', JSON.stringify({ doctorId: doctor.id, phone: doctor.phone }));
     resetLoginAttempts();
-
-    // حفظ الجلسة
-    localStorage.setItem('doctorSession', JSON.stringify({
-      doctorId: doctorId,
-      phone: phone,
-      sessionToken: data.sessionToken
-    }));
-
+    
     document.getElementById('loginSection').classList.add('hidden');
     document.getElementById('dashboardSection').classList.remove('hidden');
-
-    // استدعاء دالة الرسم
-    renderDashboardUI(data, doctorId);
+    
+    await loadDoctorDashboardData(doctor.id);
 
   } catch (err) {
     recordFailedAttempt();
-    showToast(t('toastLoginError') + err.message, 'error');
+    showToast(err.message, 'error');
   } finally {
-    setLoading(btn, false);
+    setLoading(btn, false, currentLang === 'ar' ? 'عرض مواعيدي' : 'View My Appointments');
   }
 }
     function logoutDashboard() {
