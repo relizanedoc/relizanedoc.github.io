@@ -2142,8 +2142,7 @@ document.addEventListener('submit', async function(e) {
     // INITIALIZATION
     // ========================================================================
 
-   document.addEventListener('DOMContentLoaded', () => {
-
+document.addEventListener('DOMContentLoaded', async () => {
       const dateInput = document.getElementById('apptDateInput');
 
       if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
@@ -2664,7 +2663,7 @@ document.addEventListener('submit', async function(e) {
 // CHATBOT SYSTEM LOGIC (Multilingual & Fixed RTL Phone Display)
 // ========================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
     const closeChatBtn = document.getElementById('closeChatBtn');
     const medicalChatbot = document.getElementById('medicalChatbot');
