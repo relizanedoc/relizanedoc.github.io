@@ -1893,7 +1893,8 @@ setLoading(btn, false, currentLang === 'ar' ? 'نشر التقييم' : 'Submit 
 // ========================================================================
 // INITIALIZATION
 // ========================================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListedocument.addEventListener('DOMContentLoaded', async () => {
+  ner('DOMContentLoaded', () => {
 const dateInput = document.getElementById('apptDateInput');
 if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
 const hash = window.location.hash.replace('#', '');
