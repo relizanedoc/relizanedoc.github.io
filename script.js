@@ -370,21 +370,101 @@ async function logoutUser() {
     showToast('خطأ في تسجيل الخروج: ' + err.message, 'error');
   }
 }
-    async function apiGet(action, params = {}) {
-      const qs = new URLSearchParams({ action, ...params }).toString();
-      const res = await fetch(API_URL + '?' + qs);
-      return res.json();
-    }
+    // ========================================================================
+// تحديث ميزة تتبع الحجز لتعمل مع Supabase مباشرة
+// ========================================================================
+const trackForm = document.getElementById('trackBookingForm');
+if (trackForm) {
+    trackForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('trackBtn');
+        const bookingIdInput = document.getElementById('trackBookingId').value.trim();
+        const phoneStr = document.getElementById('trackPhone').value.trim();
+        const resultDiv = document.getElementById('trackResult');
+        
+        setLoading(btn, true);
+        resultDiv.classList.add('hidden');
 
-    async function apiPost(action, data = {}) {
-      if (typeof grecaptcha !== 'undefined' && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_SITE_KEY') {
-        try { data.recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action }); } catch(e) {}
-      }
-      const fbUser = firebase.auth().currentUser;
-      if (fbUser && action !== 'authFirebase') data.idToken = await fbUser.getIdToken();
-      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action, data }) });
-      return res.json();
-    }
+        try {
+            // ✅ الاستعلام المباشر من جدول appointments في Supabase
+            // نستخدم ilike للبحث عن المعرف حتى لو أدخل المستخدم جزءاً منه أو المعرف الكامل
+            const { data, error } = await supabaseClient
+                .from('appointments')
+                .select(`
+                    id,
+                    patient_name,
+                    appointment_date,
+                    appointment_time,
+                    status,
+                    doctors (first_name, last_name)
+                `)
+                .ilike('id', `%${bookingIdInput}%`) 
+                .eq('patient_phone', phoneStr)
+                .single();
+
+            if (error || !data) {
+                throw new Error(currentLang === 'ar' ? 'لم يتم العثور على الحجز. تأكد من رقم الحجز ورقم الهاتف.' : 'Booking not found. Please check the ID and phone number.');
+            }
+
+            // 1. تحديد الألوان بناءً على الحالة
+            let statusStyle = 'background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1;';
+            let displayStatus = data.status === 'pending' ? (currentLang === 'ar' ? 'قيد الانتظار' : 'Pending') : 
+                                data.status === 'confirmed' ? (currentLang === 'ar' ? 'مؤكد' : 'Confirmed') : 
+                                (currentLang === 'ar' ? 'ملغى' : 'Cancelled');
+
+            if (data.status === 'confirmed') {
+                statusStyle = 'background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;';
+            } else if (data.status === 'cancelled') {
+                statusStyle = 'background: #fef2f2; color: #ef4444; border: 1px solid #fecaca;';
+            }
+
+            // 2. نصوص الواجهة المترجمة ديناميكياً
+            const detailsTxt = currentLang === 'ar' ? 'تفاصيل الحجز:' : 'Booking Details:';
+            const idTxt = currentLang === 'ar' ? 'رقم الحجز:' : 'Booking ID:';
+            const nameTxt = currentLang === 'ar' ? 'المريض:' : 'Patient Name:';
+            const doctorTxt = currentLang === 'ar' ? 'الطبيب:' : 'Doctor:';
+            const dateTimeTxt = currentLang === 'ar' ? 'التاريخ والوقت:' : 'Date & Time:';
+            const currentStatusTxt = currentLang === 'ar' ? 'الحالة الحالية:' : 'Current Status:';
+
+            // استخراج اسم الطبيب بأمان
+            const docName = data.doctors ? `${data.doctors.first_name} ${data.doctors.last_name}` : (currentLang === 'ar' ? 'غير محدد' : 'N/A');
+            // أخذ أول 8 أحرف من المعرف للعرض بشكل أنيق
+            const shortId = data.id.substring(0, 8).toUpperCase();
+
+            // 3. بناء نتيجة العرض
+            resultDiv.innerHTML = `
+                <h4 class="font-bold mb-3" style="color: var(--primary);">${detailsTxt}</h4>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
+                    <span style="color: var(--text-secondary);">${idTxt}</span> 
+                    <strong style="font-family: monospace; letter-spacing: 1px;">${shortId}...</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
+                    <span style="color: var(--text-secondary);">${nameTxt}</span> 
+                    <strong>${escapeHtml(data.patient_name)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
+                    <span style="color: var(--text-secondary);">${doctorTxt}</span> 
+                    <strong>${currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(docName)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:1rem; font-size: 0.95rem;">
+                    <span style="color: var(--text-secondary);">${dateTimeTxt}</span> 
+                    <strong dir="ltr">${escapeHtml(data.appointment_date)} | ${escapeHtml(data.appointment_time)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem;">
+                    <span style="font-weight: bold;">${currentStatusTxt}</span>
+                    <span class="badge" style="${statusStyle}; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 600;">${escapeHtml(displayStatus)}</span>
+                </div>
+            `;
+            resultDiv.classList.remove('hidden');
+
+        } catch (err) {
+            console.error('Track Booking Error:', err);
+            showToast(err.message || (currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection Error'), 'error');
+        } finally {
+            setLoading(btn, false, currentLang === 'ar' ? 'بحث عن الحجز' : 'Search Booking');
+        }
+    });
+}
 
     // ✅ الكود الجديد لتسجيل الدخول بـ Google:
 async function handleGoogleSignIn() {
