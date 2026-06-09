@@ -1520,21 +1520,25 @@ function renderDashboardUI(data, doctorId) {
     `;
   }).join('');
 }
-// ✅ دالة مساعدة لجلب بيانات لوحة التحكم وعرضها
+// ✅ جلب بيانات لوحة التحكم
 async function loadDoctorDashboardData(doctorId) {
     try {
-        const { data: doctor } = await supabaseClient
+        const { data: doctor, error: docError } = await supabaseClient
             .from('doctors')
-            .select('first_name, last_name, working_days, booking_enabled')
+            .select('first_name, last_name, phone, working_days, booking_enabled')
             .eq('id', doctorId)
             .single();
-            
-        const { data: appointments } = await supabaseClient
+        
+        if (docError) throw docError;
+        
+        const { data: appointments, error: apptError } = await supabaseClient
             .from('appointments')
             .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
             .eq('doctor_id', doctorId)
             .order('appointment_date', { ascending: false });
-
+        
+        if (apptError) throw apptError;
+        
         const dashboardData = {
             doctorName: `${doctor.first_name} ${doctor.last_name}`,
             workingDays: JSON.stringify(doctor.working_days || {}),
@@ -1548,55 +1552,53 @@ async function loadDoctorDashboardData(doctorId) {
         showToast(currentLang === 'ar' ? 'خطأ في تحميل البيانات' : 'Error loading data', 'error');
     }
 }
-// ✅ تسجيل دخول الطبيب (مصحح تماماً ويعمل مباشرة مع Supabase)
+// ✅ تسجيل دخول الطبيب (مباشر عبر قاعدة البيانات)
 async function handleDashboardLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
     if (isAccountLocked()) return;
-
-    const btn = document.getElementById('dashboardLoginBtn');
     
-    // ✅ التصحيح الجذري: نستخدم phone و password فقط لأن حقل loginDoctorId غير موجود في HTML
+    const btn = document.getElementById('dashboardLoginBtn');
     const phone = document.getElementById('loginPhone').value.trim();
     const password = document.getElementById('loginDoctorPassword').value.trim();
-
+    
     if (!phone || !password) {
         showToast(currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف وكلمة المرور' : 'Please enter phone and password', 'error');
         return;
     }
-
+    
     setLoading(btn, true);
-
+    
     try {
-        // 1. تشفير كلمة المرور المدخلة لمطابقتها مع المخزنة
+        // تشفير كلمة المرور
         const hashedPassword = await hashPassword(password);
-
-        // 2. البحث المباشر في جدول doctors
+        
+        // البحث عن الطبيب مباشرة في قاعدة البيانات
         const { data: doctor, error } = await supabaseClient
             .from('doctors')
             .select('id, first_name, last_name, phone, working_days, booking_enabled')
             .eq('phone', phone)
             .eq('password_hash', hashedPassword)
             .single();
-
+        
         if (error || !doctor) {
             throw new Error(currentLang === 'ar' ? 'بيانات الدخول غير صحيحة' : 'Invalid login credentials');
         }
-
-        // 3. حفظ الجلسة
+        
+        // حفظ الجلسة
         localStorage.setItem('doctorSession', JSON.stringify({
             doctorId: doctor.id,
             phone: doctor.phone
         }));
-
+        
         resetLoginAttempts();
         
-        // 4. إظهار لوحة التحكم
+        // إظهار لوحة التحكم
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('dashboardSection').classList.remove('hidden');
-
-        // 5. جلب المواعيد وعرضها
+        
+        // جلب وعرض البيانات
         await loadDoctorDashboardData(doctor.id);
-
+        
     } catch (err) {
         recordFailedAttempt();
         showToast(t('toastLoginError') + err.message, 'error');
@@ -1650,25 +1652,9 @@ window.changeBookingStatus = async function(bookingId, newStatus, patientEmail, 
         showToast('خطأ: ' + err.message, 'error');
     }
 };
-// ✅ دالة مساعدة لإعادة تحميل لوحة التحكم
+// ✅ إعادة تحميل لوحة التحكم مباشرة
 async function refreshDoctorDashboard(doctorId, phone, sessionToken) {
-  try {
-    const { data, error } = await supabaseClient.functions.invoke('doctor-auth', {
-      body: { 
-        action: 'getAppointments', 
-        doctorId: doctorId, 
-        phone: phone, 
-        sessionToken: sessionToken 
-      }
-    });
-
-    if (error) throw error;
-    if (data.success) {
-      renderDashboardUI(data, doctorId);
-    }
-  } catch (err) {
-    console.error('خطأ في تحديث لوحة التحكم:', err);
-  }
+    await loadDoctorDashboardData(doctorId);
 }
 
 window.toggleWorkingHours = function() {
@@ -2539,94 +2525,43 @@ if (trackForm) {
 
 
       window.onpopstate = (e) => { const view = (e.state && e.state.view) ? e.state.view : 'home'; router(view, false); };
-// === كود تسجيل الدخول التلقائي الآمن للطبيب (محدث ومبسط) ===
-document.addEventListener('DOMContentLoaded', async () => {
-    const savedSession = localStorage.getItem('doctorSession');
-    if (savedSession) {
-        try {
-            const session = JSON.parse(savedSession);
-            if (session.doctorId) {
-                // التحقق من أن الطبيب لا يزال موجوداً في قاعدة البيانات
-                const { data, error } = await supabaseClient
-                    .from('doctors')
-                    .select('id')
-                    .eq('id', session.doctorId)
-                    .single();
-
-                if (data && !error) {
-                    // الجلسة صالحة، انتقل مباشرة للوحة التحكم
-                    document.getElementById('loginSection').classList.add('hidden');
-                    document.getElementById('dashboardSection').classList.remove('hidden');
-                    await loadDoctorDashboardData(session.doctorId);
-                } else {
-                    // الجلسة منتهية أو الطبيب محذوف
-                    localStorage.removeItem('doctorSession');
-                }
+// === كود تسجيل الدخول التلقائي ===
+const savedSession = localStorage.getItem('doctorSession');
+if (savedSession) {
+    try {
+        const session = JSON.parse(savedSession);
+        if (session.doctorId) {
+            // التحقق من وجود الطبيب
+            const { data, error } = await supabaseClient
+                .from('doctors')
+                .select('id')
+                .eq('id', session.doctorId)
+                .single();
+            
+            if (data && !error) {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                await loadDoctorDashboardData(session.doctorId);
+            } else {
+                localStorage.removeItem('doctorSession');
             }
-        } catch(e) {
-            localStorage.removeItem('doctorSession');
         }
+    } catch(e) {
+        localStorage.removeItem('doctorSession');
     }
-});
+}
    // ========================================================================
 // نظام إرسال الإشعارات عبر البريد (محدث لـ Supabase Edge Function)
 // ========================================================================
+// ✅ إرسال الإشعارات (مؤقت - يمكن تفعيله لاحقاً)
 window.sendBookingEmail = async function(recipientEmail, doctorName, appointmentDate, status) {
     if (!recipientEmail || recipientEmail === 'undefined' || recipientEmail === '') return;
-
-    var subject = "";
-    var htmlBody = "";
-    var primaryColor = "#0ea5e9";
-    var containerStyle = "font-family: Arial, sans-serif; direction: rtl; text-align: right; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;";
-    var headerStyle = "background-color: " + primaryColor + "; color: white; padding: 20px; text-align: center; font-size: 1.25rem; font-weight: bold;";
-    var bodyStyle = "padding: 20px; color: #0f172a; line-height: 1.6;";
-    var footerStyle = "background-color: #f8fafc; padding: 15px; text-align: center; color: #64748b; font-size: 0.85rem; border-top: 1px solid #e2e8f0;";
-
-    if (status === "confirmed" || status === "مؤكد") {
-        subject = "تأكيد موعدك الطبي - دليل أطباء غليزان";
-        htmlBody = `
-        <div style="${containerStyle}">
-            <div style="${headerStyle}">تأكيد الموعد الطبي</div>
-            <div style="${bodyStyle}">
-                <p>مرحباً بك،</p>
-                <p>يسعدنا إعلامك بأنه تم <strong>تأكيد</strong> موعدك الطبي بنجاح عبر منصة "دليل أطباء غليزان".</p>
-                <div style="background-color: #f8fafc; border-right: 4px solid ${primaryColor}; padding: 15px; margin: 20px 0;">
-                    <p style="margin: 0 0 10px 0;"><strong>الطبيب المَعني:</strong> ${doctorName}</p>
-                    <p style="margin: 0;"><strong>تاريخ الموعد:</strong> <span dir="ltr">${appointmentDate}</span></p>
-                </div>
-                <p>يرجى الحضور إلى العيادة في الموعد المحدد. نتمنى لك دوام الصحة والعافية.</p>
-            </div>
-            <div style="${footerStyle}">© 2026 دليل أطباء ولاية غليزان. جميع الحقوق محفوظة.</div>
-        </div>`;
-    } else if (status === "cancelled" || status === "ملغى") {
-        subject = "إشعار بإلغاء موعدك الطبي - دليل أطباء غليزان";
-        htmlBody = `
-        <div style="${containerStyle}">
-            <div style="background-color: #ef4444; color: white; padding: 20px; text-align: center; font-size: 1.25rem; font-weight: bold;">إلغاء الموعد الطبي</div>
-            <div style="${bodyStyle}">
-                <p>مرحباً بك،</p>
-                <p>نعتذر بشدة لإعلامك بأنه قد تم <strong>إلغاء</strong> موعدك الطبي المجدول مع <strong>${doctorName}</strong> في تاريخ <span dir="ltr">${appointmentDate}</span>.</p>
-                <p>قد يعود سبب الإلغاء لظرف طارئ. ندعوك لزيارة المنصة مجدداً لحجز موعد في وقت آخر.</p>
-            </div>
-            <div style="${footerStyle}">© 2026 دليل أطباء ولاية غليزان. جميع الحقوق محفوظة.</div>
-        </div>`;
-    }
-
-    // ✅ استدعاء Edge Function في Supabase لإرسال الإيميل بأمان
-    try {
-        const { data, error } = await supabaseClient.functions.invoke('send-email', {
-            body: {
-                to: recipientEmail,
-                subject: subject,
-                html: htmlBody
-            }
-        });
-        if (error) throw error;
-        console.log("✅ تم إرسال الإشعار بنجاح:", data);
-    } catch (err) {
-        console.error("❌ خطأ في إرسال الإشعار:", err);
-        // ملاحظة: لا نعرض خطأ للمستخدم هنا حتى لا نقاطع تجربة الحجز الناجحة
-    }
+    
+    console.log(`📧 Email would be sent to: ${recipientEmail}`);
+    console.log(`Status: ${status}, Doctor: ${doctorName}, Date: ${appointmentDate}`);
+    
+    // ملاحظة: هنا يمكنك إضافة Edge Function لاحقاً
+    // حالياً فقط نسجل في console
 };
 // ========================================================================
 // CHATBOT SYSTEM LOGIC (Multilingual & Fixed RTL Phone Display)
