@@ -1511,7 +1511,7 @@ async function handleDashboardLogin(e) {
     const passwordInput = document.getElementById('loginDoctorPassword');
 
     if (!phoneInput || !passwordInput) {
-      throw new Error(currentLang === 'ar' ? 'حقول تسجيل الدخول مفقودة' : 'Login fields missing');
+      throw new Error(currentLang === 'ar' ? 'عناصر واجهة تسجيل الدخول مفقودة' : 'Login UI elements missing');
     }
 
     const phone = phoneInput.value.trim();
@@ -1523,6 +1523,7 @@ async function handleDashboardLogin(e) {
 
     const hashedPassword = await hashPassword(password);
 
+    // البحث في قاعدة البيانات باستخدام رقم الهاتف وكلمة المرور فقط
     const { data: doctor, error } = await supabaseClient
       .from('doctors')
       .select('id, first_name, last_name, phone, working_days, booking_enabled')
@@ -1531,7 +1532,7 @@ async function handleDashboardLogin(e) {
       .single();
 
     if (error || !doctor) {
-      throw new Error(currentLang === 'ar' ? 'رقم الهاتف أو كلمة المرور غير صحيحة' : 'Invalid credentials');
+      throw new Error(currentLang === 'ar' ? 'رقم الهاتف أو كلمة المرور غير صحيحة' : 'Invalid phone number or password');
     }
 
     localStorage.setItem('doctorSession', JSON.stringify({ doctorId: doctor.id, phone: doctor.phone }));
