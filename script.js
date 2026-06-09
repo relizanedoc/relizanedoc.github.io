@@ -2275,123 +2275,92 @@ document.addEventListener('submit', async function(e) {
       window.tsAddSpecialty = new TomSelect('select[name="Specialty"]', tsSettings);
       window.tsAddMunicipality = new TomSelect('select[name="Municipality"]', tsSettings);
 
+// === تتبع الحجز (محدث لـ Supabase) ===
+const trackForm = document.getElementById('trackBookingForm');
+if (trackForm) {
+    trackForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('trackBtn');
+        const bookingIdInput = document.getElementById('trackBookingId').value.trim();
+        const phoneStr = document.getElementById('trackPhone').value.trim();
+        const resultDiv = document.getElementById('trackResult');
+        
+        setLoading(btn, true);
+        resultDiv.classList.add('hidden');
 
-     // === تتبع الحجز ===
-      const trackForm = document.getElementById('trackBookingForm');
-      if (trackForm) {
-        trackForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const btn = document.getElementById('trackBtn');
-          const bookingId = document.getElementById('trackBookingId').value.trim();
-          const phoneStr = document.getElementById('trackPhone').value.trim(); // التقاط رقم الهاتف
-          const resultDiv = document.getElementById('trackResult');
+        try {
+            // ✅ الاستعلام المباشر من جدول appointments في Supabase
+            const { data, error } = await supabaseClient
+                .from('appointments')
+                .select(`
+                    id,
+                    patient_name,
+                    appointment_date,
+                    appointment_time,
+                    status,
+                    doctors (first_name, last_name)
+                `)
+                .ilike('id', `%${bookingIdInput}%`) 
+                .eq('patient_phone', phoneStr)
+                .single();
 
-          setLoading(btn, true);
-          resultDiv.classList.add('hidden');
-
-          try {
-            // إرسال الهاتف مع رقم الحجز للتحقق الأمني
-            const result = await apiPost('getBookingStatus', { bookingId: bookingId, phone: phoneStr });
-
-            if (result.success) {
-
-              const data = result.data;
-
-
-
-              // 1. تحديد الألوان
-
-              let statusStyle = 'background: #f1f5f9; color: #64748b;';
-
-              if (data.status === 'مؤكد') statusStyle = 'background: #ecfdf5; color: #10b981;';
-
-              if (data.status === 'ملغى') statusStyle = 'background: #fef2f2; color: #ef4444;';
-
-
-
-              // 2. ترجمة كلمة الحالة (Status)
-
-              let displayStatus = data.status;
-
-              if (currentLang === 'en') {
-
-                 if (data.status === 'مؤكد') displayStatus = 'Confirmed';
-
-                 else if (data.status === 'ملغى') displayStatus = 'Cancelled';
-
-                 else displayStatus = 'Pending';
-
-              }
-
-
-
-              // 3. نصوص الواجهة المترجمة ديناميكياً
-
-              const detailsTxt = currentLang === 'ar' ? 'تفاصيل الحجز:' : 'Booking Details:';
-
-              const idTxt = currentLang === 'ar' ? 'رقم الحجز:' : 'Booking ID:';
-
-              const nameTxt = currentLang === 'ar' ? 'الاسم:' : 'Patient Name:';
-
-              const dateTimeTxt = currentLang === 'ar' ? 'التاريخ والوقت:' : 'Date & Time:';
-
-              const currentStatusTxt = currentLang === 'ar' ? 'الحالة الحالية:' : 'Current Status:';
-
-
-
-              // 4. بناء النتيجة
-
-              resultDiv.innerHTML = `
-
-                <h4 class="font-bold mb-2">${detailsTxt}</h4>
-
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${idTxt}</span> <strong>${escapeHtml(data.bookingId)}</strong></div>
-
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${nameTxt}</span> <strong>${escapeHtml(data.patientName)}</strong></div>
-
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${dateTimeTxt}</span> <strong dir="ltr">${escapeHtml(data.date)} ${escapeHtml(data.time)}</strong></div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem;">
-
-                  <span>${currentStatusTxt}</span> 
-
-                  <span class="badge" style="${statusStyle}">${escapeHtml(displayStatus)}</span>
-
-                </div>
-
-              `;
-
-              resultDiv.classList.remove('hidden');
-
-            } else {
-
-              showToast(currentLang === 'ar' ? result.error : 'Booking not found', 'error');
-
+            if (error || !data) {
+                throw new Error(currentLang === 'ar' ? 'لم يتم العثور على الحجز. تأكد من رقم الحجز ورقم الهاتف.' : 'Booking not found. Please check the ID and phone number.');
             }
 
-          } catch (err) {
+            // تحديد الألوان والحالة
+            let statusStyle = 'background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1;';
+            let displayStatus = data.status === 'pending' ? (currentLang === 'ar' ? 'قيد الانتظار' : 'Pending') : 
+                                data.status === 'confirmed' ? (currentLang === 'ar' ? 'مؤكد' : 'Confirmed') : 
+                                (currentLang === 'ar' ? 'ملغى' : 'Cancelled');
 
-            showToast(currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection Error', 'error');
+            if (data.status === 'confirmed') statusStyle = 'background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;';
+            else if (data.status === 'cancelled') statusStyle = 'background: #fef2f2; color: #ef4444; border: 1px solid #fecaca;';
 
-          } finally {
+            const detailsTxt = currentLang === 'ar' ? 'تفاصيل الحجز:' : 'Booking Details:';
+            const idTxt = currentLang === 'ar' ? 'رقم الحجز:' : 'Booking ID:';
+            const nameTxt = currentLang === 'ar' ? 'المريض:' : 'Patient Name:';
+            const doctorTxt = currentLang === 'ar' ? 'الطبيب:' : 'Doctor:';
+            const dateTimeTxt = currentLang === 'ar' ? 'التاريخ والوقت:' : 'Date & Time:';
+            const currentStatusTxt = currentLang === 'ar' ? 'الحالة الحالية:' : 'Current Status:';
 
+            const docName = data.doctors ? `${data.doctors.first_name} ${data.doctors.last_name}` : (currentLang === 'ar' ? 'غير محدد' : 'N/A');
+            const shortId = data.id.substring(0, 8).toUpperCase();
+
+            resultDiv.innerHTML = `
+                <h4 class="font-bold mb-3" style="color: var(--primary);">${detailsTxt}</h4>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
+                    <span style="color: var(--text-secondary);">${idTxt}</span> 
+                    <strong style="font-family: monospace; letter-spacing: 1px;">${shortId}...</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
+                    <span style="color: var(--text-secondary);">${nameTxt}</span> 
+                    <strong>${escapeHtml(data.patient_name)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; font-size: 0.95rem;">
+                    <span style="color: var(--text-secondary);">${doctorTxt}</span> 
+                    <strong>${currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(docName)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:1rem; font-size: 0.95rem;">
+                    <span style="color: var(--text-secondary);">${dateTimeTxt}</span> 
+                    <strong dir="ltr">${escapeHtml(data.appointment_date)} | ${escapeHtml(data.appointment_time)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem;">
+                    <span style="font-weight: bold;">${currentStatusTxt}</span>
+                    <span class="badge" style="${statusStyle}; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 600;">${escapeHtml(displayStatus)}</span>
+                </div>
+            `;
+            resultDiv.classList.remove('hidden');
+
+        } catch (err) {
+            console.error('Track Booking Error:', err);
+            showToast(err.message || (currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection Error'), 'error');
+        } finally {
             setLoading(btn, false, currentLang === 'ar' ? 'بحث عن الحجز' : 'Search Booking');
-
-          }
-
-        });
-
-      }
-
-
-
+        }
+    });
+}
       // ===================================================
-
-
-
-
-
-
 
       // === إجبار حقول الهاتف على قبول 10 أرقام فقط (بدون مسافات أو حروف) ===
 
@@ -2669,61 +2638,66 @@ document.addEventListener('submit', async function(e) {
     }
     // =======================================
     });
+   // ========================================================================
+// نظام إرسال الإشعارات عبر البريد (محدث لـ Supabase Edge Function)
+// ========================================================================
+window.sendBookingEmail = async function(recipientEmail, doctorName, appointmentDate, status) {
+    if (!recipientEmail || recipientEmail === 'undefined' || recipientEmail === '') return;
 
-    // ========================================================================
-    // نظام إرسال الإشعارات عبر البريد (Google Apps Script)
-    // ========================================================================
-   window.sendBookingEmail = function(recipientEmail, doctorName, appointmentDate, status) {
-      var subject = "";
-      var htmlBody = "";
+    var subject = "";
+    var htmlBody = "";
+    var primaryColor = "#0ea5e9";
+    var containerStyle = "font-family: Arial, sans-serif; direction: rtl; text-align: right; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;";
+    var headerStyle = "background-color: " + primaryColor + "; color: white; padding: 20px; text-align: center; font-size: 1.25rem; font-weight: bold;";
+    var bodyStyle = "padding: 20px; color: #0f172a; line-height: 1.6;";
+    var footerStyle = "background-color: #f8fafc; padding: 15px; text-align: center; color: #64748b; font-size: 0.85rem; border-top: 1px solid #e2e8f0;";
 
-      // ألوان وتصميم متناسق مع منصتك
-      var primaryColor = "#0ea5e9";
-      var containerStyle = "font-family: Arial, sans-serif; direction: rtl; text-align: right; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;";
-      var headerStyle = "background-color: " + primaryColor + "; color: white; padding: 20px; text-align: center; font-size: 1.25rem; font-weight: bold;";
-      var bodyStyle = "padding: 20px; color: #0f172a; line-height: 1.6;";
-      var footerStyle = "background-color: #f8fafc; padding: 15px; text-align: center; color: #64748b; font-size: 0.85rem; border-top: 1px solid #e2e8f0;";
-
-      if (status === "confirm" || status === "مؤكد") {
+    if (status === "confirmed" || status === "مؤكد") {
         subject = "تأكيد موعدك الطبي - دليل أطباء غليزان";
         htmlBody = `
-          <div style="${containerStyle}">
+        <div style="${containerStyle}">
             <div style="${headerStyle}">تأكيد الموعد الطبي</div>
             <div style="${bodyStyle}">
-              <p>مرحباً بك،</p>
-              <p>يسعدنا إعلامك بأنه تم <strong>تأكيد</strong> موعدك الطبي بنجاح عبر منصة "دليل أطباء غليزان".</p>
-              <div style="background-color: #f8fafc; border-right: 4px solid ${primaryColor}; padding: 15px; margin: 20px 0;">
-                <p style="margin: 0 0 10px 0;"><strong>الطبيب المَعني:</strong> ${doctorName}</p>
-                <p style="margin: 0;"><strong>تاريخ الموعد:</strong> <span dir="ltr">${appointmentDate}</span></p>
-              </div>
-              <p>يرجى الحضور إلى العيادة في الموعد المحدد. نتمنى لك دوام الصحة والعافية.</p>
+                <p>مرحباً بك،</p>
+                <p>يسعدنا إعلامك بأنه تم <strong>تأكيد</strong> موعدك الطبي بنجاح عبر منصة "دليل أطباء غليزان".</p>
+                <div style="background-color: #f8fafc; border-right: 4px solid ${primaryColor}; padding: 15px; margin: 20px 0;">
+                    <p style="margin: 0 0 10px 0;"><strong>الطبيب المَعني:</strong> ${doctorName}</p>
+                    <p style="margin: 0;"><strong>تاريخ الموعد:</strong> <span dir="ltr">${appointmentDate}</span></p>
+                </div>
+                <p>يرجى الحضور إلى العيادة في الموعد المحدد. نتمنى لك دوام الصحة والعافية.</p>
             </div>
             <div style="${footerStyle}">© 2026 دليل أطباء ولاية غليزان. جميع الحقوق محفوظة.</div>
-          </div>
-        `;
-      } else if (status === "cancel" || status === "ملغى") {
+        </div>`;
+    } else if (status === "cancelled" || status === "ملغى") {
         subject = "إشعار بإلغاء موعدك الطبي - دليل أطباء غليزان";
         htmlBody = `
-          <div style="${containerStyle}">
+        <div style="${containerStyle}">
             <div style="background-color: #ef4444; color: white; padding: 20px; text-align: center; font-size: 1.25rem; font-weight: bold;">إلغاء الموعد الطبي</div>
             <div style="${bodyStyle}">
-              <p>مرحباً بك،</p>
-              <p>نعتذر بشدة لإعلامك بأنه قد تم <strong>إلغاء</strong> موعدك الطبي المجدول مع <strong>${doctorName}</strong> في تاريخ <span dir="ltr">${appointmentDate}</span>.</p>
-              <p>قد يعود سبب الإلغاء لظرف طارئ خارج عن إرادة الطبيب. ندعوك لزيارة المنصة مجدداً لحجز موعد في وقت آخر يناسبك.</p>
+                <p>مرحباً بك،</p>
+                <p>نعتذر بشدة لإعلامك بأنه قد تم <strong>إلغاء</strong> موعدك الطبي المجدول مع <strong>${doctorName}</strong> في تاريخ <span dir="ltr">${appointmentDate}</span>.</p>
+                <p>قد يعود سبب الإلغاء لظرف طارئ. ندعوك لزيارة المنصة مجدداً لحجز موعد في وقت آخر.</p>
             </div>
             <div style="${footerStyle}">© 2026 دليل أطباء ولاية غليزان. جميع الحقوق محفوظة.</div>
-          </div>
-        `;
-      }
+        </div>`;
+    }
 
-      apiPost('sendEmail', {
-        recipient: recipientEmail,
-        subject: subject,
-        htmlBody: htmlBody
-      })
-      .then(response => console.log("تم الإرسال: ", response))
-      .catch(error => console.error("خطأ في الإرسال: ", error));
-    };
+    // ✅ استدعاء Edge Function في Supabase لإرسال الإيميل بأمان
+    try {
+        const { data, error } = await supabaseClient.functions.invoke('send-email', {
+            body: {
+                to: recipientEmail,
+                subject: subject,
+                html: htmlBody
+            }
+        });
+        if (error) throw error;
+        console.log("✅ تم إرسال الإشعار بنجاح:", data);
+    } catch (err) {
+        console.error("❌ خطأ في إرسال الإشعار:", err);
+        // ملاحظة: لا نعرض خطأ للمستخدم هنا حتى لا نقاطع تجربة الحجز الناجحة
+    }
+};
 // ========================================================================
 // CHATBOT SYSTEM LOGIC (Multilingual & Fixed RTL Phone Display)
 // ========================================================================
