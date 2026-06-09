@@ -1506,7 +1506,7 @@ function renderDashboardUI(data, doctorId) {
 }
 // 2. دالة تسجيل الدخول اليدوي المحدثة
 
-// ✅ تسجيل دخول الطبيب (يتصل بـ Edge Function)
+// ✅ تسجيل دخول الطبيب (هاتف + كلمة مرور فقط)
 async function handleDashboardLogin(e) {
   if (e && e.preventDefault) e.preventDefault();
   if (isAccountLocked()) return;
@@ -1514,38 +1514,55 @@ async function handleDashboardLogin(e) {
   const btn = document.getElementById('dashboardLoginBtn');
   setLoading(btn, true);
   
-  const doctorId = document.getElementById('loginDoctorId').value.trim();
   const phone = document.getElementById('loginPhone').value.trim();
   const password = document.getElementById('loginDoctorPassword').value.trim();
   
+  if (!phone || !password) {
+    showToast(currentLang === 'ar' ? 'يرجى إدخال الهاتف وكلمة المرور' : 'Please enter phone and password', 'error');
+    setLoading(btn, false);
+    return;
+  }
+  
   try {
-    // ✅ الاتصال بـ Edge Function للتحقق من بيانات الطبيب
-    const { data, error } = await supabaseClient.functions.invoke('doctor-auth', {
-      body: { 
-        action: 'login', 
-        doctorId: doctorId, 
-        phone: phone, 
-        password: password 
-      }
-    });
+    // ✅ تشفير كلمة المرور المدخلة للمقارنة
+    const msgUint8 = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashHex = Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
     
-    if (error) throw new Error(error.message);
-    if (!data.success) throw new Error(data.error || 'بيانات الدخول غير صحيحة');
+    // ✅ البحث عن الطبيب في Supabase
+    const { data: doctor, error } = await supabaseClient
+      .from('doctors')
+      .select('*')
+      .eq('phone', phone)
+      .eq('password_hash', hashHex)
+      .single();
+    
+    if (error || !doctor) {
+      throw new Error(currentLang === 'ar' ? 'رقم الهاتف أو كلمة المرور غير صحيحة' : 'Invalid phone or password');
+    }
+    
+    // ✅ التحقق من أن الحساب مفعّل (أنت من تفعّله يدوياً)
+    if (!doctor.is_active) {
+      throw new Error(currentLang === 'ar' ? 'حسابك غير مفعّل بعد. يرجى التواصل مع الإدارة.' : 'Your account is not active yet. Please contact admin.');
+    }
     
     resetLoginAttempts();
     
-    // حفظ الجلسة
+    // ✅ حفظ الجلسة
     localStorage.setItem('doctorSession', JSON.stringify({
-      doctorId: doctorId,
+      doctorId: doctor.id,
       phone: phone,
-      sessionToken: data.sessionToken
+      doctorName: `${doctor.first_name} ${doctor.last_name}`
     }));
     
     document.getElementById('loginSection').classList.add('hidden');
     document.getElementById('dashboardSection').classList.remove('hidden');
     
-    // استدعاء دالة الرسم
-    renderDashboardUI(data, doctorId);
+    // ✅ ملء بيانات لوحة التحكم
+    fillDashboardData(doctor);
+    
+    showToast(currentLang === 'ar' ? 'أهلاً د. ' + doctor.first_name : 'Welcome Dr. ' + doctor.first_name, 'success');
     
   } catch (err) {
     recordFailedAttempt();
@@ -1555,32 +1572,26 @@ async function handleDashboardLogin(e) {
   }
 }
     function logoutDashboard() {
-
-
-
-      localStorage.removeItem('doctorSession'); // مسح المفكرة
-
-
-
-      document.getElementById('loginSection').classList.remove('hidden');
-
-
-
-      document.getElementById('dashboardSection').classList.add('hidden');
-      document.getElementById('loginDoctorId').value = '';
-      document.getElementById('loginPhone').value = '';
-      document.getElementById('loginDoctorPassword').value = ''; 
-    }
- // ✅ تغيير حالة الحجز (محدّثة لـ Supabase)
-window.changeBookingStatus = async function(bookingId, newStatus, patientEmail, doctorName, apptDate) {
-  if (!confirm('تأكيد تغيير حالة الحجز إلى: ' + (newStatus === 'confirmed' ? 'مؤكد' : 'ملغى') + '؟')) return;
+  localStorage.removeItem('doctorSession');
+  document.getElementById('loginSection').classList.remove('hidden');
+  document.getElementById('dashboardSection').classList.add('hidden');
+  document.getElementById('loginPhone').value = '';
+  document.getElementById('loginDoctorPassword').value = '';
+  showToast(t('toastLogout'), 'success');
+}
+ // ✅ تغيير حالة الحجز (مباشرة مع Supabase)
+window.changeBookingStatus = async function(bookingId, newStatus) {
+  const statusText = newStatus === 'confirmed' 
+    ? (currentLang === 'ar' ? 'مؤكد' : 'Confirmed') 
+    : (currentLang === 'ar' ? 'ملغى' : 'Cancelled');
+  
+  if (!confirm(currentLang === 'ar' ? `تأكيد تغيير الحالة إلى: ${statusText}؟` : `Change status to ${statusText}?`)) return;
   
   const sessionStr = localStorage.getItem('doctorSession');
-  if (!sessionStr) { showToast('يرجى تسجيل الدخول مجدداً', 'error'); return; }
+  if (!sessionStr) { showToast('يرجى تسجيل الدخول', 'error'); return; }
   const session = JSON.parse(sessionStr);
   
   try {
-    // ✅ تحديث الحالة مباشرة في Supabase
     const { error } = await supabaseClient
       .from('appointments')
       .update({ status: newStatus })
@@ -1589,15 +1600,10 @@ window.changeBookingStatus = async function(bookingId, newStatus, patientEmail, 
     
     if (error) throw error;
     
-    showToast('تم التحديث بنجاح', 'success');
+    showToast(currentLang === 'ar' ? 'تم التحديث بنجاح' : 'Updated successfully', 'success');
     
-    // إرسال الإيميل التلقائي
-    if (patientEmail && patientEmail !== 'undefined' && patientEmail !== '') {
-      window.sendBookingEmail(patientEmail, doctorName, apptDate, newStatus);
-    }
-    
-    // إعادة تحميل البيانات
-    refreshDoctorDashboard(session.doctorId, session.phone, session.sessionToken);
+    // إعادة تحميل المواعيد
+    await loadDoctorAppointments(session.doctorId);
     
   } catch (err) {
     showToast('خطأ: ' + err.message, 'error');
@@ -1642,7 +1648,7 @@ window.toggleWorkingHours = function() {
 
 
 
-// ✅ حفظ أوقات العمل (محدّثة لـ Supabase)
+// ✅ حفظ أوقات العمل
 window.saveWorkingHours = async function() {
   const sessionStr = localStorage.getItem('doctorSession');
   if (!sessionStr) return;
@@ -1660,24 +1666,22 @@ window.saveWorkingHours = async function() {
   }
   
   try {
-    // ✅ تحديث أوقات العمل مباشرة في Supabase
     const { error } = await supabaseClient
       .from('doctors')
       .update({ working_days: workingDaysData })
-      .eq('id', session.doctorId)
-      .eq('phone', session.phone);
+      .eq('id', session.doctorId);
     
     if (error) throw error;
     
-    showToast('تم حفظ أوقات وأيام العمل بنجاح', 'success');
+    showToast(currentLang === 'ar' ? 'تم حفظ أوقات العمل بنجاح' : 'Working hours saved', 'success');
     
     // تحديث المصفوفة المحلية
     const docIndex = allDoctors.findIndex(d => d.id === session.doctorId);
-    if(docIndex > -1) {
+    if (docIndex > -1) {
       allDoctors[docIndex].working_days = workingDaysData;
     }
     
-  } catch(err) {
+  } catch (err) {
     showToast('خطأ: ' + err.message, 'error');
   } finally {
     setLoading(btn, false, 'حفظ الأوقات');
@@ -1716,10 +1720,7 @@ window.saveWorkingHours = async function() {
 
 
     }
-
-
-
-   // ✅ تفعيل/إيقاف الحجوزات (محدّثة لـ Supabase)
+// ✅ تفعيل/إيقاف الحجوزات
 async function handleToggleBooking(e) {
   const isChecked = e.target.checked;
   const sessionStr = localStorage.getItem('doctorSession');
@@ -1730,19 +1731,16 @@ async function handleToggleBooking(e) {
   toggleSwitch.disabled = true;
   
   try {
-    // ✅ تحديث حالة الحجوزات مباشرة في Supabase
     const { error } = await supabaseClient
       .from('doctors')
       .update({ booking_enabled: isChecked })
-      .eq('id', session.doctorId)
-      .eq('phone', session.phone);
+      .eq('id', session.doctorId);
     
     if (error) throw error;
     
     showToast(t('toastToggleSuccess'), 'success');
     updateToggleText(isChecked);
     
-    // تحديث المصفوفة المحلية
     const docIndex = allDoctors.findIndex(d => d.id === session.doctorId);
     if (docIndex > -1) {
       allDoctors[docIndex].booking_enabled = isChecked;
@@ -2997,5 +2995,144 @@ function displayTimeSlots(container, slots, timeInput) {
   }
   if (eveningDiv.querySelector('.slots-grid').hasChildNodes()) {
     container.appendChild(eveningDiv);
+  }
+}
+// ✅ ملء بيانات لوحة تحكم الطبيب
+async function fillDashboardData(doctor) {
+  // تحديث العنوان
+  document.getElementById('dashboardSubtitle').textContent = 
+    currentLang === 'ar' ? `د. ${doctor.first_name} ${doctor.last_name}` : `Dr. ${doctor.first_name} ${doctor.last_name}`;
+  
+  // ✅ ملء أوقات العمل
+  let savedDays = {};
+  try { 
+    savedDays = typeof doctor.working_days === 'string' ? JSON.parse(doctor.working_days) : (doctor.working_days || {}); 
+  } catch(e) {}
+  
+  const daysNames = currentLang === 'ar' 
+    ? ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
+    : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  
+  const container = document.getElementById('daysListContainer');
+  container.innerHTML = '';
+  for (let i = 0; i <= 6; i++) {
+    const dayData = savedDays[i.toString()] || { active: false, start: '08:00', end: '16:00' };
+    const row = document.createElement('div');
+    row.style.cssText = 'display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; background: var(--bg); padding: 0.75rem; border-radius: var(--radius); border: 1px solid var(--border);';
+    row.innerHTML = `
+      <div style="flex: 1; min-width: 100px; display: flex; align-items: center; gap: 0.5rem;">
+        <input type="checkbox" id="day_active_${i}" ${dayData.active ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+        <label for="day_active_${i}" style="margin: 0; cursor: pointer; font-weight: bold;">${daysNames[i]}</label>
+      </div>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="time" id="day_start_${i}" value="${dayData.start}" style="padding: 0.4rem; max-width: 110px;">
+        <span>-</span>
+        <input type="time" id="day_end_${i}" value="${dayData.end}" style="padding: 0.4rem; max-width: 110px;">
+      </div>
+    `;
+    container.appendChild(row);
+  }
+  
+  // ✅ تحديث زر الحجوزات
+  const toggleSwitch = document.getElementById('bookingToggleSwitch');
+  if (toggleSwitch) toggleSwitch.checked = !!doctor.booking_enabled;
+  updateToggleText(!!doctor.booking_enabled);
+  
+  // ✅ جلب المواعيد
+  await loadDoctorAppointments(doctor.id);
+}
+
+// ✅ جلب مواعيد الطبيب
+async function loadDoctorAppointments(doctorId) {
+  const container = document.getElementById('appointmentsTable');
+  const empty = document.getElementById('noAppointments');
+  
+  container.innerHTML = '<div style="text-align:center; padding: 1rem;">جاري التحميل...</div>';
+  empty.classList.add('hidden');
+  
+  try {
+    const { data: appointments, error } = await supabaseClient
+      .from('appointments')
+      .select('*')
+      .eq('doctor_id', doctorId)
+      .order('appointment_date', { ascending: true });
+    
+    if (error) throw error;
+    
+    if (!appointments || appointments.length === 0) {
+      container.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    
+    const confirmTxt = currentLang === 'ar' ? 'تأكيد' : 'Confirm';
+    const cancelTxt = currentLang === 'ar' ? 'إلغاء' : 'Cancel';
+    
+    container.innerHTML = appointments.map(a => {
+      let displayStatus = a.status || 'pending';
+      let statusStyle = 'background: #f1f5f9; color: #64748b;';
+      let statusIndicator = '#f59e0b';
+      
+      if (a.status === 'confirmed') {
+        statusStyle = 'background: #ecfdf5; color: #10b981;';
+        statusIndicator = '#10b981';
+        displayStatus = currentLang === 'ar' ? 'مؤكد' : 'Confirmed';
+      } else if (a.status === 'cancelled') {
+        statusStyle = 'background: #fef2f2; color: #ef4444;';
+        statusIndicator = '#ef4444';
+        displayStatus = currentLang === 'ar' ? 'ملغى' : 'Cancelled';
+      } else {
+        displayStatus = currentLang === 'ar' ? 'قيد الانتظار' : 'Pending';
+      }
+      
+      const actionsHtml = (a.status === 'pending') ? `
+        <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #ecfdf5; border: 1px solid #10b981; color: #10b981; border-radius: 6px;"
+          onclick="changeBookingStatus('${a.id}', 'confirmed')">
+          ${confirmTxt}
+        </button>
+        <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #fef2f2; border: 1px solid #ef4444; color: #ef4444; border-radius: 6px;"
+          onclick="changeBookingStatus('${a.id}', 'cancelled')">
+          ${cancelTxt}
+        </button>
+      ` : `<span class="badge" style="${statusStyle}">${displayStatus}</span>`;
+      
+      return `
+        <div class="card-hover" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 1rem;">
+          <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: ${statusIndicator};"></div>
+          <div style="padding-right: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary); background: var(--bg); padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border);">
+                ${a.id.substring(0, 8)}...
+              </span>
+              <span class="badge" style="${statusStyle}">${displayStatus}</span>
+            </div>
+            <h4 style="font-size: 1.15rem; font-weight: bold; color: var(--text); margin-bottom: 0.25rem;">${escapeHtml(a.patient_name)}</h4>
+            <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--primary); font-size: 0.95rem; font-weight: 600; direction: ltr; margin-bottom: 1rem;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              ${escapeHtml(formatPhoneNumber(a.patient_phone))}
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; border-top: 1px dashed var(--border); padding-top: 0.75rem;">
+              <div style="display: flex; align-items: center; gap: 1rem; font-size: 0.9rem;">
+                <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect></svg>
+                  <span dir="ltr">${escapeHtml(a.appointment_date)}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>
+                  <span dir="ltr">${escapeHtml(a.appointment_time)}</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                ${actionsHtml}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+  } catch (err) {
+    console.error('Error loading appointments:', err);
+    container.innerHTML = '<div style="text-align:center; color: var(--danger); padding: 1rem;">خطأ في التحميل</div>';
   }
 }
