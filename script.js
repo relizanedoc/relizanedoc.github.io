@@ -2948,7 +2948,6 @@ async function fillDashboardData(doctor) {
   // ✅ جلب المواعيد
   await loadDoctorAppointments(doctor.id);
 }
-
 // ✅ جلب مواعيد الطبيب
 async function loadDoctorAppointments(doctorId) {
   const container = document.getElementById('appointmentsTable');
