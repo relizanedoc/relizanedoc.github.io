@@ -1,3 +1,4 @@
+// دالة لتنفيذ الكود بمجرد تحميل الصفحة
 window.addEventListener('load', function() {
     const urlParams = new URLSearchParams(window.location.search);
     const doctorId = urlParams.get('doc'); // هل هناك كود طبيب في الرابط؟
@@ -1255,10 +1256,10 @@ async function submitBooking() {
     const bDate = data.AppointmentDate;
     const bTime = data.AppointmentTime;
     const bDoctor = currentDoctor ? currentDoctor.first_name + ' ' + currentDoctor.last_name : '';
-    
+
     // إنشاء رابط الـ QR Code
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${bId}&color=0ea5e9`;
-    
+
     const ticketHtml = `
       <div class="e-ticket">
         <div class="e-ticket-top">
@@ -1296,53 +1297,11 @@ async function submitBooking() {
             <img src="${qrUrl}" alt="QR Code" />
           </div>
         </div>
-const bId = booking.id;
-const shortId = bId.split('-')[0].toUpperCase(); // ✅ أخذ أول جزء من UUID (8 أحرف)
-const bName = data.PatientName;
-const bDate = data.AppointmentDate;
-const bTime = data.AppointmentTime;
-const bDoctor = currentDoctor ? `${currentDoctor.first_name} ${currentDoctor.last_name}` : '';
-
-const ticketHtml = `
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 2rem; text-align: center; color: white; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-    <div style="background: white; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: #10b981; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-      <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-    </div>
-    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem; font-weight: bold;">${currentLang === 'ar' ? 'تم تأكيد الحجز' : 'Booking Confirmed'}</h3>
-    <div style="font-size: 1rem; opacity: 0.95; margin-bottom: 2rem; font-weight: 500;">
-      ${currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(bDoctor)}
-    </div>
-    
-    <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
-        <span style="opacity: 0.9; font-size: 0.9rem;">${currentLang === 'ar' ? 'رقم الحجز' : 'Booking ID'}</span>
-        <span style="font-family: 'Courier New', monospace; font-weight: bold; letter-spacing: 2px; font-size: 1.1rem;">${shortId}</span>
       </div>
     `;
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
-        <span style="opacity: 0.9; font-size: 0.9rem;">${currentLang === 'ar' ? 'المريض' : 'Patient'}</span>
-        <span style="font-weight: 600;">${escapeHtml(bName)}</span>
-      </div>
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="opacity: 0.9; font-size: 0.9rem;">${currentLang === 'ar' ? 'التاريخ والوقت' : 'Date & Time'}</span>
-        <span dir="ltr" style="font-weight: 600;">${bDate} | ${bTime}</span>
-      </div>
-    </div>
-    
-    <div style="background: white; padding: 1rem; border-radius: 8px; display: inline-block;">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${bId}&color=667eea" alt="QR Code" style="width: 120px; height: 120px;" />
-    </div>
-    
+
     // إظهار التذكرة
     document.getElementById('eTicketContainer').innerHTML = ticketHtml;
-    <div style="margin-top: 1.5rem; font-size: 0.85rem; opacity: 0.9;">
-      ${currentLang === 'ar' ? 'يرجى إبراز هذه التذكرة عند الوصول' : 'Please show this ticket upon arrival'}
-    </div>
-  </div>
-`;
-
-// إظهار التذكرة
-document.getElementById('eTicketContainer').innerHTML = ticketHtml;
     document.getElementById('successDialog').classList.remove('hidden');
 
   } catch (err) {
@@ -1799,16 +1758,43 @@ async function handleToggleBooking(e) {
 // ========================================================================
     // جلب حجوزات العضو
     // ========================================================================
+    async function loadUserBookings() {
+      const container = document.getElementById('userBookingsContainer');
+      // إظهار أنيميشن التحميل
+      container.innerHTML = `<div class="text-center p-4"><div class="spinner" style="border-top-color: var(--primary); margin: 0 auto; width: 24px; height: 24px;"></div><p class="mt-2 text-gray text-sm">${t('fetchingBookings')}</p></div>`;
+      
+      try {
+        const user = await getCurrentUser();
+        if (!user) return; // المستخدم غير مسجل دخول
+        
+        // الاتصال بالخادم لجلب المواعيد (تلقائياً يرسل idToken)
+        const result = await apiPost('getUserBookings', {}); 
+        if (!result.success) throw new Error(result.error);
+        
+        const bookings = result.data;
+        
+        // إذا لم يكن لديه حجوزات، نترك الحالة الفارغة (Empty State)
+       if (bookings.length === 0) {
+           container.innerHTML = `
+            <div class='empty-state' style='padding: 2rem 1rem; background: var(--bg); border-radius: var(--radius); border: 1px dashed var(--border);'>
+              <div class='empty-state-icon' style='color: var(--primary); opacity: 0.7; margin-bottom: 0.5rem;'>
+                <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              </div>
+              <p style='color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem;'>${t('noUserBookings')}</p>
+              <button class='btn btn-primary' style='padding: 0.5rem 1rem; font-size: 0.875rem;' onclick="router('home')">${t('bookFirstAppt')}</button>
+            </div>
+           `;
+           return;
+        }
    // ✅ جلب حجوزات العضو من Supabase
-// ✅ جلب حجوزات العضو من Supabase
 async function loadUserBookings() {
   const container = document.getElementById('userBookingsContainer');
   container.innerHTML = `<div class="text-center p-4"><div class="spinner" style="border-top-color: var(--primary); margin: 0 auto; width: 24px; height: 24px;"></div><p class="mt-2 text-gray text-sm">${t('fetchingBookings')}</p></div>`;
-
+  
   try {
     const user = await getCurrentUser();
     if (!user) return;
-
+    
     // ✅ جلب الحجوزات مع اسم الطبيب (Join)
     const { data: bookings, error } = await supabaseClient
       .from('appointments')
@@ -1823,8 +1809,24 @@ async function loadUserBookings() {
       .eq('user_id', user.UserID)
       .order('appointment_date', { ascending: false });
 
-    if (error) throw error;
+        // إذا كان لديه حجوزات، نقوم برسمها بشكل بطاقات أنيقة
+  let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
+      bookings.forEach(b => {
+          let statusStyle = 'background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;';
+          let statusIndicator = '#f59e0b';
+          let displayStatus = t('statusPending'); // ترجمة مبدئية
 
+          if (b.status === 'مؤكد') {
+              statusStyle = 'background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;';
+              statusIndicator = '#10b981';
+              displayStatus = t('statusConfirmed'); // ترجمة المؤكد
+          } else if (b.status === 'ملغى') {
+              statusStyle = 'background: #fef2f2; color: #ef4444; border: 1px solid #fecaca;';
+              statusIndicator = '#ef4444';
+              displayStatus = t('statusCancelled'); // ترجمة الملغى
+          }
+    if (error) throw error;
+    
     if (!bookings || bookings.length === 0) {
       container.innerHTML = `
         <div class='empty-state' style='padding: 2rem 1rem; background: var(--bg); border-radius: var(--radius); border: 1px dashed var(--border);'>
@@ -1854,10 +1856,30 @@ async function loadUserBookings() {
         displayStatus = t('statusCancelled');
       }
 
+          html += `
+          <div class="card-hover" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);">
+              <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: ${statusIndicator};"></div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; padding-right: 0.5rem;">
+                  <div style="flex: 1; min-width: 250px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                          <span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary); background: var(--bg); padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border); letter-spacing: 0.5px;">${b.bookingId}</span>
+                          <span class="badge" style="${statusStyle}">${displayStatus}</span>
+                      </div>
+                      <h4 style="font-size: 1.15rem; font-weight: bold; color: var(--text); margin-bottom: 0.25rem;">${currentLang === 'ar' ? 'د.' : 'Dr.'} ${b.doctorName}</h4>
+                      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">${t('patientLabel')}<span style="color: var(--text); font-weight: 500;">${b.patientName}</span></p>
+                      <div style="display: flex; align-items: center; gap: 1.5rem; font-size: 0.9rem; border-top: 1px dashed var(--border); padding-top: 0.75rem;">
+                          <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);">
+                              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                              <span dir="ltr">${b.date}</span>
+                          </div>
+                          <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);">
+                              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                              <span dir="ltr">${b.time}</span>
+                          </div>
+                      </div>
+                  </div>
       // ✅ استخراج اسم الطبيب من العلاقة
       const doctorName = b.doctors ? `${b.doctors.first_name} ${b.doctors.last_name}` : 'طبيب';
-      // ✅ عرض أول 8 أحرف من UUID بشكل احترافي
-      const shortId = b.id.substring(0, 8).toUpperCase();
 
       html += `
         <div class="card-hover" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);">
@@ -1866,7 +1888,6 @@ async function loadUserBookings() {
             <div style="flex: 1; min-width: 250px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary); background: var(--bg); padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border); letter-spacing: 0.5px;">${b.id.substring(0, 8)}...</span>
-                <span style="font-family: 'Courier New', monospace; font-size: 0.85rem; color: var(--primary); background: var(--bg); padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid var(--border); letter-spacing: 1px; font-weight: bold;">${shortId}</span>
                 <span class="badge" style="${statusStyle}">${displayStatus}</span>
               </div>
               <h4 style="font-size: 1.15rem; font-weight: bold; color: var(--text); margin-bottom: 0.25rem;">${currentLang === 'ar' ? 'د.' : 'Dr.'} ${doctorName}</h4>
@@ -1875,32 +1896,47 @@ async function loadUserBookings() {
                 <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);">
                   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                   <span dir="ltr">${b.appointment_date}</span>
-                  <span dir="ltr" style="font-weight: 600;">${b.appointment_date}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);">
                   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                   <span dir="ltr">${b.appointment_time}</span>
-                  <span dir="ltr" style="font-weight: 600;">${b.appointment_time}</span>
                 </div>
               </div>
             </div>
           </div>
+          `;
+      });
+      html += '</div>';
         </div>
       `;
     });
     html += '</div>';
 
+      // زر حجز موعد جديد مترجم
+      html += `
     html += `
       <div style="margin-top: 1.5rem; text-align: center;">
+          <button class='btn btn-primary' style='padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 50px;' onclick="router('home')">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-inline-end: 0.4rem; vertical-align: middle;"><path d="M12 5v14M5 12h14"></path></svg>
+              ${t('bookNewAppointment')}
+          </button>
         <button class='btn btn-primary' style='padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 50px;' onclick="router('home')">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-inline-end: 0.4rem; vertical-align: middle;"><path d="M12 5v14M5 12h14"></path></svg>
           ${t('bookNewAppointment')}
         </button>
       </div>
+      `;
+
+      container.innerHTML = html;
+        
+      } catch(err) {
+        container.innerHTML = `<div class="text-center p-4 text-danger">خطأ في الاتصال: تعذر جلب المواعيد.</div>`;
+      }
+    }
     `;
 
     container.innerHTML = html;
-
+      
   } catch(err) {
     console.error('Error loading bookings:', err);
     container.innerHTML = `<div class="text-center p-4 text-danger">خطأ في الاتصال: تعذر جلب المواعيد.</div>`;
