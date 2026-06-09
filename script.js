@@ -1252,20 +1252,18 @@ async function submitBooking() {
     
     // --- بناء التذكرة الإلكترونية (E-Ticket) ---
     const bId = booking.id;
-    
-    // تصحيح: تعريف shortId مرة واحدة فقط وبشكل سليم
+    // تم إصلاح الخطأ: تعريف المتغير مرة واحدة فقط
     const shortId = bId.substring(0, 8).toUpperCase(); 
-    
     const bName = data.PatientName;
     const bDate = data.AppointmentDate;
     const bTime = data.AppointmentTime;
     const bDoctor = currentDoctor ? `${currentDoctor.first_name} ${currentDoctor.last_name}` : '';
 
-    // تصحيح: بناء كود HTML للتذكرة بشكل نظيف وتجنب التكرار العشوائي
+    // تم إصلاح الخطأ: تصميم HTML نظيف وغير مكرر
     const ticketHtml = `
-      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 2rem; text-align: center; color: white; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 320px; margin: 0 auto;">
-        <div style="background: white; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: #10b981; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-          <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1.5rem; text-align: center; color: white; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 320px; margin: 0 auto;">
+        <div style="background: white; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; color: #10b981;">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
         <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem; font-weight: bold;">${currentLang === 'ar' ? 'تم تأكيد الحجز' : 'Booking Confirmed'}</h3>
         <div style="font-size: 0.85rem; opacity: 0.95; margin-bottom: 1.5rem;">
