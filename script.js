@@ -1807,6 +1807,7 @@ async function loadUserBookings() {
     // ✅ جلب الحجوزات مع اسم الطبيب (Join)
     const { data: bookings, error } = await supabaseClient
       .from('appointments')
+      .select(`id, patient_name, appointment_date, appointment_time, status, doctors (first_name, last_name)`)
       .select(`
         id,
         patient_name,
@@ -1815,13 +1816,13 @@ async function loadUserBookings() {
         status,
         doctors (first_name, last_name)
       `)
-      .select(`id, patient_name, appointment_date, appointment_time, status, doctors (first_name, last_name)`)
       .eq('user_id', user.UserID)
       .order('appointment_date', { ascending: false });
 
     if (error) throw error;
     
     if (!bookings || bookings.length === 0) {
+      container.innerHTML = `<div class='empty-state' style='padding: 2rem 1rem;'><div class='empty-state-icon'>📋</div><p style='color: var(--text-secondary); margin-bottom: 1rem;'>${t('noUserBookings')}</p><button class='btn btn-primary' onclick="router('home')">${t('bookFirstAppt')}</button></div>`;
       container.innerHTML = `
         <div class='empty-state' style='padding: 2rem 1rem; background: var(--bg); border-radius: var(--radius); border: 1px dashed var(--border);'>
           <div class='empty-state-icon' style='color: var(--primary); opacity: 0.7; margin-bottom: 0.5rem;'>
@@ -1831,16 +1832,17 @@ async function loadUserBookings() {
           <button class='btn btn-primary' style='padding: 0.5rem 1rem; font-size: 0.875rem;' onclick="router('home')">${t('bookFirstAppt')}</button>
         </div>
       `;
-      container.innerHTML = `<div class='empty-state' style='padding: 2rem 1rem;'><div class='empty-state-icon'>📋</div><p style='color: var(--text-secondary); margin-bottom: 1rem;'>${t('noUserBookings')}</p><button class='btn btn-primary' onclick="router('home')">${t('bookFirstAppt')}</button></div>`;
       return;
     }
 
     let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
     bookings.forEach(b => {
-      let statusStyle = 'background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;';
       let statusStyle = 'background: #f8fafc; color: #64748b;';
+      let statusStyle = 'background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;';
       let statusIndicator = '#f59e0b';
       let displayStatus = t('statusPending');
+      if (b.status === 'confirmed') { statusStyle = 'background: #ecfdf5; color: #10b981;'; statusIndicator = '#10b981'; displayStatus = t('statusConfirmed'); }
+      else if (b.status === 'cancelled') { statusStyle = 'background: #fef2f2; color: #ef4444;'; statusIndicator = '#ef4444'; displayStatus = t('statusCancelled'); }
 
       if (b.status === 'confirmed') {
         statusStyle = 'background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;';
@@ -1853,11 +1855,10 @@ async function loadUserBookings() {
       }
 
       // ✅ استخراج اسم الطبيب من العلاقة
-      if (b.status === 'confirmed') { statusStyle = 'background: #ecfdf5; color: #10b981;'; statusIndicator = '#10b981'; displayStatus = t('statusConfirmed'); }
-      else if (b.status === 'cancelled') { statusStyle = 'background: #fef2f2; color: #ef4444;'; statusIndicator = '#ef4444'; displayStatus = t('statusCancelled'); }
       const doctorName = b.doctors ? `${b.doctors.first_name} ${b.doctors.last_name}` : 'طبيب';
       // ✅ عرض أول 8 أحرف من UUID بشكل احترافي
       const shortId = b.id.substring(0, 8).toUpperCase();
+      html += `<div class="card-hover" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);"><div style="position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: ${statusIndicator};"></div><div style="padding-right: 0.5rem;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;"><span style="font-family: monospace; font-size: 0.85rem; color: var(--primary); background: var(--bg); padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid var(--border); font-weight: bold;">${shortId}</span><span class="badge" style="${statusStyle}">${displayStatus}</span></div><h4 style="font-size: 1.15rem; font-weight: bold; color: var(--text); margin-bottom: 0.25rem;">${currentLang === 'ar' ? 'د.' : 'Dr.'} ${doctorName}</h4><p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">${t('patientLabel')}<span style="color: var(--text); font-weight: 500;">${b.patient_name}</span></p><div style="display: flex; align-items: center; gap: 1.5rem; font-size: 0.9rem; border-top: 1px dashed var(--border); padding-top: 0.75rem;"><div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect></svg><span dir="ltr" style="font-weight: 600;">${b.appointment_date}</span></div><div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg><span dir="ltr" style="font-weight: 600;">${b.appointment_time}</span></div></div></div></div></div>`;
 
       html += `
         <div class="card-hover" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);">
@@ -1884,9 +1885,9 @@ async function loadUserBookings() {
           </div>
         </div>
       `;
-      html += `<div class="card-hover" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);"><div style="position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: ${statusIndicator};"></div><div style="padding-right: 0.5rem;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;"><span style="font-family: monospace; font-size: 0.85rem; color: var(--primary); background: var(--bg); padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid var(--border); font-weight: bold;">${shortId}</span><span class="badge" style="${statusStyle}">${displayStatus}</span></div><h4 style="font-size: 1.15rem; font-weight: bold; color: var(--text); margin-bottom: 0.25rem;">${currentLang === 'ar' ? 'د.' : 'Dr.'} ${doctorName}</h4><p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">${t('patientLabel')}<span style="color: var(--text); font-weight: 500;">${b.patient_name}</span></p><div style="display: flex; align-items: center; gap: 1.5rem; font-size: 0.9rem; border-top: 1px dashed var(--border); padding-top: 0.75rem;"><div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect></svg><span dir="ltr" style="font-weight: 600;">${b.appointment_date}</span></div><div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg><span dir="ltr" style="font-weight: 600;">${b.appointment_time}</span></div></div></div></div></div>`;
     });
     html += '</div>';
+    html += `<div style="margin-top: 1.5rem; text-align: center;"><button class='btn btn-primary' style='padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 50px;' onclick="router('home')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-inline-end: 0.4rem; vertical-align: middle;"><path d="M12 5v14M5 12h14"></path></svg>${t('bookNewAppointment')}</button></div>`;
 
     html += `
       <div style="margin-top: 1.5rem; text-align: center;">
@@ -1897,7 +1898,6 @@ async function loadUserBookings() {
       </div>
     `;
 
-    html += `<div style="margin-top: 1.5rem; text-align: center;"><button class='btn btn-primary' style='padding: 0.6rem 1.5rem; font-size: 0.95rem; border-radius: 50px;' onclick="router('home')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-inline-end: 0.4rem; vertical-align: middle;"><path d="M12 5v14M5 12h14"></path></svg>${t('bookNewAppointment')}</button></div>`;
     container.innerHTML = html;
       
   } catch(err) {
