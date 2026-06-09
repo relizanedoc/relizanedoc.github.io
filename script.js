@@ -761,6 +761,20 @@ function openDoctorProfileModal(doc, doctorName) {
       if (ogDesc) ogDesc.setAttribute('content', pageDesc);
     }
 
+   // ✅ تحديث updateSEOMetaTags لأسماء أعمدة Supabase
+function updateSEOMetaTags(doc) {
+  if (!doc) return;
+  const pageTitle = currentLang === 'ar' ? `د. ${doc.first_name} ${doc.last_name} | ${doc.specialty} في ${doc.municipality}` : `Dr. ${doc.first_name} ${doc.last_name} | ${doc.specialty} in ${doc.municipality}`;
+  const pageDesc = currentLang === 'ar' ? `احجز موعدك مع د. ${doc.first_name} ${doc.last_name}، أخصائي ${doc.specialty} في ${doc.municipality}، ولاية غليزان. العنوان: ${doc.exact_location}` : `Book an appointment with Dr. ${doc.first_name} ${doc.last_name}, ${doc.specialty} in ${doc.municipality}, Relizane.`;
+  document.title = pageTitle;
+  let metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.setAttribute('content', pageDesc);
+  let ogTitle = document.querySelector('meta[property="og:title"]');
+  if (ogTitle) ogTitle.setAttribute('content', pageTitle);
+  let ogDesc = document.querySelector('meta[property="og:description"]');
+  if (ogDesc) ogDesc.setAttribute('content', pageDesc);
+}
+// ✅ تحديث handleSEOAndRender لأسماء أعمدة Supabase
 function handleSEOAndRender() {
       const urlParams = new URLSearchParams(window.location.search);
       const targetDocId = urlParams.get('doc');
@@ -770,7 +784,7 @@ function handleSEOAndRender() {
           updateSEOMetaTags(targetDoc);
           renderDoctors([targetDoc]);
           populateFilters(); // تأكد من استدعاء الفلاتر
-
+          
           // === الجزء الجديد: هذا هو السحر الذي سيفتح النافذة تلقائياً ===
           const doctorName = (currentLang === 'ar' ? 'د. ' : 'Dr. ') + targetDoc.FirstName + ' ' + targetDoc.LastName;
           setTimeout(() => {
@@ -796,8 +810,40 @@ function handleSEOAndRender() {
         }
       }
       renderDoctors(allDoctors);
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetDocId = urlParams.get('doc');
+  if (targetDocId) {
+    const targetDoc = allDoctors.find(d => d.id === targetDocId);
+    if (targetDoc) {
+      updateSEOMetaTags(targetDoc);
+      renderDoctors([targetDoc]);
       populateFilters();
+      
+      const doctorName = (currentLang === 'ar' ? 'د. ' : 'Dr. ') + targetDoc.first_name + ' ' + targetDoc.last_name;
+      setTimeout(() => {
+          openDoctorProfileModal(targetDoc, doctorName);
+      }, 300);
+
+      let backBtn = document.getElementById('seoBackBtn');
+      if(!backBtn) {
+         backBtn = document.createElement('button');
+         backBtn.id = 'seoBackBtn';
+         backBtn.className = 'btn btn-secondary btn-block mb-4';
+         backBtn.innerHTML = currentLang === 'ar' ? '&#8594; عرض جميع الأطباء المتاحين' : '&#8592; View All Available Doctors';
+         backBtn.onclick = () => {
+             window.history.pushState({}, document.title, window.location.pathname);
+             document.title = currentLang === 'ar' ? 'دليل أطباء ولاية غليزان' : 'Relizane Medical Directory';
+             renderDoctors(allDoctors);
+             backBtn.remove();
+         };
+         document.getElementById('doctorsList').insertAdjacentElement('beforebegin', backBtn);
+      }
+      return;
     }
+  }
+  renderDoctors(allDoctors);
+  populateFilters();
+}
 
     // ✅ الدالة الجديدة باستخدام Supabase
 async function loadDoctors() {
@@ -865,6 +911,24 @@ async function loadDoctors() {
       if (window.tsMunicipalityFilter) { window.tsMunicipalityFilter.clearOptions(); Array.from(munSel.options).forEach(opt => window.tsMunicipalityFilter.addOption({value: opt.value, text: opt.text})); window.tsMunicipalityFilter.setValue(prevMun); }
       filterDoctors();
     }
+    // ✅ تحديث populateFilters لأسماء أعمدة Supabase
+function populateFilters() {
+  const specs = [...new Set(allDoctors.map(d => d.specialty).filter(Boolean))].sort();
+  const muns = [...new Set(allDoctors.map(d => d.municipality).filter(Boolean))].sort();
+  const specSel = document.getElementById('specialtyFilter');
+  const munSel = document.getElementById('municipalityFilter');
+  const prevSpec = specSel.value;
+  const prevMun = munSel.value;
+  specSel.innerHTML = '<option value="">' + t('allSpecialties') + '</option>';
+  munSel.innerHTML = '<option value="">' + t('allMunicipalities') + '</option>';
+  specs.forEach(s => { const opt = document.createElement('option'); opt.value = s; opt.textContent = t(s); specSel.appendChild(opt); });
+  muns.forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.textContent = t(m); munSel.appendChild(opt); });
+  if (prevSpec && specs.includes(prevSpec)) specSel.value = prevSpec;
+  if (prevMun && muns.includes(prevMun)) munSel.value = prevMun;
+  if (window.tsSpecialtyFilter) { window.tsSpecialtyFilter.clearOptions(); Array.from(specSel.options).forEach(opt => window.tsSpecialtyFilter.addOption({value: opt.value, text: opt.text})); window.tsSpecialtyFilter.setValue(prevSpec); }
+  if (window.tsMunicipalityFilter) { window.tsMunicipalityFilter.clearOptions(); Array.from(munSel.options).forEach(opt => window.tsMunicipalityFilter.addOption({value: opt.value, text: opt.text})); window.tsMunicipalityFilter.setValue(prevMun); }
+  filterDoctors();
+}
 
     function filterDoctors() {
       const searchInput = document.getElementById('searchInput');
@@ -895,6 +959,36 @@ async function loadDoctors() {
       if (suggestionsHtml) { suggestionsDropdown.innerHTML = suggestionsHtml; suggestionsDropdown.classList.remove('hidden'); } 
       else { suggestionsDropdown.innerHTML = `<div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">${t('noDoctorsFound')}</div>`; suggestionsDropdown.classList.remove('hidden'); }
     }
+    // ✅ تحديث filterDoctors لأسماء أعمدة Supabase
+function filterDoctors() {
+  const searchInput = document.getElementById('searchInput');
+  const search = searchInput.value.toLowerCase().trim();
+  const spec = document.getElementById('specialtyFilter').value;
+  const mun = document.getElementById('municipalityFilter').value;
+  const suggestionsDropdown = document.getElementById('searchSuggestions');
+  const filtered = allDoctors.filter(doc => {
+    const text = `${doc.first_name||''} ${doc.last_name||''} ${doc.specialty||''} ${doc.municipality||''} ${doc.exact_location||''}`.toLowerCase();
+    return (!search || text.includes(search)) && (!spec || doc.specialty === spec) && (!mun || doc.municipality === mun);
+  });
+  renderDoctors(filtered);
+  if (!suggestionsDropdown) return;
+  if (search.length < 2) { suggestionsDropdown.classList.add('hidden'); return; }
+  const suggestionsHtml = filtered.slice(0, 5).map(doc => {
+      const avatarText = (doc.first_name?.[0] || '') + (doc.last_name?.[0] || '');
+      const doctorName = escapeHtml(doc.first_name) + ' ' + escapeHtml(doc.last_name);
+      const specialtyStr = escapeHtml(t(doc.specialty));
+      return `
+        <div class="suggestion-item" onclick="selectSuggestion('${doc.id}')">
+          <div class="sugg-avatar">${avatarText}</div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: bold; font-size: 0.95rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${currentLang === 'ar' ? 'د.' : 'Dr.'} ${doctorName}</div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${specialtyStr} - ${escapeHtml(t(doc.municipality))}</div>
+          </div>
+        </div>`;
+  }).join('');
+  if (suggestionsHtml) { suggestionsDropdown.innerHTML = suggestionsHtml; suggestionsDropdown.classList.remove('hidden'); } 
+  else { suggestionsDropdown.innerHTML = `<div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">${t('noDoctorsFound')}</div>`; suggestionsDropdown.classList.remove('hidden'); }
+}
 
     window.selectSuggestion = function(doctorId) {
         const doc = allDoctors.find(d => d.DoctorID === doctorId);
@@ -904,6 +998,15 @@ async function loadDoctors() {
             renderDoctors([doc]);
         }
     };
+// ✅ تحديث selectSuggestion لأسماء أعمدة Supabase
+window.selectSuggestion = function(doctorId) {
+    const doc = allDoctors.find(d => d.id === doctorId);
+    if (doc) {
+        document.getElementById('searchInput').value = doc.first_name + ' ' + doc.last_name;
+        document.getElementById('searchSuggestions').classList.add('hidden');
+        renderDoctors([doc]);
+    }
+};
     document.addEventListener('click', function(e) {
         const searchInput = document.getElementById('searchInput');
         const suggestionsDropdown = document.getElementById('searchSuggestions');
@@ -1259,13 +1362,6 @@ const bTime = data.AppointmentTime;
 const bDoctor = currentDoctor ? `${currentDoctor.first_name} ${currentDoctor.last_name}` : '';
 
 const ticketHtml = `
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1.5rem; text-align: center; color: white; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 320px; margin: 0 auto;">
-    <div style="background: white; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; color: #10b981;">
-      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-    </div>
-    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: bold;">${currentLang === 'ar' ? 'تم تأكيد الحجز' : 'Booking Confirmed'}</h3>
-    <div style="font-size: 0.85rem; opacity: 0.95; margin-bottom: 1rem;">
-      ${currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(bDoctor)}
   <div class="e-ticket">
     <div class="e-ticket-top">
       <div class="success-icon">
@@ -1279,10 +1375,6 @@ const ticketHtml = `
       </div>
     </div>
     
-    <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
-        <span style="opacity: 0.9; font-size: 0.8rem;">${currentLang === 'ar' ? 'رقم الحجز' : 'Booking ID'}</span>
-        <span style="font-family: 'Courier New', monospace; font-weight: bold; letter-spacing: 1.5px; font-size: 0.9rem;">${shortId}</span>
     <div class="e-ticket-divider"></div>
     
     <div class="e-ticket-bottom">
@@ -1290,29 +1382,20 @@ const ticketHtml = `
         <span class="e-ticket-label">${currentLang === 'ar' ? 'رقم الحجز' : 'Booking ID'}</span>
         <span class="e-ticket-value booking-id">${shortId}</span>
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
-        <span style="opacity: 0.9; font-size: 0.8rem;">${currentLang === 'ar' ? 'المريض' : 'Patient'}</span>
-        <span style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(bName)}</span>
       <div class="e-ticket-info">
         <span class="e-ticket-label">${currentLang === 'ar' ? 'المريض' : 'Patient'}</span>
         <span class="e-ticket-value">${escapeHtml(bName)}</span>
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="opacity: 0.9; font-size: 0.8rem;">${currentLang === 'ar' ? 'التاريخ والوقت' : 'Date & Time'}</span>
-        <span dir="ltr" style="font-weight: 600; font-size: 0.85rem;">${bDate} | ${bTime}</span>
       <div class="e-ticket-info">
         <span class="e-ticket-label">${currentLang === 'ar' ? 'التاريخ والوقت' : 'Date & Time'}</span>
         <span class="e-ticket-value" dir="ltr">${bDate} | ${bTime}</span>
       </div>
     </div>
     
-    <div style="background: white; padding: 0.75rem; border-radius: 6px; display: inline-block;">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${bId}&color=667eea" alt="QR Code" style="width: 80px; height: 80px;" />
     <div class="e-ticket-qr">
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${bId}&color=667eea" alt="QR Code" />
     </div>
     
-    <div style="margin-top: 1rem; font-size: 0.75rem; opacity: 0.9;">
     <div class="e-ticket-footer">
       ${currentLang === 'ar' ? 'يرجى إبراز هذه التذكرة عند الوصول' : 'Please show this ticket upon arrival'}
     </div>
@@ -2721,7 +2804,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const processUserMessage = (rawMsg) => {
         const cleanMsg = normalizeText(rawMsg);
-
+        
         if (!allDoctors || allDoctors.length === 0) {
             return t('chatLoadingDB');
         }
@@ -2730,62 +2813,107 @@ document.addEventListener('DOMContentLoaded', () => {
         const isAskingForPhone = currentLang === 'ar' ? 
             /رقم|هاتف|تلفون|موبيل|اتصال/i.test(cleanMsg) : 
             /phone|number|contact|call/i.test(cleanMsg);
-
+            
         const isAskingForLocation = currentLang === 'ar' ? 
             /عنوان|اين|مكان|موقع|وين/i.test(cleanMsg) : 
             /address|location|where|place/i.test(cleanMsg);
+    // ✅ تحديث Chatbot لأسماء أعمدة Supabase
+const processUserMessage = (rawMsg) => {
+    const cleanMsg = normalizeText(rawMsg);
+    
+    if (!allDoctors || allDoctors.length === 0) {
+        return t('chatLoadingDB');
+    }
 
         let matchedDoctors = [];
         const availableSpecialties = [...new Set(allDoctors.map(d => d.Specialty).filter(Boolean))];
         const availableMunicipalities = [...new Set(allDoctors.map(d => d.Municipality).filter(Boolean))];
+    const isAskingForPhone = currentLang === 'ar' ? 
+        /رقم|هاتف|تلفون|موبيل|اتصال/i.test(cleanMsg) : 
+        /phone|number|contact|call/i.test(cleanMsg);
+        
+    const isAskingForLocation = currentLang === 'ar' ? 
+        /عنوان|اين|مكان|موقع|وين/i.test(cleanMsg) : 
+        /address|location|where|place/i.test(cleanMsg);
 
         let detectedSpecialty = null;
         let detectedMunicipality = null;
+    let matchedDoctors = [];
+    const availableSpecialties = [...new Set(allDoctors.map(d => d.specialty).filter(Boolean))];
+    const availableMunicipalities = [...new Set(allDoctors.map(d => d.municipality).filter(Boolean))];
 
         availableSpecialties.forEach(spec => {
             if (cleanMsg.includes(normalizeText(t(spec)))) detectedSpecialty = spec;
         });
+    let detectedSpecialty = null;
+    let detectedMunicipality = null;
 
         availableMunicipalities.forEach(mun => {
             if (cleanMsg.includes(normalizeText(t(mun)))) detectedMunicipality = mun;
         });
+    availableSpecialties.forEach(spec => {
+        if (cleanMsg.includes(normalizeText(t(spec)))) detectedSpecialty = spec;
+    });
 
         matchedDoctors = allDoctors.filter(doc => {
             const docNameAr = normalizeText(doc.FirstName + " " + doc.LastName);
             const docNameEn = normalizeText(doc.FirstName + " " + doc.LastName); // في حال وجود أسماء بالإنجليزية
-
+            
             const isNameMatch = cleanMsg.split(' ').some(word => 
                 word.length > 2 && (docNameAr.includes(word) || docNameEn.includes(word))
             );
             const isSpecMatch = detectedSpecialty ? doc.Specialty === detectedSpecialty : true;
             const isMunMatch = detectedMunicipality ? doc.Municipality === detectedMunicipality : true;
+    availableMunicipalities.forEach(mun => {
+        if (cleanMsg.includes(normalizeText(t(mun)))) detectedMunicipality = mun;
+    });
 
             if (isNameMatch && !detectedSpecialty && !detectedMunicipality) return true;
             if ((detectedSpecialty || detectedMunicipality) && isSpecMatch && isMunMatch) return true;
+    matchedDoctors = allDoctors.filter(doc => {
+        const docNameAr = normalizeText(doc.first_name + " " + doc.last_name);
+        const docNameEn = normalizeText(doc.first_name + " " + doc.last_name);
+        
+        const isNameMatch = cleanMsg.split(' ').some(word => 
+            word.length > 2 && (docNameAr.includes(word) || docNameEn.includes(word))
+        );
+        const isSpecMatch = detectedSpecialty ? doc.specialty === detectedSpecialty : true;
+        const isMunMatch = detectedMunicipality ? doc.municipality === detectedMunicipality : true;
 
             return false;
         });
+        if (isNameMatch && !detectedSpecialty && !detectedMunicipality) return true;
+        if ((detectedSpecialty || detectedMunicipality) && isSpecMatch && isMunMatch) return true;
 
         if (matchedDoctors.length === 0) {
             return t('chatNoResults');
         }
+        return false;
+    });
 
         if (matchedDoctors.length > 3) {
             return `${t('chatFoundPrefix')} ${matchedDoctors.length} ${t('chatFoundSuffix')}` + 
                    generateCardsHtml(matchedDoctors.slice(0, 3), isAskingForPhone, isAskingForLocation);
         }
+    if (matchedDoctors.length === 0) {
+        return t('chatNoResults');
+    }
 
         return t('chatExactResults') + generateCardsHtml(matchedDoctors, isAskingForPhone, isAskingForLocation);
     };
+    if (matchedDoctors.length > 3) {
+        return `${t('chatFoundPrefix')} ${matchedDoctors.length} ${t('chatFoundSuffix')}` + 
+               generateCardsHtml(matchedDoctors.slice(0, 3), isAskingForPhone, isAskingForLocation);
+    }
 
     const generateCardsHtml = (doctorsList, focusPhone, focusLocation) => {
         return doctorsList.map(doc => {
             const docPrefix = currentLang === 'ar' ? 'د.' : 'Dr.';
             let infoHtml = `<div class="bot-card-result">`;
-
+            
             infoHtml += `<div><strong>${t('chatDoctorLabel')}</strong> ${docPrefix} ${escapeHtml(doc.FirstName)} ${escapeHtml(doc.LastName)}</div>`;
             infoHtml += `<div><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.Specialty))}</div>`;
-
+            
             if (focusPhone || (!focusPhone && !focusLocation)) {
                 // إضافة dir="ltr" مع inline-block لإجبار الرقم على عرض صحيح من اليسار لليمين دون تشويه التخطيط
                 infoHtml += `<div><strong>${t('chatPhoneLabel')}</strong> <span dir="ltr" style="display: inline-block; direction: ltr;">${escapeHtml(formatPhoneNumber(doc.Phone))}</span></div>`;
@@ -2794,14 +2922,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 infoHtml += `<div><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.Municipality))}</div>`;
                 infoHtml += `<div><strong>${t('chatAddressLabel')}</strong> ${escapeHtml(doc.ExactLocation)}</div>`;
             }
-
+            
             infoHtml += `<button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); openDoctorProfileModal(allDoctors.find(d => d.DoctorID === '${doc.DoctorID}'), '${docPrefix} ${escapeHtml(doc.FirstName)} ${escapeHtml(doc.LastName)}')" style="margin-top: 8px; background: var(--primary-light); color: var(--primary-dark); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: bold; width: 100%; transition: opacity 0.2s;">${t('chatBookDetailsBtn')}</button>`;
-
+            
             infoHtml += `</div>`;
             return infoHtml;
         }).join('');
     };
+    return t('chatExactResults') + generateCardsHtml(matchedDoctors, isAskingForPhone, isAskingForLocation);
+};
 
+    // ✅ تحديث generateCardsHtml لأسماء أعمدة Supabase
+const generateCardsHtml = (doctorsList, focusPhone, focusLocation) => {
+    return doctorsList.map(doc => {
+        const docPrefix = currentLang === 'ar' ? 'د.' : 'Dr.';
+        let infoHtml = `<div class="bot-card-result">`;
+        
+        infoHtml += `<div><strong>${t('chatDoctorLabel')}</strong> ${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}</div>`;
+        infoHtml += `<div><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.specialty))}</div>`;
+        
+        if (focusPhone || (!focusPhone && !focusLocation)) {
+            infoHtml += `<div><strong>${t('chatPhoneLabel')}</strong> <span dir="ltr" style="display: inline-block; direction: ltr;">${escapeHtml(formatPhoneNumber(doc.phone))}</span></div>`;
+        }
+        if (focusLocation || (!focusPhone && !focusLocation)) {
+            infoHtml += `<div><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.municipality))}</div>`;
+            infoHtml += `<div><strong>${t('chatAddressLabel')}</strong> ${escapeHtml(doc.exact_location)}</div>`;
+        }
+        
+        infoHtml += `<button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); openDoctorProfileModal(allDoctors.find(d => d.id === '${doc.id}'), '${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')" style="margin-top: 8px; background: var(--primary-light); color: var(--primary-dark); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: bold; width: 100%; transition: opacity 0.2s;">${t('chatBookDetailsBtn')}</button>`;
+        
+        infoHtml += `</div>`;
+        return infoHtml;
+    }).join('');
+};
     const appendMessage = (sender, htmlContent) => {
         const msgDiv = document.createElement('div');
         msgDiv.className = `chat-msg ${sender === 'user' ? 'user-msg' : 'bot-msg'}`;
