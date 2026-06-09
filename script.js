@@ -1249,11 +1249,56 @@ async function submitBooking() {
     if (timeContainer) {
       timeContainer.innerHTML = '<div class="text-sm text-gray" style="grid-column: 1 / -1;">يرجى تحديد تاريخ الموعد أولاً لعرض الأوقات المتاحة...</div>';
     }
-    
+
     // --- بناء التذكرة الإلكترونية (E-Ticket) ---
+    const bId = booking.id;
+    const bName = data.PatientName;
+    const bDate = data.AppointmentDate;
+    const bTime = data.AppointmentTime;
+    const bDoctor = currentDoctor ? currentDoctor.first_name + ' ' + currentDoctor.last_name : '';
+    
+    // إنشاء رابط الـ QR Code
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${bId}&color=0ea5e9`;
+    
+    const ticketHtml = `
+      <div class="e-ticket">
+        <div class="e-ticket-top">
+          <div style="font-size: 2rem; margin-bottom: 0.25rem;">✅</div>
+          <h3 style="margin: 0; font-size: 1.15rem; color: white;">
+            ${currentLang === 'ar' ? 'تم تأكيد الحجز' : 'Booking Confirmed'}
+          </h3>
+          <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">
+            ${currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(bDoctor)}
+          </div>
+        </div>
+        <div class="e-ticket-divider"></div>
+        <div class="e-ticket-bottom">
+          <div class="e-ticket-info">
+            <span class="e-ticket-label">
+              ${currentLang === 'ar' ? 'رقم الحجز' : 'Booking ID'}
+            </span>
+            <span class="e-ticket-value" style="color: var(--primary); letter-spacing: 1px; font-size: 0.85rem;">
+              ${bId.substring(0, 8)}...
+            </span>
+          </div>
+          <div class="e-ticket-info">
+            <span class="e-ticket-label">
+              ${currentLang === 'ar' ? 'المريض' : 'Patient'}
+            </span>
+            <span class="e-ticket-value">${escapeHtml(bName)}</span>
+          </div>
+          <div class="e-ticket-info">
+            <span class="e-ticket-label">
+              ${currentLang === 'ar' ? 'التاريخ والوقت' : 'Date & Time'}
+            </span>
+            <span class="e-ticket-value" dir="ltr">${bDate} | ${bTime}</span>
+          </div>
+          <div class="e-ticket-qr">
+            <img src="${qrUrl}" alt="QR Code" />
+          </div>
+        </div>
 const bId = booking.id;
 const shortId = bId.split('-')[0].toUpperCase(); // ✅ أخذ أول جزء من UUID (8 أحرف)
-const shortId = bId.split('-')[0].substring(0, 8).toUpperCase();
 const bName = data.PatientName;
 const bDate = data.AppointmentDate;
 const bTime = data.AppointmentTime;
@@ -1263,14 +1308,9 @@ const ticketHtml = `
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 2rem; text-align: center; color: white; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
     <div style="background: white; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: #10b981; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
       <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1.5rem; text-align: center; color: white; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 320px; margin: 0 auto;">
-    <div style="background: white; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; color: #10b981;">
-      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
     </div>
     <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem; font-weight: bold;">${currentLang === 'ar' ? 'تم تأكيد الحجز' : 'Booking Confirmed'}</h3>
     <div style="font-size: 1rem; opacity: 0.95; margin-bottom: 2rem; font-weight: 500;">
-    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: bold;">${currentLang === 'ar' ? 'تم تأكيد الحجز' : 'Booking Confirmed'}</h3>
-    <div style="font-size: 0.85rem; opacity: 0.95; margin-bottom: 1rem;">
       ${currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(bDoctor)}
     </div>
     
@@ -1278,34 +1318,25 @@ const ticketHtml = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
         <span style="opacity: 0.9; font-size: 0.9rem;">${currentLang === 'ar' ? 'رقم الحجز' : 'Booking ID'}</span>
         <span style="font-family: 'Courier New', monospace; font-weight: bold; letter-spacing: 2px; font-size: 1.1rem;">${shortId}</span>
-    <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
-        <span style="opacity: 0.9; font-size: 0.8rem;">${currentLang === 'ar' ? 'رقم الحجز' : 'Booking ID'}</span>
-        <span style="font-family: 'Courier New', monospace; font-weight: bold; letter-spacing: 1.5px; font-size: 0.9rem;">${shortId}</span>
       </div>
+    `;
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
         <span style="opacity: 0.9; font-size: 0.9rem;">${currentLang === 'ar' ? 'المريض' : 'Patient'}</span>
         <span style="font-weight: 600;">${escapeHtml(bName)}</span>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
-        <span style="opacity: 0.9; font-size: 0.8rem;">${currentLang === 'ar' ? 'المريض' : 'Patient'}</span>
-        <span style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(bName)}</span>
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <span style="opacity: 0.9; font-size: 0.9rem;">${currentLang === 'ar' ? 'التاريخ والوقت' : 'Date & Time'}</span>
         <span dir="ltr" style="font-weight: 600;">${bDate} | ${bTime}</span>
-        <span style="opacity: 0.9; font-size: 0.8rem;">${currentLang === 'ar' ? 'التاريخ والوقت' : 'Date & Time'}</span>
-        <span dir="ltr" style="font-weight: 600; font-size: 0.85rem;">${bDate} | ${bTime}</span>
       </div>
     </div>
     
     <div style="background: white; padding: 1rem; border-radius: 8px; display: inline-block;">
       <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${bId}&color=667eea" alt="QR Code" style="width: 120px; height: 120px;" />
-    <div style="background: white; padding: 0.75rem; border-radius: 6px; display: inline-block;">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${bId}&color=667eea" alt="QR Code" style="width: 80px; height: 80px;" />
     </div>
     
+    // إظهار التذكرة
+    document.getElementById('eTicketContainer').innerHTML = ticketHtml;
     <div style="margin-top: 1.5rem; font-size: 0.85rem; opacity: 0.9;">
-    <div style="margin-top: 1rem; font-size: 0.75rem; opacity: 0.9;">
       ${currentLang === 'ar' ? 'يرجى إبراز هذه التذكرة عند الوصول' : 'Please show this ticket upon arrival'}
     </div>
   </div>
@@ -1314,8 +1345,7 @@ const ticketHtml = `
 // إظهار التذكرة
 document.getElementById('eTicketContainer').innerHTML = ticketHtml;
     document.getElementById('successDialog').classList.remove('hidden');
-    
-document.getElementById('successDialog').classList.remove('hidden');
+
   } catch (err) {
     console.error('❌ خطأ في الحجز:', err);
     showToast(t('toastBookingError') + err.message, 'error');
@@ -1836,6 +1866,7 @@ async function loadUserBookings() {
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; padding-right: 0.5rem;">
             <div style="flex: 1; min-width: 250px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary); background: var(--bg); padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border); letter-spacing: 0.5px;">${b.id.substring(0, 8)}...</span>
                 <span style="font-family: 'Courier New', monospace; font-size: 0.85rem; color: var(--primary); background: var(--bg); padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid var(--border); letter-spacing: 1px; font-weight: bold;">${shortId}</span>
                 <span class="badge" style="${statusStyle}">${displayStatus}</span>
               </div>
@@ -1844,10 +1875,12 @@ async function loadUserBookings() {
               <div style="display: flex; align-items: center; gap: 1.5rem; font-size: 0.9rem; border-top: 1px dashed var(--border); padding-top: 0.75rem;">
                 <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);">
                   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  <span dir="ltr">${b.appointment_date}</span>
                   <span dir="ltr" style="font-weight: 600;">${b.appointment_date}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);">
                   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  <span dir="ltr">${b.appointment_time}</span>
                   <span dir="ltr" style="font-weight: 600;">${b.appointment_time}</span>
                 </div>
               </div>
