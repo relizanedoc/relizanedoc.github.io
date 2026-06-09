@@ -1604,23 +1604,15 @@ async function handleDashboardLogin(e) {
         setLoading(btn, false);
     }
 }
-    function logoutDashboard() {
-
-
-
-      localStorage.removeItem('doctorSession'); // مسح المفكرة
-
-
-
-      document.getElementById('loginSection').classList.remove('hidden');
-
-
-
-      document.getElementById('dashboardSection').classList.add('hidden');
-      document.getElementById('loginDoctorId').value = '';
-      document.getElementById('loginPhone').value = '';
-      document.getElementById('loginDoctorPassword').value = ''; 
-    }
+   function logoutDashboard() {
+    localStorage.removeItem('doctorSession'); // مسح المفكرة
+    document.getElementById('loginSection').classList.remove('hidden');
+    document.getElementById('dashboardSection').classList.add('hidden');
+    
+    // ✅ تم حذف السطر الخاص بـ loginDoctorId لأنه غير موجود في HTML
+    document.getElementById('loginPhone').value = '';
+    document.getElementById('loginDoctorPassword').value = '';
+}
  // ✅ تغيير حالة الحجز (محدّثة ومبسطة تماماً لـ Supabase)
 window.changeBookingStatus = async function(bookingId, newStatus, patientEmail, doctorName, apptDate) {
     if (!confirm('تأكيد تغيير حالة الحجز إلى: ' + (newStatus === 'confirmed' ? 'مؤكد' : 'ملغى') + '؟')) return;
@@ -2554,21 +2546,25 @@ if (savedSession) {
         const session = JSON.parse(savedSession);
         if (session.doctorId) {
             // التحقق من أن الطبيب لا يزال موجوداً في قاعدة البيانات
-            const { data, error } = await supabaseClient
+            supabaseClient
                 .from('doctors')
                 .select('id')
                 .eq('id', session.doctorId)
-                .single();
-
-            if (data && !error) {
-                // الجلسة صالحة، انتقل مباشرة للوحة التحكم
-                document.getElementById('loginSection').classList.add('hidden');
-                document.getElementById('dashboardSection').classList.remove('hidden');
-                await loadDoctorDashboardData(session.doctorId);
-            } else {
-                // الجلسة منتهية أو الطبيب محذوف
-                localStorage.removeItem('doctorSession');
-            }
+                .single()
+                .then(({ data, error }) => {
+                    if (data && !error) {
+                        // الجلسة صالحة، انتقل مباشرة للوحة التحكم
+                        document.getElementById('loginSection').classList.add('hidden');
+                        document.getElementById('dashboardSection').classList.remove('hidden');
+                        loadDoctorDashboardData(session.doctorId);
+                    } else {
+                        // الجلسة منتهية أو الطبيب محذوف
+                        localStorage.removeItem('doctorSession');
+                    }
+                })
+                .catch(() => {
+                    localStorage.removeItem('doctorSession');
+                });
         }
     } catch(e) {
         localStorage.removeItem('doctorSession');
