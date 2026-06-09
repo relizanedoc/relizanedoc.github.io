@@ -1494,7 +1494,7 @@ function renderDashboardUI(data, doctorId) {
     `;
   }).join('');
 }
-// ✅ تسجيل دخول الطبيب (محدث للتحقق المباشر من قاعدة البيانات بدون Edge Functions)
+// ✅ تسجيل دخول الطبيب (محدث - يعمل بدون حقل معرف الطبيب)
 async function handleDashboardLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
     if (isAccountLocked()) return;
@@ -1507,28 +1507,22 @@ async function handleDashboardLogin(e) {
     
     setLoading(btn, true);
 
-    // ✅ التحقق من وجود العناصر قبل الوصول إليها
-    const doctorIdInput = document.getElementById('loginDoctorId');
+    // ✅ الحصول على القيم من الحقول الموجودة فقط
     const phoneInput = document.getElementById('loginPhone');
     const passwordInput = document.getElementById('loginDoctorPassword');
 
-    if (!doctorIdInput || !phoneInput || !passwordInput) {
-        console.error('❌ أحد حقول الإدخال غير موجود:', {
-            doctorIdInput: !!doctorIdInput,
-            phoneInput: !!phoneInput,
-            passwordInput: !!passwordInput
-        });
+    if (!phoneInput || !passwordInput) {
+        console.error('❌ حقول الإدخال غير موجودة');
         setLoading(btn, false);
-        showToast('خطأ في النموذج. يرجى تحديث الصفحة والمحاولة مرة أخرى.', 'error');
+        showToast('خطأ في النموذج. يرجى تحديث الصفحة.', 'error');
         return;
     }
 
-    const doctorId = doctorIdInput.value.trim();
     const phone = phoneInput.value.trim();
     const password = passwordInput.value.trim();
 
     // ✅ التحقق من أن الحقول ليست فارغة
-    if (!doctorId || !phone || !password) {
+    if (!phone || !password) {
         setLoading(btn, false);
         showToast('يرجى ملء جميع الحقول', 'error');
         return;
@@ -1538,20 +1532,24 @@ async function handleDashboardLogin(e) {
         // 1. تشفير كلمة المرور
         const hashedInputPassword = await hashPassword(password);
 
-        // 2. التحقق من بيانات الطبيب من قاعدة البيانات
+        // 2. البحث عن الطبيب باستخدام رقم الهاتف وكلمة المرور فقط
         const { data: doctor, error: doctorError } = await supabaseClient
             .from('doctors')
             .select('id, first_name, last_name, phone, working_days, booking_enabled')
-            .eq('id', doctorId)
             .eq('phone', phone)
             .eq('password_hash', hashedInputPassword)
             .maybeSingle();
 
-        if (doctorError || !doctor) {
-            throw new Error('بيانات الدخول غير صحيحة');
+        if (doctorError) {
+            console.error('خطأ في قاعدة البيانات:', doctorError);
+            throw new Error('خطأ في الاتصال بقاعدة البيانات');
         }
 
-        // 3. جلب المواعيد
+        if (!doctor) {
+            throw new Error('بيانات الدخول غير صحيحة (تحقق من رقم الهاتف أو كلمة المرور)');
+        }
+
+        // 3. جلب المواعيد الخاصة بهذا الطبيب
         const { data: appointments, error: apptError } = await supabaseClient
             .from('appointments')
             .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
@@ -1565,6 +1563,7 @@ async function handleDashboardLogin(e) {
         // 4. نجاح تسجيل الدخول
         resetLoginAttempts();
 
+        // حفظ الجلسة في المتصفح
         const sessionData = {
             doctorId: doctor.id,
             phone: doctor.phone,
@@ -1572,9 +1571,10 @@ async function handleDashboardLogin(e) {
         };
         localStorage.setItem('doctorSession', JSON.stringify(sessionData));
 
+        // تجهيز البيانات للصيغة المتوقعة
         const dashboardData = {
             doctorName: `${doctor.first_name} ${doctor.last_name}`,
-            workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : doctor.working_days,
+            workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : (doctor.working_days || '{}'),
             bookingEnabled: doctor.booking_enabled,
             appointments: appointments || []
         };
@@ -1594,6 +1594,7 @@ async function handleDashboardLogin(e) {
         recordFailedAttempt();
         showToast(t('toastLoginError') + (err.message || 'تحقق من البيانات المدخلة'), 'error');
     } finally {
+        // ضمان إلغاء حالة التحميل
         setLoading(btn, false);
     }
 }
