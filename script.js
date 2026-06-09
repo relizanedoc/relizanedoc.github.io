@@ -1494,55 +1494,80 @@ function renderDashboardUI(data, doctorId) {
     `;
   }).join('');
 }
-// 2. دالة تسجيل الدخول اليدوي المحدثة
-
-// ✅ تسجيل دخول الطبيب (يتصل بـ Edge Function)
+// ✅ تسجيل دخول الطبيب (محدث للتحقق المباشر من قاعدة البيانات بدون Edge Functions)
 async function handleDashboardLogin(e) {
-  if (e && e.preventDefault) e.preventDefault();
-  if (isAccountLocked()) return;
+    if (e && e.preventDefault) e.preventDefault();
+    if (isAccountLocked()) return;
 
-  const btn = document.getElementById('dashboardLoginBtn');
-  setLoading(btn, true);
+    const btn = document.getElementById('dashboardLoginBtn');
+    setLoading(btn, true); // يظهر "جاري المعالجة..."
 
-  const doctorId = document.getElementById('loginDoctorId').value.trim();
-  const phone = document.getElementById('loginPhone').value.trim();
-  const password = document.getElementById('loginDoctorPassword').value.trim();
+    const doctorId = document.getElementById('loginDoctorId').value.trim();
+    const phone = document.getElementById('loginPhone').value.trim();
+    const password = document.getElementById('loginDoctorPassword').value.trim();
 
-  try {
-    // ✅ الاتصال بـ Edge Function للتحقق من بيانات الطبيب
-    const { data, error } = await supabaseClient.functions.invoke('doctor-auth', {
-      body: { 
-        action: 'login', 
-        doctorId: doctorId, 
-        phone: phone, 
-        password: password 
-      }
-    });
+    try {
+        // 1. تشفير كلمة المرور المدخلة لمطابقتها مع المخزنة في قاعدة البيانات
+        const hashedInputPassword = await hashPassword(password);
 
-    if (error) throw new Error(error.message);
-    if (!data.success) throw new Error(data.error || 'بيانات الدخول غير صحيحة');
+        // 2. التحقق من بيانات الطبيب مباشرة من جدول doctors
+        const { data: doctor, error: doctorError } = await supabaseClient
+            .from('doctors')
+            .select('id, first_name, last_name, phone, working_days, booking_enabled')
+            .eq('id', doctorId)
+            .eq('phone', phone)
+            .eq('password_hash', hashedInputPassword)
+            .maybeSingle(); // استخدام maybeSingle لتجنب الأخطاء إذا لم يوجد سجل
 
-    resetLoginAttempts();
+        if (doctorError || !doctor) {
+            throw new Error('بيانات الدخول غير صحيحة (تحقق من معرف الطبيب، الهاتف، أو كلمة المرور)');
+        }
 
-    // حفظ الجلسة
-    localStorage.setItem('doctorSession', JSON.stringify({
-      doctorId: doctorId,
-      phone: phone,
-      sessionToken: data.sessionToken
-    }));
+        // 3. جلب المواعيد الخاصة بهذا الطبيب لعرضها في لوحة التحكم
+        const { data: appointments, error: apptError } = await supabaseClient
+            .from('appointments')
+            .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
+            .eq('doctor_id', doctor.id)
+            .order('appointment_date', { ascending: false });
 
-    document.getElementById('loginSection').classList.add('hidden');
-    document.getElementById('dashboardSection').classList.remove('hidden');
+        if (apptError) {
+            console.error('خطأ في جلب المواعيد:', apptError);
+        }
 
-    // استدعاء دالة الرسم
-    renderDashboardUI(data, doctorId);
+        // 4. نجاح تسجيل الدخول
+        resetLoginAttempts();
 
-  } catch (err) {
-    recordFailedAttempt();
-    showToast(t('toastLoginError') + err.message, 'error');
-  } finally {
-    setLoading(btn, false);
-  }
+        // حفظ الجلسة في المتصفح
+        const sessionData = {
+            doctorId: doctor.id,
+            phone: doctor.phone,
+            sessionToken: 'local-validated-' + Date.now() 
+        };
+        localStorage.setItem('doctorSession', JSON.stringify(sessionData));
+
+        // تجهيز البيانات بالصيغة التي تتوقعها دالة renderDashboardUI
+        const dashboardData = {
+            doctorName: `${doctor.first_name} ${doctor.last_name}`,
+            workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : doctor.working_days,
+            bookingEnabled: doctor.booking_enabled,
+            appointments: appointments || []
+        };
+
+        // 5. تحديث الواجهة
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('dashboardSection').classList.remove('hidden');
+        
+        renderDashboardUI(dashboardData, doctor.id);
+        showToast('تم تسجيل الدخول بنجاح', 'success');
+
+    } catch (err) {
+        console.error('❌ خطأ في تسجيل دخول الطبيب:', err);
+        recordFailedAttempt();
+        showToast(t('toastLoginError') + (err.message || 'تحقق من البيانات المدخلة'), 'error');
+    } finally {
+        // ضمان إلغاء حالة التحميل مهما حدث (يمنع تعليق الزر للأبد)
+        setLoading(btn, false);
+    }
 }
     function logoutDashboard() {
 
