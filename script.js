@@ -1494,79 +1494,6 @@ function renderDashboardUI(data, doctorId) {
     `;
   }).join('');
 }
-// 2. دالة تسجيل الدخول اليدوي المحدثة
-
-// ✅ تسجيل دخول الطبيب (يتصل بـ Edge Function)
-async function handleDashboardLogin(e) {
-  if (e && e.preventDefault) e.preventDefault();
-  if (isAccountLocked()) return;
-
-  const btn = document.getElementById('dashboardLoginBtn');
-  if (!btn) return;
-
-  setLoading(btn, true);
-
-  try {
-    const phoneInput = document.getElementById('loginPhone');
-    const passwordInput = document.getElementById('loginDoctorPassword');
-
-    if (!phoneInput || !passwordInput) {
-      throw new Error(currentLang === 'ar' ? 'عناصر واجهة تسجيل الدخول مفقودة' : 'Login UI elements missing');
-    }
-
-    const phone = phoneInput.value.trim();
-    const password = passwordInput.value.trim();
-
-    if (!phone || !password) {
-      throw new Error(currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف وكلمة المرور' : 'Please enter phone and password');
-    }
-
-    const hashedPassword = await hashPassword(password);
-
-    // البحث في قاعدة البيانات باستخدام رقم الهاتف وكلمة المرور فقط
-    const { data: doctor, error } = await supabaseClient
-      .from('doctors')
-      .select('id, first_name, last_name, phone, working_days, booking_enabled')
-      .eq('phone', phone)
-      .eq('password_hash', hashedPassword)
-      .single();
-
-    if (error || !doctor) {
-      throw new Error(currentLang === 'ar' ? 'رقم الهاتف أو كلمة المرور غير صحيحة' : 'Invalid phone number or password');
-    }
-
-    localStorage.setItem('doctorSession', JSON.stringify({ doctorId: doctor.id, phone: doctor.phone }));
-    resetLoginAttempts();
-    
-    document.getElementById('loginSection').classList.add('hidden');
-    document.getElementById('dashboardSection').classList.remove('hidden');
-    
-    await loadDoctorDashboardData(doctor.id);
-
-  } catch (err) {
-    recordFailedAttempt();
-    showToast(err.message, 'error');
-  } finally {
-    setLoading(btn, false, currentLang === 'ar' ? 'عرض مواعيدي' : 'View My Appointments');
-  }
-}
-    function logoutDashboard() {
-
-
-
-      localStorage.removeItem('doctorSession'); // مسح المفكرة
-
-
-
-      document.getElementById('loginSection').classList.remove('hidden');
-
-
-
-      document.getElementById('dashboardSection').classList.add('hidden');
-      document.getElementById('loginDoctorId').value = '';
-      document.getElementById('loginPhone').value = '';
-      document.getElementById('loginDoctorPassword').value = ''; 
-    }
  // ✅ تغيير حالة الحجز (محدّثة لـ Supabase)
 window.changeBookingStatus = async function(bookingId, newStatus, patientEmail, doctorName, apptDate) {
   if (!confirm('تأكيد تغيير حالة الحجز إلى: ' + (newStatus === 'confirmed' ? 'مؤكد' : 'ملغى') + '؟')) return;
@@ -2994,4 +2921,73 @@ function displayTimeSlots(container, slots, timeInput) {
   if (eveningDiv.querySelector('.slots-grid').hasChildNodes()) {
     container.appendChild(eveningDiv);
   }
+}
+// ✅ دالة تسجيل دخول الطبيب (مصححة وخالية من الأخطاء)
+async function handleDashboardLogin(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  if (isAccountLocked()) return;
+
+  const btn = document.getElementById('dashboardLoginBtn');
+  if (!btn) return;
+
+  setLoading(btn, true);
+
+  try {
+    const phoneInput = document.getElementById('loginPhone');
+    const passwordInput = document.getElementById('loginDoctorPassword');
+
+    // التحقق من وجود الحقول في الـ HTML لتفادي انهيار الكود
+    if (!phoneInput || !passwordInput) {
+      throw new Error(currentLang === 'ar' ? 'عناصر واجهة تسجيل الدخول مفقودة' : 'Login UI elements missing');
+    }
+
+    const phone = phoneInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!phone || !password) {
+      throw new Error(currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف وكلمة المرور' : 'Please enter phone and password');
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    // البحث المباشر في Supabase
+    const { data: doctor, error } = await supabaseClient
+      .from('doctors')
+      .select('id, first_name, last_name, phone, working_days, booking_enabled')
+      .eq('phone', phone)
+      .eq('password_hash', hashedPassword)
+      .single();
+
+    if (error || !doctor) {
+      throw new Error(currentLang === 'ar' ? 'رقم الهاتف أو كلمة المرور غير صحيحة' : 'Invalid phone number or password');
+    }
+
+    localStorage.setItem('doctorSession', JSON.stringify({ doctorId: doctor.id, phone: doctor.phone }));
+    resetLoginAttempts();
+    
+    document.getElementById('loginSection').classList.add('hidden');
+    document.getElementById('dashboardSection').classList.remove('hidden');
+    
+    await loadDoctorDashboardData(doctor.id);
+
+  } catch (err) {
+    recordFailedAttempt();
+    showToast(err.message, 'error');
+  } finally {
+    setLoading(btn, false, currentLang === 'ar' ? 'عرض مواعيدي' : 'View My Appointments');
+  }
+}
+
+// ✅ دالة تسجيل الخروج (مؤمنة ضد الحقول المفقودة)
+function logoutDashboard() {
+  localStorage.removeItem('doctorSession');
+  document.getElementById('loginSection').classList.remove('hidden');
+  document.getElementById('dashboardSection').classList.add('hidden');
+  
+  // تفريغ الحقول إن وجدت فقط
+  const phoneInput = document.getElementById('loginPhone');
+  const passInput = document.getElementById('loginDoctorPassword');
+  
+  if(phoneInput) phoneInput.value = '';
+  if(passInput) passInput.value = ''; 
 }
