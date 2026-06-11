@@ -2545,13 +2545,13 @@ if (savedSession) {
                 }
                 
                 if (doctor && doctor.session_token === session.sessionToken) {
-                    // ✅ نجاح تسجيل الدخول التلقائي
-           // ✅ جلب المواعيد باستخدام الدالة الآمنة ليتوافق مع RLS
-const { data: appointments, error: apptError } = await supabaseClient
-  .rpc('get_doctor_appointments_secure', {
-    p_doctor_id: doctor.id,               
-    p_session_token: doctor.session_token
-  });
+    // ✅ نجاح تسجيل الدخول التلقائي
+    // جلب المواعيد باستخدام الدالة الأمنية لضمان جلب الإيميل وتخطي RLS
+    const { data: appointments, error: apptError } = await supabaseClient
+      .rpc('get_doctor_appointments_secure', {
+        p_doctor_id: doctor.id,               
+        p_session_token: doctor.session_token
+      });
 
 if (apptError) console.error('❌ خطأ في جلب المواعيد (Auto-Login):', apptError);
 
