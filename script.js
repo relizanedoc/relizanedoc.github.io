@@ -1549,11 +1549,16 @@ async function handleDashboardLogin(e) {
         const doctor = responseData.doctor;
         
         // 2. جلب المواعيد الخاصة بهذا الطبيب
-        const { data: appointments } = await supabaseClient
-            .from('appointments')
-            .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
-            .eq('doctor_id', doctor.id)
-            .order('appointment_date', { ascending: false });
+        // 2. جلب المواعيد الخاصة بهذا الطبيب
+const { data: appointments, error: apptError } = await supabaseClient
+  .from('appointments')
+  .select('*') // ✅ تم التغيير إلى * لتجنب أخطاء الأعمدة المفقودة مثل user_email
+  .eq('doctor_id', doctor.id)
+  .order('appointment_date', { ascending: false });
+
+if (apptError) {
+  console.error('❌ خطأ في جلب مواعيد الطبيب:', apptError);
+}
         
         // 3. نجاح تسجيل الدخول
         resetLoginAttempts();
@@ -2590,11 +2595,16 @@ if (savedSession) {
                     // ✅ نجاح تسجيل الدخول التلقائي
                     
                     // جلب المواعيد
-                    const { data: appointments } = await supabaseClient
-                        .from('appointments')
-                        .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
-                        .eq('doctor_id', doctor.id)
-                        .order('appointment_date', { ascending: false });
+                    // جلب المواعيد
+const { data: appointments, error: apptError } = await supabaseClient
+  .from('appointments')
+  .select('*') // ✅ تم التغيير إلى *
+  .eq('doctor_id', doctor.id)
+  .order('appointment_date', { ascending: false });
+
+if (apptError) {
+  console.error('❌ خطأ في جلب المواعيد (Auto-Login):', apptError);
+}
                     
                     const dashboardData = {
                         doctorName: `${doctor.first_name} ${doctor.last_name}`,
