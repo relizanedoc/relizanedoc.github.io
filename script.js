@@ -912,75 +912,84 @@ async function loadDoctors() {
         }
     });
 
-    // ✅ دالة إضافة طبيب جديد (محدثة لـ Supabase)
+  // ✅ دالة إضافة طبيب جديد (محدّثة - تستخدم كلمة السر المدخلة)
 async function handleAddDoctor(e) {
-  e.preventDefault();
-  const user = await getCurrentUser();
-  if (!user) { 
-    showToast(t('loginRequired'), 'error'); 
-    router('login'); 
-    return; 
-  }
-
-  const btn = document.getElementById('addDoctorBtn');
-  setLoading(btn, true);
-
-  const formData = new FormData(e.target);
-  const data = Object.fromEntries(formData);
-
-  // التحقق من الحقول المطلوبة
-  if (!data.Specialty) { 
-    showToast(currentLang === 'ar' ? 'الرجاء اختيار الاختصاص.' : 'Please select a specialty.', 'error'); 
-    setLoading(btn, false); 
-    return; 
-  }
-  if (!data.Municipality) { 
-    showToast(currentLang === 'ar' ? 'الرجاء اختيار البلدية.' : 'Please select a municipality.', 'error'); 
-    setLoading(btn, false); 
-    return; 
-  }
-
-  try {
-    // 1. تشفير كلمة المرور (استخدمنا رقم الهاتف ككلمة مرور افتراضية للتبسيط)
-    // ملاحظة: في الإنتاج الحقيقي، يجب أن يدخل الطبيب كلمة مرور خاصة به
-    const defaultPassword = data.Phone.replace(/\s/g, ''); 
-    const hashedPassword = await hashPassword(defaultPassword);
-
-    // 2. حفظ البيانات في Supabase
-    const { data: newDoctor, error } = await supabaseClient
-      .from('doctors')
-      .insert([{
-        first_name: data.FirstName.trim(),
-        last_name: data.LastName.trim(),
-        phone: data.Phone.replace(/\s/g, ''),
-        exact_location: data.ExactLocation.trim(),
-        specialty: data.Specialty.trim(),
-        municipality: data.Municipality.trim(),
-        extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '',
-        password_hash: hashedPassword,
-        booking_enabled: false, // يبدأ الحجز وهو مغلق
-        working_days: {} // جدول فارغ افتراضياً
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error adding doctor:', error);
-      throw new Error(error.message);
+    e.preventDefault();
+    
+    const user = await getCurrentUser();
+    if (!user) {
+        showToast(t('loginRequired'), 'error');
+        router('login');
+        return;
     }
-
-    showToast(t('toastRegisterSuccess') + newDoctor.id, 'success');
-    e.target.reset();
-
-    // إعادة تحميل قائمة الأطباء
-    await loadDoctors();
-    setTimeout(() => router('home'), 1500);
-
-  } catch (err) { 
-    showToast(t('toastRegisterError') + err.message, 'error'); 
-  } finally { 
-    setLoading(btn, false); 
-  }
+    
+    const btn = document.getElementById('addDoctorBtn');
+    setLoading(btn, true);
+    
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    // التحقق من الحقول المطلوبة
+    if (!data.Specialty) {
+        showToast(currentLang === 'ar' ? 'الرجاء اختيار الاختصاص.' : 'Please select a specialty.', 'error');
+        setLoading(btn, false);
+        return;
+    }
+    
+    if (!data.Municipality) {
+        showToast(currentLang === 'ar' ? 'الرجاء اختيار البلدية.' : 'Please select a municipality.', 'error');
+        setLoading(btn, false);
+        return;
+    }
+    
+    // ✅ التحقق من كلمة المرور
+    const password = data.Password ? data.Password.trim() : '';
+    if (!password || password.length < 6) {
+        showToast(currentLang === 'ar' ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters', 'error');
+        setLoading(btn, false);
+        return;
+    }
+    
+    try {
+        // 1. تشفير كلمة المرور
+        const hashedPassword = await hashPassword(password);
+        
+        // 2. حفظ البيانات في Supabase
+        const { data: newDoctor, error } = await supabaseClient
+            .from('doctors')
+            .insert([{
+                first_name: data.FirstName.trim(),
+                last_name: data.LastName.trim(),
+                phone: data.Phone.replace(/\s/g, ''),
+                exact_location: data.ExactLocation.trim(),
+                specialty: data.Specialty.trim(),
+                municipality: data.Municipality.trim(),
+                extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '',
+                password: hashedPassword, // ⚠️ غيّرها إلى 'password_hash' إذا كان اسم العمود مختلفاً
+                session_token: null, // يبدأ بدون جلسة
+                booking_enabled: false, // يبدأ الحجز وهو مغلق
+                working_days: {} // جدول فارغ افتراضياً
+            }])
+            .select()
+            .single();
+        
+        if (error) {
+            console.error('Error adding doctor:', error);
+            throw new Error(error.message);
+        }
+        
+        showToast(t('toastRegisterSuccess') + newDoctor.id, 'success');
+        e.target.reset();
+        
+        // إعادة تحميل قائمة الأطباء
+        await loadDoctors();
+        setTimeout(() => router('home'), 1500);
+        
+    } catch (err) {
+        showToast(t('toastRegisterError') + err.message, 'error');
+    } finally {
+        setLoading(btn, false);
+    }
 }
 
 // ✅ دالة مساعدة لتشفير كلمة المرور (SHA-256)
@@ -1494,11 +1503,11 @@ function renderDashboardUI(data, doctorId) {
     `;
   }).join('');
 }
-// ✅ تسجيل دخول الطبيب (محدث - يعمل بدون حقل معرف الطبيب)
+// ✅ تسجيل دخول الطبيب (محدث - يعمل برقم الهاتف وكلمة السر فقط)
 async function handleDashboardLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
     if (isAccountLocked()) return;
-
+    
     const btn = document.getElementById('dashboardLoginBtn');
     if (!btn) {
         console.error('❌ زر تسجيل الدخول غير موجود');
@@ -1506,80 +1515,94 @@ async function handleDashboardLogin(e) {
     }
     
     setLoading(btn, true);
-
-    // ✅ الحصول على القيم من الحقول الموجودة فقط
+    
+    // الحصول على القيم من الحقول
     const phoneInput = document.getElementById('loginPhone');
     const passwordInput = document.getElementById('loginDoctorPassword');
-
+    
     if (!phoneInput || !passwordInput) {
         console.error('❌ حقول الإدخال غير موجودة');
         setLoading(btn, false);
         showToast('خطأ في النموذج. يرجى تحديث الصفحة.', 'error');
         return;
     }
-
+    
     const phone = phoneInput.value.trim();
     const password = passwordInput.value.trim();
-
-    // ✅ التحقق من أن الحقول ليست فارغة
+    
+    // التحقق من أن الحقول ليست فارغة
     if (!phone || !password) {
         setLoading(btn, false);
         showToast('يرجى ملء جميع الحقول', 'error');
         return;
     }
-
+    
     try {
-        // 1. تشفير كلمة المرور
+        // 1. تشفير كلمة المرور المدخلة
         const hashedInputPassword = await hashPassword(password);
-
+        
         // 2. البحث عن الطبيب باستخدام رقم الهاتف وكلمة المرور فقط
         const { data: doctor, error: doctorError } = await supabaseClient
             .from('doctors')
-            .select('id, first_name, last_name, phone, working_days, booking_enabled')
+            .select('id, first_name, last_name, phone, working_days, booking_enabled, password')
             .eq('phone', phone)
-            .eq('password_hash', hashedInputPassword)
+            .eq('password', hashedInputPassword) // ⚠️ غيّرها إلى 'password_hash' إذا كان اسم العمود مختلفاً
             .maybeSingle();
-
+        
         if (doctorError) {
             console.error('خطأ في قاعدة البيانات:', doctorError);
             throw new Error('خطأ في الاتصال بقاعدة البيانات');
         }
-
+        
         if (!doctor) {
             throw new Error('بيانات الدخول غير صحيحة (تحقق من رقم الهاتف أو كلمة المرور)');
         }
-
-        // 3. جلب المواعيد الخاصة بهذا الطبيب
+        
+        // 3. توليد session_token آمن (UUID)
+        const sessionToken = crypto.randomUUID();
+        
+        // 4. حفظ session_token في قاعدة البيانات Supabase
+        const { error: updateError } = await supabaseClient
+            .from('doctors')
+            .update({ session_token: sessionToken })
+            .eq('id', doctor.id);
+        
+        if (updateError) {
+            console.error('خطأ في حفظ الجلسة:', updateError);
+            throw new Error('فشل في إنشاء الجلسة');
+        }
+        
+        // 5. جلب المواعيد الخاصة بهذا الطبيب
         const { data: appointments, error: apptError } = await supabaseClient
             .from('appointments')
             .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
             .eq('doctor_id', doctor.id)
             .order('appointment_date', { ascending: false });
-
+        
         if (apptError) {
             console.error('خطأ في جلب المواعيد:', apptError);
         }
-
-        // 4. نجاح تسجيل الدخول
+        
+        // 6. نجاح تسجيل الدخول
         resetLoginAttempts();
-
-        // حفظ الجلسة في المتصفح
+        
+        // 7. حفظ الجلسة في المتصفح (مع session_token بدلاً من كلمة السر)
         const sessionData = {
             doctorId: doctor.id,
             phone: doctor.phone,
-            sessionToken: 'local-validated-' + Date.now() 
+            sessionToken: sessionToken // ✅ الرمز الآمن
         };
         localStorage.setItem('doctorSession', JSON.stringify(sessionData));
-
-        // تجهيز البيانات للصيغة المتوقعة
+        
+        // 8. تجهيز البيانات للصيغة المتوقعة
         const dashboardData = {
             doctorName: `${doctor.first_name} ${doctor.last_name}`,
             workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : (doctor.working_days || '{}'),
             bookingEnabled: doctor.booking_enabled,
             appointments: appointments || []
         };
-
-        // 5. تحديث الواجهة
+        
+        // 9. تحديث الواجهة
         const loginSection = document.getElementById('loginSection');
         const dashboardSection = document.getElementById('dashboardSection');
         
@@ -1588,13 +1611,12 @@ async function handleDashboardLogin(e) {
         
         renderDashboardUI(dashboardData, doctor.id);
         showToast('تم تسجيل الدخول بنجاح', 'success');
-
+        
     } catch (err) {
         console.error('❌ خطأ في تسجيل دخول الطبيب:', err);
         recordFailedAttempt();
         showToast(t('toastLoginError') + (err.message || 'تحقق من البيانات المدخلة'), 'error');
     } finally {
-        // ضمان إلغاء حالة التحميل
         setLoading(btn, false);
     }
 }
@@ -2575,88 +2597,82 @@ document.addEventListener('submit', async function(e) {
 
 
 
-    // === كود تسجيل الدخول التلقائي الآمن للطبيب ===
-
-    const savedSession = localStorage.getItem('doctorSession');
-
-    if (savedSession) {
-
-      try {
-
+   // === كود تسجيل الدخول التلقائي الآمن للطبيب (محدث لـ Supabase) ===
+const savedSession = localStorage.getItem('doctorSession');
+if (savedSession) {
+    try {
         const session = JSON.parse(savedSession);
-
-
-
-        if(document.getElementById('loginDoctorId')) document.getElementById('loginDoctorId').value = session.doctorId || '';
-
-        if(document.getElementById('loginPhone')) document.getElementById('loginPhone').value = session.phone || '';
-
-        if(document.getElementById('loginDoctorPassword')) document.getElementById('loginDoctorPassword').value = ''; 
-
-
-
+        
+        // تفريغ الحقول
+        const loginPhone = document.getElementById('loginPhone');
+        const loginDoctorPassword = document.getElementById('loginDoctorPassword');
+        if (loginPhone) loginPhone.value = session.phone || '';
+        if (loginDoctorPassword) loginDoctorPassword.value = '';
+        
         const btn = document.getElementById('dashboardLoginBtn');
-
         if (btn) setLoading(btn, true);
-
-
-
-        apiPost('doctorLogin', { 
-
-            doctorId: session.doctorId, 
-
-            phone: session.phone, 
-
-            sessionToken: session.sessionToken 
-
-        }).then(result => {
-
-            if (result && result.success) {
-
-                localStorage.setItem('doctorSession', JSON.stringify({ 
-
-                    doctorId: session.doctorId, 
-
-                    phone: session.phone, 
-
-                    sessionToken: result.data.sessionToken 
-
-                }));
-
-
-
-                document.getElementById('loginSection').classList.add('hidden');
-
-                document.getElementById('dashboardSection').classList.remove('hidden');
-
-
-
-                // === التعديل هنا: استدعاء دالة الرسم بدلاً من التعليق الناقص ===
-
-                renderDashboardUI(result.data, session.doctorId);
-
-
-
-            } else {
-
+        
+        // ✅ التحقق من session_token في Supabase
+        (async () => {
+            try {
+                const { data: doctor, error } = await supabaseClient
+                    .from('doctors')
+                    .select('id, first_name, last_name, phone, working_days, booking_enabled, session_token')
+                    .eq('id', session.doctorId)
+                    .eq('session_token', session.sessionToken) // ✅ التحقق من الرمز
+                    .maybeSingle();
+                
+                if (error) {
+                    console.error('خطأ في التحقق من الجلسة:', error);
+                    throw error;
+                }
+                
+                if (doctor && doctor.session_token === session.sessionToken) {
+                    // ✅ نجاح تسجيل الدخول التلقائي
+                    
+                    // جلب المواعيد
+                    const { data: appointments } = await supabaseClient
+                        .from('appointments')
+                        .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
+                        .eq('doctor_id', doctor.id)
+                        .order('appointment_date', { ascending: false });
+                    
+                    const dashboardData = {
+                        doctorName: `${doctor.first_name} ${doctor.last_name}`,
+                        workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : (doctor.working_days || '{}'),
+                        bookingEnabled: doctor.booking_enabled,
+                        appointments: appointments || []
+                    };
+                    
+                    // تحديث الواجهة
+                    const loginSection = document.getElementById('loginSection');
+                    const dashboardSection = document.getElementById('dashboardSection');
+                    
+                    if (loginSection) loginSection.classList.add('hidden');
+                    if (dashboardSection) dashboardSection.classList.remove('hidden');
+                    
+                    renderDashboardUI(dashboardData, doctor.id);
+                    console.log('✅ تم تسجيل الدخول التلقائي بنجاح');
+                } else {
+                    // ❌ الرمز غير صالح، مسح الجلسة
+                    console.log('❌ session_token غير صالح');
+                    localStorage.removeItem('doctorSession');
+                }
+                
+                if (btn) setLoading(btn, false);
+                
+            } catch (err) {
+                console.error('خطأ في تسجيل الدخول التلقائي:', err);
                 localStorage.removeItem('doctorSession');
-
+                if (btn) setLoading(btn, false);
             }
-
-            if (btn) setLoading(btn, false);
-
-        }).catch(() => {
-
-            if (btn) setLoading(btn, false);
-
-        });
-
-
-
-     } catch(e) {
+        })();
+        
+    } catch(e) {
+        console.error('خطأ في قراءة الجلسة:', e);
         localStorage.removeItem('doctorSession');
-      }
     }
+}
     // =======================================
     });
 
