@@ -3080,9 +3080,8 @@ function createDoctorGitHubPageAsync(doctorData, doctorId) {
         console.error('❌ فشل استدعاء Edge Function:', err);
     });
 }
-// ✅ دالة تأكيد أو إلغاء الحجز من لوحة تحكم الطبيب
+// ✅ دالة تأكيد أو إلغاء الحجز من لوحة تحكم الطبيب (بنسخة آمنة تتخطى RLS)
 window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doctorName, appointmentDate) {
-    // 1. رسالة التأكيد قبل التنفيذ
     const confirmMsg = newStatus === 'confirmed' 
         ? (currentLang === 'ar' ? 'هل أنت متأكد من تأكيد هذا الموعد؟' : 'Are you sure you want to confirm this appointment?')
         : (currentLang === 'ar' ? 'هل أنت متأكد من إلغاء هذا الموعد؟' : 'Are you sure you want to cancel this appointment?');
@@ -3090,43 +3089,43 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
     if (!confirm(confirmMsg)) return;
 
     try {
-        // 2. تحديث حالة الحجز في جدول appointments في Supabase
-        const { error } = await supabaseClient
-            .from('appointments')
-            .update({ status: newStatus })
-            .eq('id', bookingId);
+        // جلب جلسة الطبيب الحالية
+        const sessionStr = localStorage.getItem('doctorSession');
+        if (!sessionStr) throw new Error('يرجى تسجيل الدخول مجدداً');
+        const session = JSON.parse(sessionStr);
+
+        // ✅ 1. تحديث حالة الحجز باستخدام الدالة الآمنة (RPC) لتخطي حماية RLS
+        const { error } = await supabaseClient.rpc('update_booking_status_secure', {
+            p_booking_id: bookingId,
+            p_new_status: newStatus,
+            p_doctor_id: session.doctorId,
+            p_session_token: session.sessionToken
+        });
 
         if (error) throw error;
 
-        // 3. إظهار رسالة نجاح
+        // 2. إظهار رسالة نجاح
         showToast(currentLang === 'ar' ? 'تم تحديث حالة الحجز بنجاح' : 'Booking status updated successfully', 'success');
 
-        // 4. إرسال بريد إلكتروني للمريض (إذا كان البريد متوفراً في البيانات)
+        // 3. إرسال بريد إلكتروني للمريض (إذا كان البريد متوفراً في البيانات)
         if (userEmail && userEmail.trim() !== '') {
             const emailStatus = newStatus === 'confirmed' ? 'confirm' : 'cancel';
             window.sendBookingEmail(userEmail, doctorName, appointmentDate, emailStatus);
-        } else {
-            console.log('⚠️ تنبيه: لا يوجد بريد إلكتروني للمريض (user_email) لإرسال الإشعار.');
         }
 
-        // 5. إعادة تحميل بيانات المواعيد لتحديث الواجهة فوراً
-        const sessionStr = localStorage.getItem('doctorSession');
-        if (sessionStr) {
-            const session = JSON.parse(sessionStr);
+        // 4. إعادة تحميل بيانات المواعيد لتحديث الواجهة فوراً باستخدام الدالة الآمنة
+        const { data: updatedAppointments, error: fetchError } = await supabaseClient
+            .rpc('get_doctor_appointments_secure', {
+                p_doctor_id: session.doctorId,
+                p_session_token: session.sessionToken
+            });
             
-            // جلب المواعيد المحدثة من Supabase
-            // ✅ جلب المواعيد المحدثة باستخدام الدالة الآمنة
-const { data: updatedAppointments } = await supabaseClient
-    .rpc('get_doctor_appointments_secure', {
-        p_doctor_id: session.doctorId,
-        p_session_token: session.sessionToken
-    });
+        if (fetchError) throw fetchError;
 
-            // تحديث البيانات في المتغير العام وإعادة رسم الواجهة
-            if (globalDashboardData) {
-                globalDashboardData.appointments = updatedAppointments || [];
-                renderDashboardUI(globalDashboardData, globalDashboardDoctorId);
-            }
+        // تحديث البيانات في المتغير العام وإعادة رسم الواجهة
+        if (globalDashboardData) {
+            globalDashboardData.appointments = updatedAppointments || [];
+            renderDashboardUI(globalDashboardData, globalDashboardDoctorId);
         }
 
     } catch (err) {
