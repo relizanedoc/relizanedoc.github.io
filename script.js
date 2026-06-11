@@ -1,24 +1,3 @@
-// دالة لتنفيذ الكود بمجرد تحميل الصفحة
-window.addEventListener('load', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const doctorId = urlParams.get('doc');
-    if (doctorId) {
-        console.log("تم اكتشاف رابط مباشر للطبيب: " + doctorId);
-        // ننتظر حتى يتم تحميل الأطباء ثم نفتح النافذة
-        const checkDoctors = setInterval(() => {
-            if (allDoctors && allDoctors.length > 0) {
-                clearInterval(checkDoctors);
-                const doc = allDoctors.find(d => d.id === doctorId);
-                if (doc) {
-                    const doctorName = (currentLang === 'ar' ? 'د. ' : 'Dr. ') + doc.first_name + ' ' + doc.last_name;
-                    openDoctorProfileModal(doc, doctorName);
-                }
-            }
-        }, 100);
-        // إيقاف التحقق بعد 10 ثوانٍ
-        setTimeout(() => clearInterval(checkDoctors), 10000);
-    }
-});
 // 1. تهيئة Firebase (مؤقت - لا تحذفه الآن)
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCvWB0huHg4Wei98dAkQAvRANmB5Xs_GWI",
@@ -400,12 +379,14 @@ async function logoutUser() {
       return res.json();
     }
 
-    async function apiPost(action, data = {}) {
+async function apiPost(action, data = {}) {
       if (typeof grecaptcha !== 'undefined' && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_SITE_KEY') {
         try { data.recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action }); } catch(e) {}
       }
-      const fbUser = firebase.auth().currentUser;
-      if (fbUser && action !== 'authFirebase') data.idToken = await fbUser.getIdToken();
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && action !== 'authFirebase') {
+          data.idToken = session.access_token;
+      }
       const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action, data }) });
       return res.json();
     }
@@ -1142,9 +1123,11 @@ dateInput.onchange = function() {
   handleDateSelection(this.value, wd);
 };
 
-// أيضاً أضف هذا للتأكد من أن التاريخ لا يمكن أن يكون في الماضي
-const today = new Date().toISOString().split('T')[0];
-dateInput.min = today;
+// حساب التاريخ بناءً على التوقيت المحلي للجهاز لضمان دقة الأيام
+const currentDate = new Date();
+const timezoneOffset = currentDate.getTimezoneOffset() * 60000;
+const localDateString = new Date(currentDate.getTime() - timezoneOffset).toISOString().split('T')[0];
+dateInput.min = localDateString;
 
   // الانتقال لصفحة الحجز
   router('booking');
@@ -1260,13 +1243,15 @@ async function submitBooking() {
       timeContainer.innerHTML = '<div class="text-sm text-gray" style="grid-column: 1 / -1;">يرجى تحديد تاريخ الموعد أولاً لعرض الأوقات المتاحة...</div>';
     }
     
-    // --- بناء التذكرة الإلكترونية (E-Ticket) ---
+   // --- بناء التذكرة الإلكترونية (E-Ticket) ---
     const bId = booking.id;
     const shortId = bId.substring(0, 8).toUpperCase();
     const bName = data.PatientName;
     const bDate = data.AppointmentDate;
     const bTime = data.AppointmentTime;
-    const bDoctor = currentDoctor ? `${currentDoctor.first_name} ${currentDoctor.last_name}` : '';
+    const targetDoctorId = data.DoctorID;
+    const targetDoctorData = allDoctors.find(d => d.id === targetDoctorId);
+    const bDoctor = targetDoctorData ? `${targetDoctorData.first_name} ${targetDoctorData.last_name}` : '';
 
     const ticketHtml = `
       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1.5rem; text-align: center; color: white; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 320px; margin: 0 auto;">
@@ -2195,7 +2180,11 @@ document.addEventListener('submit', async function(e) {
 
       const dateInput = document.getElementById('apptDateInput');
 
-      if (dateInput) dateInput.min = new Date().toISOString().split('T')[0];
+      if (dateInput) {
+          const currentDate = new Date();
+          const timezoneOffset = currentDate.getTimezoneOffset() * 60000;
+          dateInput.min = new Date(currentDate.getTime() - timezoneOffset).toISOString().split('T')[0];
+      }
 
       const hash = window.location.hash.replace('#', '');
 
