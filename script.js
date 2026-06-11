@@ -2546,12 +2546,12 @@ if (savedSession) {
                 
                 if (doctor && doctor.session_token === session.sessionToken) {
                     // ✅ نجاح تسجيل الدخول التلقائي
-            // جلب المواعيد
+           // ✅ جلب المواعيد باستخدام الدالة الآمنة ليتوافق مع RLS
 const { data: appointments, error: apptError } = await supabaseClient
-  .from('appointments')
-  .select('*') // ✅ جلب كل الأعمدة
-  .eq('doctor_id', doctor.id)
-  .order('appointment_date', { ascending: false });
+  .rpc('get_doctor_appointments_secure', {
+    p_doctor_id: doctor.id,               
+    p_session_token: doctor.session_token
+  });
 
 if (apptError) console.error('❌ خطأ في جلب المواعيد (Auto-Login):', apptError);
 
@@ -3115,11 +3115,12 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
             const session = JSON.parse(sessionStr);
             
             // جلب المواعيد المحدثة من Supabase
-            const { data: updatedAppointments } = await supabaseClient
-                .from('appointments')
-                .select('*')
-                .eq('doctor_id', session.doctorId)
-                .order('appointment_date', { ascending: false });
+            // ✅ جلب المواعيد المحدثة باستخدام الدالة الآمنة
+const { data: updatedAppointments } = await supabaseClient
+    .rpc('get_doctor_appointments_secure', {
+        p_doctor_id: session.doctorId,
+        p_session_token: session.sessionToken
+    });
 
             // تحديث البيانات في المتغير العام وإعادة رسم الواجهة
             if (globalDashboardData) {
