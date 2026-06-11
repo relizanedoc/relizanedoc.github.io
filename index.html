@@ -160,7 +160,7 @@
     <div class='view hidden' id='view-add-doctor'>
       <div class='card' style='max-width: 800px; margin: 0 auto;'>
         <h2 class='text-xl font-bold mb-6' data-i18n='registerDoctor'>Register New Doctor</h2>
-        <form id='addDoctorForm'>
+                <form id='addDoctorForm'>
           <div class='grid grid-1 grid-2'>
             <div class='form-group'>
               <label data-i18n='firstName'>First Name *</label>
@@ -272,6 +272,14 @@
             <label data-i18n='extraInfo'>Extra Information</label>
             <textarea name='ExtraInfo' placeholder='Working hours, consultation fees, languages spoken, diplomas...' rows='3'></textarea>
           </div>
+
+          <!-- ⬇️ هذا هو الحقل الجديد لكلمة المرور ⬇️ -->
+          <div class='form-group'>
+            <label data-i18n='password'>كلمة المرور (لتسجيل الدخول) *</label>
+            <input name='Password' placeholder='••••••••' required='required' minlength='6' type='password'/>
+          </div>
+          <!-- ⬆️ نهاية الحقل الجديد ⬆️ -->
+
           <button class='btn btn-primary btn-block' id='addDoctorBtn' type='submit'>Register Doctor</button>
         </form>
       </div>
