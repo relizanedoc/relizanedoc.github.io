@@ -912,10 +912,9 @@ async function loadDoctors() {
         }
     });
 
-  // ✅ دالة إضافة طبيب جديد (محدّثة - تستخدم كلمة السر المدخلة)
+ // ✅ دالة إضافة طبيب جديد (النسخة الصحيحة - بدون حقل كلمة المرور)
 async function handleAddDoctor(e) {
     e.preventDefault();
-    
     const user = await getCurrentUser();
     if (!user) {
         showToast(t('loginRequired'), 'error');
@@ -942,19 +941,13 @@ async function handleAddDoctor(e) {
         return;
     }
     
-    // ✅ التحقق من كلمة المرور
-    const password = data.Password ? data.Password.trim() : '';
-    if (!password || password.length < 6) {
-        showToast(currentLang === 'ar' ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters', 'error');
-        setLoading(btn, false);
-        return;
-    }
-    
     try {
-        // 1. تشفير كلمة المرور
-        const hashedPassword = await hashPassword(password);
+        // ✅ استخدام رقم الهاتف ككلمة مرور افتراضية مؤقتة
+        // (ستغيرها أنت يدوياً في Supabase بعد استلام الدفع)
+        const defaultPassword = data.Phone.replace(/\s/g, '');
+        const hashedPassword = await hashPassword(defaultPassword);
         
-        // 2. حفظ البيانات في Supabase
+        // حفظ البيانات في Supabase
         const { data: newDoctor, error } = await supabaseClient
             .from('doctors')
             .insert([{
@@ -965,10 +958,10 @@ async function handleAddDoctor(e) {
                 specialty: data.Specialty.trim(),
                 municipality: data.Municipality.trim(),
                 extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '',
-                password: hashedPassword, // ⚠️ غيّرها إلى 'password_hash' إذا كان اسم العمود مختلفاً
-                session_token: null, // يبدأ بدون جلسة
-                booking_enabled: false, // يبدأ الحجز وهو مغلق
-                working_days: {} // جدول فارغ افتراضياً
+                password_hash: hashedPassword, // كلمة مرور مؤقتة (رقم الهاتف)
+                session_token: null,
+                booking_enabled: false,
+                working_days: {}
             }])
             .select()
             .single();
@@ -980,8 +973,6 @@ async function handleAddDoctor(e) {
         
         showToast(t('toastRegisterSuccess') + newDoctor.id, 'success');
         e.target.reset();
-        
-        // إعادة تحميل قائمة الأطباء
         await loadDoctors();
         setTimeout(() => router('home'), 1500);
         
@@ -1516,7 +1507,6 @@ async function handleDashboardLogin(e) {
     
     setLoading(btn, true);
     
-    // الحصول على القيم من الحقول
     const phoneInput = document.getElementById('loginPhone');
     const passwordInput = document.getElementById('loginDoctorPassword');
     
@@ -1530,7 +1520,6 @@ async function handleDashboardLogin(e) {
     const phone = phoneInput.value.trim();
     const password = passwordInput.value.trim();
     
-    // التحقق من أن الحقول ليست فارغة
     if (!phone || !password) {
         setLoading(btn, false);
         showToast('يرجى ملء جميع الحقول', 'error');
@@ -1541,12 +1530,12 @@ async function handleDashboardLogin(e) {
         // 1. تشفير كلمة المرور المدخلة
         const hashedInputPassword = await hashPassword(password);
         
-        // 2. البحث عن الطبيب باستخدام رقم الهاتف وكلمة المرور فقط
+        // 2. البحث عن الطبيب باستخدام رقم الهاتف وكلمة المرور
         const { data: doctor, error: doctorError } = await supabaseClient
             .from('doctors')
-            .select('id, first_name, last_name, phone, working_days, booking_enabled, password')
+            .select('id, first_name, last_name, phone, working_days, booking_enabled')
             .eq('phone', phone)
-            .eq('password', hashedInputPassword) // ⚠️ غيّرها إلى 'password_hash' إذا كان اسم العمود مختلفاً
+            .eq('password_hash', hashedInputPassword)
             .maybeSingle();
         
         if (doctorError) {
@@ -1558,43 +1547,34 @@ async function handleDashboardLogin(e) {
             throw new Error('بيانات الدخول غير صحيحة (تحقق من رقم الهاتف أو كلمة المرور)');
         }
         
-        // 3. توليد session_token آمن (UUID)
+        // 3. توليد session_token آمن
         const sessionToken = crypto.randomUUID();
         
-        // 4. حفظ session_token في قاعدة البيانات Supabase
-        const { error: updateError } = await supabaseClient
+        // 4. حفظ session_token في Supabase
+        await supabaseClient
             .from('doctors')
             .update({ session_token: sessionToken })
             .eq('id', doctor.id);
         
-        if (updateError) {
-            console.error('خطأ في حفظ الجلسة:', updateError);
-            throw new Error('فشل في إنشاء الجلسة');
-        }
-        
-        // 5. جلب المواعيد الخاصة بهذا الطبيب
-        const { data: appointments, error: apptError } = await supabaseClient
+        // 5. جلب المواعيد
+        const { data: appointments } = await supabaseClient
             .from('appointments')
             .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
             .eq('doctor_id', doctor.id)
             .order('appointment_date', { ascending: false });
         
-        if (apptError) {
-            console.error('خطأ في جلب المواعيد:', apptError);
-        }
-        
         // 6. نجاح تسجيل الدخول
         resetLoginAttempts();
         
-        // 7. حفظ الجلسة في المتصفح (مع session_token بدلاً من كلمة السر)
+        // 7. حفظ الجلسة في المتصفح
         const sessionData = {
             doctorId: doctor.id,
             phone: doctor.phone,
-            sessionToken: sessionToken // ✅ الرمز الآمن
+            sessionToken: sessionToken
         };
         localStorage.setItem('doctorSession', JSON.stringify(sessionData));
         
-        // 8. تجهيز البيانات للصيغة المتوقعة
+        // 8. تجهيز البيانات
         const dashboardData = {
             doctorName: `${doctor.first_name} ${doctor.last_name}`,
             workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : (doctor.working_days || '{}'),
@@ -1628,7 +1608,7 @@ async function logoutDashboard() {
         try {
             const session = JSON.parse(sessionStr);
             
-            // ✅ مسح session_token من قاعدة البيانات Supabase
+            // ✅ مسح session_token من Supabase
             await supabaseClient
                 .from('doctors')
                 .update({ session_token: null })
@@ -1639,14 +1619,11 @@ async function logoutDashboard() {
         }
     }
     
-    // مسح الجلسة من المتصفح
     localStorage.removeItem('doctorSession');
     
-    // تحديث الواجهة
     document.getElementById('loginSection').classList.remove('hidden');
     document.getElementById('dashboardSection').classList.add('hidden');
     
-    // تفريغ الحقول (إذا كانت موجودة)
     const loginPhone = document.getElementById('loginPhone');
     const loginDoctorPassword = document.getElementById('loginDoctorPassword');
     if (loginPhone) loginPhone.value = '';
