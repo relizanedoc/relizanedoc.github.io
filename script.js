@@ -1208,7 +1208,6 @@ async function submitBooking() {
   const form = document.getElementById('bookingForm');
   const data = Object.fromEntries(new FormData(form));
 
-  // التحقق من البيانات
   if (!data.PatientName || !data.PatientPhone || !data.AppointmentDate || !data.AppointmentTime) {
     showToast(currentLang === 'ar' ? 'يرجى ملء جميع الحقول' : 'Please fill all fields', 'error');
     setLoading(btn, false);
@@ -1216,10 +1215,9 @@ async function submitBooking() {
   }
 
   try {
-    // الحصول على المستخدم الحالي (إن وجد)
     const { data: { user } } = await supabaseClient.auth.getUser();
 
-    // ✅ حفظ الحجز في Supabase
+    // ✅ إصلاح الخلل: إدراج user_email لضمان عمل إشعارات البريد لاحقاً
     const { data: booking, error } = await supabaseClient
       .from('appointments')
       .insert([{
@@ -1229,35 +1227,34 @@ async function submitBooking() {
         appointment_date: data.AppointmentDate,
         appointment_time: data.AppointmentTime,
         status: 'pending',
-        user_id: user ? user.id : null
+        user_id: user ? user.id : null,
+        user_email: user ? user.email : null 
       }])
       .select()
       .single();
 
     if (error) {
-      console.error('❌ خطأ في الحجز:', error);
       throw new Error(error.message);
     }
 
-    console.log('✅ تم الحجز بنجاح:', booking);
+    // ✅ إصلاح الخلل: حماية الكود من الانهيار إذا كانت سياسات RLS تمنع القراءة بعد الإدخال
+    if (!booking) {
+        throw new Error("تم الحجز بنجاح، لكن يرجى تعديل صلاحيات RLS في Supabase للسماح بقراءة البيانات المضافة (Select policy).");
+    }
 
-    // مسح النموذج
     form.reset();
-
-    // تصفير حاوية الأوقات
     const timeContainer = document.getElementById('timeSlotsContainer');
     if (timeContainer) {
       timeContainer.innerHTML = '<div class="text-sm text-gray" style="grid-column: 1 / -1;">يرجى تحديد تاريخ الموعد أولاً لعرض الأوقات المتاحة...</div>';
     }
     
-   // --- بناء التذكرة الإلكترونية (E-Ticket) ---
+    // --- بناء التذكرة الإلكترونية ---
     const bId = booking.id;
     const shortId = bId.substring(0, 8).toUpperCase();
     const bName = data.PatientName;
     const bDate = data.AppointmentDate;
     const bTime = data.AppointmentTime;
-    const targetDoctorId = data.DoctorID;
-    const targetDoctorData = allDoctors.find(d => d.id === targetDoctorId);
+    const targetDoctorData = allDoctors.find(d => d.id === data.DoctorID);
     const bDoctor = targetDoctorData ? `${targetDoctorData.first_name} ${targetDoctorData.last_name}` : '';
 
     const ticketHtml = `
@@ -1288,14 +1285,9 @@ async function submitBooking() {
         <div style="background: white; padding: 1rem; border-radius: 8px; display: inline-block;">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${bId}&color=667eea" alt="QR Code" style="width: 120px; height: 120px;" />
         </div>
-        
-        <div style="margin-top: 1.5rem; font-size: 0.85rem; opacity: 0.9;">
-          ${currentLang === 'ar' ? 'يرجى إبراز هذه التذكرة عند الوصول' : 'Please show this ticket upon arrival'}
-        </div>
       </div>
     `;
 
-    // إظهار التذكرة
     document.getElementById('eTicketContainer').innerHTML = ticketHtml;
     document.getElementById('successDialog').classList.remove('hidden');
 
@@ -2251,117 +2243,73 @@ document.addEventListener('submit', async function(e) {
       // تطبيق المكتبة على نموذج إضافة طبيب
       window.tsAddSpecialty = new TomSelect('select[name="Specialty"]', tsSettings);
       window.tsAddMunicipality = new TomSelect('select[name="Municipality"]', tsSettings);
-
-
-     // === تتبع الحجز ===
+// === تتبع الحجز ===
       const trackForm = document.getElementById('trackBookingForm');
       if (trackForm) {
         trackForm.addEventListener('submit', async (e) => {
           e.preventDefault();
           const btn = document.getElementById('trackBtn');
           const bookingId = document.getElementById('trackBookingId').value.trim();
-          const phoneStr = document.getElementById('trackPhone').value.trim(); // التقاط رقم الهاتف
+          const phoneStr = document.getElementById('trackPhone').value.trim();
           const resultDiv = document.getElementById('trackResult');
 
           setLoading(btn, true);
           resultDiv.classList.add('hidden');
 
           try {
-            // إرسال الهاتف مع رقم الحجز للتحقق الأمني
-            const result = await apiPost('getBookingStatus', { bookingId: bookingId, phone: phoneStr });
+            // ✅ التحويل من apiPost (القديم) إلى قاعدة بيانات Supabase مباشرة
+            const { data, error } = await supabaseClient
+              .from('appointments')
+              .select('id, patient_name, appointment_date, appointment_time, status')
+              .eq('id', bookingId)
+              .eq('patient_phone', phoneStr)
+              .maybeSingle(); // استخدام maybeSingle لتفادي أخطاء 406 إذا كان الحجز غير موجود
 
-            if (result.success) {
+            if (error) throw error;
 
-              const data = result.data;
-
-
-
-              // 1. تحديد الألوان
-
+            if (data) {
               let statusStyle = 'background: #f1f5f9; color: #64748b;';
-
-              if (data.status === 'مؤكد') statusStyle = 'background: #ecfdf5; color: #10b981;';
-
-              if (data.status === 'ملغى') statusStyle = 'background: #fef2f2; color: #ef4444;';
-
-
-
-              // 2. ترجمة كلمة الحالة (Status)
-
               let displayStatus = data.status;
 
-              if (currentLang === 'en') {
-
-                 if (data.status === 'مؤكد') displayStatus = 'Confirmed';
-
-                 else if (data.status === 'ملغى') displayStatus = 'Cancelled';
-
-                 else displayStatus = 'Pending';
-
+              // معالجة حالة الحجز الإنجليزية وتحويلها لرسوميات ملائمة
+              if (data.status === 'confirmed') {
+                  statusStyle = 'background: #ecfdf5; color: #10b981;';
+                  displayStatus = currentLang === 'ar' ? 'مؤكد' : 'Confirmed';
+              } else if (data.status === 'cancelled') {
+                  statusStyle = 'background: #fef2f2; color: #ef4444;';
+                  displayStatus = currentLang === 'ar' ? 'ملغى' : 'Cancelled';
+              } else {
+                  displayStatus = currentLang === 'ar' ? 'قيد الانتظار' : 'Pending';
               }
 
-
-
-              // 3. نصوص الواجهة المترجمة ديناميكياً
-
               const detailsTxt = currentLang === 'ar' ? 'تفاصيل الحجز:' : 'Booking Details:';
-
               const idTxt = currentLang === 'ar' ? 'رقم الحجز:' : 'Booking ID:';
-
               const nameTxt = currentLang === 'ar' ? 'الاسم:' : 'Patient Name:';
-
               const dateTimeTxt = currentLang === 'ar' ? 'التاريخ والوقت:' : 'Date & Time:';
-
               const currentStatusTxt = currentLang === 'ar' ? 'الحالة الحالية:' : 'Current Status:';
 
-
-
-              // 4. بناء النتيجة
-
               resultDiv.innerHTML = `
-
                 <h4 class="font-bold mb-2">${detailsTxt}</h4>
-
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${idTxt}</span> <strong>${escapeHtml(data.bookingId)}</strong></div>
-
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${nameTxt}</span> <strong>${escapeHtml(data.patientName)}</strong></div>
-
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${dateTimeTxt}</span> <strong dir="ltr">${escapeHtml(data.date)} ${escapeHtml(data.time)}</strong></div>
-
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${idTxt}</span> <strong style="font-family: monospace;">${escapeHtml(data.id.substring(0,8).toUpperCase())}</strong></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${nameTxt}</span> <strong>${escapeHtml(data.patient_name)}</strong></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${dateTimeTxt}</span> <strong dir="ltr">${escapeHtml(data.appointment_date)} ${escapeHtml(data.appointment_time)}</strong></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem;">
-
                   <span>${currentStatusTxt}</span> 
-
                   <span class="badge" style="${statusStyle}">${escapeHtml(displayStatus)}</span>
-
                 </div>
-
               `;
-
               resultDiv.classList.remove('hidden');
-
             } else {
-
-              showToast(currentLang === 'ar' ? result.error : 'Booking not found', 'error');
-
+              showToast(currentLang === 'ar' ? 'لم يتم العثور على الحجز. تحقق من البيانات.' : 'Booking not found', 'error');
             }
-
           } catch (err) {
-
+            console.error("Track error:", err);
             showToast(currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection Error', 'error');
-
           } finally {
-
             setLoading(btn, false, currentLang === 'ar' ? 'بحث عن الحجز' : 'Search Booking');
-
           }
-
         });
-
       }
-
-
-
       // ===================================================
 
 
