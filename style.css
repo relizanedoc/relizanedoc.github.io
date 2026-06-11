@@ -401,9 +401,11 @@
 
 .chatbot-header span {
   color: rgba(255, 255, 255, 0.95) !important;
-  font-size: 0.8rem;
-  opacity: 1;
+  font-size: 0.75rem;
+  opacity: 1 !important;
   font-weight: 500;
+  display: block;
+  margin-top: 2px;
 }
 
 .chatbot-header button {
@@ -415,7 +417,6 @@
 .chatbot-header button:hover {
   transform: rotate(90deg);
 }
-
 /* ✅ شريط التمرير المخصص */
 .chatbot-messages {
   flex: 1;
