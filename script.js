@@ -921,6 +921,7 @@ async function loadDoctors() {
     });
 
  // ✅ دالة إضافة طبيب جديد (النسخة الصحيحة - بدون حقل كلمة المرور)
+// ✅ دالة إضافة طبيب جديد (محدّثة - تنشئ صفحة GitHub تلقائياً)
 async function handleAddDoctor(e) {
     e.preventDefault();
     const user = await getCurrentUser();
@@ -936,49 +937,51 @@ async function handleAddDoctor(e) {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData);
     
-    // التحقق من الحقول المطلوبة
-    if (!data.Specialty) {
-        showToast(currentLang === 'ar' ? 'الرجاء اختيار الاختصاص.' : 'Please select a specialty.', 'error');
-        setLoading(btn, false);
-        return;
-    }
-    
-    if (!data.Municipality) {
-        showToast(currentLang === 'ar' ? 'الرجاء اختيار البلدية.' : 'Please select a municipality.', 'error');
+    if (!data.Specialty || !data.Municipality) {
+        showToast(currentLang === 'ar' ? 'الرجاء اختيار الاختصاص والبلدية.' : 'Please select specialty and municipality.', 'error');
         setLoading(btn, false);
         return;
     }
     
     try {
-        // ✅ استخدام رقم الهاتف ككلمة مرور افتراضية مؤقتة
-        // (ستغيرها أنت يدوياً في Supabase بعد استلام الدفع)
         const defaultPassword = data.Phone.replace(/\s/g, '');
         const hashedPassword = await hashPassword(defaultPassword);
         
-        // حفظ البيانات في Supabase
+        // 1. حفظ الطبيب في Supabase
         const { data: newDoctor, error } = await supabaseClient
-    .from('doctors')
-    .insert([{
-        first_name: data.FirstName.trim(),
-        last_name: data.LastName.trim(),
-        phone: data.Phone.replace(/\s/g, ''),
-        exact_location: data.ExactLocation.trim(),
-        specialty: data.Specialty.trim(),
-        municipality: data.Municipality.trim(),
-        extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '',
-        password: hashedPassword,  // ✅ هكذا
-        booking_enabled: false,
-        working_days: {}
-    }])
+            .from('doctors')
+            .insert([{
+                first_name: data.FirstName.trim(),
+                last_name: data.LastName.trim(),
+                phone: data.Phone.replace(/\s/g, ''),
+                exact_location: data.ExactLocation.trim(),
+                specialty: data.Specialty.trim(),
+                municipality: data.Municipality.trim(),
+                extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '',
+                password: hashedPassword,
+                booking_enabled: false,
+                working_days: {}
+            }])
             .select()
             .single();
         
-        if (error) {
-            console.error('Error adding doctor:', error);
-            throw new Error(error.message);
-        }
+        if (error) throw error;
         
         showToast(t('toastRegisterSuccess') + newDoctor.id, 'success');
+        
+        // 2. إنشاء صفحة GitHub للطبيب (في الخلفية)
+        const doctorData = {
+            first_name: data.FirstName.trim(),
+            last_name: data.LastName.trim(),
+            phone: data.Phone.replace(/\s/g, ''),
+            exact_location: data.ExactLocation.trim(),
+            specialty: data.Specialty.trim(),
+            municipality: data.Municipality.trim(),
+            extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : ''
+        };
+        
+        // استدعاء Edge Function لإنشاء الصفحة (في الخلفية - لا ننتظر النتيجة)
+createDoctorGitHubPageAsync(doctorData, newDoctor.id);
         e.target.reset();
         await loadDoctors();
         setTimeout(() => router('home'), 1500);
@@ -3029,4 +3032,310 @@ function displayTimeSlots(container, slots, timeInput) {
   if (eveningDiv.querySelector('.slots-grid').hasChildNodes()) {
     container.appendChild(eveningDiv);
   }
+}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${doctorName} | ${specialty} في ${municipality}</title>
+    <meta name="description" content="احجز موعدك مع ${doctorName}، أخصائي ${specialty} في ${municipality}، ولاية غليزان. العنوان: ${doc.exact_location}">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="${doctorName} | ${specialty}">
+    <meta property="og:description" content="احجز موعدك مع ${doctorName} في ${municipality}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${pageUrl}">
+    
+    <!-- Redirect to main app after 3 seconds -->
+    <meta http-equiv="refresh" content="3; url=${mainAppUrl}">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+            animation: slideUp 0.5s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .avatar {
+            width: 100px;
+            height: 100px;
+            background: white;
+            color: #0ea5e9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+        
+        .header .specialty {
+            font-size: 1rem;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .info-section {
+            margin-bottom: 25px;
+        }
+        
+        .info-section h3 {
+            color: #0ea5e9;
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-item {
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-right: 4px solid #0ea5e9;
+        }
+        
+        .info-item label {
+            display: block;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        
+        .info-item value {
+            display: block;
+            font-size: 1rem;
+            color: #0f172a;
+            font-weight: 600;
+        }
+        
+        .phone-link {
+            color: #0ea5e9;
+            text-decoration: none;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 20px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            transition: transform 0.2s;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .redirect-notice {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            margin-top: 20px;
+            color: #92400e;
+        }
+        
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #0ea5e9;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 640px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="avatar">${doc.first_name.charAt(0)}${doc.last_name.charAt(0)}</div>
+            <h1>${doctorName}</h1>
+            <div class="specialty">${specialty}</div>
+        </div>
+        
+        <div class="content">
+            <div class="info-section">
+                <h3>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    معلومات الاتصال
+                </h3>
+                
+                <div class="info-item">
+                    <label>البلدية</label>
+                    <value>${municipality}</value>
+                </div>
+                
+                <div class="info-item">
+                    <label>العنوان الدقيق</label>
+                    <value>${doc.exact_location}</value>
+                </div>
+                
+                <div class="info-item">
+                    <label>رقم الهاتف</label>
+                    <value>
+                        <a href="tel:${doc.phone}" class="phone-link" dir="ltr">${formatPhoneNumberForDisplay(doc.phone)}</a>
+                    </value>
+                </div>
+            </div>
+            
+            ${doc.extra_info ? `
+            <div class="info-section">
+                <h3>
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    معلومات إضافية
+                </h3>
+                <div class="info-item">
+                    <value style="white-space: pre-wrap; line-height: 1.6;">${doc.extra_info}</value>
+                </div>
+            </div>
+            ` : ''}
+            
+            <a href="${mainAppUrl}" class="cta-button">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-left: 8px;" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                احجز موعد الآن
+            </a>
+            
+            <div class="redirect-notice">
+                <div class="spinner"></div>
+                <p>جاري التوجيه إلى صفحة الحجز...</p>
+                <p style="font-size: 0.85rem; margin-top: 8px;">
+                    <a href="${mainAppUrl}" style="color: #0ea5e9;">انقر هنا إذا لم يتم التوجيه تلقائياً</a>
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2026 دليل أطباء ولاية غليزان</p>
+            <p style="margin-top: 5px; font-size: 0.85rem;">Relizane Medical Directory</p>
+        </div>
+    </div>
+    
+    <script>
+        // Redirect after 3 seconds
+        setTimeout(function() {
+            window.location.href = "${mainAppUrl}";
+        }, 3000);
+    <\/script>
+</body>
+</html>`;
+// ✅ دالة مساعدة لاستدعاء Edge Function بشكل غير متزامن
+function createDoctorGitHubPageAsync(doctorData, doctorId) {
+    // استدعاء Edge Function دون انتظار النتيجة
+    supabaseClient.functions.invoke('create-github-page', {
+        body: { doctorData, doctorId }
+    })
+    .then(({ data, error }) => {
+        if (error) {
+            console.error('❌ خطأ في Edge Function:', error);
+        } else if (data && data.success) {
+            console.log('✅ تم إنشاء صفحة GitHub بنجاح:', data.url);
+            showToast('تم إنشاء صفحة الطبيب على GitHub!', 'success');
+        }
+    })
+    .catch(err => {
+        console.error('❌ فشل استدعاء Edge Function:', err);
+    });
 }
