@@ -1620,55 +1620,41 @@ async function handleDashboardLogin(e) {
         setLoading(btn, false);
     }
 }
-    function logoutDashboard() {
-
-
-
-      localStorage.removeItem('doctorSession'); // مسح المفكرة
-
-
-
-      document.getElementById('loginSection').classList.remove('hidden');
-
-
-
-      document.getElementById('dashboardSection').classList.add('hidden');
-      document.getElementById('loginDoctorId').value = '';
-      document.getElementById('loginPhone').value = '';
-      document.getElementById('loginDoctorPassword').value = ''; 
+// ✅ تسجيل خروج الطبيب (محدث - يمسح session_token من قاعدة البيانات)
+async function logoutDashboard() {
+    const sessionStr = localStorage.getItem('doctorSession');
+    
+    if (sessionStr) {
+        try {
+            const session = JSON.parse(sessionStr);
+            
+            // ✅ مسح session_token من قاعدة البيانات Supabase
+            await supabaseClient
+                .from('doctors')
+                .update({ session_token: null })
+                .eq('id', session.doctorId);
+            
+        } catch (err) {
+            console.error('خطأ في مسح الجلسة:', err);
+        }
     }
- // ✅ تغيير حالة الحجز (محدّثة لـ Supabase)
-window.changeBookingStatus = async function(bookingId, newStatus, patientEmail, doctorName, apptDate) {
-  if (!confirm('تأكيد تغيير حالة الحجز إلى: ' + (newStatus === 'confirmed' ? 'مؤكد' : 'ملغى') + '؟')) return;
-
-  const sessionStr = localStorage.getItem('doctorSession');
-  if (!sessionStr) { showToast('يرجى تسجيل الدخول مجدداً', 'error'); return; }
-  const session = JSON.parse(sessionStr);
-
-  try {
-    // ✅ تحديث الحالة مباشرة في Supabase
-    const { error } = await supabaseClient
-      .from('appointments')
-      .update({ status: newStatus })
-      .eq('id', bookingId)
-      .eq('doctor_id', session.doctorId);
-
-    if (error) throw error;
-
-    showToast('تم التحديث بنجاح', 'success');
-
-    // إرسال الإيميل التلقائي
-    if (patientEmail && patientEmail !== 'undefined' && patientEmail !== '') {
-      window.sendBookingEmail(patientEmail, doctorName, apptDate, newStatus);
-    }
-
-    // إعادة تحميل البيانات
-    refreshDoctorDashboard(session.doctorId, session.phone, session.sessionToken);
-
-  } catch (err) {
-    showToast('خطأ: ' + err.message, 'error');
-  }
-};
+    
+    // مسح الجلسة من المتصفح
+    localStorage.removeItem('doctorSession');
+    
+    // تحديث الواجهة
+    document.getElementById('loginSection').classList.remove('hidden');
+    document.getElementById('dashboardSection').classList.add('hidden');
+    
+    // تفريغ الحقول (إذا كانت موجودة)
+    const loginPhone = document.getElementById('loginPhone');
+    const loginDoctorPassword = document.getElementById('loginDoctorPassword');
+    if (loginPhone) loginPhone.value = '';
+    if (loginDoctorPassword) loginDoctorPassword.value = '';
+    
+    showToast('تم تسجيل الخروج بنجاح', 'success');
+    router('home');
+}
 
 // ✅ دالة مساعدة لإعادة تحميل لوحة التحكم
 async function refreshDoctorDashboard(doctorId, phone, sessionToken) {
