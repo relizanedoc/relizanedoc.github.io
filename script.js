@@ -1217,7 +1217,10 @@ async function submitBooking() {
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
 
-    // ✅ إصلاح الخلل: إدراج user_email لضمان عمل إشعارات البريد لاحقاً
+    // ✅ استخراج البريد الإلكتروني سواء من النموذج أو من الحساب المسجل
+    const finalEmail = data.PatientEmail ? data.PatientEmail.trim() : (user ? user.email : null);
+
+    // ✅ حفظ الحجز في Supabase مع البريد الإلكتروني
     const { data: booking, error } = await supabaseClient
       .from('appointments')
       .insert([{
@@ -1228,12 +1231,13 @@ async function submitBooking() {
         appointment_time: data.AppointmentTime,
         status: 'pending',
         user_id: user ? user.id : null,
-        user_email: user ? user.email : null 
+        user_email: finalEmail // حفظ البريد هنا ليتم استخدامه لاحقاً في الإشعارات
       }])
       .select()
       .single();
 
     if (error) {
+      console.error('❌ خطأ في الحجز:', error);
       throw new Error(error.message);
     }
 
