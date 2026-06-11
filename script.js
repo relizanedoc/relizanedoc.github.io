@@ -949,20 +949,19 @@ async function handleAddDoctor(e) {
         
         // حفظ البيانات في Supabase
         const { data: newDoctor, error } = await supabaseClient
-            .from('doctors')
-            .insert([{
-                first_name: data.FirstName.trim(),
-                last_name: data.LastName.trim(),
-                phone: data.Phone.replace(/\s/g, ''),
-                exact_location: data.ExactLocation.trim(),
-                specialty: data.Specialty.trim(),
-                municipality: data.Municipality.trim(),
-                extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '',
-                password_hash: hashedPassword, // كلمة مرور مؤقتة (رقم الهاتف)
-                session_token: null,
-                booking_enabled: false,
-                working_days: {}
-            }])
+    .from('doctors')
+    .insert([{
+        first_name: data.FirstName.trim(),
+        last_name: data.LastName.trim(),
+        phone: data.Phone.replace(/\s/g, ''),
+        exact_location: data.ExactLocation.trim(),
+        specialty: data.Specialty.trim(),
+        municipality: data.Municipality.trim(),
+        extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '',
+        password: hashedPassword,  // ✅ هكذا
+        booking_enabled: false,
+        working_days: {}
+    }])
             .select()
             .single();
         
@@ -1535,7 +1534,7 @@ async function handleDashboardLogin(e) {
             .from('doctors')
             .select('id, first_name, last_name, phone, working_days, booking_enabled')
             .eq('phone', phone)
-            .eq('password_hash', hashedInputPassword)
+           .eq('password', hashedInputPassword)
             .maybeSingle();
         
         if (doctorError) {
