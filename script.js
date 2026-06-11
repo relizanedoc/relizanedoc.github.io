@@ -926,43 +926,35 @@ async function handleAddDoctor(e) {
     
     try {
         const defaultPassword = data.Phone.replace(/\s/g, '');
-        const hashedPassword = await hashPassword(defaultPassword);
         
-        // 1. حفظ الطبيب في Supabase
-        const { data: newDoctor, error } = await supabaseClient
-            .from('doctors')
-            .insert([{
-                first_name: data.FirstName.trim(),
-                last_name: data.LastName.trim(),
-                phone: data.Phone.replace(/\s/g, ''),
-                exact_location: data.ExactLocation.trim(),
-                specialty: data.Specialty.trim(),
-                municipality: data.Municipality.trim(),
-                extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '',
-                password: hashedPassword,
-                booking_enabled: false,
-                working_days: {}
-            }])
-            .select()
-            .single();
-        
-        if (error) throw error;
-        
-        showToast(t('toastRegisterSuccess') + newDoctor.id, 'success');
-        
-        // 2. إنشاء صفحة GitHub للطبيب (في الخلفية)
+        // تجهيز بيانات الطبيب بدون كلمة المرور 
         const doctorData = {
             first_name: data.FirstName.trim(),
             last_name: data.LastName.trim(),
-            phone: data.Phone.replace(/\s/g, ''),
+            phone: defaultPassword,
             exact_location: data.ExactLocation.trim(),
             specialty: data.Specialty.trim(),
             municipality: data.Municipality.trim(),
             extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : ''
         };
+
+        // 1. استدعاء الدالة الخلفية (Edge Function) التي رفعتها للتو
+        const { data: responseData, error } = await supabaseClient.functions.invoke('create-doctor', {
+            body: { 
+                doctorData: doctorData,
+                rawPassword: defaultPassword // نرسلها خام ليتم تشفيرها في السيرفر
+            }
+        });
         
-        // استدعاء Edge Function لإنشاء الصفحة (في الخلفية - لا ننتظر النتيجة)
-createDoctorGitHubPageAsync(doctorData, newDoctor.id);
+        if (error) throw error;
+        if (!responseData || !responseData.success) throw new Error(responseData?.error || 'فشل في إنشاء حساب الطبيب');
+        
+        const newDoctor = responseData.doctor;
+        showToast(t('toastRegisterSuccess') + newDoctor.id, 'success');
+        
+        // 2. إنشاء صفحة GitHub للطبيب 
+        createDoctorGitHubPageAsync(doctorData, newDoctor.id);
+        
         e.target.reset();
         await loadDoctors();
         setTimeout(() => router('home'), 1500);
@@ -972,16 +964,6 @@ createDoctorGitHubPageAsync(doctorData, newDoctor.id);
     } finally {
         setLoading(btn, false);
     }
-}
-
-// ✅ دالة مساعدة لتشفير كلمة المرور (SHA-256)
-// هذه دالة بسيطة للتجربة، في الإنتاج استخدم bcrypt عبر Edge Function
-async function hashPassword(password) {
-  const msgUint8 = new TextEncoder().encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
 }
   function generateTimeSlots(startStr, endStr, intervalMins) {
     const slots = [];
