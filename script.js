@@ -1665,7 +1665,7 @@ window.toggleWorkingHours = function() {
 
 
 
-// ✅ حفظ أوقات العمل (محدّثة لـ Supabase)
+// ✅ حفظ أوقات العمل (محدّثة لتتوافق مع RLS عبر دالة RPC الآمنة)
 window.saveWorkingHours = async function() {
   const sessionStr = localStorage.getItem('doctorSession');
   if (!sessionStr) return;
@@ -1683,12 +1683,12 @@ window.saveWorkingHours = async function() {
   }
 
   try {
-    // ✅ تحديث أوقات العمل مباشرة في Supabase
-    const { error } = await supabaseClient
-      .from('doctors')
-      .update({ working_days: workingDaysData })
-      .eq('id', session.doctorId)
-      .eq('phone', session.phone);
+    // ✅ التحويل إلى الدالة الآمنة لإنقاذ العملية من حظر جدار الحماية RLS
+    const { error } = await supabaseClient.rpc('update_doctor_settings_secure', {
+        p_doctor_id: session.doctorId,
+        p_session_token: session.sessionToken,
+        p_working_days: workingDaysData
+    });
 
     if (error) throw error;
 
@@ -1742,7 +1742,7 @@ window.saveWorkingHours = async function() {
 
 
 
-   // ✅ تفعيل/إيقاف الحجوزات (محدّثة لـ Supabase)
+   // ✅ تفعيل/إيقاف الحجوزات (محدّثة لتمرير التعديل عبر الـ RPC الآمن)
 async function handleToggleBooking(e) {
   const isChecked = e.target.checked;
   const sessionStr = localStorage.getItem('doctorSession');
@@ -1753,12 +1753,12 @@ async function handleToggleBooking(e) {
   toggleSwitch.disabled = true;
 
   try {
-    // ✅ تحديث حالة الحجوزات مباشرة في Supabase
-    const { error } = await supabaseClient
-      .from('doctors')
-      .update({ booking_enabled: isChecked })
-      .eq('id', session.doctorId)
-      .eq('phone', session.phone);
+    // ✅ استخدام الـ RPC الموحد لتجاوز قيود الـ RLS بنجاح
+    const { error } = await supabaseClient.rpc('update_doctor_settings_secure', {
+        p_doctor_id: session.doctorId,
+        p_session_token: session.sessionToken,
+        p_booking_enabled: isChecked
+    });
 
     if (error) throw error;
 
@@ -2545,19 +2545,15 @@ if (savedSession) {
                 }
                 
                 if (doctor && doctor.session_token === session.sessionToken) {
-    // ✅ نجاح تسجيل الدخول التلقائي
-    // جلب المواعيد باستخدام الدالة الأمنية لضمان جلب الإيميل وتخطي RLS
-    const { data: appointments, error: apptError } = await supabaseClient
-      .rpc('get_doctor_appointments_secure', {
-        p_doctor_id: doctor.id,               
-        p_session_token: doctor.session_token
-      });
+                    // ✅ نجاح تسجيل الدخول التلقائي
+                    // جلب المواعيد باستخدام الدالة الأمنية لضمان جلب البيانات وتخطي حظر الـ RLS
+                    const { data: appointments, error: apptError } = await supabaseClient
+                      .rpc('get_doctor_appointments_secure', {
+                        p_doctor_id: doctor.id,                
+                        p_session_token: doctor.session_token
+                      });
 
-if (apptError) console.error('❌ خطأ في جلب المواعيد (Auto-Login):', apptError);
-
-if (apptError) {
-  console.error('❌ خطأ في جلب المواعيد (Auto-Login):', apptError);
-}
+                    if (apptError) console.error('❌ خطأ في جلب المواعيد (Auto-Login):', apptError);
                     
                     const dashboardData = {
                         doctorName: `${doctor.first_name} ${doctor.last_name}`,
