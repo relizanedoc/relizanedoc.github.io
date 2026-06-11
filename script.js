@@ -934,10 +934,14 @@ async function handleAddDoctor(e) {
             p_specialty: data.Specialty.trim(),
             p_municipality: data.Municipality.trim(),
             p_extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '',
-            p_raw_password: defaultPassword // قاعدة البيانات ستشفرها
+            p_raw_password: defaultPassword
         });
         
         if (error) throw error;
+        
+        if (!responseData || !responseData.id) {
+            throw new Error(responseData?.error || 'فشل في جلب معرف الطبيب الجديد');
+        }
         
         const newDoctorId = responseData.id;
         showToast(t('toastRegisterSuccess') + newDoctorId, 'success');
