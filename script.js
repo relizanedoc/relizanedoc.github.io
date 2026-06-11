@@ -2720,12 +2720,17 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/[^a-z0-9ا-ي\s]/g, ''); 
     };
 
-    const processUserMessage = (rawMsg) => {
+   // ========================================================
+// CHATBOT IMPROVED LOGIC
+// ========================================================
+
+const processUserMessage = (rawMsg) => {
     const cleanMsg = normalizeText(rawMsg);
     if (!allDoctors || allDoctors.length === 0) {
         return t('chatLoadingDB');
     }
 
+    // نوايا المستخدم (سؤال عن هاتف أو موقع)
     const isAskingForPhone = currentLang === 'ar' ?
         /رقم|هاتف|تلفون|موبيل|اتصال/i.test(cleanMsg) :
         /phone|number|contact|call/i.test(cleanMsg);
@@ -2733,71 +2738,146 @@ document.addEventListener('DOMContentLoaded', () => {
         /عنوان|اين|مكان|موقع|وين/i.test(cleanMsg) :
         /address|location|where|place/i.test(cleanMsg);
 
-    let matchedDoctors = [];
-    
-    // ✅ التعديل: تغيير Specialty إلى specialty و Municipality إلى municipality
     const availableSpecialties = [...new Set(allDoctors.map(d => d.specialty).filter(Boolean))];
     const availableMunicipalities = [...new Set(allDoctors.map(d => d.municipality).filter(Boolean))];
 
     let detectedSpecialty = null;
     let detectedMunicipality = null;
+    let detectedName = null;
 
-    availableSpecialties.forEach(spec => {
-        if (cleanMsg.includes(normalizeText(t(spec)))) detectedSpecialty = spec;
-    });
-    availableMunicipalities.forEach(mun => {
-        if (cleanMsg.includes(normalizeText(t(mun)))) detectedMunicipality = mun;
-    });
+    // 1. البحث عن التخصص (مع دعم الكلمات الجزئية مثل "عيون" لـ "طب العيون")
+    const specKeywords = currentLang === 'ar' ? 
+        ['عيون', 'اسنان', 'قلب', 'اطفال', 'نساء', 'توليد', 'باطني', 'جلدية', 'عظام', 'انف', 'اذن', 'حنجرة', 'صدر', 'اعصاب', 'نفسية', 'جراحة', 'عام', 'تحاليل', 'اشعة', 'تغذية', 'روماتيزم', 'غدد', 'سكري', 'كلى', 'مسالك', 'اورام', 'حساسية', 'شيخوخة', 'طوارئ', 'اوعية', 'تجميل', 'تخدير', 'علاج طبيعي', 'نطق', 'هضم', 'دم'] :
+        ['eye', 'ophthalmo', 'dental', 'dentist', 'cardio', 'pediatric', 'gyno', 'internal', 'derma', 'skin', 'ortho', 'bone', 'ent', 'ear', 'nose', 'throat', 'lung', 'neuro', 'psych', 'surgery', 'general', 'lab', 'radiology', 'nutrition', 'rheum', 'joint', 'endocrino', 'diabetes', 'nephro', 'kidney', 'urology', 'oncology', 'cancer', 'allergy', 'geriat', 'emergency', 'vascular', 'plastic', 'anesth', 'family', 'physio', 'rehab', 'speech', 'gastro', 'hema'];
+    
+    for (const spec of availableSpecialties) {
+        const normalizedSpec = normalizeText(t(spec));
+        if (cleanMsg.includes(normalizedSpec)) {
+            detectedSpecialty = spec;
+            break;
+        }
+    }
+    if (!detectedSpecialty) {
+        for (const spec of availableSpecialties) {
+            const specLower = normalizeText(t(spec));
+            for (const keyword of specKeywords) {
+                if (specLower.includes(normalizeText(keyword)) && cleanMsg.includes(normalizeText(keyword))) {
+                    detectedSpecialty = spec;
+                    break;
+                }
+            }
+            if (detectedSpecialty) break;
+        }
+    }
 
-    matchedDoctors = allDoctors.filter(doc => {
-        // ✅ التعديل: تغيير FirstName إلى first_name وهكذا
-        const docNameAr = normalizeText((doc.first_name || "") + " " + (doc.last_name || ""));
-        const docNameEn = normalizeText((doc.first_name || "") + " " + (doc.last_name || "")); 
-        
-        const isNameMatch = cleanMsg.split(' ').some(word =>
-            word.length > 2 && (docNameAr.includes(word) || docNameEn.includes(word))
+    // 2. البحث عن البلدية
+    for (const mun of availableMunicipalities) {
+        const normalizedMun = normalizeText(t(mun));
+        if (cleanMsg.includes(normalizedMun)) {
+            detectedMunicipality = mun;
+            break;
+        }
+    }
+
+    // 3. البحث عن الاسم
+    const docNameMatch = allDoctors.find(doc => {
+        const fullName = normalizeText((doc.first_name || "") + " " + (doc.last_name || ""));
+        return cleanMsg.split(' ').some(word => word.length >= 3 && fullName.includes(word));
+    });
+    if (docNameMatch) {
+        detectedName = docNameMatch;
+    }
+
+    let matchedDoctors = [];
+    let responsePrefix = '';
+    const totalFound = 0; // سنحسبه لاحقاً
+
+    // منطق البحث المتقدم (مركب)
+    if (detectedSpecialty && detectedMunicipality) {
+        // بحث بالتخصص والبلدية معاً (الأكثر شيوعاً)
+        matchedDoctors = allDoctors.filter(doc => 
+            doc.specialty === detectedSpecialty && doc.municipality === detectedMunicipality
         );
-        
-        // ✅ التعديل: تغيير خصائص المقارنة
-        const isSpecMatch = detectedSpecialty ? doc.specialty === detectedSpecialty : true;
-        const isMunMatch = detectedMunicipality ? doc.municipality === detectedMunicipality : true;
-
-        if (isNameMatch && !detectedSpecialty && !detectedMunicipality) return true;
-        if ((detectedSpecialty || detectedMunicipality) && isSpecMatch && isMunMatch) return true;
-        return false;
-    });
+        responsePrefix = currentLang === 'ar' ? 
+            `وجدت لك ${matchedDoctors.length} طبيباً متخصصاً في <strong>${t(detectedSpecialty)}</strong> في <strong>${t(detectedMunicipality)}</strong>. إليك أبرز النتائج:` :
+            `Found ${matchedDoctors.length} <strong>${t(detectedSpecialty)}</strong> doctors in <strong>${t(detectedMunicipality)}</strong>. Here are the top results:`;
+    } else if (detectedSpecialty) {
+        // بحث بالتخصص فقط
+        matchedDoctors = allDoctors.filter(doc => doc.specialty === detectedSpecialty);
+        responsePrefix = currentLang === 'ar' ? 
+            `إليك قائمة بأفضل الأطباء المتخصصين في <strong>${t(detectedSpecialty)}</strong> عبر جميع بلديات غليزان:` :
+            `Here is a list of top <strong>${t(detectedSpecialty)}</strong> specialists across Relizane:`;
+    } else if (detectedMunicipality) {
+        // بحث بالبلدية فقط
+        matchedDoctors = allDoctors.filter(doc => doc.municipality === detectedMunicipality);
+        responsePrefix = currentLang === 'ar' ? 
+            `إليك جميع الأطباء المتوفرين في بلدية <strong>${t(detectedMunicipality)}</strong>:` :
+            `Here are all available doctors in <strong>${t(detectedMunicipality)}</strong>:`;
+    } else if (detectedName) {
+        // بحث بالاسم
+        matchedDoctors = allDoctors.filter(doc => {
+            const fullName = normalizeText((doc.first_name || "") + " " + (doc.last_name || ""));
+            return cleanMsg.split(' ').some(word => word.length >= 3 && fullName.includes(word));
+        });
+        responsePrefix = currentLang === 'ar' ? 
+            `وجدت نتائج مطابقة لاسم "<strong>${detectedName.first_name} ${detectedName.last_name}</strong>":` :
+            `Found results matching "<strong>${detectedName.first_name} ${detectedName.last_name}</strong>":`;
+    } else {
+        // بحث عام بالكلمات المفتاحية
+        matchedDoctors = allDoctors.filter(doc => {
+            const text = normalizeText(`${doc.first_name||''} ${doc.last_name||''} ${doc.specialty||''} ${doc.municipality||''} ${doc.exact_location||''}`);
+            return cleanMsg.split(' ').some(word => word.length >= 3 && text.includes(word));
+        });
+        if (matchedDoctors.length > 0) {
+            responsePrefix = currentLang === 'ar' ? 
+                `إليك أفضل النتائج المطابقة لبحثك:` :
+                `Here are the best results matching your search:`;
+        }
+    }
 
     if (matchedDoctors.length === 0) {
-        return t('chatNoResults');
+        return currentLang === 'ar' ? 
+            `عذراً، لم أتمكن من العثور على أطباء يطابقون بحثك "<strong>${rawMsg}</strong>".<br><br>💡 <strong>جرب البحث بـ:</strong><br>• اسم الطبيب (مثل: د. أمين)<br>• التخصص (مثل: طبيب عيون، أسنان)<br>• البلدية (مثل: غليزان، وادي رهيو)<br>• أو مزيج (مثل: طبيب أطفال في مازونة)` :
+            `Sorry, I couldn't find any doctors matching "<strong>${rawMsg}</strong>".<br><br>💡 <strong>Try searching by:</strong><br>• Doctor's name (e.g. Dr. Amine)<br>• Specialty (e.g. eye doctor, dentist)<br>• Municipality (e.g. Relizane, Oued Rhiou)<br>• Or a combination (e.g. pediatrician in Mazouna)`;
     }
 
-    if (matchedDoctors.length > 3) {
-        return `${t('chatFoundPrefix')} ${matchedDoctors.length} ${t('chatFoundSuffix')}` +
-        generateCardsHtml(matchedDoctors.slice(0, 3), isAskingForPhone, isAskingForLocation);
+    const displayCount = Math.min(3, matchedDoctors.length);
+    const remaining = matchedDoctors.length - displayCount;
+    
+    let response = responsePrefix;
+    if (remaining > 0) {
+        response += currentLang === 'ar' ? 
+            `<br><span style="color: var(--text-secondary); font-size: 0.85rem;">📋 و ${remaining} نتيجة أخرى متاحة في الدليل الرئيسي</span>` :
+            `<br><span style="color: var(--text-secondary); font-size: 0.85rem;">📋 And ${remaining} more results available in the main directory</span>`;
     }
-
-    return t('chatExactResults') + generateCardsHtml(matchedDoctors, isAskingForPhone, isAskingForLocation);
+    
+    response += generateCardsHtml(matchedDoctors.slice(0, 3), isAskingForPhone, isAskingForLocation);
+    return response;
 };
 
 const generateCardsHtml = (doctorsList, focusPhone, focusLocation) => {
     return doctorsList.map(doc => {
         const docPrefix = currentLang === 'ar' ? 'د.' : 'Dr.';
-        let infoHtml = `<div class="bot-card-result">`;
+        let infoHtml = `<div class="bot-card-result" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 12px; background: var(--surface); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">`;
         
-        // ✅ التعديل: تغيير أسماء الخصائص لتتطابق مع Supabase
-        infoHtml += `<div><strong>${t('chatDoctorLabel')}</strong> ${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}</div>`;
-        infoHtml += `<div><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.specialty))}</div>`;
+        infoHtml += `<div style="font-weight: bold; color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            ${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}
+        </div>`;
+        infoHtml += `<div style="color: var(--text); font-size: 0.9rem; margin-bottom: 4px;"><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.specialty))}</div>`;
+        infoHtml += `<div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;"><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.municipality))}</div>`;
         
         if (focusPhone || (!focusPhone && !focusLocation)) {
-            infoHtml += `<div><strong>${t('chatPhoneLabel')}</strong> <span dir="ltr" style="display: inline-block; direction: ltr;">${escapeHtml(formatPhoneNumber(doc.phone))}</span></div>`;
+            infoHtml += `<div style="font-size: 0.9rem; margin-bottom: 4px;"><strong>${t('chatPhoneLabel')}</strong> <span dir="ltr" style="display: inline-block; direction: ltr; color: var(--primary); font-weight: 600;">${escapeHtml(formatPhoneNumber(doc.phone))}</span></div>`;
         }
         if (focusLocation || (!focusPhone && !focusLocation)) {
-            infoHtml += `<div><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.municipality))}</div>`;
-            infoHtml += `<div><strong>${t('chatAddressLabel')}</strong> ${escapeHtml(doc.exact_location)}</div>`;
+            infoHtml += `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 4px;"><strong>${t('chatAddressLabel')}</strong> ${escapeHtml(doc.exact_location)}</div>`;
         }
         
-        // ✅ التعديل الهام: تغيير d.DoctorID إلى d.id لأن معرّف الطبيب في Supabase هو id
-        infoHtml += `<button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); openDoctorProfileModal(allDoctors.find(d => d.id === '${doc.id}'), '${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')" style="margin-top: 8px; background: var(--primary-light); color: var(--primary-dark); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: bold; width: 100%; transition: opacity 0.2s;">${t('chatBookDetailsBtn')}</button>`;
+        infoHtml += `<button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); openDoctorProfileModal(allDoctors.find(d => d.id === '${doc.id}'), '${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')" style="margin-top: 12px; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.9rem; font-weight: bold; width: 100%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            ${t('chatBookDetailsBtn')}
+        </button>`;
         infoHtml += `</div>`;
         return infoHtml;
     }).join('');
