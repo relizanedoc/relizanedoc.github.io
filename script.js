@@ -2261,25 +2261,25 @@ document.addEventListener('submit', async function(e) {
           resultDiv.classList.add('hidden');
 
           try {
-            // ✅ التحويل من apiPost (القديم) إلى قاعدة بيانات Supabase مباشرة
-            const { data, error } = await supabaseClient
-              .from('appointments')
-              .select('id, patient_name, appointment_date, appointment_time, status')
-              .eq('id', bookingId)
-              .eq('patient_phone', phoneStr)
-              .maybeSingle(); // استخدام maybeSingle لتفادي أخطاء 406 إذا كان الحجز غير موجود
+            // ✅ استخدام الدالة الآمنة للبحث بالمعرف القصير وتخطي RLS
+            const { data, error } = await supabaseClient.rpc('track_booking_secure', {
+              p_short_id: bookingId,
+              p_phone: phoneStr
+            });
 
             if (error) throw error;
 
-            if (data) {
+            // التأكد من وجود بيانات مطابقة
+            if (data && data.length > 0) {
+              const booking = data[0]; // نأخذ النتيجة الأولى
               let statusStyle = 'background: #f1f5f9; color: #64748b;';
-              let displayStatus = data.status;
+              let displayStatus = booking.status;
 
-              // معالجة حالة الحجز الإنجليزية وتحويلها لرسوميات ملائمة
-              if (data.status === 'confirmed') {
+              // معالجة حالة الحجز وتحويلها لرسوميات ملائمة
+              if (booking.status === 'confirmed') {
                   statusStyle = 'background: #ecfdf5; color: #10b981;';
                   displayStatus = currentLang === 'ar' ? 'مؤكد' : 'Confirmed';
-              } else if (data.status === 'cancelled') {
+              } else if (booking.status === 'cancelled') {
                   statusStyle = 'background: #fef2f2; color: #ef4444;';
                   displayStatus = currentLang === 'ar' ? 'ملغى' : 'Cancelled';
               } else {
@@ -2294,9 +2294,9 @@ document.addEventListener('submit', async function(e) {
 
               resultDiv.innerHTML = `
                 <h4 class="font-bold mb-2">${detailsTxt}</h4>
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${idTxt}</span> <strong style="font-family: monospace;">${escapeHtml(data.id.substring(0,8).toUpperCase())}</strong></div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${nameTxt}</span> <strong>${escapeHtml(data.patient_name)}</strong></div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${dateTimeTxt}</span> <strong dir="ltr">${escapeHtml(data.appointment_date)} ${escapeHtml(data.appointment_time)}</strong></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${idTxt}</span> <strong style="font-family: monospace;">${escapeHtml(booking.id.substring(0,8).toUpperCase())}</strong></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${nameTxt}</span> <strong>${escapeHtml(booking.patient_name)}</strong></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><span>${dateTimeTxt}</span> <strong dir="ltr">${escapeHtml(booking.appointment_date)} ${escapeHtml(booking.appointment_time)}</strong></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem;">
                   <span>${currentStatusTxt}</span> 
                   <span class="badge" style="${statusStyle}">${escapeHtml(displayStatus)}</span>
@@ -2304,11 +2304,11 @@ document.addEventListener('submit', async function(e) {
               `;
               resultDiv.classList.remove('hidden');
             } else {
-              showToast(currentLang === 'ar' ? 'لم يتم العثور على الحجز. تحقق من البيانات.' : 'Booking not found', 'error');
+              showToast(currentLang === 'ar' ? 'لم يتم العثور على الحجز. تأكد من الرقم والهاتف.' : 'Booking not found', 'error');
             }
           } catch (err) {
             console.error("Track error:", err);
-            showToast(currentLang === 'ar' ? 'خطأ في الاتصال' : 'Connection Error', 'error');
+            showToast(currentLang === 'ar' ? 'خطأ في الاتصال بقاعدة البيانات' : 'Connection Error', 'error');
           } finally {
             setLoading(btn, false, currentLang === 'ar' ? 'بحث عن الحجز' : 'Search Booking');
           }
