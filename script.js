@@ -1545,16 +1545,15 @@ async function handleDashboardLogin(e) {
         const doctor = responseData.doctor;
         
         // 2. جلب المواعيد الخاصة بهذا الطبيب
+// الكود الجديد والآمن لجلب مواعيد الطبيب
 const { data: appointments, error: apptError } = await supabaseClient
-  .from('appointments')
-  .select('*') // ✅ جلب كل الأعمدة لتجنب أخطاء الأعمدة المفقودة
-  .eq('doctor_id', doctor.id)
-  .order('appointment_date', { ascending: false });
-
-if (apptError) console.error('❌ خطأ في جلب المواعيد:', apptError);
+  .rpc('get_doctor_appointments_secure', {
+    p_doctor_id: doctor.id,               // نرسل معرف الطبيب
+    p_session_token: session.sessionToken // نرسل التوكن السري للتحقق
+  });
 
 if (apptError) {
-  console.error('❌ خطأ في جلب مواعيد الطبيب:', apptError);
+  console.error('❌ خطأ في جلب المواعيد:', apptError);
 }
         
         // 3. نجاح تسجيل الدخول
