@@ -1545,16 +1545,17 @@ async function handleDashboardLogin(e) {
         const doctor = responseData.doctor;
         
         // 2. جلب المواعيد الخاصة بهذا الطبيب
-// الكود الجديد والآمن لجلب مواعيد الطبيب
-const { data: appointments, error: apptError } = await supabaseClient
-  .rpc('get_doctor_appointments_secure', {
-    p_doctor_id: doctor.id,               // نرسل معرف الطبيب
-    p_session_token: session.sessionToken // نرسل التوكن السري للتحقق
-  });
+// 2. جلب المواعيد الخاصة بهذا الطبيب باستخدام الدالة الآمنة
+        // 2. جلب المواعيد الخاصة بهذا الطبيب باستخدام الدالة الآمنة
+        const { data: appointments, error: apptError } = await supabaseClient
+          .rpc('get_doctor_appointments_secure', {
+            p_doctor_id: doctor.id,               
+            p_session_token: doctor.session_token // 👈 التعديل هنا: استخدمنا doctor.session_token بدلاً من المتغير غير الموجود
+          });
 
-if (apptError) {
-  console.error('❌ خطأ في جلب المواعيد:', apptError);
-}
+        if (apptError) {
+          console.error('❌ خطأ في جلب مواعيد الطبيب:', apptError);
+        }
         
         // 3. نجاح تسجيل الدخول
         resetLoginAttempts();
