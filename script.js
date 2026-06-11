@@ -901,8 +901,6 @@ async function loadDoctors() {
         }
     });
 
- // ✅ دالة إضافة طبيب جديد (النسخة الصحيحة - بدون حقل كلمة المرور)
-// ✅ دالة إضافة طبيب جديد (محدّثة - تنشئ صفحة GitHub تلقائياً)
 async function handleAddDoctor(e) {
     e.preventDefault();
     const user = await getCurrentUser();
@@ -927,8 +925,25 @@ async function handleAddDoctor(e) {
     try {
         const defaultPassword = data.Phone.replace(/\s/g, '');
         
-        // تجهيز بيانات الطبيب بدون كلمة المرور 
-        const doctorData = {
+        // استدعاء الدالة الآمنة (RPC) من قاعدة البيانات مباشرة
+        const { data: responseData, error } = await supabaseClient.rpc('register_doctor_secure', {
+            p_first_name: data.FirstName.trim(),
+            p_last_name: data.LastName.trim(),
+            p_phone: defaultPassword,
+            p_exact_location: data.ExactLocation.trim(),
+            p_specialty: data.Specialty.trim(),
+            p_municipality: data.Municipality.trim(),
+            p_extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '',
+            p_raw_password: defaultPassword // قاعدة البيانات ستشفرها
+        });
+        
+        if (error) throw error;
+        
+        const newDoctorId = responseData.id;
+        showToast(t('toastRegisterSuccess') + newDoctorId, 'success');
+        
+        // إنشاء صفحة GitHub للطبيب
+        const doctorDataForGithub = {
             first_name: data.FirstName.trim(),
             last_name: data.LastName.trim(),
             phone: defaultPassword,
@@ -937,23 +952,7 @@ async function handleAddDoctor(e) {
             municipality: data.Municipality.trim(),
             extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : ''
         };
-
-        // 1. استدعاء الدالة الخلفية (Edge Function) التي رفعتها للتو
-        const { data: responseData, error } = await supabaseClient.functions.invoke('create-doctor', {
-            body: { 
-                doctorData: doctorData,
-                rawPassword: defaultPassword // نرسلها خام ليتم تشفيرها في السيرفر
-            }
-        });
-        
-        if (error) throw error;
-        if (!responseData || !responseData.success) throw new Error(responseData?.error || 'فشل في إنشاء حساب الطبيب');
-        
-        const newDoctor = responseData.doctor;
-        showToast(t('toastRegisterSuccess') + newDoctor.id, 'success');
-        
-        // 2. إنشاء صفحة GitHub للطبيب 
-        createDoctorGitHubPageAsync(doctorData, newDoctor.id);
+        createDoctorGitHubPageAsync(doctorDataForGithub, newDoctorId);
         
         e.target.reset();
         await loadDoctors();
@@ -1471,7 +1470,7 @@ function renderDashboardUI(data, doctorId) {
     `;
   }).join('');
 }
-// ✅ تسجيل دخول الطبيب (محدث - يعمل برقم الهاتف وكلمة السر فقط)
+// ✅ تسجيل دخول الطبيب (محدث ليتوافق مع التشفير الآمن الجديد)
 async function handleDashboardLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
     if (isAccountLocked()) return;
@@ -1504,54 +1503,44 @@ async function handleDashboardLogin(e) {
     }
     
     try {
-        // 1. تشفير كلمة المرور المدخلة
-        const hashedInputPassword = await hashPassword(password);
+        // 1. استدعاء دالة التحقق الآمنة من قاعدة البيانات مباشرة (RPC)
+        const { data: responseData, error: rpcError } = await supabaseClient.rpc('login_doctor_secure', {
+            p_phone: phone,
+            p_raw_password: password
+        });
         
-        // 2. البحث عن الطبيب باستخدام رقم الهاتف وكلمة المرور
-        const { data: doctor, error: doctorError } = await supabaseClient
-            .from('doctors')
-            .select('id, first_name, last_name, phone, working_days, booking_enabled')
-            .eq('phone', phone)
-           .eq('password', hashedInputPassword)
-            .maybeSingle();
-        
-        if (doctorError) {
-            console.error('خطأ في قاعدة البيانات:', doctorError);
+        if (rpcError) {
+            console.error('خطأ في الاتصال:', rpcError);
             throw new Error('خطأ في الاتصال بقاعدة البيانات');
         }
         
-        if (!doctor) {
-            throw new Error('بيانات الدخول غير صحيحة (تحقق من رقم الهاتف أو كلمة المرور)');
+        // التحقق من نتيجة الدخول
+        if (!responseData || !responseData.success) {
+            throw new Error(responseData?.error || 'بيانات الدخول غير صحيحة (تحقق من رقم الهاتف أو كلمة المرور)');
         }
+
+        // استخراج بيانات الطبيب
+        const doctor = responseData.doctor;
         
-        // 3. توليد session_token آمن
-        const sessionToken = crypto.randomUUID();
-        
-        // 4. حفظ session_token في Supabase
-        await supabaseClient
-            .from('doctors')
-            .update({ session_token: sessionToken })
-            .eq('id', doctor.id);
-        
-        // 5. جلب المواعيد
+        // 2. جلب المواعيد الخاصة بهذا الطبيب
         const { data: appointments } = await supabaseClient
             .from('appointments')
             .select('id, patient_name, patient_phone, appointment_date, appointment_time, status, user_email')
             .eq('doctor_id', doctor.id)
             .order('appointment_date', { ascending: false });
         
-        // 6. نجاح تسجيل الدخول
+        // 3. نجاح تسجيل الدخول
         resetLoginAttempts();
         
-        // 7. حفظ الجلسة في المتصفح
+        // 4. حفظ الجلسة (Session) في المتصفح باستخدام التوكن الجديد
         const sessionData = {
             doctorId: doctor.id,
             phone: doctor.phone,
-            sessionToken: sessionToken
+            sessionToken: doctor.session_token
         };
         localStorage.setItem('doctorSession', JSON.stringify(sessionData));
         
-        // 8. تجهيز البيانات
+        // 5. تجهيز البيانات لعرضها في لوحة التحكم
         const dashboardData = {
             doctorName: `${doctor.first_name} ${doctor.last_name}`,
             workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : (doctor.working_days || '{}'),
@@ -1559,7 +1548,7 @@ async function handleDashboardLogin(e) {
             appointments: appointments || []
         };
         
-        // 9. تحديث الواجهة
+        // 6. تحديث الواجهة الأمامية وإخفاء نافذة الدخول
         const loginSection = document.getElementById('loginSection');
         const dashboardSection = document.getElementById('dashboardSection');
         
