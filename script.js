@@ -2594,14 +2594,14 @@ if (savedSession) {
                 
                 if (doctor && doctor.session_token === session.sessionToken) {
                     // ✅ نجاح تسجيل الدخول التلقائي
-                    
-                    // جلب المواعيد
-                    // جلب المواعيد
+            // جلب المواعيد
 const { data: appointments, error: apptError } = await supabaseClient
   .from('appointments')
-  .select('*') // ✅ تم التغيير إلى *
+  .select('*') // ✅ جلب كل الأعمدة
   .eq('doctor_id', doctor.id)
   .order('appointment_date', { ascending: false });
+
+if (apptError) console.error('❌ خطأ في جلب المواعيد (Auto-Login):', apptError);
 
 if (apptError) {
   console.error('❌ خطأ في جلب المواعيد (Auto-Login):', apptError);
