@@ -3029,12 +3029,11 @@ function displayTimeSlots(container, slots, timeInput) {
   if (morningDiv.querySelector('.slots-grid').hasChildNodes()) {
     container.appendChild(morningDiv);
   }
-  if (eveningDiv.querySelector('.slots-grid').hasChildNodes()) {
+ if (eveningDiv.querySelector('.slots-grid').hasChildNodes()) {
     container.appendChild(eveningDiv);
   }
 }
-<head>
-   
+
 // ✅ دالة مساعدة لاستدعاء Edge Function بشكل غير متزامن
 function createDoctorGitHubPageAsync(doctorData, doctorId) {
     // استدعاء Edge Function دون انتظار النتيجة
