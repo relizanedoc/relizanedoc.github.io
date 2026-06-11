@@ -1,14 +1,22 @@
 // دالة لتنفيذ الكود بمجرد تحميل الصفحة
 window.addEventListener('load', function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const doctorId = urlParams.get('doc'); // هل هناك كود طبيب في الرابط؟
-
+    const doctorId = urlParams.get('doc');
     if (doctorId) {
         console.log("تم اكتشاف رابط مباشر للطبيب: " + doctorId);
-
-        // هنا استدعِ الدالة التي تفتح تفاصيل الطبيب في تطبيقك
-        // استبدل 'openDoctorModal' بالدالة التي تستخدمها في تطبيقك لعرض الطبيب
-        openDoctorModal(doctorId); 
+        // ننتظر حتى يتم تحميل الأطباء ثم نفتح النافذة
+        const checkDoctors = setInterval(() => {
+            if (allDoctors && allDoctors.length > 0) {
+                clearInterval(checkDoctors);
+                const doc = allDoctors.find(d => d.id === doctorId);
+                if (doc) {
+                    const doctorName = (currentLang === 'ar' ? 'د. ' : 'Dr. ') + doc.first_name + ' ' + doc.last_name;
+                    openDoctorProfileModal(doc, doctorName);
+                }
+            }
+        }, 100);
+        // إيقاف التحقق بعد 10 ثوانٍ
+        setTimeout(() => clearInterval(checkDoctors), 10000);
     }
 });
 // 1. تهيئة Firebase (مؤقت - لا تحذفه الآن)
@@ -765,14 +773,14 @@ function handleSEOAndRender() {
       const urlParams = new URLSearchParams(window.location.search);
       const targetDocId = urlParams.get('doc');
       if (targetDocId) {
-        const targetDoc = allDoctors.find(d => d.DoctorID === targetDocId);
-        if (targetDoc) {
+const targetDoc = allDoctors.find(d => d.id === targetDocId);
+          if (targetDoc) {
           updateSEOMetaTags(targetDoc);
           renderDoctors([targetDoc]);
           populateFilters(); // تأكد من استدعاء الفلاتر
 
           // === الجزء الجديد: هذا هو السحر الذي سيفتح النافذة تلقائياً ===
-          const doctorName = (currentLang === 'ar' ? 'د. ' : 'Dr. ') + targetDoc.FirstName + ' ' + targetDoc.LastName;
+          const doctorName = (currentLang === 'ar' ? 'د. ' : 'Dr. ') + targetDoc.first_name + ' ' + targetDoc.last_name;
           setTimeout(() => {
               openDoctorProfileModal(targetDoc, doctorName);
           }, 300); // تأخير بسيط لضمان أن الواجهة جاهزة للرسم
@@ -896,10 +904,10 @@ async function loadDoctors() {
       else { suggestionsDropdown.innerHTML = `<div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">${t('noDoctorsFound')}</div>`; suggestionsDropdown.classList.remove('hidden'); }
     }
 
-    window.selectSuggestion = function(doctorId) {
-        const doc = allDoctors.find(d => d.DoctorID === doctorId);
-        if (doc) {
-            document.getElementById('searchInput').value = doc.FirstName + ' ' + doc.LastName;
+   window.selectSuggestion = function(doctorId) {
+    const doc = allDoctors.find(d => d.id === doctorId);
+    if (doc) {
+        document.getElementById('searchInput').value = doc.first_name + ' ' + doc.last_name;
             document.getElementById('searchSuggestions').classList.add('hidden');
             renderDoctors([doc]);
         }
