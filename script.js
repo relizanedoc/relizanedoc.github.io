@@ -1549,12 +1549,13 @@ async function handleDashboardLogin(e) {
         const doctor = responseData.doctor;
         
         // 2. جلب المواعيد الخاصة بهذا الطبيب
-        // 2. جلب المواعيد الخاصة بهذا الطبيب
 const { data: appointments, error: apptError } = await supabaseClient
   .from('appointments')
-  .select('*') // ✅ تم التغيير إلى * لتجنب أخطاء الأعمدة المفقودة مثل user_email
+  .select('*') // ✅ جلب كل الأعمدة لتجنب أخطاء الأعمدة المفقودة
   .eq('doctor_id', doctor.id)
   .order('appointment_date', { ascending: false });
+
+if (apptError) console.error('❌ خطأ في جلب المواعيد:', apptError);
 
 if (apptError) {
   console.error('❌ خطأ في جلب مواعيد الطبيب:', apptError);
@@ -3127,3 +3128,56 @@ function createDoctorGitHubPageAsync(doctorData, doctorId) {
         console.error('❌ فشل استدعاء Edge Function:', err);
     });
 }
+// ✅ دالة تأكيد أو إلغاء الحجز من لوحة تحكم الطبيب
+window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doctorName, appointmentDate) {
+    // 1. رسالة التأكيد قبل التنفيذ
+    const confirmMsg = newStatus === 'confirmed' 
+        ? (currentLang === 'ar' ? 'هل أنت متأكد من تأكيد هذا الموعد؟' : 'Are you sure you want to confirm this appointment?')
+        : (currentLang === 'ar' ? 'هل أنت متأكد من إلغاء هذا الموعد؟' : 'Are you sure you want to cancel this appointment?');
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        // 2. تحديث حالة الحجز في جدول appointments في Supabase
+        const { error } = await supabaseClient
+            .from('appointments')
+            .update({ status: newStatus })
+            .eq('id', bookingId);
+
+        if (error) throw error;
+
+        // 3. إظهار رسالة نجاح
+        showToast(currentLang === 'ar' ? 'تم تحديث حالة الحجز بنجاح' : 'Booking status updated successfully', 'success');
+
+        // 4. إرسال بريد إلكتروني للمريض (إذا كان البريد متوفراً في البيانات)
+        if (userEmail && userEmail.trim() !== '') {
+            const emailStatus = newStatus === 'confirmed' ? 'confirm' : 'cancel';
+            window.sendBookingEmail(userEmail, doctorName, appointmentDate, emailStatus);
+        } else {
+            console.log('⚠️ تنبيه: لا يوجد بريد إلكتروني للمريض (user_email) لإرسال الإشعار.');
+        }
+
+        // 5. إعادة تحميل بيانات المواعيد لتحديث الواجهة فوراً
+        const sessionStr = localStorage.getItem('doctorSession');
+        if (sessionStr) {
+            const session = JSON.parse(sessionStr);
+            
+            // جلب المواعيد المحدثة من Supabase
+            const { data: updatedAppointments } = await supabaseClient
+                .from('appointments')
+                .select('*')
+                .eq('doctor_id', session.doctorId)
+                .order('appointment_date', { ascending: false });
+
+            // تحديث البيانات في المتغير العام وإعادة رسم الواجهة
+            if (globalDashboardData) {
+                globalDashboardData.appointments = updatedAppointments || [];
+                renderDashboardUI(globalDashboardData, globalDashboardDoctorId);
+            }
+        }
+
+    } catch (err) {
+        console.error('❌ خطأ في تحديث حالة الحجز:', err);
+        showToast(currentLang === 'ar' ? 'خطأ في تحديث الحالة: ' + err.message : 'Error updating status: ' + err.message, 'error');
+    }
+};
