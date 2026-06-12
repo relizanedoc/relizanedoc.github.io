@@ -1,521 +1,1046 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
+
 <head>
+
   <meta charset="UTF-8">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Relizane Medical - دليل أطباء ولاية غليزان</title>
+
   <meta name="description" content="دليل أطباء ولاية غليزان الشامل. ابحث واحجز موعدك الطبي عبر الإنترنت مع أفضل الأطباء والأخصائيين في غليزان وجميع بلدياتها. عناوين وأرقام هواتف العيادات.">
+
   <meta name="keywords" content="أطباء غليزان, طبيب عام غليزان, دليل أطباء غليزان, مواعيد طبية غليزان, طبيب أسنان غليزان, عيادات غليزان, Medecin Relizane, Docteur Relizane">
+
   
+
   <meta property="og:title" content="دليل أطباء ولاية غليزان - Relizane Medical">
+
   <meta property="og:description" content="المنصة الأولى للبحث وحجز المواعيد الطبية في ولاية غليزان.">
+
   <meta property="og:type" content="website">
+
   
+
   <link rel="icon" type="image/png" href="favicon.png">
 
+
+
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
   <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.min.css" rel="stylesheet">
+
   <link rel="stylesheet" href="style.css">
 
+
+
   <script src="https://www.google.com/recaptcha/api.js?render=6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT" defer></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" defer></script>
+
   <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js" defer></script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 
+
+
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
 </head>
+
 <body>
 
+
+
   <nav>
+
     <div class='nav-inner'>
+
       <div class='logo' id='logoHomeBtn' style='cursor: pointer;'>
+
         <svg fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' viewBox='0 0 24 24' width='24'>
+
           <path d='M22 12h-4l-3 9L9 3l-3 9H2'/>
+
         </svg>
+
         <span data-i18n='appName'>Relizane Medical</span>
+
       </div>
+
       <div class='right-nav-controls' style='display: flex; align-items: center; gap: 0.75rem;'>
+
         <div class='lang-switch'>
+
           <button class='lang-btn active' id='btn-en'>EN</button>
+
           <button class='lang-btn' id='btn-ar'>عربي</button>
+
         </div>
+
         <button aria-label='Menu' class='hamburger-btn' id='hamburgerBtn'>
+
           <svg fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='24'>
+
             <path d='M3 12h18M3 6h18M3 18h18'/>
+
           </svg>
+
         </button>
+
       </div>
+
       <div class='nav-links' id='navLinks'>
+
         <button class='nav-btn active' data-nav='home'>Directory</button>
+
         <button class='nav-btn' data-nav='track'>تتبع حجزي</button> 
+
         <button class='nav-btn' data-nav='add-doctor'>Add Doctor</button>
+
         <button class='nav-btn' data-nav='dashboard'>Doctor Login</button>
+
         <button class='nav-btn' data-nav='login' id='navLoginBtn'>Login</button>
+
         <div class='user-pill hidden' id='userPill'>
+
           <span id='userNameDisplay'></span>
+
           <button class='nav-btn' id='logoutBtn' style='padding: 0.25rem 0.5rem; font-size: 0.75rem;'>Logout</button>
+
         </div>
+
       </div>
+
     </div>
+
   </nav>
 
+
+
   <div class='app-container'>
+
     <div class='view hidden' id='view-login'>
+
       <div class='card login-box'>
+
         <button class='btn btn-google btn-block' id='googleSignInBtn'>
+
           <svg height='20' viewBox='0 0 48 48' width='20' xmlns='http://www.w3.org/2000/svg'>
+
             <path d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z' fill='#EA4335'/>
+
             <path d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z' fill='#4285F4'/>
+
             <path d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z' fill='#FBBC05'/>
+
             <path d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z' fill='#34A853'/>
+
           </svg>
+
           <span data-i18n='googleSignIn'>Sign in with Google</span>
+
         </button>
+
         <div class='auth-divider'><span data-i18n='or'>or</span></div>
+
       <form id='emailAuthForm'>
+
         <h3 class='text-lg font-bold mb-4 text-center' data-i18n='loginTitle' id='authFormTitle'>Member Login</h3>
+
           <div class='form-group hidden' id='nameFieldGroup'>
+
             <label data-i18n='fullName'>Full Name</label>
+
             <input id='authName' placeholder='Your full name' type='text'/>
+
           </div>
+
           <div class='form-group'>
+
             <label data-i18n='email'>Email *</label>
+
             <input id='authEmail' placeholder='your@email.com' required='required' type='email'/>
+
           </div>
+
           <div class='form-group'>
+
             <label data-i18n='password'>Password *</label>
+
 <input id='authPassword' autocomplete='current-password' minlength='6' placeholder='••••••••' required='required' type='password'/>
+
           </div>
+
           <button class='btn btn-primary btn-block' id='authSubmitBtn' type='button'>
+
             <span data-i18n='loginBtn'>Login</span>
+
           </button>
+
           <div class='auth-toggle' id='authToggleText'></div>
+
         </div>
+
         <div class='mt-4 text-center'>
+
           <button class='btn btn-secondary' data-i18n='backToHome' id='backToHomeBtn'>&#8592; Back to Directory</button>
+
         </div>
+
       </div>
+
     </div>
+
+
 
     <div class='view hidden' id='view-user-dashboard'>
+
       <div style='max-width: 800px; margin: 2rem auto;'>
+
         <h2 class='text-xl font-bold mb-6' data-i18n='memberDashboardTitle'>لوحة تحكم العضو</h2>
+
         <div class='card' style='position: relative; overflow: hidden; padding: 0;'>
+
           <div style='height: 6px; background: var(--primary); width: 100%;'></div>
+
           <div style='padding: 2rem; text-align: center;'>
+
             <div class='avatar' id='memberDashAvatar' style='margin: 0 auto 1rem auto; width: 88px; height: 88px; font-size: 2.5rem; background: var(--surface); color: var(--primary); border: 2px solid var(--border); box-shadow: var(--shadow-sm); z-index: 1;'>U</div>
+
             <h3 class='font-bold text-xl mb-1' id='memberDashName' style='color: var(--text);'>الاسم</h3>
+
             <p class='text-gray text-sm mb-4' id='memberDashEmail'>البريد الإلكتروني</p>
+
             <div data-i18n='registeredMember' style='display: inline-block; padding: 0.25rem 1rem; border-radius: 99px; background: var(--primary-light); color: var(--primary-dark); font-size: 0.85rem; font-weight: 600; border: 1px solid var(--primary-light); margin-bottom: 2rem;'>عضو مسجل</div>
+
             <div style='border-top: 1px solid var(--border); padding-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;'>
+
               <button class='btn btn-primary' onclick='router("add-doctor")' style='flex: 1; max-width: 200px;'>
+
                 <svg fill='none' height='20' stroke='currentColor' stroke-width='2' style='margin-inline-end: 0.5rem;' viewBox='0 0 24 24' width='20'><path d='M12 5v14M5 12h14'/></svg>
+
                 <span data-i18n='navAdd'>إضافة طبيب</span>
+
               </button>
+
               <button class='btn btn-secondary' onclick='router("home")' style='flex: 1; max-width: 200px;'>
+
                 <svg fill='none' height='20' stroke='currentColor' stroke-width='2' style='margin-inline-end: 0.5rem;' viewBox='0 0 24 24' width='20'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>
+
                 <span data-i18n='backToHome'>العودة للرئيسية</span>
+
               </button>
+
             </div>
+
           </div>
+
         </div>
+
+
 
         <div style='margin-top: 2.5rem;'>
+
           <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;'>
+
             <h3 class='text-lg font-bold' data-i18n='myRecentBookings' style='color: var(--text);'>حجوزاتي الأخيرة</h3>
+
             <button class='btn' onclick='router("track")' style='background: transparent; border: 1px solid var(--border); color: var(--primary); padding: 0.4rem 0.8rem; font-size: 0.875rem;'>
+
               <svg fill='none' height='16' stroke='currentColor' stroke-width='2' style='margin-inline-end: 0.4rem; vertical-align: middle;' viewBox='0 0 24 24' width='16'><circle cx='11' cy='11' r='8'/><line x1='21' x2='16.65' y1='21' y2='16.65'/></svg>
+
               <span data-i18n='trackAnotherBooking'>تتبع حجز آخر</span>
+
             </button>
+
           </div>
+
           <div id='userBookingsContainer'></div>
+
         </div>
+
       </div>
+
     </div>
 
+
+
     <div class='view' id='view-home'>
+
       <div class='card text-center mb-6 hero-section'>
+
         <div style='display: inline-block; background: #0ea5e9; color: white; padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.85rem; font-weight: bold; margin-bottom: 1rem;'>المنصة الطبية الأولى</div>
+
         <h1 class='text-xl font-bold mb-3' data-i18n='heroTitle' style='color: #0f172a; font-size: 1.8rem;'>دليل أطباء ولاية غليزان</h1>
+
         <p class='text-sm text-gray' data-i18n='heroSubtitle' style='max-width: 500px; margin: 0 auto; line-height: 1.8;'>منصتك الشاملة للبحث عن الأطباء، العيادات، وحجز المواعيد الطبية في كافة بلديات ولاية غليزان.</p>
+
       </div>
+
+
 
       <h2 class='text-xl font-bold mb-4' data-i18n='findDoctor'>Find a Doctor</h2>
 
+
+
       <div class='filters'>
+
         <div style='position: relative; flex: 1;'>
+
           <input autocomplete='off' data-i18n-placeholder='searchPlaceholder' id='searchInput' placeholder='🔍 Search by name, specialty, or location...' type='text'/>
+
           <div class='suggestions-dropdown hidden' id='searchSuggestions'></div>
+
         </div>
+
         <select id='specialtyFilter'><option value=''>All Specialties</option></select>
+
         <select id='municipalityFilter'><option value=''>All Municipalities</option></select>
+
       </div>
+
     <div class='grid grid-1 grid-2 grid-3 grid-4' id='doctorsList'>
 
+
+
         <div class='empty-state'><div class='empty-state-icon'>&#9203;</div><div data-i18n='loadingDoctors'>Loading doctors...</div></div>
+
       </div>
+
     </div>
+
+
 
     <div class='view hidden' id='view-add-doctor'>
+
       <div class='card' style='max-width: 800px; margin: 0 auto;'>
+
         <h2 class='text-xl font-bold mb-6' data-i18n='registerDoctor'>Register New Doctor</h2>
+
                <form id='addDoctorForm'>
+
   <div class='grid grid-1 grid-2'>
+
     <div class='form-group'>
+
       <label data-i18n='firstName'>First Name *</label>
+
       <input name='FirstName' placeholder='e.g. Amine' required='required' type='text'/>
+
     </div>
+
     <div class='form-group'>
+
       <label data-i18n='lastName'>Last Name *</label>
+
       <input name='LastName' placeholder='e.g. Benali' required='required' type='text'/>
+
     </div>
+
   </div>
+
   <div class='form-group'>
+
     <label data-i18n='phone'>Phone Number *</label>
+
     <input name='Phone' placeholder='e.g. 0550 123 456' required='required' type='tel'/>
+
   </div>
+
   <div class='form-group'>
+
     <label data-i18n='exactLocation'>Exact Location / Address *</label>
+
     <input name='ExactLocation' placeholder='Street, Building, Floor, Landmark...' required='required' type='text'/>
+
   </div>
+
   <div class='grid grid-1 grid-2'>
+
     <div class='form-group'>
+
       <label data-i18n='specialty'>Specialty *</label>
+
       <select name='Specialty' required='required'>
+
         <option disabled='disabled' selected='selected' value=''>-- اختر الاختصاص --</option>
+
         <option data-i18n='الأرطوفونيا (تقويم النطق) - Speech Therapy' value='الأرطوفونيا (تقويم النطق) - Speech Therapy'>الأرطوفونيا (تقويم النطق) - Speech Therapy</option>
+
         <option data-i18n='الأشعة - Radiology' value='الأشعة - Radiology'>الأشعة - Radiology</option>
+
         <option data-i18n='الأمراض الجلدية - Dermatology' value='الأمراض الجلدية - Dermatology'>الأمراض الجلدية - Dermatology</option>
+
         <option data-i18n='الأمراض الصدرية - Pulmonology' value='الأمراض الصدرية - Pulmonology'>الأمراض الصدرية - Pulmonology</option>
+
         <option data-i18n='الأمراض المعدية - Infectious Disease' value='الأمراض المعدية - Infectious Disease'>الأمراض المعدية - Infectious Disease</option>
+
         <option data-i18n='الأنف والأذن والحنجرة - ENT (Otolaryngology)' value='الأنف والأذن والحنجرة - ENT (Otolaryngology)'>الأنف والأذن والحنجرة - ENT (Otolaryngology)</option>
+
         <option data-i18n='التخدير - Anesthesiology' value='التخدير - Anesthesiology'>التخدير - Anesthesiology</option>
+
         <option data-i18n='التغذية العلاجية - Clinical Nutrition' value='التغذية العلاجية - Clinical Nutrition'>التغذية العلاجية - Clinical Nutrition</option>
+
         <option data-i18n='الجراحة التجميلية - Plastic Surgery' value='الجراحة التجميلية - Plastic Surgery'>الجراحة التجميلية - Plastic Surgery</option>
+
         <option data-i18n='الجراحة العامة - General Surgery' value='الجراحة العامة - General Surgery'>الجراحة العامة - General Surgery</option>
+
         <option data-i18n='الطب الباطني - Internal Medicine' value='الطب الباطني - Internal Medicine'>الطب الباطني - Internal Medicine</option>
+
         <option data-i18n='الطب المخبري (التحاليل) - Laboratory Medicine' value='الطب المخبري (التحاليل) - Laboratory Medicine'>الطب المخبري (التحاليل) - Laboratory Medicine</option>
+
         <option data-i18n='الطب النفسي - Psychiatry' value='الطب النفسي - Psychiatry'>الطب النفسي - Psychiatry</option>
+
         <option data-i18n='العلاج الطبيعي وإعادة التأهيل - Physiotherapy &amp; Rehabilitation' value='العلاج الطبيعي وإعادة التأهيل - Physiotherapy &amp; Rehabilitation'>العلاج الطبيعي وإعادة التأهيل - Physiotherapy &amp; Rehabilitation</option>
+
         <option data-i18n='الغدد الصماء والسكري - Endocrinology' value='الغدد الصماء والسكري - Endocrinology'>الغدد الصماء والسكري - Endocrinology</option>
+
         <option data-i18n='أمراض الجهاز الهضمي - Gastroenterology' value='أمراض الجهاز الهضمي - Gastroenterology'>أمراض الجهاز الهضمي - Gastroenterology</option>
+
         <option data-i18n='أمراض الدم - Hematology' value='أمراض الدم - Hematology'>أمراض الدم - Hematology</option>
+
         <option data-i18n='أمراض الروماتيزم والمفاصل - Rheumatology' value='أمراض الروماتيزم والمفاصل - Rheumatology'>أمراض الروماتيزم والمفاصل - Rheumatology</option>
+
         <option data-i18n='أمراض القلب - Cardiology' value='أمراض القلب - Cardiology'>أمراض القلب - Cardiology</option>
+
         <option data-i18n='أمراض الكلى - Nephrology' value='أمراض الكلى - Nephrology'>أمراض الكلى - Nephrology</option>
+
         <option data-i18n='أمراض النساء والتوليد - Gynecology &amp; Obstetrics' value='أمراض النساء والتوليد - Gynecology &amp; Obstetrics'>أمراض النساء والتوليد - Gynecology &amp; Obstetrics</option>
+
         <option data-i18n='جراحة الأوعية الدموية - Vascular Surgery' value='جراحة الأوعية الدموية - Vascular Surgery'>جراحة الأوعية الدموية - Vascular Surgery</option>
+
         <option data-i18n='جراحة العظام - Orthopedics' value='جراحة العظام - Orthopedics'>جراحة العظام - Orthopedics</option>
+
         <option data-i18n='جراحة القلب والصدر - Cardiothoracic Surgery' value='جراحة القلب والصدر - Cardiothoracic Surgery'>جراحة القلب والصدر - Cardiothoracic Surgery</option>
+
         <option data-i18n='جراحة المخ والأعصاب - Neurosurgery' value='جراحة المخ والأعصاب - Neurosurgery'>جراحة المخ والأعصاب - Neurosurgery</option>
+
         <option data-i18n='جراحة المسالك البولية - Urology' value='جراحة المسالك البولية - Urology'>جراحة المسالك البولية - Urology</option>
+
         <option data-i18n='طب الأعصاب - Neurology' value='طب الأعصاب - Neurology'>طب الأعصاب - Neurology</option>
+
         <option data-i18n='طب الأسرة - Family Medicine' value='طب الأسرة - Family Medicine'>طب الأسرة - Family Medicine</option>
+
         <option data-i18n='طب الأسنان - Dentistry' value='طب الأسنان - Dentistry'>طب الأسنان - Dentistry</option>
+
         <option data-i18n='طب الأطفال - Pediatrics' value='طب الأطفال - Pediatrics'>طب الأطفال - Pediatrics</option>
+
         <option data-i18n='طب الأورام - Oncology' value='طب الأورام - Oncology'>طب الأورام - Oncology</option>
+
         <option data-i18n='طب الحساسية والمناعة - Allergy &amp; Immunology' value='طب الحساسية والمناعة - Allergy &amp; Immunology'>طب الحساسية والمناعة - Allergy &amp; Immunology</option>
+
         <option data-i18n='طب الشيخوخة - Geriatrics' value='طب الشيخوخة - Geriatrics'>طب الشيخوخة - Geriatrics</option>
+
         <option data-i18n='طب الطوارئ - Emergency Medicine' value='طب الطوارئ - Emergency Medicine'>طب الطوارئ - Emergency Medicine</option>
+
         <option data-i18n='طب العيون - Ophthalmology' value='طب العيون - Ophthalmology'>طب العيون - Ophthalmology</option>
+
         <option data-i18n='طب عام - General Medicine' value='طب عام - General Medicine'>طب عام - General Medicine</option>
+
         <option data-i18n='علم الوراثة الطبية - Medical Genetics' value='علم الوراثة الطبية - Medical Genetics'>علم الوراثة الطبية - Medical Genetics</option>
+
       </select>
+
     </div>
+
     <div class='form-group'>
+
       <label data-i18n='municipality'>Municipality (Baladiya) *</label>
+
       <select name='Municipality' required='required'>
+
         <option disabled='disabled' selected='selected' value=''>-- اختر البلدية --</option>
+
         <option data-i18n='أولاد سيدي الميهوب' value='أولاد سيدي الميهوب'>أولاد سيدي الميهوب</option>
+
         <option data-i18n='أولاد يعيش' value='أولاد يعيش'>أولاد يعيش</option>
+
         <option data-i18n='الحاسي' value='الحاسي'>الحاسي</option>
+
         <option data-i18n='الحمادنة' value='الحمادنة'>الحمادنة</option>
+
         <option data-i18n='القطار' value='القطار'>القطار</option>
+
         <option data-i18n='القلعة' value='القلعة'>القلعة</option>
+
         <option data-i18n='المطمر' value='المطمر'>المطمر</option>
+
         <option data-i18n='المرجة' value='المرجة'>المرجة</option>
+
         <option data-i18n='الولجة' value='الولجة'>الولجة</option>
+
         <option data-i18n='بن داود' value='بن داود'>بن داود</option>
+
         <option data-i18n='بني درقون' value='بني درقون'>بني درقون</option>
+
         <option data-i18n='بني زنطيس' value='بني زنطيس'>بني زنطيس</option>
+
         <option data-i18n='بلعسل بوزقزة' value='بلعسل بوزقزة'>بلعسل بوزقزة</option>
+
         <option data-i18n='جديوية' value='جديوية'>جديوية</option>
+
         <option data-i18n='حد الشكالة' value='حد الشكالة'>حد الشكالة</option>
+
         <option data-i18n='حمري' value='حمري'>حمري</option>
+
         <option data-i18n='دار بن عبد الله' value='دار بن عبد الله'>دار بن عبد الله</option>
+
         <option data-i18n='رمكة' value='رمكة'>رمكة</option>
+
         <option data-i18n='زمورة' value='زمورة'>زمورة</option>
+
         <option data-i18n='سوق الحد' value='سوق الحد'>سوق الحد</option>
+
         <option data-i18n='سيدي امحمد بن علي' value='سيدي امحمد بن علي'>سيدي امحمد بن علي</option>
+
         <option data-i18n='سيدي امحمد بن عودة' value='سيدي امحمد بن عودة'>سيدي امحمد بن عودة</option>
+
         <option data-i18n='سيدي خطاب' value='سيدي خطاب'>سيدي خطاب</option>
+
         <option data-i18n='سيدي سعادة' value='سيدي سعادة'>سيدي سعادة</option>
+
         <option data-i18n='سيدي لزرق' value='سيدي لزرق'>سيدي لزرق</option>
+
         <option data-i18n='عين الرحمة' value='عين الرحمة'>عين الرحمة</option>
+
         <option data-i18n='عين طارق' value='عين طارق'>عين طارق</option>
+
         <option data-i18n='عمي موسى' value='عمي موسى'>عمي موسى</option>
+
         <option data-i18n='غليزان' value='غليزان'>غليزان</option>
+
         <option data-i18n='لحلاف' value='لحلاف'>لحلاف</option>
+
         <option data-i18n='مازونة' value='مازونة'>مازونة</option>
+
         <option data-i18n='مديونة' value='مديونة'>مديونة</option>
+
         <option data-i18n='منداس' value='منداس'>منداس</option>
+
         <option data-i18n='وادي الجمعة' value='وادي الجمعة'>وادي الجمعة</option>
+
         <option data-i18n='وادي السلام' value='وادي السلام'>وادي السلام</option>
+
         <option data-i18n='وادي رهيو' value='وادي رهيو'>وادي رهيو</option>
+
         <option data-i18n='واريزان' value='واريزان'>واريزان</option>
+
         <option data-i18n='يلل' value='يلل'>يلل</option>
+
       </select>
+
     </div>
+
   </div>
+
   <div class='form-group'>
+
     <label data-i18n='extraInfo'>Extra Information</label>
+
     <textarea name='ExtraInfo' placeholder='Working hours, consultation fees, languages spoken, diplomas...' rows='3'></textarea>
+
   </div>
+
   <button class='btn btn-primary btn-block' id='addDoctorBtn' type='submit'>Register Doctor</button>
+
 </form>
+
       </div>
+
     </div>
+
+
 
     <div class='view hidden' id='view-track'>
+
       <div class='card' style='max-width: 500px; margin: 0 auto;'>
+
         <h2 class='text-xl font-bold mb-6 text-center' data-i18n='trackBookingTitle'>تتبع حالة حجزي</h2>
+
         <p class='text-sm text-gray text-center mb-6' data-i18n='trackBookingDesc'>أدخل رقم الحجز الذي حصلت عليه لمعرفة حالة موعدك.</p>
+
         <form id='trackBookingForm'>
+
           <div class='form-group'>
+
             <label data-i18n='bookingIdLabel'>رقم الحجز (مثال: APT-20240526-143022)</label>
+
             <input id='trackBookingId' placeholder='APT-000000000-000000' required='required' type='text'/>
+
           </div>
+
           <div class='form-group'>
+
             <label data-i18n='trackPhoneLabel'>رقم الهاتف المرفق بالحجز</label>
+
             <input dir='ltr' id='trackPhone' placeholder='07/ 05 / 06' required='required' type='tel'/>
+
           </div>
+
           <button class='btn btn-primary btn-block' data-i18n='trackSearchBtn' id='trackBtn' type='submit'>بحث عن الحجز</button>
+
         </form>
+
         <div class='hidden mt-6 p-4' id='trackResult' style='background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);'></div>
+
       </div>
+
     </div>
+
+
 
     <div class='view hidden' id='view-booking'>
+
       <div class='card' style='max-width: 600px; margin: 0 auto;'>
+
         <div class='back-bar'><button class='btn btn-secondary' id='backToDirBtn'>&#8592; Back to Directory</button></div>
+
         <div class='mb-6' id='bookingDoctorInfo'></div>
+
         <h3 class='text-lg font-bold mb-4' data-i18n='bookAppointment'>Book Appointment</h3>
+
         <form id='bookingForm'>
+
           <input id='bookingDoctorId' name='DoctorID' type='hidden'/>
+
           <div class='form-group'>
+
             <label data-i18n='patientName'>Patient Full Name *</label>
+
             <input name='PatientName' placeholder='Full name' required='required' type='text'/>
+
           </div>
+
           <div class='form-group'>
+
             <label data-i18n='patientPhone'>Patient Phone *</label>
+
             <input name='PatientPhone' placeholder='Contact number' required='required' type='tel'/>
+
           </div>
+
           <div class='form-group'>
+
             <label>البريد الإلكتروني (اختياري للإشعارات)</label>
+
             <input name='PatientEmail' placeholder='your@email.com' type='email'/>
+
           </div>
+
           <div class='grid grid-1 grid-2'>
+
             <div class='form-group'>
+
               <label data-i18n='appointmentDate'>Appointment Date *</label>
+
               <input id='apptDateInput' name='AppointmentDate' onclick='this.showPicker ? this.showPicker() : null' onkeydown='return false' required='required' type='date'/>
+
             </div>
+
             <div class='form-group' style='grid-column: 1 / -1;'>
+
               <label data-i18n='appointmentTime'>الوقت المتاح *</label>
+
               <input id='apptTimeInput' name='AppointmentTime' required='required' type='hidden'/>
+
               <div id='timeSlotsContainer' style='display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;'>
+
                 <div class='text-sm text-gray' style='grid-column: 1 / -1;'>يرجى تحديد تاريخ الموعد أولا، لعرض الأوقات المتاحة...</div>
+
               </div>
+
             </div>
+
           </div>
+
           <button class='btn btn-success btn-block' data-i18n='confirmBooking' id='bookingBtn' type='button'>Confirm Booking</button>
+
         </form>
+
       </div>
+
     </div>
+
+
 
     <div class='view hidden' id='view-dashboard'>
+
       <div class='login-box card' id='loginSection'>
+
         <h2 class='text-xl font-bold text-center mb-6' data-i18n='doctorLogin'>Doctor Login</h2>
+
         <p class='text-sm text-gray text-center mb-6' data-i18n='loginDesc'>Enter your Doctor ID and registered phone number to view your appointments.</p>
+
 <form id='dashboardLoginForm'>
+
   <div class='form-group'>
+
     <label data-i18n='loginPhone'>Phone Number</label>
+
 <input id='loginPhone' autocomplete='username' placeholder='Your registered phone' required='required' type='tel'/>
+
   </div>
+
   <div class='form-group'>
+
     <label data-i18n='password'>Password *</label>
+
 <input id='loginDoctorPassword' autocomplete='current-password' placeholder='••••••••' required='required' type='password'/>
+
   </div>
+
   <button class='btn btn-primary btn-block' id='dashboardLoginBtn' type='submit'>View My Appointments</button>
+
 </form>
+
       </div>
+
+
 
       <div class='hidden' id='dashboardSection'>
+
         <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; background: var(--surface); padding: 1rem 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm);'>
+
           <div>
+
             <h2 class='text-xl font-bold' id='dashboardSubtitle' style='margin: 0; color: var(--primary-dark);'></h2>
+
           </div>
+
           <div style='display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;'>
+
             <div class='toggle-container'>
+
               <span data-i18n='disableBooking' id='bookingStatusText'>إيقاف الحجوزات</span>
+
               <label class='switch'>
+
                 <input id='bookingToggleSwitch' type='checkbox'/>
+
                 <span class='slider'></span>
+
               </label>
+
             </div>
+
             <button class='btn btn-secondary' id='dashboardLogoutBtn' style='padding: 0.4rem 1rem;'>Logout</button>
+
           </div>
+
         </div>
 
+
+
         <div class='card mb-4' style='padding: 1rem 1.5rem;'>
+
           <div class='accordion-header' id='workingHoursToggle' onclick='toggleWorkingHours()'>
+
             <div style='display:flex; align-items:center; gap:0.75rem;'>
+
               <div style='background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;'>
+
                 <svg fill='none' height='20' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='20'><rect height='18' rx='2' ry='2' width='18' x='3' y='4'/><line x1='16' x2='16' y1='2' y2='6'/><line x1='8' x2='8' y1='2' y2='6'/><line x1='3' x2='21' y1='10' y2='10'/></svg>
+
               </div>
+
               <h3 class='text-lg font-bold' data-i18n='workingHoursTitle' style='font-size: 1.1rem; margin:0;'>إعدادات أيام وأوقات العمل</h3>
+
             </div>
+
             <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
+
           </div>
+
           <div class='accordion-content' id='workingHoursContent'>
+
             <div style='padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;'>
+
               <p class='text-sm text-gray mb-4' data-i18n='workingHoursDesc'>قم بتفعيل الأيام التي تعمل فيها وحدد وقت البداية والنهاية لكل يوم.</p>
+
               <form id='workingHoursForm'> 
+
                 <div id='daysListContainer' style='display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;'></div>
+
                 <button class='btn btn-primary' data-i18n='saveHoursBtnText' id='saveHoursBtn' onclick='saveWorkingHours()' type='button'>حفظ الأوقات</button> 
+
               </form>
+
             </div>
+
           </div>
+
         </div>
 
+
+
         <div class='card mb-4' style='padding: 1rem 1.5rem;'>
+
           <div class='accordion-header' id='appointmentsToggle' onclick='toggleAppointments()'>
+
             <div style='display:flex; align-items:center; gap:0.75rem;'>
+
               <div style='background: var(--success); color: white; padding: 0.5rem; border-radius: 8px; display: flex;'>
+
                 <svg fill='none' height='20' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='20'><rect height='18' rx='2' ry='2' width='18' x='3' y='4'/><line x1='16' x2='16' y1='2' y2='6'/><line x1='8' x2='8' y1='2' y2='6'/><line x1='3' x2='21' y1='10' y2='10'/></svg>
+
               </div>
+
               <h3 class='text-lg font-bold' data-i18n='myAppointments' style='font-size: 1.1rem; margin:0;'>My Appointments</h3>
+
             </div>
+
             <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
+
           </div>
+
           <div class='accordion-content' id='appointmentsContent'>
+
             <div id='appointmentsListContainer' style='margin-top: 1.5rem; border-top: 1px dashed var(--border); padding-top: 1.5rem;'>
+
               <div id='appointmentsTable' style='display: flex; flex-direction: column; gap: 1rem;'></div>
+
               <div class='empty-state hidden' id='noAppointments'>
+
                 <div class='empty-state-icon' style='opacity: 1; color: var(--text-secondary); margin-bottom: 1rem; display: flex; justify-content: center;'>
+
                   <svg fill='none' height='48' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' viewBox='0 0 24 24' width='48'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' x2='8' y1='13' y2='13'/><line x1='16' x2='8' y1='17' y2='17'/><polyline points='10 9 9 9 8 9'/></svg>
+
                 </div>
+
                 <div data-i18n='noAppointmentsMsg'>No appointments found.</div>
+
               </div>
+
             </div>
+
           </div>
+
         </div> 
+
       </div> 
+
     </div> 
+
   </div>
+
+
 
   <div class='dialog-overlay hidden' id='doctorProfileModal' style='z-index: 99990;'>
+
     <div class='dialog-box doctor-profile-modal' id='dpModalContent'></div>
+
   </div>
+
+
 
   <div class='dialog-overlay hidden' id='confirmDialog'>
+
     <div class='dialog-box'>
+
       <h3 data-i18n='confirmDialogTitle'>Confirm Appointment</h3>
+
       <p id='confirmDialogBody'></p>
+
       <div class='dialog-actions'>
+
         <button class='btn btn-secondary' data-i18n='cancel' id='cancelDialogBtn'>Cancel</button>
+
         <button class='btn btn-success' data-i18n='confirmBooking' id='confirmDialogOkBtn'>Confirm Booking</button>
+
       </div>
+
     </div>
+
   </div>
+
+
 
   <div class='dialog-overlay hidden' id='successDialog'>
+
     <div class='dialog-box' style='padding: 1.5rem; background: var(--bg);'>
+
       <div id='eTicketContainer'></div>
+
       <p style='color: var(--text-secondary); font-size: 0.85rem; margin: 1.25rem 0 1.5rem 0;'>يرجى أخذ لقطة شاشة (Screenshot) لهذه التذكرة للرجوع إليها عند زيارة العيادة.</p>
+
       <div class='dialog-actions'>
+
         <button class='btn btn-primary btn-block' onclick='closeSuccessDialog()'>حسناً، العودة للرئيسية</button>
+
       </div>
+
     </div>
+
   </div>
+
+
 
   <div class='dialog-overlay hidden' id='reviewsModal' style='z-index: 99995;'>
+
     <div class='dialog-box' style='max-width: 500px; width: 90%; max-height: 85vh; display: flex; flex-direction: column; padding: 1.5rem;'>
+
       <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.75rem;'>
+
         <h3 id='reviewsDoctorName' style='margin: 0; font-size: 1.15rem; color: var(--text);'>تقييمات الطبيب</h3>
+
         <button onclick='document.getElementById("reviewsModal").classList.add("hidden")' style='background: transparent; border: none; cursor: pointer; color: var(--text-secondary); padding: 0;'>
+
           <svg fill='none' height='24' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24' width='24'><line x1='18' x2='6' y1='6' y2='18'/><line x1='6' x2='18' y1='6' y2='18'/></svg>
+
         </button>
+
       </div>
+
       <div id='reviewsList' style='overflow-y: auto; flex: 1; margin-bottom: 1rem; background: var(--bg); border-radius: var(--radius); border: 1px solid var(--border); min-height: 150px; max-height: 300px;'>
+
         <div class='p-4 text-center text-gray text-sm'>جاري تحميل التقييمات...</div>
+
       </div>
+
       <div id='addReviewSection'>
+
         <form id='reviewForm'>
+
           <input id='reviewDoctorId' type='hidden'/>
+
           <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;'>
+
             <label data-i18n='ratingLabel' style='font-size: 0.9rem; font-weight: bold; color: var(--text);'>ما هو تقييمك؟</label>
+
             <div class='star-rating' id='starRatingInput'>
+
               <span class='star' data-val='1'>&#9733;</span><span class='star' data-val='2'>&#9733;</span><span class='star' data-val='3'>&#9733;</span><span class='star' data-val='4'>&#9733;</span><span class='star' data-val='5'>&#9733;</span>
+
             </div>
+
             <input id='ratingValue' type='hidden'/>
+
           </div>
+
           <div class='form-group' style='margin-bottom: 0.75rem;'>
+
             <textarea data-i18n-placeholder='reviewPlaceholder' id='reviewComment' placeholder='اكتب تجربتك مع هذا الطبيب لمساعدة الآخرين...' required='required' rows='2' style='resize: none;'></textarea>
+
           </div>
+
           <button class='btn btn-primary btn-block' data-i18n='submitReviewBtn' id='submitReviewBtn' type='submit'>نشر التقييم</button>
+
         </form>
+
       </div>
+
       <div class='hidden text-center p-3' id='loginToReviewMsg' style='background: var(--primary-light); border-radius: var(--radius); margin-top: 0.5rem;'>
+
         <p class='text-sm mb-2' data-i18n='loginToReviewText' style='color: var(--primary-dark); font-weight: 600;'>يجب تسجيل الدخول لإضافة تقييم.</p>
+
         <button class='btn btn-secondary' data-i18n='loginBtn' onclick='document.getElementById("reviewsModal").classList.add("hidden"); document.getElementById("doctorProfileModal").classList.add("hidden"); router("login");' style='padding: 0.4rem 1rem; font-size: 0.85rem;'>تسجيل الدخول</button>
+
       </div>
+
     </div>
-  </div>
-  <button class='hidden' id='backToTop'>
-    <svg fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='24'>
-      <path d='M18 15l-6-6-6 6'/>
-    </svg>
-  </button>
-  <div id='toastContainer'></div>
-<script src="script.js" defer></script>
-  <!-- نافذة المستشار الآلي -->
-<div id="medicalChatbot" class="chatbot-container hidden">
-    <div class="chatbot-header">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"></path></svg>
-        <div>
-          <h3 style="font-size: 1rem; margin: 0; color: white;" data-i18n="chatTitle">المستشار الطبي</h3>
-        <span style="font-size: 0.75rem; opacity: 0.8; color: rgba(255,255,255,0.9);" data-i18n="chatSubtitle"> متاح للرد الفوري </span>
-        </div>
-      </div>
-      <button id="closeChatBtn" style="background: transparent; border: none; color: white; cursor: pointer;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
-    <div id="chatMessages" class="chatbot-messages">
-      <div class="chat-msg bot-msg" data-i18n="chatWelcome">
-        أهلاً بك في دليل أطباء غليزان. أنا مساعدك الآلي 🤖. كيف يمكنني مساعدتك اليوم؟
-      </div>
-    </div>
-    <div class="chatbot-input">
-      <input type="text" id="chatInputText" data-i18n-placeholder="chatInputPlaceholder" placeholder="اكتب سؤالك هنا..." autocomplete="off">
-      <button id="sendChatBtn" style="transform: scaleX(var(--rtl-scale, 1));"> <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-      </button>
-    </div>
+
   </div>
 
-  <button id="chatbotToggleBtn" class="chatbot-toggle-btn">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"></path></svg>
-    <span data-i18n="chatToggleBtn">تحدث معنا</span>
-  </button>
-  <footer>
+
+
+<footer>
+
   <div data-i18n='footerRights'>&#169; 2026 Relizane Medical Directory. All rights reserved.</div>
+
   <div class='footer-links'>
+
     <a data-i18n='privacyPolicy' href='privacy.html'>Privacy Policy</a>
+
     <a data-i18n='termsOfUse' href='terms.html'>Terms of Use</a>
+
     <a data-i18n='contactUs' href='#'>Contact Us</a>
+
   </div>
+
 </footer>
+
+
+
+  <button class='hidden' id='backToTop'>
+
+    <svg fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='24'>
+
+      <path d='M18 15l-6-6-6 6'/>
+
+    </svg>
+
+  </button>
+
+  <div id='toastContainer'></div>
+
+<script src="script.js" defer></script>
+
+  <!-- نافذة المستشار الآلي -->
+
+<div id="medicalChatbot" class="chatbot-container hidden">
+
+    <div class="chatbot-header">
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"></path></svg>
+
+        <div>
+
+          <h3 style="font-size: 1rem; margin: 0; color: white;" data-i18n="chatTitle">المستشار الطبي</h3>
+
+        <span style="font-size: 0.75rem; opacity: 0.8; color: rgba(255,255,255,0.9);" data-i18n="chatSubtitle"> متاح للرد الفوري </span>
+
+        </div>
+
+      </div>
+
+      <button id="closeChatBtn" style="background: transparent; border: none; color: white; cursor: pointer;">
+
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+
+      </button>
+
+    </div>
+
+    <div id="chatMessages" class="chatbot-messages">
+
+      <div class="chat-msg bot-msg" data-i18n="chatWelcome">
+
+        أهلاً بك في دليل أطباء غليزان. أنا مساعدك الآلي 🤖. كيف يمكنني مساعدتك اليوم؟
+
+      </div>
+
+    </div>
+
+    <div class="chatbot-input">
+
+      <input type="text" id="chatInputText" data-i18n-placeholder="chatInputPlaceholder" placeholder="اكتب سؤالك هنا..." autocomplete="off">
+
+      <button id="sendChatBtn" style="transform: scaleX(var(--rtl-scale, 1));"> <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+
+  <button id="chatbotToggleBtn" class="chatbot-toggle-btn">
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"></path></svg>
+
+    <span data-i18n="chatToggleBtn">تحدث معنا</span>
+
+  </button>
+
 </body>
-</html>
+
+</html> 
+
