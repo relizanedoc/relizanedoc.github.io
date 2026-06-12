@@ -410,57 +410,76 @@ async function handleGoogleSignIn() {
   }
 }
 
-  // ✅ تسجيل حساب جديد
-  const { data, error } = await supabaseClient.auth.signUp({ 
-    email: email, 
-    password: password,
-    options: { 
-      data: { name: name, display_name: name },
-      emailRedirectTo: window.location.origin
-    }
-  });
+// ✅ الكود الجديد لتسجيل الدخول بالإيميل
+async function handleEmailAuth() {
+  if (isAccountLocked()) return;
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const name = document.getElementById('authName').value.trim();
+  const btn = document.getElementById('authSubmitBtn');
 
-  if (error) throw error;
+  if (!email || !password) return;
+  setLoading(btn, true);
 
-  resetLoginAttempts();
+  try {
+    if (isSignUp) {
+      if (!name) { 
+        showToast(t('fullName') + ' required', 'error'); 
+        setLoading(btn, false); 
+        return; 
+      }
 
-  // ✅ تسجيل الدخول تلقائياً حتى لو لم يؤكد البريد
-  if (data.user) {
-    // محاولة تسجيل الدخول مباشرة
-    const { error: loginError } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
+      // ✅ تسجيل حساب جديد
+      const { data, error } = await supabaseClient.auth.signUp({ 
+        email: email, 
+        password: password,
+        options: { 
+          data: { name: name, display_name: name },
+          emailRedirectTo: window.location.origin
+        }
+      });
 
-    if (loginError && loginError.message.includes('Email not confirmed')) {
-      // البريد غير مؤكد، لكن نعرض رسالة نجاح فقط
-      showToast('تم إنشاء الحساب! يمكنك تسجيل الدخول الآن.', 'success');
+      if (error) throw error;
+
+      resetLoginAttempts();
+
+      // ✅ تسجيل الدخول تلقائياً حتى لو لم يؤكد البريد
+      if (data.user) {
+        // محاولة تسجيل الدخول مباشرة
+        const { error: loginError } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        if (loginError && loginError.message.includes('Email not confirmed')) {
+          // البريد غير مؤكد، لكن نعرض رسالة نجاح فقط
+          showToast('تم إنشاء الحساب! يمكنك تسجيل الدخول الآن.', 'success');
+        } else {
+          showToast('تم إنشاء الحساب بنجاح! ' + t('toastAuthSuccess') + name, 'success');
+          setTimeout(() => router('user-dashboard'), 500);
+        }
+      }
+
     } else {
-      showToast('تم إنشاء الحساب بنجاح! ' + t('toastAuthSuccess') + name, 'success');
+      // ✅ تسجيل دخول
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (error) throw error;
+      resetLoginAttempts();
+      showToast(t('toastAuthSuccess') + (data.user.user_metadata?.name || email), 'success');
       setTimeout(() => router('user-dashboard'), 500);
     }
-  }
-
-} else {
-  // تسجيل دخول
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
-
-  if (error) throw error;
-  resetLoginAttempts();
-  showToast(t('toastAuthSuccess') + (data.user.user_metadata?.name || email), 'success');
-  setTimeout(() => router('user-dashboard'), 500);
-}
   } catch (err) {
     recordFailedAttempt();
     let msg = err.message;
-    if (err.code === 'auth/weak-password') msg = t('weakPassword');
-    else if (err.code === 'auth/invalid-email') msg = t('invalidEmail');
-    else if (err.code === 'auth/user-not-found') msg = t('userNotFound');
-    else if (err.code === 'auth/wrong-password') msg = t('wrongPassword');
-    else if (err.code === 'auth/email-already-in-use') msg = t('emailInUse');
+    if (err.message.includes('weak-password')) msg = t('weakPassword');
+    else if (err.message.includes('invalid-email')) msg = t('invalidEmail');
+    else if (err.message.includes('not found')) msg = t('userNotFound');
+    else if (err.message.includes('Invalid login credentials')) msg = t('wrongPassword');
+    else if (err.message.includes('already in use') || err.message.includes('already registered')) msg = t('emailInUse');
     showToast(t('toastAuthError') + msg, 'error');
   } finally { 
     setLoading(btn, false); 
