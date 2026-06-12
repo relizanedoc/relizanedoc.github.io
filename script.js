@@ -3128,19 +3128,31 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
         showToast(currentLang === 'ar' ? 'خطأ في تحديث الحالة: ' + err.message : 'Error updating status: ' + err.message, 'error');
     }
 };
-// ✅ دالة تغيير كلمة المرور للعضو المسجل
-async function handleChangePassword() {
-  const newPassword = prompt(currentLang === 'ar' ? 'أدخل كلمة المرور الجديدة (يجب أن تتكون من 6 أحرف أو أرقام على الأقل):' : 'Enter your new password (at least 6 characters):');
+// ✅ فتح النافذة الاحترافية
+function handleChangePassword() {
+  document.getElementById('newPasswordInput').value = '';
+  document.getElementById('changePasswordModal').classList.remove('hidden');
+  document.getElementById('newPasswordInput').focus();
+}
 
-  if (!newPassword) return; // إذا ضغط المستخدم على "إلغاء"
+// ✅ إغلاق النافذة
+function closeChangePasswordModal() {
+  document.getElementById('changePasswordModal').classList.add('hidden');
+}
 
-  if (newPassword.length < 6) {
-    showToast(currentLang === 'ar' ? 'كلمة المرور قصيرة جداً!' : 'Password is too short!', 'error');
+// ✅ إرسال كلمة المرور الجديدة (مع زر انتظار Loading)
+async function submitNewPassword() {
+  const newPassword = document.getElementById('newPasswordInput').value;
+  
+  if (!newPassword || newPassword.length < 6) {
+    showToast(currentLang === 'ar' ? 'كلمة المرور يجب أن تتكون من 6 أحرف على الأقل!' : 'Password must be at least 6 characters!', 'error');
     return;
   }
 
+  const btn = document.getElementById('saveNewPasswordBtn');
+  setLoading(btn, true);
+
   try {
-    // تحديث كلمة المرور في Supabase
     const { error } = await supabaseClient.auth.updateUser({
       password: newPassword
     });
@@ -3148,7 +3160,10 @@ async function handleChangePassword() {
     if (error) throw error;
 
     showToast(currentLang === 'ar' ? 'تم تحديث كلمة المرور بنجاح' : 'Password updated successfully', 'success');
+    closeChangePasswordModal();
   } catch (err) {
     showToast((currentLang === 'ar' ? 'فشل تغيير كلمة المرور: ' : 'Error: ') + err.message, 'error');
+  } finally {
+    setLoading(btn, false, currentLang === 'ar' ? 'حفظ التغييرات' : 'Save Changes');
   }
 }
