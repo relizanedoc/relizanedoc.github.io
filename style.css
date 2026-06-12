@@ -26,8 +26,7 @@
       .btn-google { background: var(--surface); color: var(--text); }
       .btn-google:hover { background: var(--bg); }
       .toast { background: var(--text); color: var(--bg); }
-      .hero-section { background: linear-gradient(135deg, #082f49 0%, #0f172a 100%) !important; border-color: var(--border) !important; }
-    }
+.hero-section { background: linear-gradient(135deg, #082f49 0%, #0f172a 100%) !important; border-color: var(--border) !important; max-width: 900px !important; margin: 0 auto !important; }    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
