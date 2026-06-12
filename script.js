@@ -1896,7 +1896,8 @@ async function loadUserBookings() {
     // ========================================================================
     // دالة التوجيه (Router)
     // ========================================================================
-function router(viewName, pushHistory = true) {
+// أضف async للدالة
+async function router(viewName, pushHistory = true) {
   // التحقق من تسجيل الدخول قبل الدخول لصفحة إضافة طبيب
   if (viewName === 'add-doctor') {
     getCurrentUser().then(user => { 
