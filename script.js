@@ -379,41 +379,36 @@ async function logoutUser() {
       const res = await fetch(API_URL + '?' + qs);
       return res.json();
     }
-    // ✅ الكود الجديد لتسجيل الدخول بـ Google:
+  // ✅ الكود المحسن لتسجيل الدخول بـ Google:
 async function handleGoogleSignIn() {
   if (isAccountLocked()) return;
+  
+  const btn = document.getElementById('googleSignInBtn');
+  setLoading(btn, true); // إظهار حالة التحميل للمستخدم
+
   try {
-    const { data, error } = await supabaseClient.auth.signInWithOAuth({
+    const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin }
+      options: { 
+        // توجيه المستخدم مباشرة إلى لوحة التحكم بعد نجاح الدخول
+        redirectTo: window.location.origin + window.location.pathname + '#user-dashboard',
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
+      }
     });
+
     if (error) throw error;
     resetLoginAttempts();
+    
+    // ملاحظة: المتصفح سينتقل لصفحة غوغل، لذا الكود أدناه قد لا يُنفذ إلا إذا حدث خطأ قبل الانتقال
   } catch (err) { 
     recordFailedAttempt(); 
     showToast(t('toastAuthError') + err.message, 'error'); 
+    setLoading(btn, false);
   }
 }
-
-// ✅ الكود الجديد لتسجيل الدخول بالإيميل:
-// ✅ الكود الجديد لتسجيل الدخول بالإيميل (مع التحقق من التأكيد)
-async function handleEmailAuth() {
-  if (isAccountLocked()) return;
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
-  const name = document.getElementById('authName').value.trim();
-  const btn = document.getElementById('authSubmitBtn');
-
-  if (!email || !password) return;
-  setLoading(btn, true);
-
-  try {
-  if (isSignUp) {
-  if (!name) { 
-    showToast(t('fullName') + ' required', 'error'); 
-    setLoading(btn, false); 
-    return; 
-  }
 
   // ✅ تسجيل حساب جديد
   const { data, error } = await supabaseClient.auth.signUp({ 
