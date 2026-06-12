@@ -149,14 +149,6 @@
         <div class='auth-divider'><span data-i18n='or'>or</span></div>
 
       <form id='emailAuthForm'>
-        <div class='form-group'>
-  <label data-i18n='password'>Password *</label>
-  <input id='authPassword' autocomplete='current-password' minlength='6' placeholder='••••••••' required='required' type='password'/>
-  
-  <div style="text-align: start; margin-top: 5px;">
-    <a href="#" onclick="handleForgotPassword(event)" id="forgotPasswordLink" style="color: var(--primary); font-size: 0.85rem; text-decoration: none;">هل نسيت كلمة المرور؟</a>
-  </div>
-</div>
         <h3 class='text-lg font-bold mb-4 text-center' data-i18n='loginTitle' id='authFormTitle'>Member Login</h3>
 
           <div class='form-group hidden' id='nameFieldGroup'>
@@ -175,13 +167,14 @@
 
           </div>
 
-          <div class='form-group'>
-
-            <label data-i18n='password'>Password *</label>
-
-<input id='authPassword' autocomplete='current-password' minlength='6' placeholder='••••••••' required='required' type='password'/>
-
-          </div>
+         <div class='form-group'>
+  <label data-i18n='password'>Password *</label>
+  <input id='authPassword' autocomplete='current-password' minlength='6' placeholder='••••••••' required='required' type='password'/>
+  
+  <div style="text-align: start; margin-top: 5px;">
+    <a href="#" onclick="handleForgotPassword(event)" id="forgotPasswordLink" style="color: var(--primary); font-size: 0.85rem; text-decoration: none;">هل نسيت كلمة المرور؟</a>
+  </div>
+</div>
 
           <button class='btn btn-primary btn-block' id='authSubmitBtn' type='button'>
 
