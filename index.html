@@ -1017,15 +1017,19 @@
     <h3 style='margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: bold; color: var(--text);'>تغيير كلمة المرور</h3>
     <p style='color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;'>يرجى إدخال كلمة المرور الجديدة (يجب أن تتكون من 6 أحرف أو أرقام على الأقل).</p>
     
-    <div class='form-group' style='position: relative; text-align: right;'>
-  <input id='newPasswordInput' placeholder='أدخل كلمة المرور الجديدة...' type='password' style='width: 100%; padding-left: 40px;'/>
-  
-  <button type="button" onclick="togglePasswordVisibility('newPasswordInput', 'eyeIconModal')" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 0; display: flex; align-items: center; justify-content: center;">
-    <svg id="eyeIconModal" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-      <line x1="1" y1="1" x2="23" y2="23"></line>
-    </svg>
-  </button>
+   <div class='form-group' style='text-align: right;'>
+  <div style="position: relative; width: 100%;">
+    
+    <input id='newPasswordInput' placeholder='أدخل كلمة المرور الجديدة...' type='password' style='width: 100%; padding-left: 45px; box-sizing: border-box;'/>
+    
+    <button type="button" onclick="togglePasswordVisibility('newPasswordInput', 'eyeIconModal')" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; outline: none; cursor: pointer; color: #64748b; padding: 5px; display: flex; align-items: center; justify-content: center; z-index: 10;">
+      <svg id="eyeIconModal" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+      </svg>
+    </button>
+    
+  </div>
 </div>
     
     <div class='dialog-actions' style='margin-top: 1.5rem;'>
