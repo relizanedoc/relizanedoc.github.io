@@ -544,12 +544,19 @@ async function handleForgotPassword(e) {
   }
 }
     function toggleAuthMode() {
-      isSignUp = !isSignUp;
-      document.getElementById('nameFieldGroup').classList.toggle('hidden', !isSignUp);
-      document.getElementById('authFormTitle').textContent = t(isSignUp ? 'signUpTitle' : 'loginTitle');
-      document.getElementById('authSubmitBtn').querySelector('span').textContent = t(isSignUp ? 'signUpBtn' : 'loginBtn');
-      document.getElementById('authToggleText').textContent = t(isSignUp ? 'hasAccount' : 'noAccount');
-    }
+  isSignUp = !isSignUp;
+  document.getElementById('nameFieldGroup').classList.toggle('hidden', !isSignUp);
+  
+  // ✅ إخفاء أو إظهار رابط "نسيت كلمة المرور" بشكل احترافي
+  const forgotLink = document.getElementById('forgotPasswordLink');
+  if (forgotLink) {
+    forgotLink.style.display = isSignUp ? 'none' : 'block';
+  }
+
+  document.getElementById('authFormTitle').textContent = t(isSignUp ? 'signUpTitle' : 'loginTitle');
+  document.getElementById('authSubmitBtn').querySelector('span').textContent = t(isSignUp ? 'signUpBtn' : 'loginBtn');
+  document.getElementById('authToggleText').textContent = t(isSignUp ? 'hasAccount' : 'noAccount');
+}
 
     function openScheduleModal(doctorName, scheduleHtml) {
       const overlay = document.createElement('div');
