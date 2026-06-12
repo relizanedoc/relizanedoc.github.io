@@ -130,32 +130,25 @@
       </button>
       
       <div class='auth-toggle mt-4' id='authToggleText' style="text-align: center; font-size: 0.9rem; cursor: pointer; color: var(--primary); font-weight: bold;"></div>
-    </form>
-  </div> <div class='mt-4 text-center'>
-    <button class='btn btn-secondary' data-i18n='backToHome' id='backToHomeBtn'>&#8592; Back to Directory</button>
-  </div>
-</div>
+   </form>
+    </div> 
+    
+    <div class='mt-4 text-center'>
+      <button class='btn btn-secondary' data-i18n='backToHome' id='backToHomeBtn'>&#8592; Back to Directory</button>
     </div>
-
-
-
-    <div class='view hidden' id='view-user-dashboard'>
-
-      <div style='max-width: 800px; margin: 2rem auto;'>
-
-        <h2 class='text-xl font-bold mb-6' data-i18n='memberDashboardTitle'>لوحة تحكم العضو</h2>
-
-        <div class='card' style='position: relative; overflow: hidden; padding: 0;'>
-
-          <div style='height: 6px; background: var(--primary); width: 100%;'></div>
-
-          <div style='padding: 2rem; text-align: center;'>
-
-            <div class='avatar' id='memberDashAvatar' style='margin: 0 auto 1rem auto; width: 88px; height: 88px; font-size: 2.5rem; background: var(--surface); color: var(--primary); border: 2px solid var(--border); box-shadow: var(--shadow-sm); z-index: 1;'>U</div>
-
-            <h3 class='font-bold text-xl mb-1' id='memberDashName' style='color: var(--text);'>الاسم</h3>
-
-            <p class='text-gray text-sm mb-4' id='memberDashEmail'>البريد الإلكتروني</p>
+  </div> <div class='view hidden' id='view-user-dashboard'>
+    <div style='max-width: 800px; margin: 2rem auto;'>
+      <h2 class='text-xl font-bold mb-6' data-i18n='memberDashboardTitle'>لوحة تحكم العضو</h2>
+      
+      <div class='card' style='position: relative; overflow: hidden; padding: 0;'>
+        <div style='height: 6px; background: var(--primary); width: 100%;'></div>
+        
+        <div style='padding: 2rem; text-align: center;'>
+          <div class='avatar' id='memberDashAvatar' style='margin: 0 auto 1rem auto; width: 88px; height: 88px; font-size: 2.5rem; background: var(--surface); color: var(--primary); border: 2px solid var(--border); box-shadow: var(--shadow-sm); z-index: 1;'>U</div>
+          
+          <h3 class='font-bold text-xl mb-1' id='memberDashName' style='color: var(--text);'>الاسم</h3>
+          
+          <p class='text-gray text-sm mb-4' id='memberDashEmail'>البريد الإلكتروني</p>
 
             <div data-i18n='registeredMember' style='display: inline-block; padding: 0.25rem 1rem; border-radius: 99px; background: var(--primary-light); color: var(--primary-dark); font-size: 0.85rem; font-weight: 600; border: 1px solid var(--primary-light); margin-bottom: 2rem;'>عضو مسجل</div>
 
@@ -607,23 +600,14 @@
 
 
     <div class='view hidden' id='view-dashboard'>
-
       <div class='login-box card' id='loginSection'>
-
         <h2 class='text-xl font-bold text-center mb-6' data-i18n='doctorLogin'>Doctor Login</h2>
-
         <p class='text-sm text-gray text-center mb-6' data-i18n='loginDesc'>Enter your Doctor ID and registered phone number to view your appointments.</p>
-
 <form id='dashboardLoginForm'>
-
   <div class='form-group'>
-
     <label data-i18n='loginPhone'>Phone Number</label>
-
 <input id='loginPhone' autocomplete='username' placeholder='Your registered phone' required='required' type='tel'/>
-
   </div>
-
   <div class='form-group'>
 
     <label data-i18n='password'>Password *</label>
@@ -763,18 +747,10 @@
       </div> 
 
     </div> 
-
   </div>
-
-
-
   <div class='dialog-overlay hidden' id='doctorProfileModal' style='z-index: 99990;'>
-
     <div class='dialog-box doctor-profile-modal' id='dpModalContent'></div>
-
   </div>
-
-
 
   <div class='dialog-overlay hidden' id='confirmDialog'>
 
