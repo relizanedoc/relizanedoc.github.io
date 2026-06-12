@@ -43,13 +43,12 @@
     .text-center { text-align: center; } .text-sm { font-size: 0.875rem; } .text-lg { font-size: 1.125rem; } .text-xl { font-size: 1.25rem; }
     .font-semibold { font-weight: 600; } .font-bold { font-weight: 700; } .text-gray { color: var(--text-secondary); }
     .mb-2 { margin-bottom: 0.5rem; } .mb-4 { margin-bottom: 1rem; } .mb-6 { margin-bottom: 1.5rem; } .mt-4 { margin-top: 1rem; } .p-4 { padding: 1rem; }
-  .app-container { 
-  max-width: 1200px; 
-  margin: 0 auto; 
-  padding: 1.5rem; /* تم تغيير 1rem إلى 1.5rem لفراغ أكبر */
-  flex: 1; 
-  width: 100%; 
-  box-sizing: border-box; /* تأمين إضافي للحاوية الكلية */
+ .app-container { 
+    max-width: 1100px; /* يجب أن يتطابق مع شريط التنقل */
+    width: 92%; /* يترك 4% فراغ على اليمين و 4% على اليسار دائماً */
+    margin: 0 auto; 
+    padding: 1rem 0; /* بادينج من الأعلى والأسفل فقط */
+    flex: 1; 
 }
      .lang-switch { display: flex; gap: 0.25rem; background: var(--bg); padding: 0.25rem; border-radius: var(--radius); border: 1px solid var(--border); }
     .lang-btn { background: transparent; border: none; padding: 0.5rem 0.875rem; border-radius: 10px; cursor: pointer; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -57,8 +56,18 @@
     .lang-btn:hover { color: var(--primary); }
     .lang-btn.active { background: var(--primary); color: white; }
     nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.75rem 0; position: sticky; top: 0; z-index: 50; box-shadow: var(--shadow-sm); }
-    .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
-    .logo { font-size: 1.25rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
+    .nav-inner { 
+    max-width: 1100px; /* قللنا العرض الأقصى قليلاً */
+    width: 92%; /* نجبر المتصفح على شغل 92% فقط من الشاشة */
+    margin: 0 auto; 
+    padding: 0; /* لا نحتاج للبادينج الجانبي لوجود الفراغ النسبي */
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    flex-wrap: wrap; 
+    gap: 0.75rem; 
+}
+.logo { font-size: 1.25rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
     .nav-links { display: flex; gap: 0.25rem; flex-wrap: wrap; align-items: center; }
     .nav-btn { background: transparent; border: none; padding: 0.5rem 0.875rem; border-radius: var(--radius); cursor: pointer; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); transition: all 0.2s; }
     .nav-btn:hover { background: var(--bg); color: var(--primary); }
