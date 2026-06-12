@@ -15,7 +15,7 @@
 
 /* === الوضع المظلم (Dark Mode) === */
 @media (prefers-color-scheme: dark) {
-  :root {
+   :root {
     --primary: #0ea5e9; --primary-dark: #38bdf8; --primary-light: #082f49;
     --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --text-secondary: #94a3b8; --border: #334155;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5); 
@@ -28,8 +28,11 @@
   .toast { background: var(--text); color: var(--bg); }
   
   /* التعديل هنا: نضع الألوان القاتمة فقط للوضع المظلم */
-  .hero-section { background: linear-gradient(135deg, #082f49 0%, #0f172a 100%) !important; border-color: var(--border) !important; }
-}
+ .hero-section { 
+    background: linear-gradient(135deg, #082f49 0%, #0f172a 100%) !important; 
+    border-color: var(--border) !important; 
+    color: #ffffff !important; /* تغيير اللون الأساسي للنص في هذا القسم */
+  }
 /* === الإعدادات العامة === */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
