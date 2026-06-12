@@ -22,11 +22,17 @@ let isAuthInitialized = false;
 supabaseClient.auth.onAuthStateChange((event, session) => {
   console.log('🔄 حدث المصادقة:', event);
 
-  // تم دمج الأحداث لتشمل التهيئة الأولية INITIAL_SESSION
   if (['INITIAL_SESSION', 'SIGNED_IN', 'USER_UPDATED', 'TOKEN_REFRESHED'].includes(event)) {
     if (session) {
       console.log('✅ جلسة نشطة:', session.user);
       updateUserUI(session.user);
+      
+      // توجيه المستخدم وتنظيف الرابط بعد نجاح تسجيل الدخول
+      if (event === 'SIGNED_IN') {
+        router('user-dashboard');
+        // تنظيف الرابط من التوكن الطويل وإرجاعه لشكله الطبيعي
+        window.history.replaceState(null, '', window.location.pathname + '#user-dashboard');
+      }
     } else if (event === 'INITIAL_SESSION') {
       updateUserUI(null);
     }
@@ -36,9 +42,15 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   }
 
   if (!isAuthInitialized) {
-    const hash = window.location.hash.replace('#', '');
-    const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(hash) ? hash : 'home';
-    router(startView, false);
+    const hash = window.location.hash;
+    
+    // 🔴 الحل السحري: لا تقم بتشغيل الراوتر إذا كان الرابط يحتوي على توكن المصادقة!
+    if (!hash.includes('access_token') && !hash.includes('error=')) {
+        const cleanHash = hash.replace('#', '');
+        const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(cleanHash) ? cleanHash : 'home';
+        router(startView, false);
+    }
+    
     isAuthInitialized = true;
   }
 });
@@ -390,7 +402,7 @@ async function logoutUser() {
       const res = await fetch(API_URL + '?' + qs);
       return res.json();
     }
-  // ✅ الكود المحسن لتسجيل الدخول بـ Google
+ // ✅ الكود المحسن لتسجيل الدخول بـ Google
 async function handleGoogleSignIn() {
   if (isAccountLocked()) return;
   
@@ -401,7 +413,8 @@ async function handleGoogleSignIn() {
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: 'google',
       options: { 
-        redirectTo: window.location.origin + window.location.pathname + '#user-dashboard',
+        // 🔴 التعديل هنا: يجب أن يكون الرابط الأساسي فقط بدون أي Hash
+        redirectTo: window.location.origin + window.location.pathname,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent'
