@@ -378,35 +378,6 @@ async function logoutUser() {
       const res = await fetch(API_URL + '?' + qs);
       return res.json();
     }
-
-async function apiPost(action, data = {}) {
-  if (typeof grecaptcha !== 'undefined' && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_SITE_KEY') {
-    try { data.recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action }); } catch(e) {}
-  }
-  
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session && action !== 'authFirebase') {
-      data.idToken = session.access_token;
-  }
-  
-  console.log(`🚀 جاري إرسال طلب إلى سيرفر GAS - العملية: ${action}`, data);
-  
-  try {
-      const res = await fetch(API_URL, { 
-          method: 'POST', 
-          // ✅ إضافة الترويسة الضرورية لتخطي حظر متصفحات Google Apps Script
-          headers: {
-              'Content-Type': 'text/plain;charset=utf-8',
-          },
-          body: JSON.stringify({ action, data }) 
-      });
-      return await res.json();
-  } catch(err) {
-      console.error(`❌ فشل الاتصال بسيرفر GAS في إجراء ${action}:`, err);
-      return { success: false, error: err.message };
-  }
-}
-
     // ✅ الكود الجديد لتسجيل الدخول بـ Google:
 async function handleGoogleSignIn() {
   if (isAccountLocked()) return;
@@ -2610,72 +2581,6 @@ if (savedSession) {
     // =======================================
     });
 
-    // ========================================================================
-    // نظام إرسال الإشعارات عبر البريد (Google Apps Script)
-    // ========================================================================
-   window.sendBookingEmail = async function(recipientEmail, doctorName, appointmentDate, status) {
-  console.log('✉️ محاولة إرسال بريد إلكتروني إلى:', recipientEmail, 'الحالة:', status);
-  
-  var subject = "";
-  var htmlBody = "";
-
-  var primaryColor = "#0ea5e9";
-  var containerStyle = "font-family: Arial, sans-serif; direction: rtl; text-align: right; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;";
-  var headerStyle = "background-color: " + primaryColor + "; color: white; padding: 20px; text-align: center; font-size: 1.25rem; font-weight: bold;";
-  var bodyStyle = "padding: 20px; color: #0f172a; line-height: 1.6;";
-  var footerStyle = "background-color: #f8fafc; padding: 15px; text-align: center; color: #64748b; font-size: 0.85rem; border-top: 1px solid #e2e8f0;";
-
-  if (status === "confirm" || status === "مؤكد") {
-    subject = "تأكيد موعدك الطبي - دليل أطباء غليزان";
-    htmlBody = `
-      <div style="${containerStyle}">
-        <div style="${headerStyle}">تأكيد الموعد الطبي</div>
-        <div style="${bodyStyle}">
-          <p>مرحباً بك،</p>
-          <p>يسعدنا إعلامك بأنه تم <strong>تأكيد</strong> موعدك الطبي بنجاح عبر منصة "دليل أطباء غليزان".</p>
-          <div style="background-color: #f8fafc; border-right: 4px solid ${primaryColor}; padding: 15px; margin: 20px 0;">
-            <p style="margin: 0 0 10px 0;"><strong>الطبيب المَعني:</strong> ${doctorName}</p>
-            <p style="margin: 0;"><strong>تاريخ الموعد:</strong> <span dir="ltr">${appointmentDate}</span></p>
-          </div>
-          <p>يرجى الحضور إلى العيادة في الموعد المحدد. نتمنى لك دوام الصحة والعافية.</p>
-        </div>
-        <div style="${footerStyle}">© 2026 دليل أطباء ولاية غليزان. جميع الحقوق محفوظة.</div>
-      </div>
-    `;
-  } else if (status === "cancel" || status === "ملغى") {
-    subject = "إشعار بإلغاء موعدك الطبي - دليل أطباء غليزان";
-    htmlBody = `
-      <div style="${containerStyle}">
-        <div style="background-color: #ef4444; color: white; padding: 20px; text-align: center; font-size: 1.25rem; font-weight: bold;">إلغاء الموعد الطبي</div>
-        <div style="${bodyStyle}">
-          <p>مرحباً بك،</p>
-          <p>نعتذر بشدة لإعلامك بأنه قد تم <strong>إلغاء</strong> موعدك الطبي المجدول مع <strong>${doctorName}</strong> في تاريخ <span dir="ltr">${appointmentDate}</span>.</p>
-          <p>قد يعود سبب الإلغاء لظرف طارئ خارج عن إرادة الطبيب. ندعوك لزيارة المنصة مجدداً لحجز موعد في وقت آخر يناسبك.</p>
-        </div>
-        <div style="${footerStyle}">© 2026 دليل أطباء ولاية غليزان. جميع الحقوق محفوظة.</div>
-      </div>
-    `;
-  }
-
-  try {
-    const response = await apiPost('sendEmail', {
-      recipient: recipientEmail,
-      subject: subject,
-      htmlBody: htmlBody
-    });
-    
-    console.log("✅ رد خادم البريد (GAS): ", response);
-    
-    // إظهار النتيجة للطبيب لمعرفة نجاح الإرسال من عدمه
-    if (response && response.success) {
-       showToast('تم إرسال الإشعار للمريض عبر البريد بنجاح', 'success');
-    } else {
-       showToast('اكتمل التأكيد، لكن فشل إرسال البريد: ' + (response.error || 'خطأ في سيرفر GAS'), 'error');
-    }
-  } catch (error) {
-    console.error("❌ خطأ قاطع في إرسال البريد: ", error);
-  }
-};
 // ========================================================================
 // CHATBOT SYSTEM LOGIC (Multilingual & Fixed RTL Phone Display)
 // ========================================================================
@@ -3130,12 +3035,6 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
 
         // 2. إظهار رسالة نجاح
         showToast(currentLang === 'ar' ? 'تم تحديث حالة الحجز بنجاح' : 'Booking status updated successfully', 'success');
-
-        // 3. إرسال بريد إلكتروني للمريض (إذا كان البريد متوفراً في البيانات)
-        if (userEmail && userEmail.trim() !== '') {
-            const emailStatus = newStatus === 'confirmed' ? 'confirm' : 'cancel';
-await window.sendBookingEmail(userEmail, doctorName, appointmentDate, emailStatus);
-        }
 
         // 4. إعادة تحميل بيانات المواعيد لتحديث الواجهة فوراً باستخدام الدالة الآمنة
         const { data: updatedAppointments, error: fetchError } = await supabaseClient
