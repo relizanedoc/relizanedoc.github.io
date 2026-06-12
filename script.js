@@ -304,6 +304,10 @@ async function getCurrentUser() {
     // ✅ تحديث واجهة المستخدم حسب حالة تسجيل الدخول (Supabase)
 function updateUserUI(user) {
   console.log('🎨 updateUserUI called with:', user);
+    if (!document.getElementById('userPill')) {
+    console.log('⏳ الصفحة لم تُحمّل بعد');
+    return;
+  }
   const pill = document.getElementById('userPill');
   const loginBtn = document.getElementById('navLoginBtn');
   const nameDisplay = document.getElementById('userNameDisplay');
