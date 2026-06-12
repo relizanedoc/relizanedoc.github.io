@@ -379,18 +379,17 @@ async function logoutUser() {
       const res = await fetch(API_URL + '?' + qs);
       return res.json();
     }
-  // ✅ الكود المحسن لتسجيل الدخول بـ Google:
+  // ✅ الكود المحسن لتسجيل الدخول بـ Google
 async function handleGoogleSignIn() {
   if (isAccountLocked()) return;
   
   const btn = document.getElementById('googleSignInBtn');
-  setLoading(btn, true); // إظهار حالة التحميل للمستخدم
+  setLoading(btn, true); 
 
   try {
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: 'google',
       options: { 
-        // توجيه المستخدم مباشرة إلى لوحة التحكم بعد نجاح الدخول
         redirectTo: window.location.origin + window.location.pathname + '#user-dashboard',
         queryParams: {
           access_type: 'offline',
@@ -401,8 +400,6 @@ async function handleGoogleSignIn() {
 
     if (error) throw error;
     resetLoginAttempts();
-    
-    // ملاحظة: المتصفح سينتقل لصفحة غوغل، لذا الكود أدناه قد لا يُنفذ إلا إذا حدث خطأ قبل الانتقال
   } catch (err) { 
     recordFailedAttempt(); 
     showToast(t('toastAuthError') + err.message, 'error'); 
@@ -443,16 +440,14 @@ async function handleEmailAuth() {
 
       resetLoginAttempts();
 
-      // ✅ تسجيل الدخول تلقائياً حتى لو لم يؤكد البريد
+      // ✅ تسجيل الدخول تلقائياً
       if (data.user) {
-        // محاولة تسجيل الدخول مباشرة
         const { error: loginError } = await supabaseClient.auth.signInWithPassword({
           email: email,
           password: password
         });
 
         if (loginError && loginError.message.includes('Email not confirmed')) {
-          // البريد غير مؤكد، لكن نعرض رسالة نجاح فقط
           showToast('تم إنشاء الحساب! يمكنك تسجيل الدخول الآن.', 'success');
         } else {
           showToast('تم إنشاء الحساب بنجاح! ' + t('toastAuthSuccess') + name, 'success');
@@ -475,11 +470,11 @@ async function handleEmailAuth() {
   } catch (err) {
     recordFailedAttempt();
     let msg = err.message;
-    if (err.message.includes('weak-password')) msg = t('weakPassword');
-    else if (err.message.includes('invalid-email')) msg = t('invalidEmail');
-    else if (err.message.includes('not found')) msg = t('userNotFound');
-    else if (err.message.includes('Invalid login credentials')) msg = t('wrongPassword');
-    else if (err.message.includes('already in use') || err.message.includes('already registered')) msg = t('emailInUse');
+    if (msg.includes('weak-password')) msg = t('weakPassword');
+    else if (msg.includes('invalid-email')) msg = t('invalidEmail');
+    else if (msg.includes('not found') || msg.includes('Invalid login')) msg = t('userNotFound');
+    else if (msg.includes('wrong-password') || msg.includes('Invalid login credentials')) msg = t('wrongPassword');
+    else if (msg.includes('already in use') || msg.includes('already registered')) msg = t('emailInUse');
     showToast(t('toastAuthError') + msg, 'error');
   } finally { 
     setLoading(btn, false); 
