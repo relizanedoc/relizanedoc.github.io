@@ -26,7 +26,15 @@
   .btn-google { background: var(--surface); color: var(--text); }
   .btn-google:hover { background: var(--bg); }
   .toast { background: var(--text); color: var(--bg); }
-  .hero-section { background: linear-gradient(135deg, #082f49 0%, #0f172a 100%) !important; border-color: var(--border) !important; }
+  .hero-section { 
+  max-width: 1200px;
+  margin: 0 auto 1.5rem auto; /* توسيط أفقياً مع ترك مسافة بالأسفل */
+  width: 100%;
+  background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%); 
+  border-radius: 20px; 
+  border: 1px solid transparent; 
+  padding: 2.5rem 1.5rem; 
+}  
 }
 
 /* === الإعدادات العامة === */
