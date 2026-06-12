@@ -1036,7 +1036,21 @@
     <span data-i18n="chatToggleBtn">تحدث معنا</span>
 
   </button>
-
+<div class='dialog-overlay hidden' id='changePasswordModal' style='z-index: 99999;'>
+  <div class='dialog-box' style='max-width: 400px; padding: 1.5rem;'>
+    <h3 style='margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: bold; color: var(--text);'>تغيير كلمة المرور</h3>
+    <p style='color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;'>يرجى إدخال كلمة المرور الجديدة (يجب أن تتكون من 6 أحرف أو أرقام على الأقل).</p>
+    
+    <div class='form-group' style='text-align: right;'>
+      <input id='newPasswordInput' placeholder='أدخل كلمة المرور الجديدة...' type='password' style='width: 100%;'/>
+    </div>
+    
+    <div class='dialog-actions' style='margin-top: 1.5rem;'>
+      <button class='btn btn-secondary' onclick='closeChangePasswordModal()'>إلغاء</button>
+      <button class='btn btn-primary' id='saveNewPasswordBtn' onclick='submitNewPassword()'>حفظ التغييرات</button>
+    </div>
+  </div>
+</div>
 </body>
 
 </html> 
