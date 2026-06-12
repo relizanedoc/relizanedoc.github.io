@@ -22,16 +22,17 @@ let isAuthInitialized = false;
 supabaseClient.auth.onAuthStateChange((event, session) => {
   console.log('🔄 حدث المصادقة:', event);
 
-  if (event === 'SIGNED_IN' && session) {
-    console.log('✅ تم تسجيل الدخول:', session.user);
-    updateUserUI(session.user);
+  // تم دمج الأحداث لتشمل التهيئة الأولية INITIAL_SESSION
+  if (['INITIAL_SESSION', 'SIGNED_IN', 'USER_UPDATED', 'TOKEN_REFRESHED'].includes(event)) {
+    if (session) {
+      console.log('✅ جلسة نشطة:', session.user);
+      updateUserUI(session.user);
+    } else if (event === 'INITIAL_SESSION') {
+      updateUserUI(null);
+    }
   } else if (event === 'SIGNED_OUT') {
     console.log('❌ تم تسجيل الخروج');
     updateUserUI(null);
-  } else if (event === 'USER_UPDATED') {
-    if (session) updateUserUI(session.user);
-  } else if (event === 'TOKEN_REFRESHED') {
-    if (session) updateUserUI(session.user);
   }
 
   if (!isAuthInitialized) {
@@ -1898,12 +1899,15 @@ async function loadUserBookings() {
       if (viewName === 'home') loadDoctors();
       if (viewName === 'user-dashboard') loadUserBookings();
 
-      // إخفاء اسم العضو من الشريط العلوي إذا كنا داخل لوحة الطبيب لمنع التضارب البصري
+     // إخفاء اسم العضو من الشريط العلوي إذا كنا داخل لوحة الطبيب لمنع التضارب البصري
       const pill = document.getElementById('userPill');
       if (viewName === 'dashboard') {
           if(pill) pill.classList.add('hidden');
       } else {
-          updateUserUI(); // إعادة إظهار الاسم في باقي الصفحات إذا كان مسجل الدخول
+          // 🛠 التعديل: يجب جلب الجلسة الحالية لتمرير المستخدم الصحيح بدلاً من تمرير قيمة فارغة
+          supabaseClient.auth.getSession().then(({ data: { session } }) => {
+              updateUserUI(session ? session.user : null);
+          });
       }
     }
   function setLang(lang) {
