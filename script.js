@@ -2458,63 +2458,45 @@ document.addEventListener('submit', async function(e) {
 
       });
 
+// ✅ هذا هو الكود الصحيح والمحمي
+// 1. نرفع أزرار التنقل للأعلى لضمان تشغيلها دائماً قبل أي شيء آخر
+document.querySelectorAll('.nav-btn[data-nav]').forEach(btn => { 
+    btn.onclick = () => router(btn.getAttribute('data-nav')); 
+});
 
+// 2. نتأكد من وجود العنصر في الصفحة (if) قبل ربط الحدث به
+const addDoctorForm = document.getElementById('addDoctorForm');
+if (addDoctorForm) addDoctorForm.onsubmit = handleAddDoctor;
 
+const bookingBtn = document.getElementById('bookingBtn');
+if (bookingBtn) bookingBtn.onclick = confirmBooking;
 
+const confirmDialogOkBtn = document.getElementById('confirmDialogOkBtn');
+if (confirmDialogOkBtn) confirmDialogOkBtn.onclick = submitBooking;
 
+const cancelDialogBtn = document.getElementById('cancelDialogBtn');
+if (cancelDialogBtn) cancelDialogBtn.onclick = closeConfirmDialog;
 
+const dashboardLoginForm = document.getElementById('dashboardLoginForm');
+if (dashboardLoginForm) dashboardLoginForm.onsubmit = handleDashboardLogin;
 
-      document.getElementById('addDoctorForm').onsubmit = handleAddDoctor;
+const dashboardLogoutBtn = document.getElementById('dashboardLogoutBtn');
+if (dashboardLogoutBtn) dashboardLogoutBtn.onclick = logoutDashboard;
 
+const bookingToggleSwitch = document.getElementById('bookingToggleSwitch');
+if (bookingToggleSwitch) bookingToggleSwitch.onchange = handleToggleBooking;
 
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) logoutBtn.onclick = logoutUser;
 
-      document.getElementById('bookingBtn').onclick = confirmBooking;
+const searchInput = document.getElementById('searchInput');
+if (searchInput) searchInput.oninput = filterDoctors;
 
+const specialtyFilter = document.getElementById('specialtyFilter');
+if (specialtyFilter) specialtyFilter.onchange = filterDoctors;
 
-
-      document.getElementById('confirmDialogOkBtn').onclick = submitBooking;
-
-
-
-      document.getElementById('cancelDialogBtn').onclick = closeConfirmDialog;
-
-
-
-      document.getElementById('dashboardLoginForm').onsubmit = handleDashboardLogin;
-
-
-
-      document.getElementById('dashboardLogoutBtn').onclick = logoutDashboard;
-
-
-
-      document.getElementById('bookingToggleSwitch').onchange = handleToggleBooking;
-
-
-
-      document.getElementById('logoutBtn').onclick = logoutUser;
-
-
-
-      document.getElementById('searchInput').oninput = filterDoctors;
-
-
-
-      document.getElementById('specialtyFilter').onchange = filterDoctors;
-
-
-
-      document.getElementById('municipalityFilter').onchange = filterDoctors;
-
-
-
-      document.querySelectorAll('.nav-btn[data-nav]').forEach(btn => { btn.onclick = () => router(btn.getAttribute('data-nav')); });
-
-
-
-
-
-
+const municipalityFilter = document.getElementById('municipalityFilter');
+if (municipalityFilter) municipalityFilter.onchange = filterDoctors;
 
       window.onscroll = () => { const btn = document.getElementById('backToTop'); if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) btn.classList.remove('hidden'); else btn.classList.add('hidden'); };
 
