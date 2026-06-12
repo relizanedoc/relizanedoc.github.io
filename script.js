@@ -512,35 +512,47 @@ async function handleEmailAuth() {
     setLoading(btn, false); 
   }
 }
-// ✅ دالة إرسال رابط استعادة كلمة المرور
-async function handleForgotPassword(e) {
-  e.preventDefault();
-  const email = document.getElementById('authEmail').value.trim();
+// ✅ 1. دالة فتح نافذة استعادة كلمة المرور
+function handleForgotPassword(e) {
+  if (e) e.preventDefault();
+  document.getElementById('resetEmailInput').value = ''; // تفريغ الحقل
+  document.getElementById('forgotPasswordModal').classList.remove('hidden');
+  document.getElementById('resetEmailInput').focus();
+}
 
-  // التحقق من أن المستخدم أدخل بريده الإلكتروني أولاً
-  if (!email) {
-    showToast(currentLang === 'ar' ? 'يرجى كتابة بريدك الإلكتروني في الحقل أعلاه أولاً' : 'Please enter your email first', 'error');
+// ✅ 2. دالة إغلاق النافذة
+function closeForgotPasswordModal() {
+  document.getElementById('forgotPasswordModal').classList.add('hidden');
+}
+
+// ✅ 3. دالة إرسال رابط الاستعادة عبر Supabase
+async function submitPasswordReset() {
+  const email = document.getElementById('resetEmailInput').value.trim();
+
+  // التحقق من صحة البريد الإلكتروني
+  if (!email || !email.includes('@')) {
+    showToast(currentLang === 'ar' ? 'يرجى إدخال بريد إلكتروني صحيح' : 'Please enter a valid email', 'error');
     return;
   }
 
-  const btn = document.getElementById('authSubmitBtn');
-  setLoading(btn, true);
+  const btn = document.getElementById('sendResetLinkBtn');
+  setLoading(btn, true, currentLang === 'ar' ? 'جاري الإرسال...' : 'Sending...');
 
   try {
-    // إرسال رابط الاسترجاع عبر Supabase
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + window.location.pathname, // توجيه المستخدم لنفس الصفحة بعد النقر على الرابط
+      redirectTo: window.location.origin + window.location.pathname,
     });
 
     if (error) throw error;
 
-    showToast(currentLang === 'ar' ? 'تم إرسال رابط استعادة كلمة المرور إلى بريدك' : 'Password reset link sent to your email', 'success');
+    showToast(currentLang === 'ar' ? 'تم إرسال رابط الاستعادة إلى بريدك بنجاح' : 'Reset link sent successfully', 'success');
+    closeForgotPasswordModal(); // إغلاق النافذة بعد النجاح
   } catch (err) {
     let msg = err.message;
     if (msg.includes('not found')) msg = currentLang === 'ar' ? 'هذا البريد غير مسجل لدينا' : 'Email not found';
     showToast((currentLang === 'ar' ? 'خطأ: ' : 'Error: ') + msg, 'error');
   } finally {
-    setLoading(btn, false);
+    setLoading(btn, false, currentLang === 'ar' ? 'إرسال الرابط' : 'Send Link');
   }
 }
     function toggleAuthMode() {
