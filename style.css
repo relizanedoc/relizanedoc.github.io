@@ -67,7 +67,12 @@ nav {
   max-width: 1200px; 
   margin: 0 auto; 
   padding: 0 1.5rem; 
-  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  flex-wrap: wrap; 
+  gap: 0.75rem; 
+  width: 100%; /* يضمن أن المحتوى يملأ العرض الأقصى 1200 بكسل */
 }
 .app-container { 
   max-width: 1200px; 
