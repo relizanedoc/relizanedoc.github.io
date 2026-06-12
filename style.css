@@ -73,7 +73,9 @@ nav {
   max-width: 1000px; 
   margin: 0 auto; 
   padding: 2rem 1.5rem; 
-  flex: 1; width: 100%; 
+  flex: 1; 
+  width: 100%; 
+  border: 5px solid red; /* أضف هذا السطر فقط للاختبار */
 }
 footer { 
   background: var(--surface); border-top: 1px solid var(--border); 
