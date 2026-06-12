@@ -70,12 +70,11 @@ nav {
   display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; 
 }
 .app-container { 
-  max-width: 1000px; 
+  max-width: 1200px; 
   margin: 0 auto; 
   padding: 2rem 1.5rem; 
   flex: 1; 
   width: 100%; 
-  border: 5px solid red; /* أضف هذا السطر فقط للاختبار */
 }
 footer { 
   background: var(--surface); border-top: 1px solid var(--border); 
