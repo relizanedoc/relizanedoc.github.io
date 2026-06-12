@@ -22,15 +22,23 @@ let isAuthInitialized = false;
 supabaseClient.auth.onAuthStateChange((event, session) => {
   console.log('🔄 حدث المصادقة:', event);
 
+  // 🔴 أضف هذا الشرط لالتقاط حدث استعادة كلمة المرور
+  if (event === 'PASSWORD_RECOVERY') {
+    console.log('✅ تم التقاط حدث استعادة كلمة المرور');
+    // ننتظر نصف ثانية حتى تستقر الواجهة ثم نظهر نافذة تغيير كلمة المرور
+    setTimeout(() => {
+      handleChangePassword();
+    }, 500);
+  }
+
   if (['INITIAL_SESSION', 'SIGNED_IN', 'USER_UPDATED', 'TOKEN_REFRESHED'].includes(event)) {
+    // ... (باقي كودك الحالي كما هو) ...
     if (session) {
       console.log('✅ جلسة نشطة:', session.user);
       updateUserUI(session.user);
       
-      // توجيه المستخدم وتنظيف الرابط بعد نجاح تسجيل الدخول
       if (event === 'SIGNED_IN') {
         router('user-dashboard');
-        // تنظيف الرابط من التوكن الطويل وإرجاعه لشكله الطبيعي
         window.history.replaceState(null, '', window.location.pathname + '#user-dashboard');
       }
     } else if (event === 'INITIAL_SESSION') {
@@ -502,6 +510,37 @@ async function handleEmailAuth() {
     showToast(t('toastAuthError') + msg, 'error');
   } finally { 
     setLoading(btn, false); 
+  }
+}
+// ✅ دالة إرسال رابط استعادة كلمة المرور
+async function handleForgotPassword(e) {
+  e.preventDefault();
+  const email = document.getElementById('authEmail').value.trim();
+
+  // التحقق من أن المستخدم أدخل بريده الإلكتروني أولاً
+  if (!email) {
+    showToast(currentLang === 'ar' ? 'يرجى كتابة بريدك الإلكتروني في الحقل أعلاه أولاً' : 'Please enter your email first', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('authSubmitBtn');
+  setLoading(btn, true);
+
+  try {
+    // إرسال رابط الاسترجاع عبر Supabase
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname, // توجيه المستخدم لنفس الصفحة بعد النقر على الرابط
+    });
+
+    if (error) throw error;
+
+    showToast(currentLang === 'ar' ? 'تم إرسال رابط استعادة كلمة المرور إلى بريدك' : 'Password reset link sent to your email', 'success');
+  } catch (err) {
+    let msg = err.message;
+    if (msg.includes('not found')) msg = currentLang === 'ar' ? 'هذا البريد غير مسجل لدينا' : 'Email not found';
+    showToast((currentLang === 'ar' ? 'خطأ: ' : 'Error: ') + msg, 'error');
+  } finally {
+    setLoading(btn, false);
   }
 }
     function toggleAuthMode() {
@@ -3082,3 +3121,27 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
         showToast(currentLang === 'ar' ? 'خطأ في تحديث الحالة: ' + err.message : 'Error updating status: ' + err.message, 'error');
     }
 };
+// ✅ دالة تغيير كلمة المرور للعضو المسجل
+async function handleChangePassword() {
+  const newPassword = prompt(currentLang === 'ar' ? 'أدخل كلمة المرور الجديدة (يجب أن تتكون من 6 أحرف أو أرقام على الأقل):' : 'Enter your new password (at least 6 characters):');
+
+  if (!newPassword) return; // إذا ضغط المستخدم على "إلغاء"
+
+  if (newPassword.length < 6) {
+    showToast(currentLang === 'ar' ? 'كلمة المرور قصيرة جداً!' : 'Password is too short!', 'error');
+    return;
+  }
+
+  try {
+    // تحديث كلمة المرور في Supabase
+    const { error } = await supabaseClient.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) throw error;
+
+    showToast(currentLang === 'ar' ? 'تم تحديث كلمة المرور بنجاح' : 'Password updated successfully', 'success');
+  } catch (err) {
+    showToast((currentLang === 'ar' ? 'فشل تغيير كلمة المرور: ' : 'Error: ') + err.message, 'error');
+  }
+}
