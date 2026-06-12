@@ -1871,40 +1871,46 @@ async function loadUserBookings() {
     // ========================================================================
     // دالة التوجيه (Router)
     // ========================================================================
- function router(viewName, pushHistory = true) {
-      if (viewName === 'add-doctor') {
-        getCurrentUser().then(user => { if (!user) { showToast(t('loginRequired'), 'error'); router('login'); } });
-      }
+function router(viewName, pushHistory = true) {
+  // التحقق من تسجيل الدخول قبل الدخول لصفحة إضافة طبيب
+  if (viewName === 'add-doctor') {
+    getCurrentUser().then(user => { 
+        if (!user) { 
+            showToast(t('loginRequired'), 'error'); 
+            router('login'); 
+        } 
+    });
+  }
 
-      document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
+  // إخفاء جميع الواجهات وإظهار الواجهة المطلوبة
+  document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
+  const target = document.getElementById('view-' + viewName);
+  if (target) target.classList.remove('hidden');
 
-      const target = document.getElementById('view-' + viewName);
-      if (target) target.classList.remove('hidden');
+  // تحديث حالة الأزرار في القائمة العلوية
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+  const activeNav = document.querySelector(`.nav-btn[data-nav="${viewName}"]`);
+  if (activeNav) activeNav.classList.add('active');
 
-      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+  // تحديث رابط المتصفح
+  if (pushHistory) history.pushState({ view: viewName }, '', '#' + viewName);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
-      const activeNav = document.querySelector(`.nav-btn[data-nav="${viewName}"]`);
-      if (activeNav) activeNav.classList.add('active');
+  // معالجة الواجهات وجلب البيانات
+  if (viewName === 'home') loadDoctors();
+  if (viewName === 'user-dashboard') loadUserBookings();
 
-      if (pushHistory) history.pushState({ view: viewName }, '', '#' + viewName);
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-
-      // معالجة الواجهات وجلب البيانات
-      if (viewName === 'home') loadDoctors();
-      if (viewName === 'user-dashboard') loadUserBookings();
-
- // إخفاء اسم العضو من الشريط العلوي إذا كنا داخل لوحة الطبيب لمنع التضارب البصري
-      const pill = document.getElementById('userPill');
-      if (viewName === 'dashboard') {
-          if(pill) pill.classList.add('hidden');
-      } else {
-          // جلب الجلسة بشكل غير متزامن باستخدام then بدلاً من await
-          supabaseClient.auth.getSession().then(({ data: { session } }) => {
-              updateUserUI(session ? session.user : null);
-          });
-      }
-    }
+  // إخفاء اسم العضو من الشريط العلوي إذا كنا داخل لوحة الطبيب لمنع التضارب البصري
+  const pill = document.getElementById('userPill');
+  if (viewName === 'dashboard') {
+      if(pill) pill.classList.add('hidden');
+  } else {
+      // ✅ جلب الجلسة بطريقة آمنة (بدون await) لمنع تعطل السكريبت
+      supabaseClient.auth.getSession().then(({ data: { session } }) => {
+          updateUserUI(session ? session.user : null);
+      }).catch(err => console.error("Error fetching session:", err));
+  }
+}
   function setLang(lang) {
       currentLang = lang;
       localStorage.setItem('appLanguage', lang);
