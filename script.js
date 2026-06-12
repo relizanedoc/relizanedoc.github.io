@@ -1894,12 +1894,12 @@ async function loadUserBookings() {
       if (viewName === 'home') loadDoctors();
       if (viewName === 'user-dashboard') loadUserBookings();
 
-     // إخفاء اسم العضو من الشريط العلوي إذا كنا داخل لوحة الطبيب لمنع التضارب البصري
+ // إخفاء اسم العضو من الشريط العلوي إذا كنا داخل لوحة الطبيب لمنع التضارب البصري
       const pill = document.getElementById('userPill');
       if (viewName === 'dashboard') {
           if(pill) pill.classList.add('hidden');
       } else {
-          // 🛠 التعديل: يجب جلب الجلسة الحالية لتمرير المستخدم الصحيح بدلاً من تمرير قيمة فارغة
+          // جلب الجلسة بشكل غير متزامن باستخدام then بدلاً من await
           supabaseClient.auth.getSession().then(({ data: { session } }) => {
               updateUserUI(session ? session.user : null);
           });
