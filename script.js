@@ -669,7 +669,7 @@ function renderDoctors(doctors) {
     container.appendChild(card);
   });
 }
-// ✅ تحويل واجهة العرض إلى صفحة كاملة باحترافية وتصميم عصري (Premium UI)
+// ✅ تحويل واجهة العرض إلى صفحة كاملة باحترافية وتصميم عصري فاخر (Premium UI)
 function openDoctorProfileModal(doc, doctorName) {
   let fbLink = doc.facebook_link || '';
   if (fbLink && !fbLink.match(/^https?:\/\//i)) {
@@ -695,7 +695,7 @@ function openDoctorProfileModal(doc, doctorName) {
   document.getElementById('fullProfileSpec').querySelector('span').textContent = escapeHtml(t(doc.specialty));
   document.getElementById('fullProfileAvatar').textContent = (doc.first_name?.[0] || '') + (doc.last_name?.[0] || '');
 
-  // بناء جدول العمل الأسبوعي (تصميم أنظف)
+  // 1. بناء جدول العمل الأسبوعي (تصميم أنظف وأرقى)
   let scheduleHtml = '';
   if (doc.working_days && Object.keys(doc.working_days).length > 0) {
     try {
@@ -706,9 +706,9 @@ function openDoctorProfileModal(doc, doctorName) {
 
       for(let i=0; i<=6; i++) {
         if(wd[i] && wd[i].active) {
-          scheduleHtml += `<div style="display:flex; justify-content:space-between; padding: 0.5rem 0; font-size: 0.95rem; border-bottom: 1px solid var(--border);">
-            <span style="color: var(--text-secondary); font-weight: 500;">${daysNames[i]}</span>
-            <span dir="ltr" style="color: var(--primary-dark); font-weight: 700; background: var(--bg); padding: 0.2rem 0.5rem; border-radius: 4px;">${wd[i].start} - ${wd[i].end}</span>
+          scheduleHtml += `<div style="display:flex; justify-content:space-between; align-items: center; padding: 0.6rem 0; font-size: 0.95rem; border-bottom: 1px solid #f1f5f9;">
+            <span style="color: #64748b; font-weight: 600;">${daysNames[i]}</span>
+            <span dir="ltr" style="color: var(--primary-dark); font-weight: 800; background: #f8fafc; padding: 0.3rem 0.75rem; border-radius: 6px; letter-spacing: 0.5px;">${wd[i].start} - ${wd[i].end}</span>
           </div>`;
         }
       }
@@ -716,30 +716,33 @@ function openDoctorProfileModal(doc, doctorName) {
   }
 
   if(!scheduleHtml) {
-    scheduleHtml = `<div class="text-sm text-gray" style="padding: 1rem 0; text-align: center;">${currentLang === 'ar' ? 'غير متوفر' : 'Not available'}</div>`;
+    scheduleHtml = `<div class="text-sm text-gray" style="padding: 1.5rem 0; text-align: center; background: #f8fafc; border-radius: 8px;">${currentLang === 'ar' ? 'غير متوفر حالياً' : 'Not available currently'}</div>`;
   }
 
-  // بناء قسم الخدمات (تصميم بطاقات عصرية متناسقة اللون)
+  // 2. بناء قسم الخدمات (تصميم بطاقات عصرية نظيفة)
   let servicesHtml = '';
   if (doc.services && Array.isArray(doc.services) && doc.services.length > 0) {
       servicesHtml = `
-      <div style="margin-top: 2rem; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: white; box-shadow: var(--shadow-sm);">
-        <div style="display: flex; align-items: center; gap: 0.5rem; background: linear-gradient(to right, var(--primary), var(--primary-light)); color: white; padding: 1rem 1.25rem;">
-           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-           <h3 style="margin: 0; font-size: 1.1rem; font-weight: bold; color: white;">${t('ourServices')}</h3>
-        </div>
-        <div style="padding: 0;">
-            ${doc.services.map((service, index) => `
-                <div style="padding: 1rem 1.25rem; border-bottom: ${index !== doc.services.length - 1 ? '1px solid var(--border)' : 'none'};">
-                    <div style="color: var(--primary-dark); font-size: 1rem; font-weight: bold; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 6px;">
-                        <span style="display: inline-block; width: 6px; height: 6px; background: var(--primary); border-radius: 50%;"></span>
+      <div style="margin-top: 2rem; background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05);">
+        <h3 style="margin: 0 0 1.5rem 0; font-size: 1.2rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 0.5rem;">
+           <span style="background: rgba(14, 165, 233, 0.1); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+           </span>
+           ${t('ourServices')}
+        </h3>
+        <div style="display: grid; gap: 1rem;">
+            ${doc.services.map(service => `
+                <div style="background: #f8fafc; border-radius: 10px; padding: 1.25rem;">
+                    <div style="color: var(--primary-dark); font-size: 1.05rem; font-weight: 800; margin-bottom: ${service.items.length > 0 ? '0.75rem' : '0'}; display: flex; align-items: center; gap: 8px;">
+                        <span style="display: inline-block; width: 8px; height: 8px; background: var(--primary); border-radius: 50%;"></span>
                         ${escapeHtml(service.category)}
                     </div>
                     ${service.items.length > 0 ? `
-                        <div style="display: flex; flex-direction: column; gap: 0.3rem; padding-inline-start: 1rem;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; padding-inline-start: 1.25rem;">
                             ${service.items.map(item => `
-                                <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                                    - ${escapeHtml(item)}
+                                <div style="color: #475569; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color: #cbd5e1;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    ${escapeHtml(item)}
                                 </div>
                             `).join('')}
                         </div>
@@ -756,27 +759,36 @@ function openDoctorProfileModal(doc, doctorName) {
       
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
-        <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; box-shadow: var(--shadow-sm);">
-            <div class="dp-info-row" style="padding-top: 0; border-bottom: 1px solid #f1f5f9;">
-              <div class="dp-info-icon" style="background: #e0f2fe; color: var(--primary);"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
+        <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05);">
+            
+            <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;">
+              <div style="background: rgba(14, 165, 233, 0.1); color: var(--primary); padding: 0.75rem; border-radius: 12px; flex-shrink: 0;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              </div>
               <div>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem; text-transform: uppercase; letter-spacing: 0.5px;">${currentLang === 'ar' ? 'العنوان الدقيق' : 'Exact Location'}</div>
-                <div style="font-weight: bold; color: var(--text); font-size: 1rem;">${escapeHtml(doc.exact_location)}, ${escapeHtml(t(doc.municipality))}</div>
+                <div style="font-size: 0.75rem; color: #64748b; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;">${currentLang === 'ar' ? 'العنوان الدقيق' : 'Exact Location'}</div>
+                <div style="font-weight: 800; color: #0f172a; font-size: 1.05rem; line-height: 1.4;">${escapeHtml(doc.exact_location)}, <span style="color: var(--primary);">${escapeHtml(t(doc.municipality))}</span></div>
               </div>
             </div>
             
-            <div class="dp-info-row" style="padding-bottom: 0; border-bottom: none;">
-              <div class="dp-info-icon" style="background: #e0f2fe; color: var(--primary);"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
+            <div style="width: 100%; height: 1px; background: #f1f5f9; margin-bottom: 1.5rem;"></div>
+            
+            <div style="display: flex; align-items: flex-start; gap: 1rem;">
+              <div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.75rem; border-radius: 12px; flex-shrink: 0;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              </div>
               <div>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem; text-transform: uppercase; letter-spacing: 0.5px;">${currentLang === 'ar' ? 'رقم العيادة' : 'Clinic Phone'}</div>
-                <div style="font-weight: bold; color: var(--text); font-size: 1.1rem; letter-spacing: 1px;" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone))}</div>
+                <div style="font-size: 0.75rem; color: #64748b; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;">${currentLang === 'ar' ? 'رقم العيادة' : 'Clinic Phone'}</div>
+                <div style="font-weight: 800; color: #0f172a; font-size: 1.15rem; letter-spacing: 1px;" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone))}</div>
               </div>
             </div>
         </div>
 
-        <div style="background: white; border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; box-shadow: var(--shadow-sm);">
-          <div style="font-size: 0.9rem; font-weight: bold; color: var(--primary-dark); margin-bottom: 1rem; display: flex; gap: 0.5rem; align-items: center;">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05);">
+          <div style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-bottom: 1.25rem; display: flex; gap: 0.5rem; align-items: center;">
+            <span style="background: rgba(14, 165, 233, 0.1); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </span>
             <span>${currentLang === 'ar' ? 'أوقات العمل المتاحة' : 'Available Working Hours'}</span>
           </div>
           <div>
@@ -785,34 +797,37 @@ function openDoctorProfileModal(doc, doctorName) {
         </div>
 
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-          ${doc.whatsapp_number ? `<a href="https://wa.me/${doc.whatsapp_number.replace(/\D/g, '')}" target="_blank" class="btn" style="background: #ecfdf5; color: #059669; border: 1px solid #10b981; padding: 0.75rem; font-size: 0.9rem; flex: 1; justify-content: center; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#10b981'; this.style.color='white';" onmouseout="this.style.background='#ecfdf5'; this.style.color='#059669';"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> ${t('whatsappBtn')}</a>` : ''}
-          ${fbLink ? `<a href="${fbLink}" target="_blank" class="btn" style="background: #eff6ff; color: #2563eb; border: 1px solid #3b82f6; padding: 0.75rem; font-size: 0.9rem; flex: 1; justify-content: center; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='#3b82f6'; this.style.color='white';" onmouseout="this.style.background='#eff6ff'; this.style.color='#2563eb';"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> ${t('facebookBtn')}</a>` : ''}
-          ${doc.contact_email ? `<a href="mailto:${doc.contact_email}" class="btn" style="background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 0.75rem; font-size: 0.9rem; flex: 1; justify-content: center; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='var(--text)'; this.style.color='white';" onmouseout="this.style.background='var(--bg)'; this.style.color='var(--text)';"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> ${t('emailBtn')}</a>` : ''}
+          ${doc.whatsapp_number ? `<a href="https://wa.me/${doc.whatsapp_number.replace(/\D/g, '')}" target="_blank" class="btn" style="background: white; color: #059669; border: 1px solid #a7f3d0; padding: 0.85rem; font-size: 0.95rem; flex: 1; justify-content: center; font-weight: 800; box-shadow: 0 2px 8px rgba(16,185,129,0.05); transition: all 0.2s;" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='white'; this.style.color='#059669'; this.style.transform='translateY(0)';"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> ${t('whatsappBtn')}</a>` : ''}
+          ${fbLink ? `<a href="${fbLink}" target="_blank" class="btn" style="background: white; color: #2563eb; border: 1px solid #bfdbfe; padding: 0.85rem; font-size: 0.95rem; flex: 1; justify-content: center; font-weight: 800; box-shadow: 0 2px 8px rgba(59,130,246,0.05); transition: all 0.2s;" onmouseover="this.style.background='#3b82f6'; this.style.color='white'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='white'; this.style.color='#2563eb'; this.style.transform='translateY(0)';"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> ${t('facebookBtn')}</a>` : ''}
+          ${doc.contact_email ? `<a href="mailto:${doc.contact_email}" class="btn" style="background: white; color: #475569; border: 1px solid #cbd5e1; padding: 0.85rem; font-size: 0.95rem; flex: 1; justify-content: center; font-weight: 800; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: all 0.2s;" onmouseover="this.style.background='#475569'; this.style.color='white'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='white'; this.style.color='#475569'; this.style.transform='translateY(0)';"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> ${t('emailBtn')}</a>` : ''}
         </div>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
         ${doc.map_link ? `
-        <div style="background: white; border: 1px solid #fecaca; border-radius: 12px; padding: 1.25rem; text-align: center; box-shadow: var(--shadow-sm);">
-          <div style="font-size: 0.85rem; font-weight: bold; color: #ef4444; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">${t('mapLocation')}</div>
-          <a href="${doc.map_link}" target="_blank" class="btn" style="width: 100%; justify-content: center; background: #fef2f2; color: #ef4444; border: 1px dashed #fca5a5; padding: 0.85rem; font-weight: bold; font-size: 1rem; transition: all 0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='white';" onmouseout="this.style.background='#fef2f2'; this.style.color='#ef4444';">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end:0.4rem;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <div style="background: white; border: 1px solid #fecaca; border-radius: 16px; padding: 1.5rem; text-align: center; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.05);">
+          <div style="font-size: 0.85rem; font-weight: 800; color: #ef4444; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">${t('mapLocation')}</div>
+          <a href="${doc.map_link}" target="_blank" class="btn" style="width: 100%; justify-content: center; background: #fff5f5; color: #ef4444; border: 2px dashed #fca5a5; padding: 1rem; font-weight: 800; font-size: 1.05rem; border-radius: 12px; transition: all 0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='white'; this.style.borderStyle='solid';" onmouseout="this.style.background='#fff5f5'; this.style.color='#ef4444'; this.style.borderStyle='dashed';">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-inline-end:0.5rem;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             ${t('openInGoogleMaps')}
           </a>
         </div>` : ''}
 
-        <div style="background: white; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); text-align: center; box-shadow: var(--shadow-sm);">
-            <div style="color: var(--primary-dark); font-weight: bold; font-size: 1.05rem; margin-bottom: 1rem;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: sub; margin-inline-end: 4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
+        <div style="background: white; padding: 2rem; border-radius: 16px; border: 1px solid rgba(0,0,0,0.05); text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <div style="color: #0f172a; font-weight: 800; font-size: 1.1rem; margin-bottom: 1.25rem;">
+                <span style="background: rgba(14, 165, 233, 0.1); color: var(--primary); padding: 0.4rem; border-radius: 8px; display: inline-flex; vertical-align: bottom; margin-inline-end: 6px;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
+                </span>
                 ${currentLang === 'ar' ? 'إمسح الرمز لحفظ جهة الاتصال' : 'Scan to save contact'}
             </div>
-            <div style="display: inline-block; padding: 0.5rem; background: var(--bg); border: 1px dashed var(--border); border-radius: 8px;">
+            <div style="display: inline-block; padding: 1rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px;">
                 <img 
                   src="${qrPrimary}" 
                   data-fallback-url="${qrFallback}" 
                   onerror="handleQrError(this)" 
                   alt="QR Contact Code" 
-                  style="width: 150px; height: 150px; display: block; margin: 0 auto; mix-blend-mode: multiply;" 
+                  style="width: 160px; height: 160px; display: block; margin: 0 auto; mix-blend-mode: multiply;" 
                 />
             </div>
         </div>
@@ -822,27 +837,33 @@ function openDoctorProfileModal(doc, doctorName) {
     ${servicesHtml}
 
     ${doc.extra_info ? `
-    <div style="margin-top: 2rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 1.5rem;">
-      <h4 style="font-size: 1rem; font-weight: bold; margin-bottom: 0.75rem; color: #d97706; display: flex; align-items: center; gap: 0.5rem;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+    <div style="margin-top: 2rem; background: #fefce8; border: 1px solid #fde68a; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.05);">
+      <h4 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 0.75rem; color: #d97706; display: flex; align-items: center; gap: 0.5rem;">
+        <span style="background: rgba(245, 158, 11, 0.15); padding: 0.4rem; border-radius: 8px; display: flex;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        </span>
         ${currentLang === 'ar' ? 'معلومات إضافية' : 'Extra Information'}
       </h4>
-      <p style="color: #92400e; font-size: 0.95rem; line-height: 1.6; margin: 0;">${escapeHtml(doc.extra_info)}</p>
+      <p style="color: #92400e; font-size: 1rem; line-height: 1.6; margin: 0; font-weight: 500;">${escapeHtml(doc.extra_info)}</p>
     </div>` : ''}
 
-    <div style="position: sticky; bottom: 0; background: white; margin: 2rem -2rem -2rem -2rem; padding: 1.25rem 2rem; border-top: 1px solid var(--border); box-shadow: 0 -10px 20px rgba(0,0,0,0.03); display: flex; gap: 1rem; flex-wrap: wrap; z-index: 10;">
-      <div style="display: flex; gap: 1rem; flex: 1; min-width: max-content;">
-          <button class="btn" style="background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.85rem; font-size: 0.95rem; flex: 1; font-weight: bold;" onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
-            <span style="color: #f59e0b; margin-inline-end: 4px; font-size: 1.1rem;">★</span> ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
+    <div style="position: sticky; bottom: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); margin: 3rem -2rem -2rem -2rem; padding: 1.25rem 2rem; border-top: 1px solid rgba(0,0,0,0.08); box-shadow: 0 -10px 30px rgba(0,0,0,0.05); display: flex; gap: 1rem; flex-wrap: wrap; z-index: 50;">
+      
+      <div style="display: flex; gap: 1rem; flex: 1; min-width: 280px;">
+          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.85rem; font-size: 0.95rem; flex: 1; font-weight: 800; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'" onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
+            <span style="color: #f59e0b; margin-inline-end: 6px; font-size: 1.2rem;">★</span> ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
           </button>
-          <button class="btn" style="background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.85rem; font-size: 0.95rem; flex: 1; font-weight: bold;" onclick="navigator.clipboard.writeText('${profileUrl}'); showToast(currentLang==='ar'?'تم نسخ الرابط بنجاح':'Copied', 'success');">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 4px; vertical-align: sub;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          
+          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.85rem; font-size: 0.95rem; flex: 1; font-weight: 800; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'" onclick="navigator.clipboard.writeText('${profileUrl}'); showToast(currentLang==='ar'?'تم نسخ الرابط بنجاح':'Copied', 'success');">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--primary)" stroke-width="2.5" style="margin-inline-end: 6px; vertical-align: sub;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             ${shareText}
           </button>
       </div>
-      <button class="btn ${isBookingEnabled ? 'btn-success' : 'btn-secondary'}" style="flex: 2; padding: 0.85rem; font-size: 1.05rem; box-shadow: ${isBookingEnabled ? '0 4px 15px rgba(16, 185, 129, 0.3)' : 'none'}; min-width: 250px;" ${isBookingEnabled ? `onclick="openBooking('${doc.id}')"` : 'disabled'}>
+
+      <button class="btn ${isBookingEnabled ? 'btn-success' : 'btn-secondary'}" style="flex: 1.5; padding: 0.85rem; font-size: 1.1rem; font-weight: 800; letter-spacing: 0.5px; box-shadow: ${isBookingEnabled ? '0 8px 20px rgba(16, 185, 129, 0.25)' : 'none'}; min-width: 250px; transition: transform 0.2s;" ${isBookingEnabled ? `onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'" onclick="openBooking('${doc.id}')"` : 'disabled'}>
         ${isBookingEnabled ? (currentLang === 'ar' ? 'احجز موعد الآن' : 'Book Appointment') : (currentLang === 'ar' ? 'الحجوزات مغلقة حالياً' : 'Bookings Closed')}
       </button>
+
     </div>
   `;
 
