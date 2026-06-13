@@ -398,7 +398,7 @@ function updateUserUI(user) {
   }
 }
     function getCurrentVisibleView() {
-      for (const view of ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'doctor-profile'])
+      for (const view of ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'doctor-profile']) { // 👈 تم إضافة القوس هنا
         const el = document.getElementById('view-' + view);
         if (el && !el.classList.contains('hidden')) return view;
       }
@@ -670,6 +670,7 @@ function renderDoctors(doctors) {
   });
 }
 // ✅ تحويل واجهة العرض إلى صفحة كاملة احترافية ديناميكية بالكامل
+// ✅ تحويل واجهة العرض إلى صفحة كاملة احترافية ديناميكية بالكامل
 function openDoctorProfileModal(doc, doctorName) {
   let fbLink = doc.facebook_link || '';
   if (fbLink && !fbLink.match(/^https?:\/\//i)) {
@@ -719,7 +720,7 @@ function openDoctorProfileModal(doc, doctorName) {
     scheduleHtml = `<div class="text-sm text-gray">${currentLang === 'ar' ? 'غير متوفر' : 'Not available'}</div>`;
   }
 
-  // بناء جدول الخدمات النظيف الموحد (ألوان متناوبة وإطار فيروزي علوي)
+  // بناء جدول الخدمات النظيف الموحد
   let servicesHtml = '';
   if (doc.services && Array.isArray(doc.services) && doc.services.length > 0) {
       servicesHtml = `
@@ -833,7 +834,7 @@ function openDoctorProfileModal(doc, doctorName) {
     </div>
   `;
 
-  // تحويل العرض إلى الصفحة المخصصة الجديدة كاملة
+  // تحويل العرض إلى الصفحة المخصصة الجديدة كاملة (هذا هو الإغلاق الصحيح)
   router('doctor-profile');
 }
   modal.classList.remove('hidden');
@@ -1406,9 +1407,6 @@ async function submitBooking() {
   }
 }
     // دالة جديدة لإغلاق نافذة النجاح والعودة للرئيسية
-
-
-
     window.closeSuccessDialog = function() {
 
 
