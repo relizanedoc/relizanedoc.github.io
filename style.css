@@ -349,7 +349,6 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 #vcard-qrcode {
     width: 130px !important;
     height: 130px !important;
-    min-width: 130px !important;
-    min-height: 130px !important;
     display: block;
+    margin: 0 auto;
 }
