@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -6,6 +7,30 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <nav>
+    <div class="nav-inner">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Relizane Medical
+      </div>
+      
+      <div class="nav-links">
+        <button class="nav-btn" data-i18n="navDirectory">Directory</button>
+        <button class="nav-btn" data-i18n="navTrack">Track Booking</button>
+        <button class="nav-btn" data-i18n="navAddDoctor">Add Doctor</button>
+        <button class="nav-btn" data-i18n="navDoctorLogin">Doctor Login</button>
+        <button class="nav-btn" data-i18n="navLogin">Login</button>
+      </div>
+
+      <div class="right-nav-controls">
+        <div class="lang-switch">
+          <button class="lang-btn" id="btn-en">EN</button>
+          <button class="lang-btn active" id="btn-ar">عربي</button>
+        </div>
+      </div>
+    </div>
+  </nav>
 
   <main class="app-container" style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
     <div style="width: 100%; max-width: 600px;">
@@ -17,7 +42,6 @@
         </div>
 
         <form id="contactForm">
-          
           <div class="form-group">
             <label for="name" data-i18n="formName">الاسم الكامل</label>
             <input type="text" id="name" required placeholder="أدخل اسمك الكامل" data-i18n-placeholder="namePlaceholder">
@@ -46,26 +70,99 @@
       <div class='footer-links'>
         <a data-i18n='privacyPolicy' href='privacy.html'>Privacy Policy</a>
         <a data-i18n='termsOfUse' href='terms.html'>Terms of Use</a>
-        <a data-i18n='contactUs' href='contact.html'>اتصل بنا</a>
+        <a data-i18n='contactUs' href='contact.html'>Contact Us</a>
       </div>
     </div>
   </footer>
 
   <script>
-    // ضع روابط ومفاتيح Supabase الخاصة بك هنا
-   const SUPABASE_URL = "https://iirjtmobphgmkgwkwumc.supabase.co/";
+    /* =========================================
+       نظام الترجمة الديناميكي (يعمل مع الصفحة الرئيسية)
+       ========================================= */
+    const translations = {
+      en: {
+        contactPageTitle: "Contact Us - Relizane Medical Directory",
+        navDirectory: "Directory", navTrack: "Track Booking", navAddDoctor: "Add Doctor", navDoctorLogin: "Doctor Login", navLogin: "Login",
+        contactTitle: "Contact Us",
+        contactDesc: "We'd love to hear from you. Please fill out the form below.",
+        formName: "Full Name",
+        namePlaceholder: "Enter your full name",
+        formEmail: "Email Address",
+        formMessage: "Your Message",
+        messagePlaceholder: "How can we help you?",
+        formSubmit: "Send Message",
+        footerRights: "© 2026 Relizane Medical Directory. All rights reserved.",
+        privacyPolicy: "Privacy Policy", termsOfUse: "Terms of Use", contactUs: "Contact Us"
+      },
+      ar: {
+        contactPageTitle: "اتصل بنا - Relizane Medical Directory",
+        navDirectory: "الرئيسية", navTrack: "تتبع الحجز", navAddDoctor: "إضافة طبيب", navDoctorLogin: "دخول الأطباء", navLogin: "تسجيل الدخول",
+        contactTitle: "اتصل بنا",
+        contactDesc: "يسعدنا تواصلك معنا. يرجى ملء النموذج أدناه وسيتم حفظ رسالتك فوراً.",
+        formName: "الاسم الكامل",
+        namePlaceholder: "أدخل اسمك الكامل",
+        formEmail: "البريد الإلكتروني",
+        formMessage: "رسالتك",
+        messagePlaceholder: "كيف يمكننا مساعدتك؟",
+        formSubmit: "إرسال الرسالة",
+        footerRights: "© 2026 الدليل الطبي لغليزان. جميع الحقوق محفوظة.",
+        privacyPolicy: "سياسة الخصوصية", termsOfUse: "شروط الاستخدام", contactUs: "اتصل بنا"
+      }
+    };
+
+    // تطبيق اللغة على كامل الصفحة
+    function setLanguage(lang) {
+      // 1. تغيير الاتجاه
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+      // 2. تحديث الأزرار
+      document.getElementById('btn-ar').classList.toggle('active', lang === 'ar');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+
+      // 3. ترجمة النصوص
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang][key]) {
+          el.innerText = translations[lang][key];
+        }
+      });
+
+      // 4. ترجمة النصوص الشفافة (Placeholders)
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (translations[lang][key]) {
+          el.placeholder = translations[lang][key];
+        }
+      });
+
+      // حفظ التفضيل في ذاكرة المتصفح ليتزامن مع الصفحة الرئيسية
+      localStorage.setItem('siteLang', lang);
+    }
+
+    // مراقبة أزرار اللغة
+    document.getElementById('btn-ar').addEventListener('click', () => setLanguage('ar'));
+    document.getElementById('btn-en').addEventListener('click', () => setLanguage('en'));
+
+    // عند فتح الصفحة، اقرأ لغة المستخدم السابقة من الذاكرة (أو اجعلها عربية كافتراضي)
+    const savedLang = localStorage.getItem('siteLang') || 'ar';
+    setLanguage(savedLang);
+
+    /* =========================================
+       إرسال نموذج الاتصال إلى Supabase
+       ========================================= */
+ const SUPABASE_URL = "https://iirjtmobphgmkgwkwumc.supabase.co/";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpcmp0bW9icGhnbWtnd2t3dW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA2NjYsImV4cCI6MjA5NjUxNjY2Nn0.Yfa0oEwp_id9tHpSb3h0jf__B4drqXsM-TVs4VTTmp4";
 
-<!DOCTYPE html>
 
     document.getElementById('contactForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const submitBtn = document.getElementById('submitBtn');
-      const originalBtnText = submitBtn.innerText; 
+      const currentLang = document.documentElement.lang;
       
       submitBtn.disabled = true;
-      submitBtn.innerText = "جاري الإرسال..."; 
+      submitBtn.innerText = currentLang === 'ar' ? "جاري الإرسال..." : "Sending..."; 
 
       const payload = {
         name: document.getElementById('name').value,
@@ -86,18 +183,18 @@
         });
 
         if (response.ok) {
-          alert('تم إرسال رسالتك وحفظها بنجاح! شكرًا لتواصلك معنا.');
+          alert(currentLang === 'ar' ? 'تم إرسال رسالتك بنجاح!' : 'Message sent successfully!');
           document.getElementById('contactForm').reset();
         } else {
-          throw new Error('فشل السيرفر في الاستجابة بشكل صحيح');
+          throw new Error('Server error');
         }
 
       } catch (error) {
-        console.error('Error submitting form:', error);
-        alert('عذرًا، حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.');
+        console.error(error);
+        alert(currentLang === 'ar' ? 'حدث خطأ. يرجى المحاولة لاحقاً.' : 'An error occurred. Please try again.');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerText = originalBtnText; 
+        submitBtn.innerText = translations[currentLang]['formSubmit']; 
       }
     });
   </script>
