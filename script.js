@@ -803,14 +803,30 @@ function openDoctorProfileModal(doc, doctorName) {
 
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
-        ${doc.map_link ? `
-        <div style="background: white; border-radius: 20px; padding: 1.5rem; text-align: center; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.05); border: 1px solid rgba(239,68,68,0.03);">
-          <div style="font-size: 0.85rem; font-weight: 800; color: #ef4444; margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 0.5px;">${t('mapLocation')}</div>
-          <a href="${doc.map_link}" target="_blank" class="btn" style="width: 100%; justify-content: center; background: #fff5f5; color: #ef4444; border: 2px dashed #fca5a5; padding: 1.1rem; font-weight: 800; font-size: 1.1rem; border-radius: 12px; transition: all 0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='white'; this.style.borderStyle='solid'; this.style.transform='scale(1.02)';" onmouseout="this.style.background='#fff5f5'; this.style.color='#ef4444'; this.style.borderStyle='dashed'; this.style.transform='scale(1)';"">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-inline-end:0.5rem;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            ${t('openInGoogleMaps')}
-          </a>
-        </div>` : ''}
+        <div style="background: white; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.03);">
+          <div style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin-bottom: 1.25rem; display: flex; gap: 0.75rem; align-items: center;">
+            <span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.6rem; border-radius: 10px; display: flex; box-shadow: inset 0 2px 4px rgba(239,68,68,0.1);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            </span>
+            <span>${currentLang === 'ar' ? 'الموقع على الخريطة' : 'Map Location'}</span>
+          </div>
+          
+          <div style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: ${doc.map_link ? '1rem' : '0'}; position: relative; padding-bottom: 65%; height: 0; background: #f8fafc;">
+            <iframe 
+                src="https://maps.google.com/maps?q=${encodeURIComponent(doc.exact_location + ', ' + t(doc.municipality) + ', Relizane')}&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+          </div>
+
+          ${doc.map_link ? `
+          <a href="${doc.map_link}" target="_blank" class="btn" style="width: 100%; justify-content: center; background: #fff5f5; color: #ef4444; border: 1px solid #fca5a5; padding: 0.85rem; font-weight: 800; font-size: 0.95rem; border-radius: 10px; transition: all 0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='white';" onmouseout="this.style.background='#fff5f5'; this.style.color='#ef4444';">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-inline-end:0.4rem;"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+            ${currentLang === 'ar' ? 'فتح تطبيق الخرائط للتوجه' : 'Open in Maps App'}
+          </a>` : ''}
+        </div>
 
         <div style="background: white; padding: 2rem; border-radius: 20px; border: 1px solid rgba(0,0,0,0.03); text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
             <div style="color: #0f172a; font-weight: 900; font-size: 1.15rem; margin-bottom: 1.5rem;">
