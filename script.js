@@ -669,7 +669,7 @@ function renderDoctors(doctors) {
     container.appendChild(card);
   });
 }
-// ✅ تحويل واجهة العود إلى صفحة كاملة باحترافية وتصميم عصري خارق (Ultimate Premium UI)
+// ✅ تحويل واجهة العرض إلى صفحة كاملة باحترافية وتصميم عصري خارق (مع أزرار المشاركة)
 function openDoctorProfileModal(doc, doctorName) {
   let fbLink = doc.facebook_link || '';
   if (fbLink && !fbLink.match(/^https?:\/\//i)) {
@@ -680,7 +680,12 @@ function openDoctorProfileModal(doc, doctorName) {
   const shareText = currentLang === 'ar' ? 'مشاركة الرابط' : 'Share Link';
   const isBookingEnabled = doc.booking_enabled === true;
 
-  // إعداد بيانات vCard الموحدة
+  // إعداد رسائل المشاركة الديناميكية
+  const shareMessageText = currentLang === 'ar' ? `احجز موعد مع د. ${doctorName} عبر دليل أطباء غليزان` : `Book an appointment with Dr. ${doctorName} via Relizane Medical Directory`;
+  const encodedShareText = encodeURIComponent(shareMessageText + '\n\n' + profileUrl);
+  const encodedUrl = encodeURIComponent(profileUrl);
+
+  // إعداد بيانات vCard الموحدة لرموز الـ QR التلقائية
   let vCard = `BEGIN:VCARD\nVERSION:3.0\nFN:${doctorName}\n`;
   if (doc.phone) vCard += `TEL:${doc.phone}\n`;
   if (doc.contact_email) vCard += `EMAIL:${doc.contact_email}\n`;
@@ -690,12 +695,12 @@ function openDoctorProfileModal(doc, doctorName) {
   const qrPrimary  = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(vCard)}&color=000000`;
   const qrFallback = `https://quickchart.io/qr?size=150&text=${encodeURIComponent(vCard)}`;
 
-  // تحديث بيانات الهيدر الملون الثابتة بتصميم أرقى
+  // تحديث بيانات الهيدر الملون الثابتة
   document.getElementById('fullProfileName').textContent = doctorName;
   document.getElementById('fullProfileSpec').querySelector('span').textContent = escapeHtml(t(doc.specialty));
   document.getElementById('fullProfileAvatar').textContent = (doc.first_name?.[0] || '') + (doc.last_name?.[0] || '');
 
-  // بناء جدول العمل الأسبوعي (تصميم عصري باهر)
+  // بناء جدول العمل الأسبوعي
   let scheduleHtml = '';
   if (doc.working_days && Object.keys(doc.working_days).length > 0) {
     try {
@@ -719,7 +724,7 @@ function openDoctorProfileModal(doc, doctorName) {
     scheduleHtml = `<div class="text-sm text-gray" style="padding: 1.5rem 0; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px solid var(--border);">${currentLang === 'ar' ? 'غير متوفر حالياً' : 'Not available currently'}</div>`;
   }
 
-  // بناء قسم الخدمات (تصميم تاقات عصرية فخمة)
+  // بناء قسم الخدمات
   let servicesHtml = '';
   if (doc.services && Array.isArray(doc.services) && doc.services.length > 0) {
       servicesHtml = `
@@ -752,6 +757,46 @@ function openDoctorProfileModal(doc, doctorName) {
         </div>
       </div>`;
   }
+
+  // بناء شريط المشاركة (Social Share Icons)
+  const shareSectionHtml = `
+      <div style="margin-top: 2.5rem; text-align: center;">
+        <h4 style="font-size: 1.15rem; font-weight: 900; color: var(--primary); margin-bottom: 1.25rem;">
+          ${currentLang === 'ar' ? 'شارك مع:' : 'Share with:'}
+        </h4>
+        <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; align-items: center;">
+            
+            <a href="https://api.whatsapp.com/send?text=${encodedShareText}" target="_blank" title="WhatsApp" style="background: #25D366; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(37,211,102,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            </a>
+            
+            <a href="https://t.me/share/url?url=${encodedUrl}&text=${encodeURIComponent(shareMessageText)}" target="_blank" title="Telegram" style="background: #0088cc; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,136,204,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </a>
+            
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}" target="_blank" title="Facebook" style="background: #1877F2; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(24,119,242,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+            </a>
+            
+            <a href="https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(shareMessageText)}" target="_blank" title="X (Twitter)" style="background: #000000; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.005 4.15H5.059z"/></svg>
+            </a>
+            
+            <a href="sms:?body=${encodedShareText}" title="SMS" style="background: #34C759; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(52,199,89,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            </a>
+            
+            <a href="mailto:?subject=${encodeURIComponent(currentLang === 'ar' ? 'ملف طبيب مهم' : 'Doctor Profile')}&body=${encodedShareText}" title="Email" style="background: #6B7280; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(107,114,128,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            </a>
+            
+            <button onclick="navigator.clipboard.writeText('${profileUrl}'); showToast('${currentLang==='ar'?'تم نسخ الرابط بنجاح':'Link Copied!'}', 'success');" title="Copy Link" style="background: #475569; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; border: none; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(71,85,105,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+            
+        </div>
+      </div>
+  `;
 
   // تجميع وحقن المحتويات التفاعلية
   document.getElementById('fullProfileContent').innerHTML = `
@@ -835,15 +880,8 @@ function openDoctorProfileModal(doc, doctorName) {
                 </span>
                 ${currentLang === 'ar' ? 'إمسح الرمز لحفظ جهة الاتصال' : 'Scan to save contact'}
             </div>
-            <div style="display: inline-block; padding: 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 16px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.01);">
-                <img 
-                  src="${qrPrimary}" 
-                  data-fallback-url="${qrFallback}" 
-                  onerror="handleQrError(this)" 
-                  alt="QR Contact Code" 
-                  style="width: 170px; height: 170px; display: block; margin: 0 auto; mix-blend-mode: multiply;" 
-                />
-            </div>
+            <div id="vcard-qrcode" style="display: inline-flex; justify-content: center; align-items: center; padding: 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 16px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.01); min-width: 160px; min-height: 160px;">
+                </div>
         </div>
       </div>
     </div>
@@ -861,27 +899,43 @@ function openDoctorProfileModal(doc, doctorName) {
       <p style="color: #92400e; font-size: 1.05rem; line-height: 1.7; margin: 0; font-weight: 500;">${escapeHtml(doc.extra_info)}</p>
     </div>` : ''}
 
-    <div style="position: sticky; bottom: 0; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); margin: 3.5rem -2rem -2rem -2rem; padding: 1.5rem 2rem; border-top: 1px solid rgba(0,0,0,0.06); box-shadow: 0 -15px 35px rgba(0,0,0,0.03); display: flex; gap: 1rem; flex-wrap: wrap; z-index: 100; border-radius: 24px 24px 0 0;">
-      
-      <div style="display: flex; gap: 1rem; flex: 1; min-width: 300px;">
-          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 1rem; font-size: 1rem; flex: 1; font-weight: 800; border-radius: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: all 0.2s; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'" onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
-            <span style="color: #f59e0b; margin-inline-end: 8px; font-size: 1.3rem;">★</span> ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
-          </button>
-          
-          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 1rem; font-size: 1rem; flex: 1; font-weight: 800; border-radius: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: all 0.2s; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'" onclick="navigator.clipboard.writeText('${profileUrl}'); showToast(currentLang==='ar'?'تم نسخ الرابط بنجاح':'Copied', 'success');">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--primary)" stroke-width="2.5" style="margin-inline-end: 8px; vertical-align: sub;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            ${shareText}
-          </button>
-      </div>
+    ${shareSectionHtml}
 
-      <button class="btn ${isBookingEnabled ? 'btn-success' : 'btn-secondary'}" style="flex: 1.6; padding: 1rem; font-size: 1.2rem; font-weight: 900; letter-spacing: 0.5px; border-radius: 14px; box-shadow: ${isBookingEnabled ? '0 10px 25px rgba(16, 185, 129, 0.3)' : 'none'}; min-width: 280px; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);" ${isBookingEnabled ? `onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 15px 30px rgba(16, 185, 129, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(16, 185, 129, 0.3)';" onclick="openBooking('${doc.id}')"` : 'disabled'}>
+    <div style="position: sticky; bottom: 0; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); margin: 3.5rem -2rem -2rem -2rem; padding: 1.5rem 2rem; border-top: 1px solid rgba(0,0,0,0.06); box-shadow: 0 -15px 35px rgba(0,0,0,0.03); display: flex; gap: 1rem; flex-wrap: wrap; z-index: 100; border-radius: 24px 24px 0 0; justify-content: center;">
+      
+      <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 1rem; font-size: 1rem; font-weight: 800; border-radius: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: transform 0.3s; min-width: 150px; flex: 1;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'" onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
+        <span style="color: #f59e0b; margin-inline-end: 8px; font-size: 1.3rem;">★</span> ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
+      </button>
+
+      <button class="btn ${isBookingEnabled ? 'btn-success' : 'btn-secondary'}" style="flex: 2; padding: 1rem; font-size: 1.2rem; font-weight: 900; letter-spacing: 0.5px; border-radius: 14px; box-shadow: ${isBookingEnabled ? '0 10px 25px rgba(16, 185, 129, 0.3)' : 'none'}; min-width: 280px; transition: transform 0.3s;" ${isBookingEnabled ? `onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'" onclick="openBooking('${doc.id}')"` : 'disabled'}>
         ${isBookingEnabled ? (currentLang === 'ar' ? 'احجز موعد الآن' : 'Book Appointment') : (currentLang === 'ar' ? 'الحجوزات مغلقة حالياً' : 'Bookings Closed')}
       </button>
 
     </div>
   `;
 
+  // الانتقال للصفحة أولاً للسماح للمتصفح برسم العناصر (يحل مشكلة المربع الأبيض للـ QR Code)
   router('doctor-profile');
+
+  // رسم الـ QR Code والتأكد من ظهوره بعد تحول الشاشة
+  setTimeout(() => {
+      const qrContainer = document.getElementById('vcard-qrcode');
+      if (qrContainer) {
+          qrContainer.innerHTML = '';
+          if (typeof QRCode !== 'undefined') {
+              new QRCode(qrContainer, {
+                  text: vCard,
+                  width: 140,
+                  height: 140,
+                  colorDark : "#0f172a",
+                  colorLight : "#f8fafc",
+                  correctLevel : QRCode.CorrectLevel.M
+              });
+          } else {
+              qrContainer.innerHTML = `<img src="${qrPrimary}" data-fallback-url="${qrFallback}" onerror="handleQrError(this)" alt="QR Code" style="width: 140px; height: 140px; mix-blend-mode: multiply;" />`;
+          }
+      }
+  }, 150);
 }
     function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
 
