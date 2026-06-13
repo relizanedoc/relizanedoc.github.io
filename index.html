@@ -109,12 +109,12 @@
 
       <div class='form-group hidden' id='nameFieldGroup'>
         <label data-i18n='fullName'>Full Name</label>
-        <input id='authName' placeholder='Your full name' type='text'/>
+<input id='authName' placeholder='Your full name' type='text'>
       </div>
 
       <div class='form-group'>
         <label data-i18n='email'>Email *</label>
-        <input id='authEmail' placeholder='your@email.com' required='required' type='email'/>
+        <input id='authEmail' placeholder='your@email.com' required='required' type='email'>
       </div>
 
       <div class='form-group'>
@@ -122,7 +122,7 @@
           <label data-i18n='password' style="margin: 0;">Password *</label>
           <a href="#" onclick="handleForgotPassword(event)" id="forgotPasswordLink" style="color: var(--primary); font-size: 0.85rem; text-decoration: none; font-weight: 600; transition: opacity 0.3s;">هل نسيت كلمة المرور؟</a>
         </div>
-        <input id='authPassword' autocomplete='current-password' minlength='6' placeholder='••••••••' required='required' type='password'/>
+<input id='authPassword' autocomplete='current-password' minlength='6' placeholder='••••••••' required='required' type='password'>
       </div>
 
       <button class='btn btn-primary btn-block' id='authSubmitBtn' type='button'>
@@ -222,8 +222,7 @@
 
         <div style='position: relative; flex: 1;'>
 
-          <input autocomplete='off' data-i18n-placeholder='searchPlaceholder' id='searchInput' placeholder='🔍 Search by name, specialty, or location...' type='text'/>
-
+<input autocomplete='off' data-i18n-placeholder='searchPlaceholder' id='searchInput' placeholder='🔍 Search by name, specialty, or location...' type='text'>
           <div class='suggestions-dropdown hidden' id='searchSuggestions'></div>
 
         </div>
@@ -260,16 +259,14 @@
 
       <label data-i18n='firstName'>First Name *</label>
 
-      <input name='FirstName' placeholder='e.g. Amine' required='required' type='text'/>
-
+<input name='FirstName' placeholder='e.g. Amine' required='required' type='text'>
     </div>
 
     <div class='form-group'>
 
       <label data-i18n='lastName'>Last Name *</label>
 
-      <input name='LastName' placeholder='e.g. Benali' required='required' type='text'/>
-
+<input name='LastName' placeholder='e.g. Benali' required='required' type='text'>
     </div>
 
   </div>
@@ -278,16 +275,14 @@
 
     <label data-i18n='phone'>Phone Number *</label>
 
-    <input name='Phone' placeholder='e.g. 0550 123 456' required='required' type='tel'/>
-
+<input name='Phone' placeholder='e.g. 0550 123 456' required='required' type='tel'>
   </div>
 
   <div class='form-group'>
 
     <label data-i18n='exactLocation'>Exact Location / Address *</label>
 
-    <input name='ExactLocation' placeholder='Street, Building, Floor, Landmark...' required='required' type='text'/>
-
+  <input name='ExactLocation' placeholder='Street, Building, Floor, Landmark...' required='required' type='text'>
   </div>
 
   <div class='grid grid-1 grid-2'>
@@ -500,16 +495,14 @@
 
             <label data-i18n='bookingIdLabel'>رقم الحجز (مثال: APT-20240526-143022)</label>
 
-            <input id='trackBookingId' placeholder='APT-000000000-000000' required='required' type='text'/>
-
+<input id='trackBookingId' placeholder='APT-000000000-000000' required='required' type='text'>
           </div>
 
           <div class='form-group'>
 
             <label data-i18n='trackPhoneLabel'>رقم الهاتف المرفق بالحجز</label>
 
-            <input dir='ltr' id='trackPhone' placeholder='07/ 05 / 06' required='required' type='tel'/>
-
+<input dir='ltr' id='trackPhone' placeholder='07/ 05 / 06' required='required' type='tel'>
           </div>
 
           <button class='btn btn-primary btn-block' data-i18n='trackSearchBtn' id='trackBtn' type='submit'>بحث عن الحجز</button>
@@ -536,30 +529,26 @@
 
         <form id='bookingForm'>
 
-          <input id='bookingDoctorId' name='DoctorID' type='hidden'/>
-
+<input id='bookingDoctorId' name='DoctorID' type='hidden'>
           <div class='form-group'>
 
             <label data-i18n='patientName'>Patient Full Name *</label>
 
-            <input name='PatientName' placeholder='Full name' required='required' type='text'/>
-
+<input name='PatientName' placeholder='Full name' required='required' type='text'>
           </div>
 
           <div class='form-group'>
 
             <label data-i18n='patientPhone'>Patient Phone *</label>
 
-            <input name='PatientPhone' placeholder='Contact number' required='required' type='tel'/>
-
+<input name='PatientPhone' placeholder='Contact number' required='required' type='tel'>
           </div>
 
           <div class='form-group'>
 
             <label>البريد الإلكتروني (اختياري للإشعارات)</label>
 
-            <input name='PatientEmail' placeholder='your@email.com' type='email'/>
-
+<input name='PatientEmail' placeholder='your@email.com' type='email'>
           </div>
 
           <div class='grid grid-1 grid-2'>
@@ -568,16 +557,14 @@
 
               <label data-i18n='appointmentDate'>Appointment Date *</label>
 
-              <input id='apptDateInput' name='AppointmentDate' onclick='this.showPicker ? this.showPicker() : null' onkeydown='return false' required='required' type='date'/>
-
+<input id='apptDateInput' name='AppointmentDate' onclick='this.showPicker ? this.showPicker() : null' onkeydown='return false' required='required' type='date'>
             </div>
 
             <div class='form-group' style='grid-column: 1 / -1;'>
 
               <label data-i18n='appointmentTime'>الوقت المتاح *</label>
 
-              <input id='apptTimeInput' name='AppointmentTime' required='required' type='hidden'/>
-
+<input id='apptTimeInput' name='AppointmentTime' type='hidden'>
               <div id='timeSlotsContainer' style='display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;'>
 
                 <div class='text-sm text-gray' style='grid-column: 1 / -1;'>يرجى تحديد تاريخ الموعد أولا، لعرض الأوقات المتاحة...</div>
@@ -605,14 +592,13 @@
 <form id='dashboardLoginForm'>
   <div class='form-group'>
     <label data-i18n='loginPhone'>Phone Number</label>
-<input id='loginPhone' autocomplete='username' placeholder='Your registered phone' required='required' type='tel'/>
+<input id='loginPhone' autocomplete='tel' placeholder='Your registered phone' required='required' type='tel'>
   </div>
   <div class='form-group'>
 
     <label data-i18n='password'>Password *</label>
 
-<input id='loginDoctorPassword' autocomplete='current-password' placeholder='••••••••' required='required' type='password'/>
-
+<input id='loginDoctorPassword' autocomplete='current-password' placeholder='••••••••' required='required' type='password'>
   </div>
 
   <button class='btn btn-primary btn-block' id='dashboardLoginBtn' type='submit'>View My Appointments</button>
@@ -629,8 +615,7 @@
 
           <div>
 
-            <h2 class='text-xl font-bold' id='dashboardSubtitle' style='margin: 0; color: var(--primary-dark);'></h2>
-
+<h2 class='text-xl font-bold' id='dashboardSubtitle' style='margin: 0; color: var(--primary-dark);'>&nbsp;</h2>
           </div>
 
           <div style='display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;'>
@@ -641,8 +626,7 @@
 
               <label class='switch'>
 
-                <input id='bookingToggleSwitch' type='checkbox'/>
-
+<input id='bookingToggleSwitch' type='checkbox'>
                 <span class='slider'></span>
 
               </label>
@@ -819,8 +803,7 @@
 
         <form id='reviewForm'>
 
-          <input id='reviewDoctorId' type='hidden'/>
-
+      <input id='reviewDoctorId' type='hidden'>
           <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;'>
 
             <label data-i18n='ratingLabel' style='font-size: 0.9rem; font-weight: bold; color: var(--text);'>ما هو تقييمك؟</label>
@@ -831,8 +814,7 @@
 
             </div>
 
-            <input id='ratingValue' type='hidden'/>
-
+        <input id='ratingValue' type='hidden'>
           </div>
 
           <div class='form-group' style='margin-bottom: 0.75rem;'>
@@ -953,8 +935,7 @@
     <div class='form-group' style='text-align: right; margin-bottom: 1rem;'>
       <div style="position: relative; width: 100%; display: block;">
 
-        <input id="newPasswordInput" placeholder="أدخل كلمة المرور الجديدة..." type="password" style="width: 100%; padding-left: 50px !important; box-sizing: border-box; display: block; margin: 0;" />
-
+<input id="newPasswordInput" placeholder="أدخل كلمة المرور الجديدة..." type="password" style="width: 100%; padding-left: 50px !important; box-sizing: border-box; display: block; margin: 0;">
         <span onclick="togglePasswordVisibility('newPasswordInput', 'eyeIconModal')" style="position: absolute; left: 5px; top: 0; height: 100%; width: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; z-index: 9999;">
           <svg id="eyeIconModal" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
@@ -978,7 +959,7 @@
     <p style='color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;'>أدخل بريدك الإلكتروني المسجل أدناه وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.</p>
 
     <div class='form-group' style='text-align: right;'>
-      <input id='resetEmailInput' placeholder='your@email.com' type='email' style='width: 100%; text-align: left; direction: ltr;'/>
+<input id='resetEmailInput' placeholder='your@email.com' type='email' style='width: 100%; text-align: left; direction: ltr;'>
     </div>
 
     <div class='dialog-actions' style='margin-top: 1.5rem;'>
