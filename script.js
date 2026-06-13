@@ -669,8 +669,7 @@ function renderDoctors(doctors) {
     container.appendChild(card);
   });
 }
-    // ✅ الدالة الجديدة لعرض تفاصيل الطبيب
-// ✅ الدالة الجديدة لعرض تفاصيل الطبيب
+   // ✅ الدالة الجديدة لعرض تفاصيل الطبيب (مع توليد QR محلياً)
 function openDoctorProfileModal(doc, doctorName) {
   const modal = document.getElementById('doctorProfileModal');
   const content = document.getElementById('dpModalContent');
@@ -856,7 +855,7 @@ function openDoctorProfileModal(doc, doctorName) {
               ${currentLang === 'ar' ? 'إمسح الرمز لحفظ جهة الاتصال' : 'Scan to save contact'}
           </div>
           <div style="display: inline-block; padding: 0.5rem; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-sm); margin-top: 0.5rem;">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(vCard)}&color=000000" alt="QR Contact Code" style="width: 130px; height: 130px; display: block;" />
+              <div id="vcard-qrcode" style="width: 130px; height: 130px; margin: 0 auto;"></div>
           </div>
       </div>
       
@@ -886,6 +885,20 @@ function openDoctorProfileModal(doc, doctorName) {
   `;
 
   modal.classList.remove('hidden');
+
+  // ✅ رسم الـ QR Code محلياً بعد إظهار النافذة مباشرة
+  const qrContainer = document.getElementById('vcard-qrcode');
+  if (qrContainer) {
+      qrContainer.innerHTML = ''; // مسح أي رمز سابق لتجنب التكرار
+      new QRCode(qrContainer, {
+          text: vCard,
+          width: 130,
+          height: 130,
+          colorDark : "#000000",
+          colorLight : "#ffffff",
+          correctLevel : QRCode.CorrectLevel.M // دقة متوسطة تناسب كمية بيانات جهات الاتصال
+      });
+  }
 }
 
     function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
