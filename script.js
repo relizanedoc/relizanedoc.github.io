@@ -693,22 +693,6 @@ function openDoctorProfileModal(doc, doctorName) {
   // 🔄 روابط QR مع fallback
   const qrPrimary  = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(vCard)}&color=000000`;
   const qrFallback = `https://quickchart.io/qr?size=150&text=${encodeURIComponent(vCard)}`;
-
-  // حقن سكربت التبديل التلقائي مرة واحدة فقط
-  if (!document.getElementById('qr-fallback-script')) {
-    const s = document.createElement('script');
-    s.id = 'qr-fallback-script';
-    s.textContent = `
-      function handleQrError(img){
-        if(!img.dataset.fallback){
-          img.dataset.fallback = '1';
-          img.src = img.dataset.fallbackUrl;
-        }
-      }
-    `;
-    document.head.appendChild(s);
-  }
-
   // بناء جدول العمل
   let scheduleHtml = '';
   if (doc.working_days && Object.keys(doc.working_days).length > 0) {
@@ -3408,4 +3392,11 @@ window.addServiceCategory = function(category = '', items = '') {
         </button>
     `;
     container.appendChild(row);
+};
+// ✅ دالة التبديل الاحتياطي لـ QR Code
+window.handleQrError = function(img) {
+    if(!img.dataset.fallback){
+        img.dataset.fallback = '1';
+        img.src = img.dataset.fallbackUrl;
+    }
 };
