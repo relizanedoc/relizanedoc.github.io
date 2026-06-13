@@ -669,7 +669,7 @@ function renderDoctors(doctors) {
     container.appendChild(card);
   });
 }
-// ✅ تحويل واجهة العرض إلى صفحة كاملة باحترافية وتصميم عصري خارق (مع أزرار المشاركة)
+// ✅ تحويل واجهة العرض إلى صفحة كاملة باحترافية (مع حل مشاكل التداخل والـ QR العربي)
 function openDoctorProfileModal(doc, doctorName) {
   let fbLink = doc.facebook_link || '';
   if (fbLink && !fbLink.match(/^https?:\/\//i)) {
@@ -685,7 +685,7 @@ function openDoctorProfileModal(doc, doctorName) {
   const encodedShareText = encodeURIComponent(shareMessageText + '\n\n' + profileUrl);
   const encodedUrl = encodeURIComponent(profileUrl);
 
-  // إعداد بيانات vCard الموحدة لرموز الـ QR التلقائية
+  // إعداد بيانات vCard
   let vCard = `BEGIN:VCARD\nVERSION:3.0\nFN:${doctorName}\n`;
   if (doc.phone) vCard += `TEL:${doc.phone}\n`;
   if (doc.contact_email) vCard += `EMAIL:${doc.contact_email}\n`;
@@ -765,35 +765,11 @@ function openDoctorProfileModal(doc, doctorName) {
           ${currentLang === 'ar' ? 'شارك مع:' : 'Share with:'}
         </h4>
         <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; align-items: center;">
-            
-            <a href="https://api.whatsapp.com/send?text=${encodedShareText}" target="_blank" title="WhatsApp" style="background: #25D366; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(37,211,102,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-            </a>
-            
-            <a href="https://t.me/share/url?url=${encodedUrl}&text=${encodeURIComponent(shareMessageText)}" target="_blank" title="Telegram" style="background: #0088cc; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,136,204,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            </a>
-            
-            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}" target="_blank" title="Facebook" style="background: #1877F2; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(24,119,242,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-            </a>
-            
-            <a href="https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(shareMessageText)}" target="_blank" title="X (Twitter)" style="background: #000000; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.005 4.15H5.059z"/></svg>
-            </a>
-            
-            <a href="sms:?body=${encodedShareText}" title="SMS" style="background: #34C759; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(52,199,89,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            </a>
-            
-            <a href="mailto:?subject=${encodeURIComponent(currentLang === 'ar' ? 'ملف طبيب مهم' : 'Doctor Profile')}&body=${encodedShareText}" title="Email" style="background: #6B7280; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(107,114,128,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-            </a>
-            
-            <button onclick="navigator.clipboard.writeText('${profileUrl}'); showToast('${currentLang==='ar'?'تم نسخ الرابط بنجاح':'Link Copied!'}', 'success');" title="Copy Link" style="background: #475569; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; border: none; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(71,85,105,0.2);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            </button>
-            
+            <a href="https://api.whatsapp.com/send?text=${encodedShareText}" target="_blank" title="WhatsApp" style="background: #25D366; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(37,211,102,0.2);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></a>
+            <a href="https://t.me/share/url?url=${encodedUrl}&text=${encodeURIComponent(shareMessageText)}" target="_blank" title="Telegram" style="background: #0088cc; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,136,204,0.2);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}" target="_blank" title="Facebook" style="background: #1877F2; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(24,119,242,0.2);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+            <a href="https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(shareMessageText)}" target="_blank" title="X (Twitter)" style="background: #000000; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.005 4.15H5.059z"/></svg></a>
+            <a href="sms:?body=${encodedShareText}" title="SMS" style="background: #34C759; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(52,199,89,0.2);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></a>
         </div>
       </div>
   `;
@@ -805,7 +781,6 @@ function openDoctorProfileModal(doc, doctorName) {
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
         <div style="background: white; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.03);">
-            
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; background: rgba(14, 165, 233, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(14,165,233,0.1);">
               <div style="background: white; color: var(--primary); padding: 0.75rem; border-radius: 12px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(14,165,233,0.1);">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
@@ -822,7 +797,7 @@ function openDoctorProfileModal(doc, doctorName) {
               </div>
               <div>
                 <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;">${currentLang === 'ar' ? 'رقم العيادة' : 'Clinic Phone'}</div>
-                <div style="font-weight: 900; color: #0f172a; font-size: 1.25rem; letter-spacing: 1px; font-family: 'Roboto', sans-serif;" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone))}</div>
+                <div style="font-weight: 900; color: #0f172a; font-size: 1.25rem; letter-spacing: 1px;" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone))}</div>
               </div>
             </div>
         </div>
@@ -839,11 +814,6 @@ function openDoctorProfileModal(doc, doctorName) {
           </div>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-          ${doc.whatsapp_number ? `<a href="https://wa.me/${doc.whatsapp_number.replace(/\D/g, '')}" target="_blank" class="btn" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 0.9rem; font-size: 0.95rem; flex: 1; justify-content: center; font-weight: 800; border-radius: 12px; box-shadow: 0 4px 10px rgba(16,185,129,0.05); transition: all 0.2s;" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(16,185,129,0.1)';" onmouseout="this.style.background='#ecfdf5'; this.style.color='#059669'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(16,185,129,0.05)';"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> ${t('whatsappBtn')}</a>` : ''}
-          ${fbLink ? `<a href="${fbLink}" target="_blank" class="btn" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 0.9rem; font-size: 0.95rem; flex: 1; justify-content: center; font-weight: 800; border-radius: 12px; box-shadow: 0 4px 10px rgba(59,130,246,0.05); transition: all 0.2s;" onmouseover="this.style.background='#3b82f6'; this.style.color='white'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(59,130,246,0.1)';" onmouseout="this.style.background='#eff6ff'; this.style.color='#2563eb'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(59,130,246,0.05)';"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> ${t('facebookBtn')}</a>` : ''}
-          ${doc.contact_email ? `<a href="mailto:${doc.contact_email}" class="btn" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; padding: 0.9rem; font-size: 0.95rem; flex: 1; justify-content: center; font-weight: 800; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: all 0.2s;" onmouseover="this.style.background='#475569'; this.style.color='white'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.05)';" onmouseout="this.style.background='#f8fafc'; this.style.color='#475569'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.02)';"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> ${t('emailBtn')}</a>` : ''}
-        </div>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -901,36 +871,51 @@ function openDoctorProfileModal(doc, doctorName) {
 
     ${shareSectionHtml}
 
-    <div style="position: sticky; bottom: 0; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); margin: 3.5rem -2rem -2rem -2rem; padding: 1.5rem 2rem; border-top: 1px solid rgba(0,0,0,0.06); box-shadow: 0 -15px 35px rgba(0,0,0,0.03); display: flex; gap: 1rem; flex-wrap: wrap; z-index: 100; border-radius: 24px 24px 0 0; justify-content: center;">
+    <div style="position: sticky; bottom: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin: 3.5rem -2rem -2rem -2rem; padding: 1rem 1.5rem; border-top: 1px solid rgba(0,0,0,0.08); box-shadow: 0 -10px 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 0.75rem; z-index: 100; border-radius: 20px 20px 0 0;">
       
-      <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 1rem; font-size: 1rem; font-weight: 800; border-radius: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: transform 0.3s; min-width: 150px; flex: 1;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'" onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
-        <span style="color: #f59e0b; margin-inline-end: 8px; font-size: 1.3rem;">★</span> ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
-      </button>
+      <div style="display: flex; gap: 0.75rem; width: 100%;">
+          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.95rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
+            <span style="color: #f59e0b; font-size: 1.1rem;">★</span> ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
+          </button>
+          
+          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.95rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="navigator.clipboard.writeText('${profileUrl}'); showToast(currentLang==='ar'?'تم نسخ الرابط بنجاح':'Copied', 'success');">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--primary)" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            ${shareText}
+          </button>
+      </div>
 
-      <button class="btn ${isBookingEnabled ? 'btn-success' : 'btn-secondary'}" style="flex: 2; padding: 1rem; font-size: 1.2rem; font-weight: 900; letter-spacing: 0.5px; border-radius: 14px; box-shadow: ${isBookingEnabled ? '0 10px 25px rgba(16, 185, 129, 0.3)' : 'none'}; min-width: 280px; transition: transform 0.3s;" ${isBookingEnabled ? `onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'" onclick="openBooking('${doc.id}')"` : 'disabled'}>
+      <button class="btn ${isBookingEnabled ? 'btn-success' : 'btn-secondary'}" style="width: 100%; padding: 0.85rem; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; border-radius: 12px; justify-content: center; display: flex; align-items: center; box-shadow: ${isBookingEnabled ? '0 4px 15px rgba(16, 185, 129, 0.2)' : 'none'};" ${isBookingEnabled ? `onclick="openBooking('${doc.id}')"` : 'disabled'}>
         ${isBookingEnabled ? (currentLang === 'ar' ? 'احجز موعد الآن' : 'Book Appointment') : (currentLang === 'ar' ? 'الحجوزات مغلقة حالياً' : 'Bookings Closed')}
       </button>
 
     </div>
   `;
 
-  // الانتقال للصفحة أولاً للسماح للمتصفح برسم العناصر (يحل مشكلة المربع الأبيض للـ QR Code)
+  // الانتقال للصفحة أولاً للسماح للمتصفح برسم العناصر
   router('doctor-profile');
 
-  // رسم الـ QR Code والتأكد من ظهوره بعد تحول الشاشة
+  // رسم الـ QR Code والتأكد من ظهوره
   setTimeout(() => {
       const qrContainer = document.getElementById('vcard-qrcode');
       if (qrContainer) {
           qrContainer.innerHTML = '';
           if (typeof QRCode !== 'undefined') {
-              new QRCode(qrContainer, {
-                  text: vCard,
-                  width: 140,
-                  height: 140,
-                  colorDark : "#0f172a",
-                  colorLight : "#f8fafc",
-                  correctLevel : QRCode.CorrectLevel.M
-              });
+              try {
+                  // ✅ حيلة (UTF-8) لضمان عدم انهيار المكتبة مع الحروف العربية
+                  const utf8vCard = unescape(encodeURIComponent(vCard));
+                  new QRCode(qrContainer, {
+                      text: utf8vCard,
+                      width: 140,
+                      height: 140,
+                      colorDark : "#0f172a",
+                      colorLight : "#f8fafc",
+                      correctLevel : QRCode.CorrectLevel.L // تم تقليل مستوى التصحيح للسماح بنصوص أطول
+                  });
+              } catch (e) {
+                  // في حال فشلت المكتبة المحلية لأي سبب، نلجأ فوراً للرابط البديل
+                  console.warn("QR Library failed, using fallback APIs...");
+                  qrContainer.innerHTML = `<img src="${qrPrimary}" data-fallback-url="${qrFallback}" onerror="handleQrError(this)" alt="QR Code" style="width: 140px; height: 140px; mix-blend-mode: multiply;" />`;
+              }
           } else {
               qrContainer.innerHTML = `<img src="${qrPrimary}" data-fallback-url="${qrFallback}" onerror="handleQrError(this)" alt="QR Code" style="width: 140px; height: 140px; mix-blend-mode: multiply;" />`;
           }
