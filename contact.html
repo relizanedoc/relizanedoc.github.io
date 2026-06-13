@@ -9,40 +9,32 @@
 <body>
 
   <main class="app-container" style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-    
     <div style="width: 100%; max-width: 600px;">
       
-      <div class="card text-center mb-6" style="background: var(--primary-light); border-color: var(--primary);">
-        <p class="font-semibold mb-2" style="color: var(--primary-dark);" data-i18n="emailUs">يمكنك مراسلتنا مباشرة عبر البريد الإلكتروني:</p>
-        <a href="mailto:contact.relizane@gmail.com" class="font-bold text-lg" style="color: var(--primary); text-decoration: none;" dir="ltr">
-          contact.relizane@gmail.com
-        </a>
-      </div>
-
       <div class="card card-hover">
         <div class="text-center mb-6">
           <h1 class="font-bold text-xl mb-2" style="color: var(--primary);" data-i18n="contactTitle">اتصل بنا</h1>
-          <p class="text-gray text-sm" data-i18n="contactDesc">يسعدنا تواصلك معنا. يرجى ملء النموذج أدناه وسيتم الرد عليك في أقرب وقت.</p>
+          <p class="text-gray text-sm" data-i18n="contactDesc">يسعدنا تواصلك معنا. يرجى ملء النموذج أدناه وسيتم حفظ رسالتك فوراً.</p>
         </div>
 
-        <form action="YOUR_SERVICE_ENDPOINT" method="POST">
+        <form id="contactForm">
           
           <div class="form-group">
             <label for="name" data-i18n="formName">الاسم الكامل</label>
-            <input type="text" id="name" name="name" required placeholder="أدخل اسمك الكامل">
+            <input type="text" id="name" required placeholder="أدخل اسمك الكامل">
           </div>
 
           <div class="form-group">
             <label for="email" data-i18n="formEmail">البريد الإلكتروني</label>
-            <input type="email" id="email" name="email" required placeholder="example@mail.com" dir="ltr" style="text-align: left;">
+            <input type="email" id="email" required placeholder="example@mail.com" dir="ltr" style="text-align: left;">
           </div>
 
           <div class="form-group">
             <label for="message" data-i18n="formMessage">رسالتك</label>
-            <textarea id="message" name="message" rows="5" required placeholder="كيف يمكننا مساعدتك؟"></textarea>
+            <textarea id="message" rows="5" required placeholder="كيف يمكننا مساعدتك؟"></textarea>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-block mt-4" data-i18n="formSubmit">إرسال الرسالة</button>
+          <button type="submit" id="submitBtn" class="btn btn-primary btn-block mt-4" data-i18n="formSubmit">إرسال الرسالة</button>
         </form>
       </div>
 
@@ -59,6 +51,58 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    // تجميع ثوابت الـ API (استبدل هذه القيم ببيانات مشروعك الحقيقية من إعدادات Supabase)
+    const SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+    document.getElementById('contactForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); // منع الصفحة من إعادة التحميل الافتراضية
+      
+      const submitBtn = document.getElementById('submitBtn');
+      
+      // تغيير حالة الزر لمنع الضغط المتكرر (UX Best Practice)
+      submitBtn.disabled = true;
+      submitBtn.innerText = "جاري الإرسال...";
+
+      // تجهيز البيانات المطابقة لأعمدة الجدول
+      const payload = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        message: document.getElementById('message').value
+      };
+
+      try {
+        // الاتصال المباشر بـ REST API الخاص بـ Supabase
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/contact_messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Prefer': 'return=minimal' // يطلب من السيرفر عدم إعادة البيانات لتوفير الباندويث
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          alert('تم إرسال رسالتك وحفظها بنجاح! شكرًا لتواصلك معنا.');
+          document.getElementById('contactForm').reset(); // تفريغ الحقول بعد النجاح
+        } else {
+          throw new Error('فشل السيرفر في الاستجابة بشكل صحيح');
+        }
+
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        alert('عذرًا، حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.');
+      } finally {
+        // إعادة الزر لوضعه الطبيعي
+        submitBtn.disabled = false;
+        submitBtn.innerText = "إرسال الرسالة";
+      }
+    });
+  </script>
 
 </body>
 </html>
