@@ -86,9 +86,9 @@
   </footer>
 
   <script>
-    /* ---------------------------------------------------
-       1. إعدادات الكابتشا والتنبيهات
-       --------------------------------------------------- */
+    /* =========================================================
+       1. إعدادات الكابتشا وعرض التنبيهات
+       ========================================================= */
     let num1, num2, expectedAnswer;
     
     function generateCaptcha() {
@@ -108,9 +108,9 @@
       setTimeout(() => { alertBox.style.display = 'none'; }, 5000);
     }
 
-    /* ---------------------------------------------------
-       2. نظام الترجمة
-       --------------------------------------------------- */
+    /* =========================================================
+       2. نظام تبديل اللغات (Arabic / English)
+       ========================================================= */
     const translations = {
       en: {
         contactPageTitle: "Contact Us - Relizane Medical Directory",
@@ -162,12 +162,13 @@
     document.getElementById('btn-ar').addEventListener('click', () => setLanguage('ar'));
     document.getElementById('btn-en').addEventListener('click', () => setLanguage('en'));
     
+    // جلب اللغة المحفوظة في المتصفح أو تطبيق العربية كافتراضي
     const currentLang = localStorage.getItem('siteLang') || 'ar';
     setLanguage(currentLang);
 
-    /* ---------------------------------------------------
-       3. إرسال البيانات إلى Supabase
-       --------------------------------------------------- */
+    /* =========================================================
+       3. الربط بـ Supabase ومعالجة الإرسال
+       ========================================================= */
     const SUPABASE_URL = "https://iirjtmobphgmkgwkwumc.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpcmp0bW9icGhnbWtnd2t3dW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA2NjYsImV4cCI6MjA5NjUxNjY2Nn0.Yfa0oEwp_id9tHpSb3h0jf__B4drqXsM-TVs4VTTmp4";
 
@@ -175,17 +176,17 @@
       e.preventDefault();
       const lang = document.documentElement.lang;
 
-      // فحص مصيدة الروبوتات
+      // أ. حماية من السبام (Honeypot)
       if (document.getElementById('websiteUrl').value !== "") return;
 
-      // فحص الكابتشا
+      // ب. التحقق من الكابتشا
       if (parseInt(document.getElementById('captchaAnswer').value) !== expectedAnswer) {
         showAlert(lang === 'ar' ? 'الإجابة الرياضية خاطئة، يرجى المحاولة مرة أخرى.' : 'Incorrect math answer. Please try again.');
         generateCaptcha();
         return;
       }
 
-      // فحص حظر 10 دقائق
+      // ج. حظر الـ 10 دقائق
       const lastSentTime = localStorage.getItem('lastMessageTime');
       if (lastSentTime) {
         const timeElapsed = Date.now() - parseInt(lastSentTime);
@@ -197,6 +198,7 @@
         }
       }
 
+      // د. معالجة الإرسال
       const submitBtn = document.getElementById('submitBtn');
       const originalBtnText = submitBtn.innerText;
       submitBtn.disabled = true;
