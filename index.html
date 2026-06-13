@@ -658,7 +658,50 @@
             <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
 
           </div>
+          <div class='card mb-4' style='padding: 1rem 1.5rem;'>
+  <div class='accordion-header' id='clinicProfileToggle' onclick='document.getElementById("clinicProfileContent").classList.toggle("open"); this.classList.toggle("open");'>
+    <div style='display:flex; align-items:center; gap:0.75rem;'>
+      <div style='background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;'>
+        <svg fill='none' height='20' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24' width='20'><path d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/><circle cx='12' cy='10' r='3'/></svg>
+      </div>
+      <h3 class='text-lg font-bold' style='font-size: 1.1rem; margin:0;'>ملف العيادة والخدمات</h3>
+    </div>
+    <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
+  </div>
 
+  <div class='accordion-content' id='clinicProfileContent'>
+    <div style='padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;'>
+      <form id='clinicProfileForm'>
+        <div class="grid grid-1 grid-2">
+            <div class="form-group">
+                <label>البريد الإلكتروني للعيادة</label>
+                <input type="email" id="dash_contact_email" placeholder="contact@clinic.com">
+            </div>
+            <div class="form-group">
+                <label>رقم الواتساب</label>
+                <input type="tel" id="dash_whatsapp" placeholder="مثال: 213550000000+">
+            </div>
+            <div class="form-group">
+                <label>رابط حساب الفيسبوك</label>
+                <input type="url" id="dash_facebook" placeholder="https://facebook.com/...">
+            </div>
+            <div class="form-group">
+                <label>رابط موقع العيادة (Google Maps)</label>
+                <input type="url" id="dash_map_link" placeholder="رابط خرائط جوجل...">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>الخدمات المقدمة (اكتب كل خدمة في سطر جديد)</label>
+            <p class="text-sm text-gray mb-2">مثال للتنسيق:<br>الفئة الرئيسية: الخدمة 1، الخدمة 2</p>
+            <textarea id="dash_services" rows="5" placeholder="طب الأطفال العام: حديثي الولادة، رضيع..."></textarea>
+        </div>
+
+        <button class='btn btn-primary' id='saveProfileBtn' onclick='saveClinicProfile()' type='button'>حفظ التغييرات</button>
+      </form>
+    </div>
+  </div>
+</div>
           <div class='accordion-content' id='workingHoursContent'>
 
             <div style='padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;'>
