@@ -3248,24 +3248,18 @@ window.saveClinicProfile = async function() {
     const btn = document.getElementById('saveProfileBtn');
     setLoading(btn, true, 'جاري الحفظ...');
 
-    // تحويل النص المدخل في الخدمات إلى مصفوفة JSON
-    const rawServices = document.getElementById('dash_services').value.split('\n');
-    // استبدل كود `rawServices` في دالة الحفظ بهذا:
-const formattedServices = [];
-document.querySelectorAll('.service-row').forEach(row => {
-    const category = row.querySelector('.svc-category').value.trim();
-    const itemsStr = row.querySelector('.svc-items').value.trim();
-    
-    if (category || itemsStr) {
-        formattedServices.push({
-            category: category || 'خدمات عامة',
-            // تقسيم السلسلة بالفاصلة العربية أو الإنجليزية
-            items: itemsStr ? itemsStr.split(/[,،]/).map(i => i.trim()).filter(Boolean) : []
-        });
-    }
-});
-                formattedServices.push({ category: line.trim(), items: [] });
-            }
+    // تجميع البيانات من الجدول التفاعلي
+    const formattedServices = [];
+    document.querySelectorAll('.service-row').forEach(row => {
+        const category = row.querySelector('.svc-category').value.trim();
+        const itemsStr = row.querySelector('.svc-items').value.trim();
+        
+        if (category || itemsStr) {
+            formattedServices.push({
+                category: category || 'خدمات عامة',
+                // تقسيم السلسلة بالفاصلة العربية أو الإنجليزية
+                items: itemsStr ? itemsStr.split(/[,،]/).map(i => i.trim()).filter(Boolean) : []
+            });
         }
     });
 
@@ -3285,7 +3279,7 @@ document.querySelectorAll('.service-row').forEach(row => {
 
         showToast('تم حفظ ملف العيادة والخدمات بنجاح', 'success');
 
-        // تحديث المتغير المحلي
+        // تحديث المتغير المحلي لتنعكس التغييرات فوراً
         const docIndex = allDoctors.findIndex(d => d.id === session.doctorId);
         if (docIndex > -1) {
             allDoctors[docIndex] = { 
