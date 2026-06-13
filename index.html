@@ -13,7 +13,8 @@
   <link rel="icon" type="image/png" href="favicon.png">
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.min.css" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
   <script src="https://www.google.com/recaptcha/api.js?render=6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js" defer></script>
@@ -91,7 +92,7 @@
 
     <div class='view hidden' id='view-login'>
   <div class='card login-box' style='max-width: 450px; margin: 0 auto;'>
-    
+
     <button class='btn btn-google btn-block' id='googleSignInBtn'>
       <svg height='20' viewBox='0 0 48 48' width='20' xmlns='http://www.w3.org/2000/svg'>
         <path d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z' fill='#EA4335'/>
@@ -101,22 +102,22 @@
       </svg>
       <span data-i18n='googleSignIn'>Sign in with Google</span>
     </button>
-    
+
     <div class='auth-divider'><span data-i18n='or'>or</span></div>
-    
+
     <form id='emailAuthForm'>
       <h3 class='text-lg font-bold mb-4 text-center' data-i18n='loginTitle' id='authFormTitle'>Member Login</h3>
-      
+
       <div class='form-group hidden' id='nameFieldGroup'>
         <label data-i18n='fullName'>Full Name</label>
         <input id='authName' placeholder='Your full name' type='text'/>
       </div>
-      
+
       <div class='form-group'>
         <label data-i18n='email'>Email *</label>
         <input id='authEmail' placeholder='your@email.com' required='required' type='email'/>
       </div>
-      
+
       <div class='form-group'>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
           <label data-i18n='password' style="margin: 0;">Password *</label>
@@ -124,31 +125,38 @@
         </div>
         <input id='authPassword' autocomplete='current-password' minlength='6' placeholder='••••••••' required='required' type='password'/>
       </div>
-      
+
       <button class='btn btn-primary btn-block' id='authSubmitBtn' type='button'>
         <span data-i18n='loginBtn'>Login</span>
       </button>
-      
+
       <div class='auth-toggle mt-4' id='authToggleText' style="text-align: center; font-size: 0.9rem; cursor: pointer; color: var(--primary); font-weight: bold;"></div>
-   </form>
-    </div> 
-    
-    <div class='mt-4 text-center'>
-      <button class='btn btn-secondary' data-i18n='backToHome' id='backToHomeBtn'>&#8592; Back to Directory</button>
+    </form>
+  </div> <div class='mt-4 text-center'>
+    <button class='btn btn-secondary' data-i18n='backToHome' id='backToHomeBtn'>&#8592; Back to Directory</button>
+  </div>
+</div>
     </div>
-  </div> <div class='view hidden' id='view-user-dashboard'>
-    <div style='max-width: 800px; margin: 2rem auto;'>
-      <h2 class='text-xl font-bold mb-6' data-i18n='memberDashboardTitle'>لوحة تحكم العضو</h2>
-      
-      <div class='card' style='position: relative; overflow: hidden; padding: 0;'>
-        <div style='height: 6px; background: var(--primary); width: 100%;'></div>
-        
-        <div style='padding: 2rem; text-align: center;'>
-          <div class='avatar' id='memberDashAvatar' style='margin: 0 auto 1rem auto; width: 88px; height: 88px; font-size: 2.5rem; background: var(--surface); color: var(--primary); border: 2px solid var(--border); box-shadow: var(--shadow-sm); z-index: 1;'>U</div>
-          
-          <h3 class='font-bold text-xl mb-1' id='memberDashName' style='color: var(--text);'>الاسم</h3>
-          
-          <p class='text-gray text-sm mb-4' id='memberDashEmail'>البريد الإلكتروني</p>
+
+
+
+    <div class='view hidden' id='view-user-dashboard'>
+
+      <div style='max-width: 800px; margin: 2rem auto;'>
+
+        <h2 class='text-xl font-bold mb-6' data-i18n='memberDashboardTitle'>لوحة تحكم العضو</h2>
+
+        <div class='card' style='position: relative; overflow: hidden; padding: 0;'>
+
+          <div style='height: 6px; background: var(--primary); width: 100%;'></div>
+
+          <div style='padding: 2rem; text-align: center;'>
+
+            <div class='avatar' id='memberDashAvatar' style='margin: 0 auto 1rem auto; width: 88px; height: 88px; font-size: 2.5rem; background: var(--surface); color: var(--primary); border: 2px solid var(--border); box-shadow: var(--shadow-sm); z-index: 1;'>U</div>
+
+            <h3 class='font-bold text-xl mb-1' id='memberDashName' style='color: var(--text);'>الاسم</h3>
+
+            <p class='text-gray text-sm mb-4' id='memberDashEmail'>البريد الإلكتروني</p>
 
             <div data-i18n='registeredMember' style='display: inline-block; padding: 0.25rem 1rem; border-radius: 99px; background: var(--primary-light); color: var(--primary-dark); font-size: 0.85rem; font-weight: 600; border: 1px solid var(--primary-light); margin-bottom: 2rem;'>عضو مسجل</div>
 
@@ -157,7 +165,7 @@
     <svg fill='none' height='20' stroke='currentColor' stroke-width='2' style='margin-inline-end: 0.5rem; vertical-align: middle;' viewBox='0 0 24 24' width='20'><path d='M12 5v14M5 12h14'/></svg>
     <span data-i18n='navAdd'>إضافة طبيب</span>
   </button>
-  
+
   <button class='btn' onclick='handleChangePassword()' style='flex: 1; max-width: 200px; background: transparent; border: 1px solid var(--border); color: var(--text);'>
     <svg fill='none' height='20' stroke='currentColor' stroke-width='2' style='margin-inline-end: 0.5rem; vertical-align: middle;' viewBox='0 0 24 24' width='20'><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
     <span>تغيير كلمة المرور</span>
@@ -600,14 +608,23 @@
 
 
     <div class='view hidden' id='view-dashboard'>
+
       <div class='login-box card' id='loginSection'>
+
         <h2 class='text-xl font-bold text-center mb-6' data-i18n='doctorLogin'>Doctor Login</h2>
+
         <p class='text-sm text-gray text-center mb-6' data-i18n='loginDesc'>Enter your Doctor ID and registered phone number to view your appointments.</p>
+
 <form id='dashboardLoginForm'>
+
   <div class='form-group'>
+
     <label data-i18n='loginPhone'>Phone Number</label>
+
 <input id='loginPhone' autocomplete='username' placeholder='Your registered phone' required='required' type='tel'/>
+
   </div>
+
   <div class='form-group'>
 
     <label data-i18n='password'>Password *</label>
@@ -747,10 +764,18 @@
       </div> 
 
     </div> 
+
   </div>
+
+
+
   <div class='dialog-overlay hidden' id='doctorProfileModal' style='z-index: 99990;'>
+
     <div class='dialog-box doctor-profile-modal' id='dpModalContent'></div>
+
   </div>
+
+
 
   <div class='dialog-overlay hidden' id='confirmDialog'>
 
@@ -957,22 +982,22 @@
   <div class='dialog-box' style='max-width: 400px; padding: 1.5rem;'>
     <h3 style='margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: bold; color: var(--text);'>تغيير كلمة المرور</h3>
     <p style='color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;'>يرجى إدخال كلمة المرور الجديدة (يجب أن تتكون من 6 أحرف أو أرقام على الأقل).</p>
-    
+
     <div class='form-group' style='text-align: right; margin-bottom: 1rem;'>
       <div style="position: relative; width: 100%; display: block;">
-        
+
         <input id="newPasswordInput" placeholder="أدخل كلمة المرور الجديدة..." type="password" style="width: 100%; padding-left: 50px !important; box-sizing: border-box; display: block; margin: 0;" />
-        
+
         <span onclick="togglePasswordVisibility('newPasswordInput', 'eyeIconModal')" style="position: absolute; left: 5px; top: 0; height: 100%; width: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; z-index: 9999;">
           <svg id="eyeIconModal" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
             <line x1="1" y1="1" x2="23" y2="23"></line>
           </svg>
         </span>
-        
+
       </div>
     </div>
-    
+
     <div class='dialog-actions' style='margin-top: 1.5rem;'>
       <button class='btn btn-secondary' onclick='closeChangePasswordModal()'>إلغاء</button>
       <button class='btn btn-primary' id='saveNewPasswordBtn' onclick='submitNewPassword()'>حفظ التغييرات</button>
@@ -984,11 +1009,11 @@
   <div class='dialog-box' style='max-width: 400px; padding: 1.5rem;'>
     <h3 style='margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: bold; color: var(--text);'>استعادة كلمة المرور</h3>
     <p style='color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;'>أدخل بريدك الإلكتروني المسجل أدناه وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.</p>
-    
+
     <div class='form-group' style='text-align: right;'>
       <input id='resetEmailInput' placeholder='your@email.com' type='email' style='width: 100%; text-align: left; direction: ltr;'/>
     </div>
-    
+
     <div class='dialog-actions' style='margin-top: 1.5rem;'>
       <button class='btn btn-secondary' onclick='closeForgotPasswordModal()'>إلغاء</button>
       <button class='btn btn-primary' id='sendResetLinkBtn' onclick='submitPasswordReset()'>إرسال الرابط</button>
@@ -998,4 +1023,3 @@
 </body>
 
 </html> 
-
