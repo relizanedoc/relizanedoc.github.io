@@ -670,17 +670,26 @@ function renderDoctors(doctors) {
   });
 }
     // ✅ الدالة الجديدة لعرض تفاصيل الطبيب
+// ✅ الدالة الجديدة لعرض تفاصيل الطبيب
 function openDoctorProfileModal(doc, doctorName) {
   const modal = document.getElementById('doctorProfileModal');
   const content = document.getElementById('dpModalContent');
-let fbLink = doc.facebook_link;
-if (fbLink && !fbLink.match(/^https?:\/\//i)) {
-    fbLink = 'https://' + fbLink; // يضيف بروتوكول HTTPS إذا نسي الطبيب إضافته
-}
-  // إنشاء رابط المشاركة (يستخدم UUID الآن)
+
+  let fbLink = doc.facebook_link;
+  if (fbLink && !fbLink.match(/^https?:\/\//i)) {
+      fbLink = 'https://' + fbLink;
+  }
+
   const profileUrl = `${window.location.origin}${window.location.pathname}?doc=${doc.id}`;
   const shareText = currentLang === 'ar' ? 'مشاركة الرابط' : 'Share Link';
   const isBookingEnabled = doc.booking_enabled === true;
+
+  // 📱 بناء بيانات جهة الاتصال (vCard) للـ QR Code
+  let vCard = `BEGIN:VCARD\nVERSION:3.0\nFN:${doctorName}\n`;
+  if (doc.phone) vCard += `TEL:${doc.phone}\n`;
+  if (doc.contact_email) vCard += `EMAIL:${doc.contact_email}\n`;
+  if (doc.exact_location) vCard += `ADR:;;${doc.exact_location};${t(doc.municipality)};;;\n`;
+  vCard += `URL:${profileUrl}\nEND:VCARD`;
 
   // بناء جدول العمل
   let scheduleHtml = '';
@@ -778,7 +787,8 @@ if (fbLink && !fbLink.match(/^https?:\/\//i)) {
           </div>
         </div>
       </div>
-<div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; justify-content: center; flex-wrap: wrap;">
+
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; justify-content: center; flex-wrap: wrap;">
         ${doc.whatsapp_number ? `<a href="https://wa.me/${doc.whatsapp_number.replace(/\D/g, '')}" target="_blank" class="btn" style="background: #25D366; color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> ${t('whatsappBtn')}</a>` : ''}
         ${fbLink ? `<a href="${fbLink}" target="_blank" class="btn" style="background: #1877F2; color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> ${t('facebookBtn')}</a>` : ''}
         ${doc.contact_email ? `<a href="mailto:${doc.contact_email}" class="btn" style="background: var(--text-secondary); color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> ${t('emailBtn')}</a>` : ''}
@@ -797,24 +807,33 @@ if (fbLink && !fbLink.match(/^https?:\/\//i)) {
       </div>` : ''}
 
       ${doc.services && doc.services.length > 0 ? `
-      <div class="dp-info-row" style="flex-direction: column;">
-        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; width: 100%; background: var(--primary); color: white; padding: 0.75rem; border-radius: 8px;">
+      <div class="dp-info-row" style="flex-direction: column; padding-bottom: 0; border-bottom: none;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0; width: 100%; background: #2ab2a5; color: white; padding: 1rem; border-top-left-radius: 12px; border-top-right-radius: 12px;">
            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-           <h3 style="margin: 0; font-size: 1rem;">${t('ourServices')}</h3>
+           <h3 style="margin: 0; font-size: 1.1rem; font-weight: bold;">${t('ourServices')}</h3>
         </div>
-        <div style="width: 100%; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+        <div style="width: 100%; border: 1px solid var(--border); border-top: none; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; overflow: hidden; margin-bottom: 1.5rem;">
             ${doc.services.map((service, index) => `
-                <div style="background: ${index % 2 === 0 ? '#f8fafc' : '#ffffff'}; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);">
-                    <div style="font-weight: bold; color: var(--primary-dark); font-size: 0.95rem;">${escapeHtml(service.category)}</div>
-                    ${service.items.length > 0 ? `<ul style="margin: 0.5rem 1.5rem 0; padding: 0; list-style-type: disc; color: var(--text-secondary); font-size: 0.85rem;">
-                        ${service.items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
-                    </ul>` : ''}
+                <div style="background: ${index % 2 === 0 ? '#f8f9fa' : '#e6f7f6'}; padding: 0.85rem 1.2rem; border-bottom: 1px solid #eee;">
+                    <div style="color: var(--primary-dark); font-size: 0.95rem; font-weight: 800;">
+                        ${escapeHtml(service.category)}
+                    </div>
+                    ${service.items.length > 0 ? `
+                        <div style="margin-top: 0.4rem; display: flex; flex-direction: column; gap: 0.25rem;">
+                            ${service.items.map(item => `
+                                <div style="color: #555; font-size: 0.85rem; padding: 0.15rem 0;">
+                                    • ${escapeHtml(item)}
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
                 </div>
             `).join('')}
         </div>
       </div>` : ''}
+
       ${doc.extra_info ? `
-      <div class="dp-info-row">
+      <div class="dp-info-row" style="border-top: 1px dashed var(--border); padding-top: 1rem;">
         <div class="dp-info-icon">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
@@ -831,8 +850,17 @@ if (fbLink && !fbLink.match(/^https?:\/\//i)) {
           </div>
         </div>
       </div>` : ''}
+
+      <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed var(--border);">
+          <div style="color: #0284c7; font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">
+              ${currentLang === 'ar' ? 'إمسح الرمز لحفظ جهة الاتصال' : 'Scan to save contact'}
+          </div>
+          <div style="display: inline-block; padding: 0.5rem; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-sm); margin-top: 0.5rem;">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(vCard)}&color=000000" alt="QR Contact Code" style="width: 130px; height: 130px; display: block;" />
+          </div>
+      </div>
       
-      <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+      <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
         <button class="btn btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;" 
           onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
           <span style="color: #b45309; margin-inline-end: 4px;">★</span> 
