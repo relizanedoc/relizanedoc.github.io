@@ -733,7 +733,40 @@ function openDoctorProfileModal(doc, doctorName) {
           </div>
         </div>
       </div>
-      
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; justify-content: center; flex-wrap: wrap;">
+        ${doc.whatsapp_number ? `<a href="https://wa.me/${doc.whatsapp_number.replace(/\D/g, '')}" target="_blank" class="btn" style="background: #25D366; color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> واتساب</a>` : ''}
+        ${doc.facebook_link ? `<a href="${doc.facebook_link}" target="_blank" class="btn" style="background: #1877F2; color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> فيسبوك</a>` : ''}
+        ${doc.contact_email ? `<a href="mailto:${doc.contact_email}" class="btn" style="background: var(--text-secondary); color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> إيميل</a>` : ''}
+      </div>
+
+      ${doc.map_link ? `
+      <div class="dp-info-row">
+        <div class="dp-info-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg></div>
+        <div style="flex: 1;">
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem;">${currentLang === 'ar' ? 'الموقع على الخريطة' : 'Location Map'}</div>
+          <a href="${doc.map_link}" target="_blank" class="btn btn-secondary btn-block" style="font-size: 0.9rem; justify-content: center; background: #f8fafc;">
+            فتح في خرائط جوجل Google Maps
+          </a>
+        </div>
+      </div>` : ''}
+
+      ${doc.services && doc.services.length > 0 ? `
+      <div class="dp-info-row" style="flex-direction: column;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; width: 100%; background: var(--primary); color: white; padding: 0.75rem; border-radius: 8px;">
+           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+           <h3 style="margin: 0; font-size: 1rem;">${currentLang === 'ar' ? 'خدماتنا' : 'Nos services'}</h3>
+        </div>
+        <div style="width: 100%; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+            ${doc.services.map((service, index) => `
+                <div style="background: ${index % 2 === 0 ? '#f0fdf4' : '#ffffff'}; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);">
+                    <div style="font-weight: bold; color: var(--primary-dark); font-size: 0.95rem;">${escapeHtml(service.category)}</div>
+                    ${service.items.length > 0 ? `<ul style="margin: 0.5rem 1.5rem 0; padding: 0; list-style-type: disc; color: var(--text-secondary); font-size: 0.85rem;">
+                        ${service.items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+                    </ul>` : ''}
+                </div>
+            `).join('')}
+        </div>
+      </div>` : ''}
       ${doc.extra_info ? `
       <div class="dp-info-row">
         <div class="dp-info-icon">
@@ -1413,7 +1446,20 @@ function renderDashboardUI(data, doctorId) {
     `;
     container.appendChild(row);
   }
-
+// تعبئة حقول ملف العيادة
+if (data.doctorDetails) {
+    document.getElementById('dash_contact_email').value = data.doctorDetails.contact_email || '';
+    document.getElementById('dash_whatsapp').value = data.doctorDetails.whatsapp_number || '';
+    document.getElementById('dash_facebook').value = data.doctorDetails.facebook_link || '';
+    document.getElementById('dash_map_link').value = data.doctorDetails.map_link || '';
+    
+    // تحويل JSON الخاص بالخدمات إلى نص قابل للتعديل
+    let servicesText = '';
+    if (data.doctorDetails.services && Array.isArray(data.doctorDetails.services)) {
+        servicesText = data.doctorDetails.services.map(s => `${s.category}: ${s.items.join('، ')}`).join('\n');
+    }
+    document.getElementById('dash_services').value = servicesText;
+}
   // تحديث زر إيقاف/تشغيل الحجوزات
   const isEnabled = !!data.bookingEnabled;
   const toggleSwitch = document.getElementById('bookingToggleSwitch');
@@ -3185,3 +3231,59 @@ function togglePasswordVisibility(inputId, iconId) {
     icon.style.color = 'var(--text-secondary)';
   }
 }
+window.saveClinicProfile = async function() {
+    const sessionStr = localStorage.getItem('doctorSession');
+    if (!sessionStr) return;
+    const session = JSON.parse(sessionStr);
+
+    const btn = document.getElementById('saveProfileBtn');
+    setLoading(btn, true, 'جاري الحفظ...');
+
+    // تحويل النص المدخل في الخدمات إلى مصفوفة JSON
+    const rawServices = document.getElementById('dash_services').value.split('\n');
+    const formattedServices = [];
+    rawServices.forEach(line => {
+        if (line.trim()) {
+            const parts = line.split(':');
+            if (parts.length >= 2) {
+                formattedServices.push({
+                    category: parts[0].trim(),
+                    items: parts[1].split('،').map(item => item.trim()).filter(Boolean)
+                });
+            } else {
+                formattedServices.push({ category: line.trim(), items: [] });
+            }
+        }
+    });
+
+    const updateData = {
+        contact_email: document.getElementById('dash_contact_email').value.trim(),
+        whatsapp_number: document.getElementById('dash_whatsapp').value.trim(),
+        facebook_link: document.getElementById('dash_facebook').value.trim(),
+        map_link: document.getElementById('dash_map_link').value.trim(),
+        services: formattedServices
+    };
+
+    try {
+        // تحديث البيانات مباشرة في Supabase
+        const { error } = await supabaseClient
+            .from('doctors')
+            .update(updateData)
+            .eq('id', session.doctorId);
+
+        if (error) throw error;
+
+        showToast('تم حفظ ملف العيادة والخدمات بنجاح', 'success');
+
+        // تحديث المتغير المحلي
+        const docIndex = allDoctors.findIndex(d => d.id === session.doctorId);
+        if (docIndex > -1) {
+            allDoctors[docIndex] = { ...allDoctors[docIndex], ...updateData };
+        }
+
+    } catch (err) {
+        showToast('خطأ: ' + err.message, 'error');
+    } finally {
+        setLoading(btn, false, 'حفظ التغييرات');
+    }
+};
