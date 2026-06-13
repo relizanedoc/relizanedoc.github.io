@@ -14,6 +14,15 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
         Relizane Medical
       </div>
+      
+      <div class="nav-links">
+        <button class="nav-btn" data-i18n="navDirectory">الرئيسية</button>
+        <button class="nav-btn" data-i18n="navTrack">تتبع الحجز</button>
+        <button class="nav-btn" data-i18n="navAddDoctor">إضافة طبيب</button>
+        <button class="nav-btn" data-i18n="navDoctorLogin">دخول الأطباء</button>
+        <button class="nav-btn" data-i18n="navLogin">تسجيل الدخول</button>
+      </div>
+
       <div class="right-nav-controls">
         <div class="lang-switch">
           <button class="lang-btn" id="btn-en">EN</button>
@@ -55,7 +64,7 @@
 
           <div class="form-group" style="background: var(--bg); padding: 15px; border-radius: 8px; border: 1px dashed var(--border);">
             <label id="captchaQuestion" style="color: var(--primary-dark); font-weight: bold;"></label>
-            <input type="number" id="captchaAnswer" required placeholder="الرقم هنا" style="width: 50%; margin-top: 5px;">
+            <input type="number" id="captchaAnswer" required placeholder="..." style="width: 50%; margin-top: 5px;">
           </div>
 
           <button type="submit" id="submitBtn" class="btn btn-primary btn-block mt-4" data-i18n="formSubmit">إرسال الرسالة</button>
@@ -65,17 +74,76 @@
     </div>
   </main>
 
+  <footer>
+    <div class="footer-inner">
+      <div data-i18n='footerRights'>&#169; 2026 Relizane Medical Directory. All rights reserved.</div>
+      <div class='footer-links'>
+        <a data-i18n='privacyPolicy' href='privacy.html'>Privacy Policy</a>
+        <a data-i18n='termsOfUse' href='terms.html'>Terms of Use</a>
+        <a data-i18n='contactUs' href='contact.html'>اتصل بنا</a>
+      </div>
+    </div>
+  </footer>
+
   <script>
-    /* === إعداد الترجمة واللغة (مختصر هنا لتوضيح المنطق) === */
-    const translations = { /* ... نفس القاموس السابق ... */ };
-    function setLanguage(lang) { /* ... نفس دالة تغيير اللغة السابقة ... */ }
+    /* --- 1. نظام الترجمة وتغيير اللغة --- */
+    const translations = {
+      en: {
+        contactPageTitle: "Contact Us - Relizane Medical Directory",
+        navDirectory: "Directory", navTrack: "Track Booking", navAddDoctor: "Add Doctor", navDoctorLogin: "Doctor Login", navLogin: "Login",
+        contactTitle: "Contact Us",
+        contactDesc: "We'd love to hear from you. Please fill out the form below.",
+        formName: "Full Name", namePlaceholder: "Enter your full name",
+        formEmail: "Email Address",
+        formMessage: "Your Message", messagePlaceholder: "How can we help you?",
+        formSubmit: "Send Message",
+        footerRights: "© 2026 Relizane Medical Directory. All rights reserved.",
+        privacyPolicy: "Privacy Policy", termsOfUse: "Terms of Use", contactUs: "Contact Us"
+      },
+      ar: {
+        contactPageTitle: "اتصل بنا - Relizane Medical Directory",
+        navDirectory: "الرئيسية", navTrack: "تتبع الحجز", navAddDoctor: "إضافة طبيب", navDoctorLogin: "دخول الأطباء", navLogin: "تسجيل الدخول",
+        contactTitle: "اتصل بنا",
+        contactDesc: "يسعدنا تواصلك معنا. يرجى ملء النموذج أدناه وسيتم حفظ رسالتك فوراً.",
+        formName: "الاسم الكامل", namePlaceholder: "أدخل اسمك الكامل",
+        formEmail: "البريد الإلكتروني",
+        formMessage: "رسالتك", messagePlaceholder: "كيف يمكننا مساعدتك؟",
+        formSubmit: "إرسال الرسالة",
+        footerRights: "© 2026 الدليل الطبي لغليزان. جميع الحقوق محفوظة.",
+        privacyPolicy: "سياسة الخصوصية", termsOfUse: "شروط الاستخدام", contactUs: "اتصل بنا"
+      }
+    };
+
+    function setLanguage(lang) {
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+      document.getElementById('btn-ar').classList.toggle('active', lang === 'ar');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang][key]) el.innerText = translations[lang][key];
+      });
+
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (translations[lang][key]) el.placeholder = translations[lang][key];
+      });
+
+      localStorage.setItem('siteLang', lang);
+      generateCaptcha(); // تحديث لغة الكابتشا عند تغيير لغة الموقع
+    }
+
     document.getElementById('btn-ar').addEventListener('click', () => setLanguage('ar'));
     document.getElementById('btn-en').addEventListener('click', () => setLanguage('en'));
-    setLanguage(localStorage.getItem('siteLang') || 'ar');
-
-    /* === نظام الحماية (Anti-Spam & Validation) === */
     
-    // توليد كابتشا رياضية عشوائية
+    // جلب اللغة المحفوظة أو تعيين العربية كافتراضي
+    const currentLang = localStorage.getItem('siteLang') || 'ar';
+    setLanguage(currentLang);
+
+
+    /* --- 2. نظام الكابتشا والتنبيهات --- */
     let num1, num2, expectedAnswer;
     function generateCaptcha() {
       num1 = Math.floor(Math.random() * 10) + 1;
@@ -84,10 +152,7 @@
       const lang = document.documentElement.lang;
       document.getElementById('captchaQuestion').innerText = lang === 'ar' ? `تحقق أمني: كم يساوي ${num1} + ${num2} ؟` : `Security Check: What is ${num1} + ${num2}?`;
     }
-    // تشغيل الكابتشا عند فتح الصفحة
-    generateCaptcha();
 
-    // دالة عرض التنبيهات
     function showAlert(message, isError = true) {
       const alertBox = document.getElementById('formAlert');
       alertBox.style.display = 'block';
@@ -97,44 +162,42 @@
       setTimeout(() => { alertBox.style.display = 'none'; }, 5000);
     }
 
-   const SUPABASE_URL = "https://iirjtmobphgmkgwkwumc.supabase.co/";
+
+    /* --- 3. إرسال البيانات إلى Supabase --- */
+    // تم إزالة الشرطة المائلة (/) من آخر الرابط لتجنب الأخطاء
+    const SUPABASE_URL = "https://iirjtmobphgmkgwkwumc.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpcmp0bW9icGhnbWtnd2t3dW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA2NjYsImV4cCI6MjA5NjUxNjY2Nn0.Yfa0oEwp_id9tHpSb3h0jf__B4drqXsM-TVs4VTTmp4";
 
     document.getElementById('contactForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const currentLang = document.documentElement.lang;
+      const lang = document.documentElement.lang;
 
-      // 1. فحص مصيدة العسل (إذا كانت ممتلئة، فهذا روبوت سبام)
-      if (document.getElementById('websiteUrl').value !== "") {
-        console.warn('Bot detected by Honeypot.');
-        return; // يتم إيقاف العملية بصمت دون إخبار الروبوت
-      }
+      // أ. فحص مصيدة الروبوتات
+      if (document.getElementById('websiteUrl').value !== "") return;
 
-      // 2. فحص إجابة الكابتشا الرياضية
+      // ب. فحص الكابتشا
       if (parseInt(document.getElementById('captchaAnswer').value) !== expectedAnswer) {
-        showAlert(currentLang === 'ar' ? 'الإجابة الرياضية خاطئة، يرجى المحاولة مرة أخرى.' : 'Incorrect math answer. Please try again.');
-        generateCaptcha(); // توليد سؤال جديد
+        showAlert(lang === 'ar' ? 'الإجابة الرياضية خاطئة، يرجى المحاولة مرة أخرى.' : 'Incorrect math answer. Please try again.');
+        generateCaptcha();
         return;
       }
 
-      // 3. فحص الحظر الزمني (10 دقائق) في المتصفح
+      // ج. فحص حظر الـ 10 دقائق من المتصفح
       const lastSentTime = localStorage.getItem('lastMessageTime');
       if (lastSentTime) {
         const timeElapsed = Date.now() - parseInt(lastSentTime);
         const tenMinutes = 10 * 60 * 1000;
-        
         if (timeElapsed < tenMinutes) {
           const minutesLeft = Math.ceil((tenMinutes - timeElapsed) / 60000);
-          showAlert(currentLang === 'ar' ? `لقد قمت بإرسال رسالة مؤخراً. يرجى الانتظار ${minutesLeft} دقائق.` : `You recently sent a message. Please wait ${minutesLeft} minutes.`);
+          showAlert(lang === 'ar' ? `لقد قمت بإرسال رسالة مؤخراً. يرجى الانتظار ${minutesLeft} دقائق.` : `You recently sent a message. Please wait ${minutesLeft} minutes.`);
           return;
         }
       }
 
-      // 4. التحضير للإرسال
       const submitBtn = document.getElementById('submitBtn');
       const originalBtnText = submitBtn.innerText;
       submitBtn.disabled = true;
-      submitBtn.innerText = currentLang === 'ar' ? "جاري الإرسال..." : "Sending...";
+      submitBtn.innerText = lang === 'ar' ? "جاري الإرسال..." : "Sending...";
 
       const payload = {
         name: document.getElementById('name').value,
@@ -155,22 +218,21 @@
         });
 
         if (response.ok) {
-          showAlert(currentLang === 'ar' ? 'تم إرسال رسالتك بنجاح!' : 'Message sent successfully!', false);
+          showAlert(lang === 'ar' ? 'تم إرسال رسالتك بنجاح!' : 'Message sent successfully!', false);
           document.getElementById('contactForm').reset();
-          generateCaptcha(); // تحديث الكابتشا لعملية قادمة
-          localStorage.setItem('lastMessageTime', Date.now()); // تسجيل وقت الإرسال الناجح
+          generateCaptcha();
+          localStorage.setItem('lastMessageTime', Date.now());
         } else {
           const errorData = await response.json();
-          // التقاط الخطأ القادم من قاعدة البيانات إذا حاول أحدهم تجاوز حظر المتصفح
           if (errorData.message && errorData.message.includes('RATE_LIMIT_EXCEEDED')) {
-             showAlert(currentLang === 'ar' ? 'لقد تجاوزت الحد المسموح. يرجى الانتظار 10 دقائق.' : 'Rate limit exceeded. Wait 10 minutes.');
+             showAlert(lang === 'ar' ? 'لقد تجاوزت الحد المسموح. يرجى الانتظار 10 دقائق.' : 'Rate limit exceeded. Wait 10 minutes.');
           } else {
              throw new Error('Server error');
           }
         }
 
       } catch (error) {
-        showAlert(currentLang === 'ar' ? 'حدث خطأ في الاتصال، يرجى المحاولة لاحقاً.' : 'Connection error, please try again.');
+        showAlert(lang === 'ar' ? 'حدث خطأ في الاتصال، يرجى المحاولة لاحقاً.' : 'Connection error, please try again.');
       } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = originalBtnText;
