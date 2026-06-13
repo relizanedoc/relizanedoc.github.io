@@ -1,9 +1,8 @@
- <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-i18n="contactPageTitle">Contact Us - Relizane Medical Directory</title>
+  <title data-i18n="contactPageTitle">اتصل بنا - Relizane Medical Directory</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,28 +12,28 @@
       
       <div class="card card-hover">
         <div class="text-center mb-6">
-          <h1 class="font-bold text-xl mb-2" style="color: var(--primary);" data-i18n="contactTitle">Contact Us</h1>
-          <p class="text-gray text-sm" data-i18n="contactDesc">We'd love to hear from you. Please fill out the form below and your message will be saved immediately.</p>
+          <h1 class="font-bold text-xl mb-2" style="color: var(--primary);" data-i18n="contactTitle">اتصل بنا</h1>
+          <p class="text-gray text-sm" data-i18n="contactDesc">يسعدنا تواصلك معنا. يرجى ملء النموذج أدناه وسيتم حفظ رسالتك فوراً.</p>
         </div>
 
         <form id="contactForm">
           
           <div class="form-group">
-            <label for="name" data-i18n="formName">Full Name</label>
-            <input type="text" id="name" required placeholder="Enter your full name" data-i18n-placeholder="namePlaceholder">
+            <label for="name" data-i18n="formName">الاسم الكامل</label>
+            <input type="text" id="name" required placeholder="أدخل اسمك الكامل" data-i18n-placeholder="namePlaceholder">
           </div>
 
           <div class="form-group">
-            <label for="email" data-i18n="formEmail">Email Address</label>
+            <label for="email" data-i18n="formEmail">البريد الإلكتروني</label>
             <input type="email" id="email" required placeholder="example@mail.com" dir="ltr" style="text-align: left;">
           </div>
 
           <div class="form-group">
-            <label for="message" data-i18n="formMessage">Your Message</label>
-            <textarea id="message" rows="5" required placeholder="How can we help you?" data-i18n-placeholder="messagePlaceholder"></textarea>
+            <label for="message" data-i18n="formMessage">رسالتك</label>
+            <textarea id="message" rows="5" required placeholder="كيف يمكننا مساعدتك؟" data-i18n-placeholder="messagePlaceholder"></textarea>
           </div>
 
-          <button type="submit" id="submitBtn" class="btn btn-primary btn-block mt-4" data-i18n="formSubmit">Send Message</button>
+          <button type="submit" id="submitBtn" class="btn btn-primary btn-block mt-4" data-i18n="formSubmit">إرسال الرسالة</button>
         </form>
       </div>
 
@@ -47,26 +46,26 @@
       <div class='footer-links'>
         <a data-i18n='privacyPolicy' href='privacy.html'>Privacy Policy</a>
         <a data-i18n='termsOfUse' href='terms.html'>Terms of Use</a>
-        <a data-i18n='contactUs' href='contact.html'>Contact Us</a>
+        <a data-i18n='contactUs' href='contact.html'>اتصل بنا</a>
       </div>
     </div>
   </footer>
 
   <script>
-    const SUPABASE_URL = "https://iirjtmobphgmkgwkwumc.supabase.co/";
+    // ضع روابط ومفاتيح Supabase الخاصة بك هنا
+   const SUPABASE_URL = "https://iirjtmobphgmkgwkwumc.supabase.co/";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpcmp0bW9icGhnbWtnd2t3dW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA2NjYsImV4cCI6MjA5NjUxNjY2Nn0.Yfa0oEwp_id9tHpSb3h0jf__B4drqXsM-TVs4VTTmp4";
 
+<!DOCTYPE html>
 
     document.getElementById('contactForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const submitBtn = document.getElementById('submitBtn');
-      // حفظ النص الأصلي للزر لإعادته لاحقاً بغض النظر عن لغته الحالية
       const originalBtnText = submitBtn.innerText; 
       
       submitBtn.disabled = true;
-      // يفضل إضافة مفتاح ترجمة لحالة "جاري الإرسال" في ملفات الترجمة لديك
-      submitBtn.innerText = "..."; 
+      submitBtn.innerText = "جاري الإرسال..."; 
 
       const payload = {
         name: document.getElementById('name').value,
@@ -87,19 +86,18 @@
         });
 
         if (response.ok) {
-          // يمكن استبدال alert بنظام التنبيهات (Toast) الموجود في ملف CSS الخاص بك لدعم الترجمة
-          alert('Message sent successfully! / تم إرسال الرسالة بنجاح!');
+          alert('تم إرسال رسالتك وحفظها بنجاح! شكرًا لتواصلك معنا.');
           document.getElementById('contactForm').reset();
         } else {
-          throw new Error('Server response was not ok.');
+          throw new Error('فشل السيرفر في الاستجابة بشكل صحيح');
         }
 
       } catch (error) {
         console.error('Error submitting form:', error);
-        alert('An error occurred. Please try again. / حدث خطأ، يرجى المحاولة مرة أخرى.');
+        alert('عذرًا، حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerText = originalBtnText; // إعادة النص بلغته المختارة
+        submitBtn.innerText = originalBtnText; 
       }
     });
   </script>
