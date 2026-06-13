@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en" dir="ltr"> <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact Us - Relizane Medical Directory</title>
@@ -8,43 +7,53 @@
 </head>
 <body>
 
-  <main class="contact-container">
-    <div class="contact-header">
-      <h1 data-i18n="contactTitle">Contact Us</h1>
-      <p data-i18n="contactDesc">We'd love to hear from you. Please reach out using the form below or email us directly.</p>
+  <main class="app-container">
+    
+    <div class="text-center mb-6">
+      <h1 class="font-bold text-xl" style="color: var(--primary);" data-i18n="contactTitle">Contact Us</h1>
+      <p class="text-gray mt-4" data-i18n="contactDesc">We'd love to hear from you. Please reach out using the form below or email us directly.</p>
     </div>
 
-    <div class="direct-contact">
-      <p>Email us directly at:</p>
-      <a href="mailto:contact.relizane@gmail.com">contact.relizane@gmail.com</a>
+    <div style="max-width: 600px; margin: 0 auto; width: 100%;">
+      
+      <div class="card text-center mb-6" style="background: var(--primary-light); border-color: var(--primary-light);">
+        <p class="font-semibold mb-2" style="color: var(--primary-dark);">Email us directly at:</p>
+        <a href="mailto:contact.relizane@gmail.com" class="font-bold text-lg" style="color: var(--primary); text-decoration: none;">contact.relizane@gmail.com</a>
+      </div>
+
+      <div class="card card-hover">
+        <form action="YOUR_SERVICE_ENDPOINT" method="POST">
+          
+          <div class="form-group">
+            <label for="name" data-i18n="formName">Full Name</label>
+            <input type="text" id="name" name="name" required placeholder="Enter your full name">
+          </div>
+
+          <div class="form-group">
+            <label for="email" data-i18n="formEmail">Email Address</label>
+            <input type="email" id="email" name="email" required placeholder="Enter your email address">
+          </div>
+
+          <div class="form-group">
+            <label for="message" data-i18n="formMessage">Your Message</label>
+            <textarea id="message" name="message" rows="5" required placeholder="How can we help you?"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block mt-4" data-i18n="formSubmit">Send Message</button>
+        </form>
+      </div>
+
     </div>
-
-    <form class="contact-form" action="YOUR_SERVICE_ENDPOINT" method="POST">
-      <div class="form-group">
-        <label for="name" data-i18n="formName">Full Name</label>
-        <input type="text" id="name" name="name" required placeholder="Enter your full name">
-      </div>
-
-      <div class="form-group">
-        <label for="email" data-i18n="formEmail">Email Address</label>
-        <input type="email" id="email" name="email" required placeholder="Enter your email address">
-      </div>
-
-      <div class="form-group">
-        <label for="message" data-i18n="formMessage">Your Message</label>
-        <textarea id="message" name="message" rows="5" required placeholder="How can we help you?"></textarea>
-      </div>
-
-      <button type="submit" class="submit-btn" data-i18n="formSubmit">Send Message</button>
-    </form>
   </main>
 
   <footer>
-    <div data-i18n='footerRights'>&#169; 2026 Relizane Medical Directory. All rights reserved.</div>
-    <div class='footer-links'>
-      <a data-i18n='privacyPolicy' href='privacy.html'>Privacy Policy</a>
-      <a data-i18n='termsOfUse' href='terms.html'>Terms of Use</a>
-      <a data-i18n='contactUs' href='contact.html'>Contact Us</a>
+    <div class="footer-inner">
+      <div data-i18n='footerRights'>&#169; 2026 Relizane Medical Directory. All rights reserved.</div>
+      <div class='footer-links'>
+        <a data-i18n='privacyPolicy' href='privacy.html'>Privacy Policy</a>
+        <a data-i18n='termsOfUse' href='terms.html'>Terms of Use</a>
+        <a data-i18n='contactUs' href='contact.html'>Contact Us</a>
+      </div>
     </div>
   </footer>
 
