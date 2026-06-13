@@ -609,171 +609,119 @@
 
       <div class='hidden' id='dashboardSection'>
 
-        <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; background: var(--surface); padding: 1rem 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm);'>
-
+    <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; background: var(--surface); padding: 1rem 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm);'>
           <div>
-
-<h2 class='text-xl font-bold' id='dashboardSubtitle' style='margin: 0; color: var(--primary-dark);'>&nbsp;</h2>
+            <h2 class='text-xl font-bold' id='dashboardSubtitle' style='margin: 0; color: var(--primary-dark);'>&nbsp;</h2>
           </div>
-
           <div style='display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;'>
-
             <div class='toggle-container'>
-
               <span data-i18n='disableBooking' id='bookingStatusText'>إيقاف الحجوزات</span>
-
               <label class='switch'>
-
-<input id='bookingToggleSwitch' type='checkbox'>
+                <input id='bookingToggleSwitch' type='checkbox'>
                 <span class='slider'></span>
-
               </label>
-
             </div>
-
             <button class='btn btn-secondary' id='dashboardLogoutBtn' style='padding: 0.4rem 1rem;'>Logout</button>
-
           </div>
-
         </div>
 
-
-
         <div class='card mb-4' style='padding: 1rem 1.5rem;'>
-
           <div class='accordion-header' id='workingHoursToggle' onclick='toggleWorkingHours()'>
-
             <div style='display:flex; align-items:center; gap:0.75rem;'>
-
               <div style='background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;'>
-
                 <svg fill='none' height='20' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='20'><rect height='18' rx='2' ry='2' width='18' x='3' y='4'/><line x1='16' x2='16' y1='2' y2='6'/><line x1='8' x2='8' y1='2' y2='6'/><line x1='3' x2='21' y1='10' y2='10'/></svg>
-
               </div>
-
               <h3 class='text-lg font-bold' data-i18n='workingHoursTitle' style='font-size: 1.1rem; margin:0;'>إعدادات أيام وأوقات العمل</h3>
-
             </div>
-
             <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
-
           </div>
-          <div class='card mb-4' style='padding: 1rem 1.5rem;'>
-  <div class='accordion-header' id='clinicProfileToggle' onclick='document.getElementById("clinicProfileContent").classList.toggle("open"); this.classList.toggle("open");'>
-    <div style='display:flex; align-items:center; gap:0.75rem;'>
-      <div style='background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;'>
-        <svg fill='none' height='20' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24' width='20'><path d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/><circle cx='12' cy='10' r='3'/></svg>
-      </div>
-      <h3 class='text-lg font-bold' style='font-size: 1.1rem; margin:0;'>ملف العيادة والخدمات</h3>
-    </div>
-    <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
-  </div>
 
-  <div class='accordion-content' id='clinicProfileContent'>
-    <div style='padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;'>
-      <form id='clinicProfileForm'>
-        <div class="grid grid-1 grid-2">
-            <div class="form-group">
-                <label>البريد الإلكتروني للعيادة</label>
-                <input type="email" id="dash_contact_email" placeholder="contact@clinic.com">
-            </div>
-            <div class="form-group">
-                <label>رقم الواتساب</label>
-                <input type="tel" id="dash_whatsapp" placeholder="مثال: 213550000000+">
-            </div>
-            <div class="form-group">
-                <label>رابط حساب الفيسبوك</label>
-                <input type="url" id="dash_facebook" placeholder="https://facebook.com/...">
-            </div>
-            <div class="form-group">
-                <label>رابط موقع العيادة (Google Maps)</label>
-                <input type="url" id="dash_map_link" placeholder="رابط خرائط جوجل...">
-            </div>
-        </div>
-        
-        <div class="form-group">
-    <label>الخدمات المقدمة (جدول الخدمات)</label>
-    <p class="text-sm text-gray mb-2">أضف فئات الخدمات (مثال: طب الأطفال) ثم اكتب الخدمات التابعة لها مفصولة بفاصلة (,)</p>
-    
-    <div id="servicesContainer" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;">
-        </div>
-
-    <button class="btn btn-secondary btn-block" type="button" onclick="addServiceCategory()" style="border: 1px dashed var(--primary); color: var(--primary); background: var(--primary-light);">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        إضافة فئة خدمات جديدة
-    </button>
-</div>
-
-        <button class='btn btn-primary' id='saveProfileBtn' onclick='saveClinicProfile()' type='button'>حفظ التغييرات</button>
-      </form>
-    </div>
-  </div>
-</div>
           <div class='accordion-content' id='workingHoursContent'>
-
             <div style='padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;'>
-
               <p class='text-sm text-gray mb-4' data-i18n='workingHoursDesc'>قم بتفعيل الأيام التي تعمل فيها وحدد وقت البداية والنهاية لكل يوم.</p>
-
               <form id='workingHoursForm'> 
-
                 <div id='daysListContainer' style='display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;'></div>
-
                 <button class='btn btn-primary' data-i18n='saveHoursBtnText' id='saveHoursBtn' onclick='saveWorkingHours()' type='button'>حفظ الأوقات</button> 
-
               </form>
-
             </div>
-
           </div>
-
         </div>
-
-
 
         <div class='card mb-4' style='padding: 1rem 1.5rem;'>
-
-          <div class='accordion-header' id='appointmentsToggle' onclick='toggleAppointments()'>
-
+          <div class='accordion-header' id='clinicProfileToggle' onclick='document.getElementById("clinicProfileContent").classList.toggle("open"); this.classList.toggle("open");'>
             <div style='display:flex; align-items:center; gap:0.75rem;'>
-
-              <div style='background: var(--success); color: white; padding: 0.5rem; border-radius: 8px; display: flex;'>
-
-                <svg fill='none' height='20' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='20'><rect height='18' rx='2' ry='2' width='18' x='3' y='4'/><line x1='16' x2='16' y1='2' y2='6'/><line x1='8' x2='8' y1='2' y2='6'/><line x1='3' x2='21' y1='10' y2='10'/></svg>
-
+              <div style='background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;'>
+                <svg fill='none' height='20' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24' width='20'><path d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/><circle cx='12' cy='10' r='3'/></svg>
               </div>
-
-              <h3 class='text-lg font-bold' data-i18n='myAppointments' style='font-size: 1.1rem; margin:0;'>My Appointments</h3>
-
+              <h3 class='text-lg font-bold' style='font-size: 1.1rem; margin:0;'>ملف العيادة والخدمات</h3>
             </div>
+            <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
+          </div>
 
+          <div class='accordion-content' id='clinicProfileContent'>
+            <div style='padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;'>
+              <form id='clinicProfileForm'>
+                <div class="grid grid-1 grid-2">
+                    <div class="form-group">
+                        <label>البريد الإلكتروني للعيادة</label>
+                        <input type="email" id="dash_contact_email" placeholder="contact@clinic.com">
+                    </div>
+                    <div class="form-group">
+                        <label>رقم الواتساب</label>
+                        <input type="tel" id="dash_whatsapp" placeholder="مثال: 213550000000+">
+                    </div>
+                    <div class="form-group">
+                        <label>رابط حساب الفيسبوك</label>
+                        <input type="url" id="dash_facebook" placeholder="https://facebook.com/...">
+                    </div>
+                    <div class="form-group">
+                        <label>رابط موقع العيادة (Google Maps)</label>
+                        <input type="url" id="dash_map_link" placeholder="رابط خرائط جوجل...">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>الخدمات المقدمة (جدول الخدمات)</label>
+                    <p class="text-sm text-gray mb-2">أضف فئات الخدمات (مثال: طب الأطفال) ثم اكتب الخدمات التابعة لها مفصولة بفاصلة (,)</p>
+                    
+                    <div id="servicesContainer" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;">
+                        </div>
+
+                    <button class="btn btn-secondary btn-block" type="button" onclick="addServiceCategory()" style="border: 1px dashed var(--primary); color: var(--primary); background: var(--primary-light);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        إضافة فئة خدمات جديدة
+                    </button>
+                </div>
+
+                <button class='btn btn-primary' id='saveProfileBtn' onclick='saveClinicProfile()' type='button'>حفظ التغييرات</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class='card mb-4' style='padding: 1rem 1.5rem;'>
+          <div class='accordion-header' id='appointmentsToggle' onclick='toggleAppointments()'>
+            <div style='display:flex; align-items:center; gap:0.75rem;'>
+              <div style='background: var(--success); color: white; padding: 0.5rem; border-radius: 8px; display: flex;'>
+                <svg fill='none' height='20' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='20'><rect height='18' rx='2' ry='2' width='18' x='3' y='4'/><line x1='16' x2='16' y1='2' y2='6'/><line x1='8' x2='8' y1='2' y2='6'/><line x1='3' x2='21' y1='10' y2='10'/></svg>
+              </div>
+              <h3 class='text-lg font-bold' data-i18n='myAppointments' style='font-size: 1.1rem; margin:0;'>My Appointments</h3>
+            </div>
             <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
-
           </div>
 
           <div class='accordion-content' id='appointmentsContent'>
-
             <div id='appointmentsListContainer' style='margin-top: 1.5rem; border-top: 1px dashed var(--border); padding-top: 1.5rem;'>
-
               <div id='appointmentsTable' style='display: flex; flex-direction: column; gap: 1rem;'></div>
-
               <div class='empty-state hidden' id='noAppointments'>
-
                 <div class='empty-state-icon' style='opacity: 1; color: var(--text-secondary); margin-bottom: 1rem; display: flex; justify-content: center;'>
-
                   <svg fill='none' height='48' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' viewBox='0 0 24 24' width='48'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' x2='8' y1='13' y2='13'/><line x1='16' x2='8' y1='17' y2='17'/><polyline points='10 9 9 9 8 9'/></svg>
-
                 </div>
-
                 <div data-i18n='noAppointmentsMsg'>No appointments found.</div>
-
               </div>
-
             </div>
-
           </div>
-
-        </div> 
+        </div>
 
       </div> 
 
