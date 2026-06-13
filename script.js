@@ -834,10 +834,8 @@ function openDoctorProfileModal(doc, doctorName) {
     </div>
   `;
 
-  // تحويل العرض إلى الصفحة المخصصة الجديدة كاملة (هذا هو الإغلاق الصحيح)
+ // تحويل العرض إلى الصفحة المخصصة الجديدة كاملة
   router('doctor-profile');
-}
-  modal.classList.remove('hidden');
 }
     function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
 
