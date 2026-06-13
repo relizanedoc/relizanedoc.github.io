@@ -3256,20 +3256,17 @@ window.saveClinicProfile = async function() {
         }
     });
 
-    const updateData = {
-        contact_email: document.getElementById('dash_contact_email').value.trim(),
-        whatsapp_number: document.getElementById('dash_whatsapp').value.trim(),
-        facebook_link: document.getElementById('dash_facebook').value.trim(),
-        map_link: document.getElementById('dash_map_link').value.trim(),
-        services: formattedServices
-    };
-
     try {
-        // تحديث البيانات مباشرة في Supabase
-        const { error } = await supabaseClient
-            .from('doctors')
-            .update(updateData)
-            .eq('id', session.doctorId);
+        // ✅ استخدام RPC الآمن لتخطي حظر RLS
+        const { error } = await supabaseClient.rpc('update_clinic_profile_secure', {
+            p_doctor_id: session.doctorId,
+            p_session_token: session.sessionToken,
+            p_contact_email: document.getElementById('dash_contact_email').value.trim(),
+            p_whatsapp_number: document.getElementById('dash_whatsapp').value.trim(),
+            p_facebook_link: document.getElementById('dash_facebook').value.trim(),
+            p_map_link: document.getElementById('dash_map_link').value.trim(),
+            p_services: formattedServices
+        });
 
         if (error) throw error;
 
@@ -3278,7 +3275,14 @@ window.saveClinicProfile = async function() {
         // تحديث المتغير المحلي
         const docIndex = allDoctors.findIndex(d => d.id === session.doctorId);
         if (docIndex > -1) {
-            allDoctors[docIndex] = { ...allDoctors[docIndex], ...updateData };
+            allDoctors[docIndex] = { 
+                ...allDoctors[docIndex], 
+                contact_email: document.getElementById('dash_contact_email').value.trim(),
+                whatsapp_number: document.getElementById('dash_whatsapp').value.trim(),
+                facebook_link: document.getElementById('dash_facebook').value.trim(),
+                map_link: document.getElementById('dash_map_link').value.trim(),
+                services: formattedServices
+            };
         }
 
     } catch (err) {
