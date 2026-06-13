@@ -16,11 +16,11 @@
       </div>
       
       <div class="nav-links">
-        <a href="index.html" class="nav-btn" data-i18n="navDirectory" style="text-decoration:none; display:inline-block;">الرئيسية</a>
-        <a href="track.html" class="nav-btn" data-i18n="navTrack" style="text-decoration:none; display:inline-block;">تتبع الحجز</a>
-        <a href="add-doctor.html" class="nav-btn" data-i18n="navAddDoctor" style="text-decoration:none; display:inline-block;">إضافة طبيب</a>
-        <a href="doctor-login.html" class="nav-btn" data-i18n="navDoctorLogin" style="text-decoration:none; display:inline-block;">دخول الأطباء</a>
-        <a href="login.html" class="nav-btn" data-i18n="navLogin" style="text-decoration:none; display:inline-block;">تسجيل الدخول</a>
+        <a href="index.html" class="nav-btn" data-i18n="navDirectory" style="text-decoration:none;">الرئيسية</a>
+        <a href="track.html" class="nav-btn" data-i18n="navTrack" style="text-decoration:none;">تتبع الحجز</a>
+        <a href="add-doctor.html" class="nav-btn" data-i18n="navAddDoctor" style="text-decoration:none;">إضافة طبيب</a>
+        <a href="doctor-login.html" class="nav-btn" data-i18n="navDoctorLogin" style="text-decoration:none;">دخول الأطباء</a>
+        <a href="login.html" class="nav-btn" data-i18n="navLogin" style="text-decoration:none;">تسجيل الدخول</a>
       </div>
 
       <div class="right-nav-controls">
@@ -40,8 +40,6 @@
           <h1 class="font-bold text-xl mb-2" style="color: var(--primary);" data-i18n="contactTitle">اتصل بنا</h1>
           <p class="text-gray text-sm" data-i18n="contactDesc">يسعدنا تواصلك معنا. يرجى ملء النموذج أدناه وسيتم حفظ رسالتك فوراً.</p>
         </div>
-
-        <div id="formAlert" style="display: none; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-weight: bold;"></div>
 
         <form id="contactForm">
           
@@ -85,12 +83,13 @@
     </div>
   </footer>
 
+  <div id="toastContainer"></div>
+
   <script>
-    // استخدام DOMContentLoaded يضمن أن الكود لن ينهار أبداً بسبب تأخر تحميل الصفحة
     document.addEventListener('DOMContentLoaded', () => {
       
       /* =========================================================
-         1. إعدادات الكابتشا وعرض التنبيهات
+         1. إعدادات الكابتشا والنظام المنبثق الجميل (Toasts)
          ========================================================= */
       let num1, num2, expectedAnswer;
       const captchaQuestionEl = document.getElementById('captchaQuestion');
@@ -104,14 +103,22 @@
         captchaQuestionEl.innerText = lang === 'ar' ? `تحقق أمني: كم يساوي ${num1} + ${num2} ؟` : `Security Check: What is ${num1} + ${num2}?`;
       }
 
+      // الدالة الجديدة التي تستخدم تصميم موقعك بدلاً من المربع القبيح أعلى الكود
       function showAlert(message, isError = true) {
-        const alertBox = document.getElementById('formAlert');
-        if (!alertBox) return;
-        alertBox.style.display = 'block';
-        alertBox.style.backgroundColor = isError ? '#fee2e2' : '#dcfce3';
-        alertBox.style.color = isError ? '#991b1b' : '#166534';
-        alertBox.innerText = message;
-        setTimeout(() => { alertBox.style.display = 'none'; }, 5000);
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        
+        const toast = document.createElement('div');
+        toast.className = `toast ${isError ? 'error' : 'success'}`;
+        toast.innerText = message;
+        
+        container.appendChild(toast);
+        
+        // حذف التنبيه برفق بعد 4 ثوانٍ
+        setTimeout(() => {
+          toast.style.animation = 'fadeOutDown 0.35s forwards';
+          setTimeout(() => toast.remove(), 350);
+        }, 4000);
       }
 
       /* =========================================================
@@ -192,11 +199,11 @@
           e.preventDefault();
           const lang = document.documentElement.lang;
 
-          // أ. حماية من السبام (Honeypot)
+          // أ. فحص مصيدة الروبوتات
           const websiteUrl = document.getElementById('websiteUrl');
           if (websiteUrl && websiteUrl.value !== "") return;
 
-          // ب. التحقق من الكابتشا
+          // ب. فحص الكابتشا
           const captchaAnswer = document.getElementById('captchaAnswer');
           if (!captchaAnswer || parseInt(captchaAnswer.value) !== expectedAnswer) {
             showAlert(lang === 'ar' ? 'الإجابة الرياضية خاطئة، يرجى المحاولة مرة أخرى.' : 'Incorrect math answer. Please try again.');
@@ -204,7 +211,7 @@
             return;
           }
 
-          // ج. حظر الـ 10 دقائق
+          // ج. فحص حظر الـ 10 دقائق
           const lastSentTime = localStorage.getItem('lastMessageTime');
           if (lastSentTime) {
             const timeElapsed = Date.now() - parseInt(lastSentTime);
@@ -216,7 +223,7 @@
             }
           }
 
-          // د. معالجة الإرسال
+          // د. إرسال البيانات
           const submitBtn = document.getElementById('submitBtn');
           const originalBtnText = submitBtn.innerText;
           submitBtn.disabled = true;
