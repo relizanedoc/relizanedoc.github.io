@@ -1,13 +1,3 @@
-// 1. تهيئة Firebase (مؤقت - لا تحذفه الآن)
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCvWB0huHg4Wei98dAkQAvRANmB5Xs_GWI",
-  authDomain: "relizane-doc-4dbf2.firebaseapp.com",
-  projectId: "relizane-doc-4dbf2",
-  appId: "1:284439573850:web:9edd0f408e68a511de6f63"
-};
-
-firebase.initializeApp(FIREBASE_CONFIG);
-
 // 2. تهيئة Supabase (جديد)
 const SUPABASE_URL = 'https://iirjtmobphgmkgwkwumc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpcmp0bW9icGhnbWtnd2t3dW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA2NjYsImV4cCI6MjA5NjUxNjY2Nn0.Yfa0oEwp_id9tHpSb3h0jf__B4drqXsM-TVs4VTTmp4';
@@ -15,7 +5,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = window.supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
-const API_URL = 'https://script.google.com/macros/s/AKfycbxuQvatnWUMoMMSA6QTsbpxhO6r3Qh54yoj8Zrkor_2Icg3n3AVP7_2ajh0NvEPMlTgRw/exec';
 // ✅ الاستماع لتغيير حالة المصادقة (Supabase)
 let isAuthInitialized = false;
 
@@ -283,23 +272,6 @@ chatBookDetailsBtn: 'عرض التفاصيل والحجز',
     }
 
     function resetLoginAttempts() { localStorage.removeItem(ATTEMPTS_KEY); localStorage.removeItem(LOCKOUT_KEY); }
-
-    async function syncUserWithBackend(firebaseUser) {
-      if (!firebaseUser) return null;
-      try {
-        const idToken = await firebaseUser.getIdToken();
-        const result = await apiPost('authFirebase', { idToken, provider: firebaseUser.providerData[0]?.providerId || 'firebase' });
-        if (result.success) {
-          const userData = result.data;
-          localStorage.setItem('medicalUser', JSON.stringify(userData));
-          return userData;
-        } else throw new Error(result.error);
-      } catch (err) {
-        console.error('Sync user failed:', err);
-        return null;
-      }
-    }
-
     // ✅ الحصول على المستخدم الحالي
 async function getCurrentUser() {
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -405,11 +377,6 @@ async function logoutUser() {
     showToast('خطأ في تسجيل الخروج: ' + err.message, 'error');
   }
 }
-    async function apiGet(action, params = {}) {
-      const qs = new URLSearchParams({ action, ...params }).toString();
-      const res = await fetch(API_URL + '?' + qs);
-      return res.json();
-    }
  // ✅ الكود المحسن لتسجيل الدخول بـ Google
 async function handleGoogleSignIn() {
   if (isAccountLocked()) return;
