@@ -13,7 +13,6 @@
   <link rel="icon" type="image/png" href="favicon.png">
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.min.css" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2">
 <link rel="stylesheet" href="style.css?v=3">
   <script src="https://www.google.com/recaptcha/api.js?render=6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" defer></script>
@@ -136,6 +135,11 @@
     <button class='btn btn-secondary' data-i18n='backToHome' id='backToHomeBtn'>&#8592; Back to Directory</button>
   </div>
 </div>
+   </form>
+    </div> 
+    
+    <div class='mt-4 text-center'>
+      <button class='btn btn-secondary' data-i18n='backToHome' id='backToHomeBtn'>&#8592; Back to Directory</button>
     </div>
 
 
@@ -157,6 +161,19 @@
             <h3 class='font-bold text-xl mb-1' id='memberDashName' style='color: var(--text);'>الاسم</h3>
 
             <p class='text-gray text-sm mb-4' id='memberDashEmail'>البريد الإلكتروني</p>
+  </div> <div class='view hidden' id='view-user-dashboard'>
+    <div style='max-width: 800px; margin: 2rem auto;'>
+      <h2 class='text-xl font-bold mb-6' data-i18n='memberDashboardTitle'>لوحة تحكم العضو</h2>
+      
+      <div class='card' style='position: relative; overflow: hidden; padding: 0;'>
+        <div style='height: 6px; background: var(--primary); width: 100%;'></div>
+        
+        <div style='padding: 2rem; text-align: center;'>
+          <div class='avatar' id='memberDashAvatar' style='margin: 0 auto 1rem auto; width: 88px; height: 88px; font-size: 2.5rem; background: var(--surface); color: var(--primary); border: 2px solid var(--border); box-shadow: var(--shadow-sm); z-index: 1;'>U</div>
+          
+          <h3 class='font-bold text-xl mb-1' id='memberDashName' style='color: var(--text);'>الاسم</h3>
+          
+          <p class='text-gray text-sm mb-4' id='memberDashEmail'>البريد الإلكتروني</p>
 
             <div data-i18n='registeredMember' style='display: inline-block; padding: 0.25rem 1rem; border-radius: 99px; background: var(--primary-light); color: var(--primary-dark); font-size: 0.85rem; font-weight: 600; border: 1px solid var(--primary-light); margin-bottom: 2rem;'>عضو مسجل</div>
 
