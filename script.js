@@ -2071,8 +2071,8 @@ async function router(viewName, pushHistory = true) {
         loadReviews(doctorId);
     }
 
-   // 3. دالة جلب التقييمات من قاعدة البيانات
     // ✅ جلب التقييمات من Supabase مباشرة
+// ✅ جلب التقييمات من Supabase مباشرة
 async function loadReviews(doctorId) {
   const list = document.getElementById('reviewsList');
   list.innerHTML = `<div class='p-4 text-center text-gray text-sm'>${currentLang === 'ar' ? 'جاري تحميل التقييمات...' : 'Loading reviews...'}</div>`;
@@ -2081,12 +2081,11 @@ async function loadReviews(doctorId) {
     // جلب المستخدم الحالي
     const currentUser = await getCurrentUser();
 
-    // ✅ جلب التقييمات من Supabase
+    // ✅ جلب التقييمات (بدون فلترة الحالة، لأن RLS سيتكفل بالباقي: سيحضر المعتمدة للجميع، وقيد المراجعة لصاحبها فقط)
     const { data: reviews, error } = await supabaseClient
       .from('reviews')
       .select('*')
       .eq('doctor_id', doctorId)
-      .eq('status', 'approved')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -2098,11 +2097,18 @@ async function loadReviews(doctorId) {
       return;
     }
 
-    list.innerHTML = reviews.map(r => `
-      <div class="review-item" id="review-${r.id}">
+    list.innerHTML = reviews.map(r => {
+      // ✅ اللمسة السحرية: التحقق من الحالة لطباعة شارة المراجعة باللغتين
+      const isPending = r.status === 'pending';
+      const pendingBadge = isPending 
+        ? `<span style="font-size: 0.7rem; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; margin-inline-start: 8px;">${currentLang === 'ar' ? 'قيد المراجعة' : 'Pending Approval'}</span>` 
+        : '';
+
+      return `
+      <div class="review-item" id="review-${r.id}" style="${isPending ? 'opacity: 0.8; background: var(--bg);' : ''}">
         <div class="review-header">
           <div>
-            <span class="review-author">${escapeHtml(r.patient_name || 'مستخدم')}</span>
+            <span class="review-author">${escapeHtml(r.patient_name || (currentLang === 'ar' ? 'مستخدم' : 'User'))} ${pendingBadge}</span>
             <span class="review-date" dir="ltr" style="margin: 0 0.5rem;">
               ${new Date(r.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-DZ' : 'en-US')}
             </span>
@@ -2122,7 +2128,8 @@ async function loadReviews(doctorId) {
         </div>
         <div class="review-text">${escapeHtml(r.comment)}</div>
       </div>
-    `).join('');
+      `;
+    }).join('');
 
   } catch (err) {
     console.error('❌ خطأ في جلب التقييمات:', err);
@@ -2210,7 +2217,7 @@ document.addEventListener('submit', async function(e) {
           throw error;
         }
       } else {
-        showToast(currentLang === 'ar' ? 'تم إضافة تقييمك بنجاح' : 'Review added successfully', 'success');
+        showToast(currentLang === 'ar' ? 'تم إرسال تقييمك بنجاح. سيتم نشره بعد المراجعة.' : 'Review submitted successfully. It will be published after moderation.', 'success');
         e.target.reset();
         currentReviewRating = 0;
         document.getElementById('ratingValue').value = '';
