@@ -690,6 +690,25 @@ function openDoctorProfileModal(doc, doctorName) {
   if (doc.exact_location) vCard += `ADR:;;${doc.exact_location};${t(doc.municipality)};;;\n`;
   vCard += `URL:${profileUrl}\nEND:VCARD`;
 
+  // 🔄 روابط QR مع fallback
+  const qrPrimary  = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(vCard)}&color=000000`;
+  const qrFallback = `https://quickchart.io/qr?size=150&text=${encodeURIComponent(vCard)}`;
+
+  // حقن سكربت التبديل التلقائي مرة واحدة فقط
+  if (!document.getElementById('qr-fallback-script')) {
+    const s = document.createElement('script');
+    s.id = 'qr-fallback-script';
+    s.textContent = `
+      function handleQrError(img){
+        if(!img.dataset.fallback){
+          img.dataset.fallback = '1';
+          img.src = img.dataset.fallbackUrl;
+        }
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
   // بناء جدول العمل
   let scheduleHtml = '';
   if (doc.working_days && Object.keys(doc.working_days).length > 0) {
@@ -855,7 +874,13 @@ function openDoctorProfileModal(doc, doctorName) {
               ${currentLang === 'ar' ? 'إمسح الرمز لحفظ جهة الاتصال' : 'Scan to save contact'}
           </div>
           <div style="display: inline-block; padding: 0.5rem; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-sm); margin-top: 0.5rem;">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(vCard)}&color=000000" alt="QR Contact Code" style="width: 130px; height: 130px; display: block;" />
+              <img 
+                src="${qrPrimary}" 
+                data-fallback-url="${qrFallback}" 
+                onerror="handleQrError(this)" 
+                alt="QR Contact Code" 
+                style="width: 130px; height: 130px; display: block;" 
+              />
           </div>
       </div>
       
@@ -886,7 +911,6 @@ function openDoctorProfileModal(doc, doctorName) {
 
   modal.classList.remove('hidden');
 }
-
     function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
 
 function updateSEOMetaTags(doc) {
