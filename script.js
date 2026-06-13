@@ -839,24 +839,32 @@ function openDoctorProfileModal(doc, doctorName) {
     </div>
   `;
 
-  // 1. نظهر النافذة أولاً لكي تأخذ العناصر أبعادها الحقيقية
+ // 1. نظهر النافذة أولاً لكي تأخذ العناصر أبعادها الحقيقية
   modal.classList.remove('hidden');
 
-  // 2. ننتظر 50 ملي ثانية ليتعرف المتصفح على الأبعاد، ثم نرسم الـ QR Code مباشرة
+  // 2. ننتظر قليلاً ليتعرف المتصفح على الأبعاد، ثم نرسم الـ QR Code
   setTimeout(() => {
       const qrContainer = document.getElementById('vcard-qrcode');
       if (qrContainer) {
-          qrContainer.innerHTML = '';
-          new QRCode(qrContainer, {
-              text: vCard,
-              width: 130,
-              height: 130,
-              colorDark : "#000000",
-              colorLight : "#ffffff",
-              correctLevel : QRCode.CorrectLevel.M
-          });
+          qrContainer.innerHTML = ''; // مسح أي كود سابق
+          
+          // التحقق: هل مكتبة الرسم موجودة وتم تحميلها بنجاح؟
+          if (typeof QRCode !== 'undefined') {
+              // ✅ رسم الرمز محلياً وبسرعة (بدون انترنت)
+              new QRCode(qrContainer, {
+                  text: vCard,
+                  width: 130,
+                  height: 130,
+                  colorDark : "#000000",
+                  colorLight : "#ffffff",
+                  correctLevel : QRCode.CorrectLevel.M
+              });
+          } else {
+              // 🔄 الخطة البديلة (Fallback): إذا فشل تحميل المكتبة، استخدم الـ API
+              qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(vCard)}&color=000000" alt="QR Contact Code" style="width: 130px; height: 130px; display: block;" />`;
+          }
       }
-  }, 50);
+  }, 150); // زدنا الوقت قليلاً إلى 150 ملي ثانية لضمان استقرار النافذة قبل الرسم
 }
 
     function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
