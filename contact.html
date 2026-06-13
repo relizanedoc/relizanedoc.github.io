@@ -8,7 +8,7 @@
 </head>
 <body>
 
-  <nav>
+ <nav>
     <div class="nav-inner">
       <div class="logo">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
@@ -17,10 +17,11 @@
       
       <div class="nav-links">
         <a href="index.html" class="nav-btn" data-i18n="navDirectory" style="text-decoration:none;">الرئيسية</a>
-        <a href="track.html" class="nav-btn" data-i18n="navTrack" style="text-decoration:none;">تتبع الحجز</a>
-        <a href="add-doctor.html" class="nav-btn" data-i18n="navAddDoctor" style="text-decoration:none;">إضافة طبيب</a>
-        <a href="doctor-login.html" class="nav-btn" data-i18n="navDoctorLogin" style="text-decoration:none;">دخول الأطباء</a>
-        <a href="login.html" class="nav-btn" data-i18n="navLogin" style="text-decoration:none;">تسجيل الدخول</a>
+        
+        <a href="index.html#track" class="nav-btn" data-i18n="navTrack" style="text-decoration:none;">تتبع الحجز</a>
+        <a href="index.html#add-doctor" class="nav-btn" data-i18n="navAddDoctor" style="text-decoration:none;">إضافة طبيب</a>
+        <a href="index.html#dashboard" class="nav-btn" data-i18n="navDoctorLogin" style="text-decoration:none;">دخول الأطباء</a>
+        <a href="index.html#login" class="nav-btn" data-i18n="navLogin" style="text-decoration:none;">تسجيل الدخول</a>
       </div>
 
       <div class="right-nav-controls">
@@ -30,7 +31,6 @@
         </div>
       </div>
     </div>
-  </nav>
 
   <main class="app-container" style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
     <div style="width: 100%; max-width: 600px;">
@@ -57,7 +57,7 @@
 
           <div class="form-group">
             <label for="message" data-i18n="formMessage">رسالتك</label>
-            <textarea id="message" rows="5" required minlength="10" placeholder="كيف يمكننا مساعدتك؟" data-i18n-placeholder="messagePlaceholder"></textarea>
+            <textarea id="message" rows="3" required minlength="10" placeholder="كيف يمكننا مساعدتك؟" data-i18n-placeholder="messagePlaceholder"></textarea>
           </div>
 
           <div class="form-group" style="background: var(--bg); padding: 15px; border-radius: 8px; border: 1px dashed var(--border);">
@@ -89,7 +89,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       
       /* =========================================================
-         1. إعدادات الكابتشا والنظام المنبثق الجميل (Toasts)
+         1. إعدادات الكابتشا ونظام التنبيهات المنبثق (Toasts)
          ========================================================= */
       let num1, num2, expectedAnswer;
       const captchaQuestionEl = document.getElementById('captchaQuestion');
@@ -103,7 +103,6 @@
         captchaQuestionEl.innerText = lang === 'ar' ? `تحقق أمني: كم يساوي ${num1} + ${num2} ؟` : `Security Check: What is ${num1} + ${num2}?`;
       }
 
-      // الدالة الجديدة التي تستخدم تصميم موقعك بدلاً من المربع القبيح أعلى الكود
       function showAlert(message, isError = true) {
         const container = document.getElementById('toastContainer');
         if (!container) return;
@@ -114,7 +113,7 @@
         
         container.appendChild(toast);
         
-        // حذف التنبيه برفق بعد 4 ثوانٍ
+        // إخفاء التنبيه بجمالية بعد 4 ثوانٍ
         setTimeout(() => {
           toast.style.animation = 'fadeOutDown 0.35s forwards';
           setTimeout(() => toast.remove(), 350);
@@ -122,7 +121,7 @@
       }
 
       /* =========================================================
-         2. نظام تبديل اللغات (Arabic / English)
+         2. نظام تبديل اللغات
          ========================================================= */
       const translations = {
         en: {
@@ -199,31 +198,31 @@
           e.preventDefault();
           const lang = document.documentElement.lang;
 
-          // أ. فحص مصيدة الروبوتات
+          // 1. مصيدة الروبوتات
           const websiteUrl = document.getElementById('websiteUrl');
           if (websiteUrl && websiteUrl.value !== "") return;
 
-          // ب. فحص الكابتشا
+          // 2. فحص الكابتشا
           const captchaAnswer = document.getElementById('captchaAnswer');
           if (!captchaAnswer || parseInt(captchaAnswer.value) !== expectedAnswer) {
-            showAlert(lang === 'ar' ? 'الإجابة الرياضية خاطئة، يرجى المحاولة مرة أخرى.' : 'Incorrect math answer. Please try again.');
+            showAlert(lang === 'ar' ? 'الإجابة الرياضية خاطئة، يرجى المحاولة مرة أخرى.' : 'Incorrect math answer. Please try again.', true);
             generateCaptcha();
             return;
           }
 
-          // ج. فحص حظر الـ 10 دقائق
+          // 3. فحص حظر الـ 10 دقائق
           const lastSentTime = localStorage.getItem('lastMessageTime');
           if (lastSentTime) {
             const timeElapsed = Date.now() - parseInt(lastSentTime);
             const tenMinutes = 10 * 60 * 1000;
             if (timeElapsed < tenMinutes) {
               const minutesLeft = Math.ceil((tenMinutes - timeElapsed) / 60000);
-              showAlert(lang === 'ar' ? `لقد قمت بإرسال رسالة مؤخراً. يرجى الانتظار ${minutesLeft} دقائق.` : `You recently sent a message. Please wait ${minutesLeft} minutes.`);
+              showAlert(lang === 'ar' ? `لقد قمت بإرسال رسالة مؤخراً. يرجى الانتظار ${minutesLeft} دقائق.` : `You recently sent a message. Please wait ${minutesLeft} minutes.`, true);
               return;
             }
           }
 
-          // د. إرسال البيانات
+          // 4. إرسال البيانات
           const submitBtn = document.getElementById('submitBtn');
           const originalBtnText = submitBtn.innerText;
           submitBtn.disabled = true;
@@ -255,14 +254,14 @@
             } else {
               const errorData = await response.json();
               if (errorData.message && errorData.message.includes('RATE_LIMIT_EXCEEDED')) {
-                showAlert(lang === 'ar' ? 'لقد تجاوزت الحد المسموح. يرجى الانتظار 10 دقائق.' : 'Rate limit exceeded. Wait 10 minutes.');
+                showAlert(lang === 'ar' ? 'لقد تجاوزت الحد المسموح. يرجى الانتظار 10 دقائق.' : 'Rate limit exceeded. Wait 10 minutes.', true);
               } else {
                 throw new Error('Server error');
               }
             }
 
           } catch (error) {
-            showAlert(lang === 'ar' ? 'حدث خطأ في الاتصال، يرجى المحاولة لاحقاً.' : 'Connection error, please try again.');
+            showAlert(lang === 'ar' ? 'حدث خطأ في الاتصال، يرجى المحاولة لاحقاً.' : 'Connection error, please try again.', true);
           } finally {
             submitBtn.disabled = false;
             submitBtn.innerText = originalBtnText;
