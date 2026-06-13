@@ -838,8 +838,7 @@ function openDoctorProfileModal(doc, doctorName) {
       </button>
     </div>
   `;
-
- // 1. نظهر النافذة أولاً لكي تأخذ العناصر أبعادها الحقيقية
+// 1. نظهر النافذة أولاً لكي تأخذ العناصر أبعادها الحقيقية
   modal.classList.remove('hidden');
 
   // 2. ننتظر قليلاً ليتعرف المتصفح على الأبعاد، ثم نرسم الـ QR Code
@@ -864,7 +863,7 @@ function openDoctorProfileModal(doc, doctorName) {
               qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(vCard)}&color=000000" alt="QR Contact Code" style="width: 130px; height: 130px; display: block;" />`;
           }
       }
-  }, 150); // زدنا الوقت قليلاً إلى 150 ملي ثانية لضمان استقرار النافذة قبل الرسم
+  }, 100); // تأخير 100 ملي ثانية كافٍ جداً
 }
 
     function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
