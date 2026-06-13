@@ -44,8 +44,8 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     // 🔴 الحل السحري: لا تقم بتشغيل الراوتر إذا كان الرابط يحتوي على توكن المصادقة!
     if (!hash.includes('access_token') && !hash.includes('error=')) {
         const cleanHash = hash.replace('#', '');
-        const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(cleanHash) ? cleanHash : 'home';
-        router(startView, false);
+const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard', 'doctor-profile'].includes(cleanHash) ? cleanHash : 'home';
+      router(startView, false);
     }
     
     isAuthInitialized = true;
@@ -398,7 +398,7 @@ function updateUserUI(user) {
   }
 }
     function getCurrentVisibleView() {
-      for (const view of ['home', 'add-doctor', 'booking', 'dashboard', 'login']) {
+      for (const view of ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'doctor-profile'])
         const el = document.getElementById('view-' + view);
         if (el && !el.classList.contains('hidden')) return view;
       }
@@ -669,12 +669,9 @@ function renderDoctors(doctors) {
     container.appendChild(card);
   });
 }
-// ✅ الدالة الجديدة لعرض تفاصيل الطبيب
+// ✅ تحويل واجهة العرض إلى صفحة كاملة احترافية ديناميكية بالكامل
 function openDoctorProfileModal(doc, doctorName) {
-  const modal = document.getElementById('doctorProfileModal');
-  const content = document.getElementById('dpModalContent');
-
-  let fbLink = doc.facebook_link;
+  let fbLink = doc.facebook_link || '';
   if (fbLink && !fbLink.match(/^https?:\/\//i)) {
       fbLink = 'https://' + fbLink;
   }
@@ -683,17 +680,22 @@ function openDoctorProfileModal(doc, doctorName) {
   const shareText = currentLang === 'ar' ? 'مشاركة الرابط' : 'Share Link';
   const isBookingEnabled = doc.booking_enabled === true;
 
-  // 📱 بناء بيانات جهة الاتصال (vCard) للـ QR Code
+  // 📱 إعداد بيانات vCard الموحدة لرموز الـ QR التلقائية
   let vCard = `BEGIN:VCARD\nVERSION:3.0\nFN:${doctorName}\n`;
   if (doc.phone) vCard += `TEL:${doc.phone}\n`;
   if (doc.contact_email) vCard += `EMAIL:${doc.contact_email}\n`;
   if (doc.exact_location) vCard += `ADR:;;${doc.exact_location};${t(doc.municipality)};;;\n`;
   vCard += `URL:${profileUrl}\nEND:VCARD`;
 
-  // 🔄 روابط QR مع fallback
   const qrPrimary  = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(vCard)}&color=000000`;
   const qrFallback = `https://quickchart.io/qr?size=150&text=${encodeURIComponent(vCard)}`;
-  // بناء جدول العمل
+
+  // تحديث بيانات الهيدر الملون الثابتة
+  document.getElementById('fullProfileName').textContent = doctorName;
+  document.getElementById('fullProfileSpec').querySelector('span').textContent = escapeHtml(t(doc.specialty));
+  document.getElementById('fullProfileAvatar').textContent = (doc.first_name?.[0] || '') + (doc.last_name?.[0] || '');
+
+  // بناء جدول العمل الأسبوعي
   let scheduleHtml = '';
   if (doc.working_days && Object.keys(doc.working_days).length > 0) {
     try {
@@ -704,195 +706,136 @@ function openDoctorProfileModal(doc, doctorName) {
 
       for(let i=0; i<=6; i++) {
         if(wd[i] && wd[i].active) {
-          scheduleHtml += `<div style="display:flex; justify-content:space-between; padding: 0.25rem 0; font-size: 0.9rem;">
-            <span style="color: var(--text-secondary);">${daysNames[i]}</span>
-            <span dir="ltr" style="color: var(--text); font-weight: 600;">${wd[i].start} - ${wd[i].end}</span>
+          scheduleHtml += `<div style="display:flex; justify-content:space-between; padding: 0.4rem 0; font-size: 0.95rem; border-bottom: 1px dashed var(--border);">
+            <span style="color: var(--text-secondary); font-weight: 500;">${daysNames[i]}</span>
+            <span dir="ltr" style="color: var(--text); font-weight: 700;">${wd[i].start} - ${wd[i].end}</span>
           </div>`;
         }
       }
-    } catch(e) {
-      console.error('Error parsing working days:', e);
-    }
+    } catch(e) { console.error(e); }
   }
 
   if(!scheduleHtml) {
     scheduleHtml = `<div class="text-sm text-gray">${currentLang === 'ar' ? 'غير متوفر' : 'Not available'}</div>`;
   }
 
-  // محتوى النافذة
-  content.innerHTML = `
-    <div class="dp-header">
-      <button class="dp-close" onclick="document.getElementById('doctorProfileModal').classList.add('hidden')">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-      <div class="avatar" style="width: 64px; height: 64px; font-size: 1.5rem; background: white; color: var(--primary); box-shadow: none;">
-        ${(doc.first_name?.[0] || '') + (doc.last_name?.[0] || '')}
+  // بناء جدول الخدمات النظيف الموحد (ألوان متناوبة وإطار فيروزي علوي)
+  let servicesHtml = '';
+  if (doc.services && Array.isArray(doc.services) && doc.services.length > 0) {
+      servicesHtml = `
+      <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 0.5rem; width: 100%; background: #2ab2a5; color: white; padding: 0.85rem 1rem; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+         <h3 style="margin: 0; font-size: 1.05rem; font-weight: bold; color: white;">${t('ourServices')}</h3>
       </div>
+      <div style="width: 100%; border: 1px solid var(--border); border-top: none; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; overflow: hidden; margin-bottom: 1.5rem;">
+          ${doc.services.map((service, index) => `
+              <div style="background: ${index % 2 === 0 ? '#f8f9fa' : '#e6f7f6'}; padding: 0.85rem 1.2rem; border-bottom: 1px solid #eee;">
+                  <div style="color: var(--primary-dark); font-size: 0.95rem; font-weight: 800; margin-bottom: 0.25rem;">
+                      ${escapeHtml(service.category)}
+                  </div>
+                  ${service.items.length > 0 ? `
+                      <div style="display: flex; flex-direction: column; gap: 0.25rem; padding-inline-start: 0.5rem;">
+                          ${service.items.map(item => `
+                              <div style="color: #555; font-size: 0.85rem; padding: 0.15rem 0;">
+                                  • ${escapeHtml(item)}
+                                </div>
+                          `).join('')}
+                      </div>
+                  ` : ''}
+              </div>
+          `).join('')}
+      </div>`;
+  }
+
+  // تجميع وحقن المحتويات التفاعلية في شاشة العرض الكاملة
+  document.getElementById('fullProfileContent').innerHTML = `
+    <div class="grid grid-1 grid-2" style="gap: 1.5rem; align-items: start;">
       <div>
-        <h2 style="margin: 0; font-size: 1.25rem; font-weight: bold;">${doctorName}</h2>
-        <div style="opacity: 0.9; font-size: 0.9rem;">${escapeHtml(t(doc.specialty))}</div>
-      </div>
-    </div>
-    
-    <div class="dp-body">
-      <div class="dp-info-row">
-        <div class="dp-info-icon">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-        </div>
-        <div>
-          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem;">
-            ${currentLang === 'ar' ? 'العنوان الدقيق' : 'Exact Location'}
-          </div>
-          <div style="font-weight: 600; color: var(--text);">
-            ${escapeHtml(doc.exact_location)}, ${escapeHtml(t(doc.municipality))}
+        <div class="dp-info-row">
+          <div class="dp-info-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem;">${currentLang === 'ar' ? 'العنوان الدقيق' : 'Exact Location'}</div>
+            <div style="font-weight: 600; color: var(--text);">${escapeHtml(doc.exact_location)}, ${escapeHtml(t(doc.municipality))}</div>
           </div>
         </div>
-      </div>
-      
-      <div class="dp-info-row">
-        <div class="dp-info-icon">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-          </svg>
-        </div>
-        <div>
-          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem;">
-            ${currentLang === 'ar' ? 'رقم العيادة' : 'Clinic Phone'}
-          </div>
-          <div style="font-weight: 600; color: var(--text);" dir="ltr">
-            ${escapeHtml(formatPhoneNumber(doc.phone))}
+        
+        <div class="dp-info-row">
+          <div class="dp-info-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem;">${currentLang === 'ar' ? 'رقم العيادة' : 'Clinic Phone'}</div>
+            <div style="font-weight: 600; color: var(--text);" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone))}</div>
           </div>
         </div>
-      </div>
-      
-      <div class="dp-info-row">
-        <div class="dp-info-icon">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
-        </div>
-        <div style="flex: 1;">
-          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem;">
-            ${currentLang === 'ar' ? 'أوقات العمل المتاحة' : 'Available Working Hours'}
+
+        <div class="dp-info-row" style="flex-direction: column; align-items: stretch; border: none;">
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem; display: flex; gap: 0.5rem; align-items: center;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span>${currentLang === 'ar' ? 'أوقات العمل المتاحة' : 'Available Working Hours'}</span>
           </div>
-          <div style="background: var(--surface); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border);">
+          <div style="background: var(--bg); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border); width: 100%;">
             ${scheduleHtml}
           </div>
         </div>
+
+        <div style="display: flex; gap: 0.5rem; margin: 1.5rem 0; flex-wrap: wrap;">
+          ${doc.whatsapp_number ? `<a href="https://wa.me/${doc.whatsapp_number.replace(/\D/g, '')}" target="_blank" class="btn" style="background: #25D366; color: white; padding: 0.5rem 1rem; font-size: 0.85rem; flex: 1; justify-content: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> ${t('whatsappBtn')}</a>` : ''}
+          ${fbLink ? `<a href="${fbLink}" target="_blank" class="btn" style="background: #1877F2; color: white; padding: 0.5rem 1rem; font-size: 0.85rem; flex: 1; justify-content: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> ${t('facebookBtn')}</a>` : ''}
+          ${doc.contact_email ? `<a href="mailto:${doc.contact_email}" class="btn" style="background: var(--text-secondary); color: white; padding: 0.5rem 1rem; font-size: 0.85rem; flex: 1; justify-content: center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> ${t('emailBtn')}</a>` : ''}
+        </div>
       </div>
 
-      <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; justify-content: center; flex-wrap: wrap;">
-        ${doc.whatsapp_number ? `<a href="https://wa.me/${doc.whatsapp_number.replace(/\D/g, '')}" target="_blank" class="btn" style="background: #25D366; color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> ${t('whatsappBtn')}</a>` : ''}
-        ${fbLink ? `<a href="${fbLink}" target="_blank" class="btn" style="background: #1877F2; color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> ${t('facebookBtn')}</a>` : ''}
-        ${doc.contact_email ? `<a href="mailto:${doc.contact_email}" class="btn" style="background: var(--text-secondary); color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> ${t('emailBtn')}</a>` : ''}
-      </div>
-
-      ${doc.map_link ? `
-      <div class="dp-info-row">
-        <div class="dp-info-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg></div>
-        <div style="flex: 1;">
+      <div>
+        ${doc.map_link ? `
+        <div class="dp-info-row" style="flex-direction: column; align-items: stretch; border: none; margin-bottom: 1.5rem;">
           <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem;">${t('mapLocation')}</div>
-          <a href="${doc.map_link}" target="_blank" class="btn btn-block" style="font-size: 0.9rem; justify-content: center; background: #fef2f2; color: #ea4335; border: 1px solid #fca5a5;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <a href="${doc.map_link}" target="_blank" class="btn btn-block" style="font-size: 0.9rem; justify-content: center; background: #fef2f2; color: #ea4335; border: 1px solid #fca5a5; padding: 0.75rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end:0.4rem;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             ${t('openInGoogleMaps')}
           </a>
-        </div>
-      </div>` : ''}
+        </div>` : ''}
 
-      ${doc.services && doc.services.length > 0 ? `
-      <div class="dp-info-row" style="flex-direction: column; padding-bottom: 0; border-bottom: none;">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0; width: 100%; background: #2ab2a5; color: white; padding: 1rem; border-top-left-radius: 12px; border-top-right-radius: 12px;">
-           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-           <h3 style="margin: 0; font-size: 1.1rem; font-weight: bold;">${t('ourServices')}</h3>
+        <div style="text-align: center; background: var(--bg); padding: 1.25rem; border-radius: var(--radius); border: 1px solid var(--border);">
+            <div style="color: var(--primary-dark); font-weight: bold; font-size: 1rem; margin-bottom: 0.5rem;">
+                ${currentLang === 'ar' ? 'إمسح الرمز لحفظ جهة الاتصال' : 'Scan to save contact'}
+            </div>
+            <div style="display: inline-block; padding: 0.5rem; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-sm);">
+                <img 
+                  src="${qrPrimary}" 
+                  data-fallback-url="${qrFallback}" 
+                  onerror="handleQrError(this)" 
+                  alt="QR Contact Code" 
+                  style="width: 140px; height: 130px; display: block; margin: 0 auto;" 
+                />
+            </div>
         </div>
-        <div style="width: 100%; border: 1px solid var(--border); border-top: none; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; overflow: hidden; margin-bottom: 1.5rem;">
-            ${doc.services.map((service, index) => `
-                <div style="background: ${index % 2 === 0 ? '#f8f9fa' : '#e6f7f6'}; padding: 0.85rem 1.2rem; border-bottom: 1px solid #eee;">
-                    <div style="color: var(--primary-dark); font-size: 0.95rem; font-weight: 800;">
-                        ${escapeHtml(service.category)}
-                    </div>
-                    ${service.items.length > 0 ? `
-                        <div style="margin-top: 0.4rem; display: flex; flex-direction: column; gap: 0.25rem;">
-                            ${service.items.map(item => `
-                                <div style="color: #555; font-size: 0.85rem; padding: 0.15rem 0;">
-                                    • ${escapeHtml(item)}
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            `).join('')}
-        </div>
-      </div>` : ''}
-
-      ${doc.extra_info ? `
-      <div class="dp-info-row" style="border-top: 1px dashed var(--border); padding-top: 1rem;">
-        <div class="dp-info-icon">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-        </div>
-        <div>
-          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem;">
-            ${currentLang === 'ar' ? 'معلومات إضافية' : 'Extra Information'}
-          </div>
-          <div style="color: var(--text); font-size: 0.9rem; line-height: 1.5;">
-            ${escapeHtml(doc.extra_info)}
-          </div>
-        </div>
-      </div>` : ''}
-
-      <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed var(--border);">
-          <div style="color: #0284c7; font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">
-              ${currentLang === 'ar' ? 'إمسح الرمز لحفظ جهة الاتصال' : 'Scan to save contact'}
-          </div>
-          <div style="display: inline-block; padding: 0.5rem; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow-sm); margin-top: 0.5rem;">
-              <img 
-                src="${qrPrimary}" 
-                data-fallback-url="${qrFallback}" 
-                onerror="handleQrError(this)" 
-                alt="QR Contact Code" 
-                style="width: 130px; height: 130px; display: block;" 
-              />
-          </div>
-      </div>
-      
-      <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
-        <button class="btn btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;" 
-          onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
-          <span style="color: #b45309; margin-inline-end: 4px;">★</span> 
-          ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
-        </button>
-        <button class="btn btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;" 
-          onclick="navigator.clipboard.writeText('${profileUrl}'); showToast(currentLang==='ar'?'تم النسخ':'Copied', 'success');">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 4px;">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-          ${shareText}
-        </button>
       </div>
     </div>
-    
-    <div class="dp-footer">
-      <button class="btn ${isBookingEnabled ? 'btn-success' : 'btn-secondary'} btn-block" 
-        ${isBookingEnabled ? `onclick="document.getElementById('doctorProfileModal').classList.add('hidden'); openBooking('${doc.id}')"` : 'disabled'}>
-        ${isBookingEnabled ? (currentLang === 'ar' ? 'تأكيد وحجز موعد' : 'Confirm & Book') : (currentLang === 'ar' ? 'الحجوزات مغلقة' : 'Bookings Closed')}
+
+    ${servicesHtml}
+
+    ${doc.extra_info ? `
+    <div class="card" style="margin-top: 1.5rem; background: var(--bg); border-color: var(--border);">
+      <h4 style="font-size: 0.95rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text);">${currentLang === 'ar' ? 'معلومات إضافية' : 'Extra Information'}</h4>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">${escapeHtml(doc.extra_info)}</p>
+    </div>` : ''}
+
+    <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+      <button class="btn btn-secondary" style="padding: 0.6rem 1.25rem; font-size: 0.9rem;" onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
+        <span style="color: #b45309; margin-inline-end: 4px;">★</span> ${currentLang === 'ar' ? 'التقييمات والتعليقات' : 'Reviews'}
+      </button>
+      <button class="btn btn-secondary" style="padding: 0.6rem 1.25rem; font-size: 0.9rem;" onclick="navigator.clipboard.writeText('${profileUrl}'); showToast(currentLang==='ar'?'تم نسخ الرابط بنجاح':'Copied', 'success');">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 4px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        ${shareText}
+      </button>
+      <button class="btn ${isBookingEnabled ? 'btn-success' : 'btn-secondary'}" style="margin-inline-start: auto; padding: 0.6rem 2rem;" ${isBookingEnabled ? `onclick="openBooking('${doc.id}')"` : 'disabled'}>
+        ${isBookingEnabled ? (currentLang === 'ar' ? 'احجز موعد الآن' : 'Book Appointment') : (currentLang === 'ar' ? 'الحجوزات مغلقة' : 'Bookings Closed')}
       </button>
     </div>
   `;
 
+  // تحويل العرض إلى الصفحة المخصصة الجديدة كاملة
+  router('doctor-profile');
+}
   modal.classList.remove('hidden');
 }
     function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
@@ -3393,7 +3336,7 @@ window.addServiceCategory = function(category = '', items = '') {
     `;
     container.appendChild(row);
 };
-// ✅ دالة التبديل الاحتياطي لـ QR Code
+// ✅ دالة التبديل الاحتياطي المستقرة لرموز QR
 window.handleQrError = function(img) {
     if(!img.dataset.fallback){
         img.dataset.fallback = '1';
