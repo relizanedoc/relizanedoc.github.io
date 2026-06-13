@@ -2189,7 +2189,7 @@ document.addEventListener('submit', async function(e) {
       }
 
       // ✅ إضافة التقييم في Supabase
-      const { data, error } = await supabaseClient
+     const { data, error } = await supabaseClient
         .from('reviews')
         .insert([{
           doctor_id: doctorId,
@@ -2197,7 +2197,7 @@ document.addEventListener('submit', async function(e) {
           patient_name: user.Name || user.Email.split('@')[0],
           rating: parseInt(rating),
           comment: comment.trim(),
-          status: 'approved'
+          status: 'pending' 
         }])
         .select()
         .single();
