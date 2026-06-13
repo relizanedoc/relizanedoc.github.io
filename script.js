@@ -631,7 +631,10 @@ function renderDoctors(doctors) {
 function openDoctorProfileModal(doc, doctorName) {
   const modal = document.getElementById('doctorProfileModal');
   const content = document.getElementById('dpModalContent');
-
+let fbLink = doc.facebook_link;
+if (fbLink && !fbLink.match(/^https?:\/\//i)) {
+    fbLink = 'https://' + fbLink; // يضيف بروتوكول HTTPS إذا نسي الطبيب إضافته
+}
   // إنشاء رابط المشاركة (يستخدم UUID الآن)
   const profileUrl = `${window.location.origin}${window.location.pathname}?doc=${doc.id}`;
   const shareText = currentLang === 'ar' ? 'مشاركة الرابط' : 'Share Link';
@@ -735,7 +738,7 @@ function openDoctorProfileModal(doc, doctorName) {
       </div>
       <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; justify-content: center; flex-wrap: wrap;">
         ${doc.whatsapp_number ? `<a href="https://wa.me/${doc.whatsapp_number.replace(/\D/g, '')}" target="_blank" class="btn" style="background: #25D366; color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> واتساب</a>` : ''}
-        ${doc.facebook_link ? `<a href="${doc.facebook_link}" target="_blank" class="btn" style="background: #1877F2; color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> فيسبوك</a>` : ''}
+        ${fbLink ? `<a href="${fbLink}" target="_blank" class="btn" style="background: #1877F2; color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg> فيسبوك</a>` : ''}
         ${doc.contact_email ? `<a href="mailto:${doc.contact_email}" class="btn" style="background: var(--text-secondary); color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> إيميل</a>` : ''}
       </div>
 
@@ -743,9 +746,10 @@ function openDoctorProfileModal(doc, doctorName) {
       <div class="dp-info-row">
         <div class="dp-info-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg></div>
         <div style="flex: 1;">
-          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem;">${currentLang === 'ar' ? 'الموقع على الخريطة' : 'Location Map'}</div>
-          <a href="${doc.map_link}" target="_blank" class="btn btn-secondary btn-block" style="font-size: 0.9rem; justify-content: center; background: #f8fafc;">
-            فتح في خرائط جوجل Google Maps
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem;">${currentLang === 'ar' ? 'الموقع الجغرافي' : 'Location Map'}</div>
+          <a href="${doc.map_link}" target="_blank" class="btn btn-block" style="font-size: 0.9rem; justify-content: center; background: #fef2f2; color: #ea4335; border: 1px solid #fca5a5;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            ${currentLang === 'ar' ? 'فتح في خرائط جوجل' : 'Open in Google Maps'}
           </a>
         </div>
       </div>` : ''}
@@ -1446,19 +1450,24 @@ function renderDashboardUI(data, doctorId) {
     `;
     container.appendChild(row);
   }
-// تعبئة حقول ملف العيادة
+// استبدل كود تعبئة حقول ملف العيادة القديم بهذا:
 if (data.doctorDetails) {
     document.getElementById('dash_contact_email').value = data.doctorDetails.contact_email || '';
     document.getElementById('dash_whatsapp').value = data.doctorDetails.whatsapp_number || '';
     document.getElementById('dash_facebook').value = data.doctorDetails.facebook_link || '';
     document.getElementById('dash_map_link').value = data.doctorDetails.map_link || '';
     
-    // تحويل JSON الخاص بالخدمات إلى نص قابل للتعديل
-    let servicesText = '';
-    if (data.doctorDetails.services && Array.isArray(data.doctorDetails.services)) {
-        servicesText = data.doctorDetails.services.map(s => `${s.category}: ${s.items.join('، ')}`).join('\n');
+    // رسم جدول الخدمات
+    const srvContainer = document.getElementById('servicesContainer');
+    if (srvContainer) srvContainer.innerHTML = ''; // مسح القديم
+    
+    if (data.doctorDetails.services && Array.isArray(data.doctorDetails.services) && data.doctorDetails.services.length > 0) {
+        data.doctorDetails.services.forEach(s => {
+            addServiceCategory(s.category, s.items.join('، '));
+        });
+    } else {
+        addServiceCategory(); // إضافة سطر فارغ افتراضي
     }
-    document.getElementById('dash_services').value = servicesText;
 }
   // تحديث زر إيقاف/تشغيل الحجوزات
   const isEnabled = !!data.bookingEnabled;
@@ -3241,16 +3250,20 @@ window.saveClinicProfile = async function() {
 
     // تحويل النص المدخل في الخدمات إلى مصفوفة JSON
     const rawServices = document.getElementById('dash_services').value.split('\n');
-    const formattedServices = [];
-    rawServices.forEach(line => {
-        if (line.trim()) {
-            const parts = line.split(':');
-            if (parts.length >= 2) {
-                formattedServices.push({
-                    category: parts[0].trim(),
-                    items: parts[1].split('،').map(item => item.trim()).filter(Boolean)
-                });
-            } else {
+    // استبدل كود `rawServices` في دالة الحفظ بهذا:
+const formattedServices = [];
+document.querySelectorAll('.service-row').forEach(row => {
+    const category = row.querySelector('.svc-category').value.trim();
+    const itemsStr = row.querySelector('.svc-items').value.trim();
+    
+    if (category || itemsStr) {
+        formattedServices.push({
+            category: category || 'خدمات عامة',
+            // تقسيم السلسلة بالفاصلة العربية أو الإنجليزية
+            items: itemsStr ? itemsStr.split(/[,،]/).map(i => i.trim()).filter(Boolean) : []
+        });
+    }
+});
                 formattedServices.push({ category: line.trim(), items: [] });
             }
         }
@@ -3290,4 +3303,22 @@ window.saveClinicProfile = async function() {
     } finally {
         setLoading(btn, false, 'حفظ التغييرات');
     }
+};
+window.addServiceCategory = function(category = '', items = '') {
+    const container = document.getElementById('servicesContainer');
+    if (!container) return;
+
+    const row = document.createElement('div');
+    row.className = 'service-row';
+    row.style.cssText = 'display: flex; gap: 0.5rem; align-items: flex-start; background: var(--bg); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border);';
+    row.innerHTML = `
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+            <input type="text" class="svc-category" placeholder="اسم الفئة (مثال: طب الأسنان)" value="${escapeHtml(category)}">
+            <input type="text" class="svc-items" placeholder="الخدمات (افصل بينها بفاصلة، مثال: تبييض، تقويم...)" value="${escapeHtml(items)}">
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="this.parentElement.remove()" style="padding: 0.5rem; color: var(--danger); border-color: var(--danger);" title="حذف">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        </button>
+    `;
+    container.appendChild(row);
 };
