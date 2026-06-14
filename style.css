@@ -435,3 +435,27 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 #view-home > h2[data-i18n='findDoctor'] {
     text-align: center !important;
 }
+/* =========================================================
+   تصميم البانر الاحترافي (أزرق عميق زجاجي - الخيار الأول)
+   ========================================================= */
+.hero-section {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+  border: none !important;
+  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.25) !important;
+}
+
+/* إجبار النصوص على اللون الأبيض لتناسب الخلفية الداكنة */
+.hero-section h1, 
+.hero-section p {
+  color: #ffffff !important;
+  opacity: 0.95;
+}
+
+/* تعديل شارة "المنصة الطبية الأولى" لتصبح زجاجية أنيقة (Glassmorphism) */
+.hero-section div[style*="background: #0ea5e9"] {
+  background: rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+  color: #ffffff !important;
+}
