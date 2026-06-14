@@ -353,10 +353,10 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     margin: 0 auto;
 }
 /* =========================================================
-   إصلاح شريط اسم العضو وزر الخروج في الموبايل
+   1. تحسينات الموبايل (أزرار القائمة واسم العضو)
    ========================================================= */
 @media (max-width: 768px) {
-  /* تطبيق التنسيق فقط إذا كان العنصر غير مخفي */
+  /* شريط المستخدم */
   .user-pill:not(.hidden) {
     display: flex !important;
     flex-direction: row !important; 
@@ -366,7 +366,6 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     padding: 0.75rem 1rem !important;
     border-radius: 0 !important;
   }
-  
   .user-pill #logoutBtn {
     width: auto !important;
     padding: 0.35rem 0.8rem !important;
@@ -378,7 +377,6 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     border: 1px solid var(--border) !important;
     border-radius: 6px !important;
   }
-  
   .user-pill #userNameDisplay {
     font-weight: 800 !important;
     font-size: 1rem !important;
@@ -387,67 +385,49 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     overflow: hidden;
     text-overflow: ellipsis;
   }
-}
-/* =========================================================
-   تحسين جمالية قائمة الهاتف (إضافة خطوط فاصلة)
-   ========================================================= */
-@media (max-width: 768px) {
+  
+  /* أزرار القائمة السفلية مع خطوط فاصلة */
   .nav-links .nav-btn {
-    border-bottom: 1px solid var(--border) !important; /* الخط الفاصل بلون هادئ */
-    width: calc(100% - 2rem) !important; /* ترك مسافة صغيرة من الجوانب */
-    margin: 0 auto !important; /* توسيط العنصر */
-    padding: 1rem 0.5rem !important; /* مساحة مريحة للإصبع عند اللمس */
+    border-bottom: 1px solid var(--border) !important;
+    width: calc(100% - 2rem) !important;
+    margin: 0 auto !important;
+    padding: 1rem 0.5rem !important;
     border-radius: 0 !important;
   }
-  
-  /* إزالة الخط من آخر عنصر في القائمة (لتجنب الخط الزائد في الأسفل) */
   .nav-links .nav-btn:last-of-type {
     border-bottom: none !important;
   }
-
-  /* تحسين شكل العنصر النشط (الصفحة الحالية) في الهاتف */
   .nav-links .nav-btn.active {
     background: transparent !important;
     color: var(--primary) !important;
     font-weight: 800 !important;
   }
 }
+
 /* =========================================================
-   توحيد عرض العناصر ومحاذاتها في الصفحة الرئيسية (للحاسوب)
+   2. إصلاحات الشبكة (Grid) ومحاذاة الشاشات الكبيرة
    ========================================================= */
-@media (min-width: 768px) {
+/* إجبار الشبكة على احترام الحدود ومنع التمدد (Grid Blowout Fix) */
+.grid-1 { grid-template-columns: minmax(0, 1fr) !important; }
+@media (min-width: 640px) { .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+@media (min-width: 1024px) { .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } }
+
+@media (min-width: 768px) { 
+  .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } 
+  
+  /* تأكيد اصطفاف الأقسام الثلاثة كالمسطرة من اليمين واليسار */
   #view-home > .hero-section,
   #view-home > .filters,
   #view-home > #doctorsList {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    box-sizing: border-box !important;
+     width: 100% !important;
+     max-width: 100% !important;
+     margin-left: 0 !important;
+     margin-right: 0 !important;
+     box-sizing: border-box !important;
   }
 }
-/* =========================================================
-   إصلاح محاذاة الصفحة الرئيسية (منع تمرد الشبكة وتوحيد العرض)
-   ========================================================= */
 
-/* 1. إجبار الشبكة على احترام الحدود (Grid Blowout Fix) */
-.grid-1 { grid-template-columns: minmax(0, 1fr) !important; }
-@media (min-width: 640px) { .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
-@media (min-width: 768px) { .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } }
-@media (min-width: 1024px) { .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } }
-
-/* 2. تأكيد اصطفاف الأقسام الثلاثة كالمسطرة من اليمين واليسار */
-#view-home > .hero-section,
-#view-home > .filters,
-#view-home > #doctorsList {
-   width: 100% !important;
-   max-width: 100% !important;
-   margin-left: 0 !important;
-   margin-right: 0 !important;
-   box-sizing: border-box !important;
-}
-
-/* 3. توسيع الحاوية الرئيسية للموقع لتعطيك العرض المريح الذي طلبته */
+/* توسيع الحاوية الرئيسية للموقع لراحة العين */
 .app-container, .nav-inner {
    max-width: 1350px !important; 
 }
