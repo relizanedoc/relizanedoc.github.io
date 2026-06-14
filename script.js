@@ -773,19 +773,18 @@ function openDoctorProfileModal(doc, doctorName) {
         </div>
       </div>
   `;
-
-  // تجميع وحقن المحتويات التفاعلية
+// تجميع وحقن المحتويات التفاعلية
   document.getElementById('fullProfileContent').innerHTML = `
-    <div class="grid grid-1 grid-2" style="gap: 2.5rem; align-items: start;">
+    <div class="grid grid-1 grid-2" style="gap: 1.5rem; align-items: start;">
       
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
-        <div style="background: white; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.03);">
+        <div style="background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.03);">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; background: rgba(14, 165, 233, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(14,165,233,0.1);">
               <div style="background: white; color: var(--primary); padding: 0.75rem; border-radius: 12px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(14,165,233,0.1);">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
               </div>
-              <div>
+              <div style="flex: 1;">
                 <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;">${currentLang === 'ar' ? 'العنوان الدقيق' : 'Exact Location'}</div>
                 <div style="font-weight: 900; color: #0f172a; font-size: 1.1rem; line-height: 1.4;">${escapeHtml(doc.exact_location)}, <span style="color: var(--primary);">${escapeHtml(t(doc.municipality))}</span></div>
               </div>
@@ -795,14 +794,14 @@ function openDoctorProfileModal(doc, doctorName) {
               <div style="background: white; color: #10b981; padding: 0.75rem; border-radius: 12px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(16,185,129,0.1);">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
               </div>
-              <div>
+              <div style="flex: 1;">
                 <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;">${currentLang === 'ar' ? 'رقم العيادة' : 'Clinic Phone'}</div>
                 <div style="font-weight: 900; color: #0f172a; font-size: 1.25rem; letter-spacing: 1px;" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone))}</div>
               </div>
             </div>
         </div>
 
-        <div style="background: white; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.03);">
+        <div style="background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.03);">
           <div style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin-bottom: 1.25rem; display: flex; gap: 0.75rem; align-items: center;">
             <span style="background: rgba(14, 165, 233, 0.1); color: var(--primary); padding: 0.6rem; border-radius: 10px; display: flex; box-shadow: inset 0 2px 4px rgba(14,165,233,0.1);">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -818,7 +817,7 @@ function openDoctorProfileModal(doc, doctorName) {
 
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
-        <div style="background: white; border-radius: 20px; padding: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.03);">
+        <div style="background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.03);">
           <div style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin-bottom: 1.25rem; display: flex; gap: 0.75rem; align-items: center;">
             <span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.6rem; border-radius: 10px; display: flex; box-shadow: inset 0 2px 4px rgba(239,68,68,0.1);">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
@@ -843,27 +842,26 @@ function openDoctorProfileModal(doc, doctorName) {
           </a>` : ''}
         </div>
 
-        <div style="background: white; padding: 2rem; border-radius: 20px; border: 1px solid rgba(0,0,0,0.03); text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
+        <div style="background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(0,0,0,0.03); text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
             <div style="color: #0f172a; font-weight: 900; font-size: 1.15rem; margin-bottom: 1.5rem;">
                 <span style="background: rgba(14, 165, 233, 0.1); color: var(--primary); padding: 0.6rem; border-radius: 10px; display: inline-flex; vertical-align: bottom; margin-inline-end: 8px; box-shadow: inset 0 2px 4px rgba(14,165,233,0.1);">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
                 </span>
                 ${currentLang === 'ar' ? 'إمسح الرمز لحفظ جهة الاتصال' : 'Scan to save contact'}
             </div>
-            <div id="vcard-qrcode" style="display: inline-flex; justify-content: center; align-items: center; padding: 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 16px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.01); min-width: 160px; min-height: 160px;">
+            <div id="vcard-qrcode" style="display: inline-flex; justify-content: center; align-items: center; padding: 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 16px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.01); width: 140px; height: 140px; margin: 0 auto;">
                 </div>
         </div>
       </div>
   </div>
 
    ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
-    <div style="margin-top: 2.5rem; background: white; border-radius: 20px; padding: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
+    <div style="margin-top: 1.5rem; background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
         <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1.5rem; color: #0f172a;">
             ${currentLang === 'ar' ? 'صور العيادة' : 'Clinic Gallery'}
         </h4>
 
-        <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: 450px;">
-            
+        <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: 250px;">
             <div id="clinicSlider_${doc.id}" dir="ltr" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; width: 100%; height: 100%; scrollbar-width: none; -ms-overflow-style: none;">
                 ${doc.clinic_images.map((url, index) => `
                     <img src="${url}" 
@@ -874,22 +872,15 @@ function openDoctorProfileModal(doc, doctorName) {
             </div>
 
             ${doc.clinic_images.length > 1 ? `
-                <button onclick="moveClinicSlide('clinicSlider_${doc.id}', -1)" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 2; transition: all 0.2s;" onmouseover="this.style.background='white'" onmouseout="this.style.background='rgba(255,255,255,0.85)'">
+                <button onclick="moveClinicSlide('clinicSlider_${doc.id}', -1)" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 2;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
                 </button>
-                <button onclick="moveClinicSlide('clinicSlider_${doc.id}', 1)" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 2; transition: all 0.2s;" onmouseover="this.style.background='white'" onmouseout="this.style.background='rgba(255,255,255,0.85)'">
+                <button onclick="moveClinicSlide('clinicSlider_${doc.id}', 1)" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 2;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </button>
-
-                <div style="position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 2;">
-                    ${doc.clinic_images.map((_, i) => `
-                        <span class="slide-dot-${doc.id}" style="width: 8px; height: 8px; border-radius: 50%; background: ${i === 0 ? 'white' : 'rgba(255,255,255,0.4)'}; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: background 0.3s;"></span>
-                    `).join('')}
-                </div>
             ` : ''}
             
             <style>
-                /* إخفاء شريط التمرير الافتراضي */
                 #clinicSlider_${doc.id}::-webkit-scrollbar { display: none; }
             </style>
         </div>
@@ -899,7 +890,7 @@ function openDoctorProfileModal(doc, doctorName) {
     ${servicesHtml}
 
     ${doc.extra_info ? `
-    <div style="margin-top: 2.5rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 20px; padding: 2rem; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.05);">
+    <div style="margin-top: 1.5rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.05);">
       <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1rem; color: #d97706; display: flex; align-items: center; gap: 0.6rem;">
         <span style="background: rgba(245, 158, 11, 0.15); padding: 0.6rem; border-radius: 10px; display: flex;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -911,26 +902,25 @@ function openDoctorProfileModal(doc, doctorName) {
 
     ${shareSectionHtml}
 
-    <div style="position: sticky; bottom: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin: 3.5rem -2rem -2rem -2rem; padding: 1rem 1.5rem; border-top: 1px solid rgba(0,0,0,0.08); box-shadow: 0 -10px 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 0.75rem; z-index: 100; border-radius: 20px 20px 0 0;">
+    <div style="position: sticky; bottom: 0; background: var(--surface); padding: 1rem; margin-top: 2rem; border-top: 1px solid var(--border); box-shadow: 0 -4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 0.75rem; z-index: 100; border-radius: 20px 20px 0 0;">
       
-      <div style="display: flex; gap: 0.75rem; width: 100%;">
-          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.95rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
+      <div style="display: flex; gap: 0.5rem; width: 100%;">
+          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.9rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
             <span style="color: #f59e0b; font-size: 1.1rem;">★</span> ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
           </button>
           
-          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.95rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="navigator.clipboard.writeText('${profileUrl}'); showToast(currentLang==='ar'?'تم نسخ الرابط بنجاح':'Copied', 'success');">
+          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.9rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="navigator.clipboard.writeText('${profileUrl}'); showToast(currentLang==='ar'?'تم نسخ الرابط بنجاح':'Copied', 'success');">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--primary)" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             ${shareText}
           </button>
       </div>
 
-      <button class="btn ${isBookingEnabled ? 'btn-success' : 'btn-secondary'}" style="width: 100%; padding: 0.85rem; font-size: 1.1rem; font-weight: 900; letter-spacing: 0.5px; border-radius: 12px; justify-content: center; display: flex; align-items: center; box-shadow: ${isBookingEnabled ? '0 4px 15px rgba(16, 185, 129, 0.2)' : 'none'};" ${isBookingEnabled ? `onclick="openBooking('${doc.id}')"` : 'disabled'}>
+      <button class="btn ${isBookingEnabled ? 'btn-success' : 'btn-secondary'}" style="width: 100%; padding: 0.85rem; font-size: 1rem; font-weight: 900; letter-spacing: 0.5px; border-radius: 12px; justify-content: center; display: flex; align-items: center;" ${isBookingEnabled ? `onclick="openBooking('${doc.id}')"` : 'disabled'}>
         ${isBookingEnabled ? (currentLang === 'ar' ? 'احجز موعد الآن' : 'Book Appointment') : (currentLang === 'ar' ? 'الحجوزات مغلقة حالياً' : 'Bookings Closed')}
       </button>
 
     </div>
   `;
-
   // الانتقال للصفحة أولاً للسماح للمتصفح برسم العناصر
   router('doctor-profile');
 
