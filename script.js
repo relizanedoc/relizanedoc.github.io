@@ -854,7 +854,22 @@ function openDoctorProfileModal(doc, doctorName) {
                 </div>
         </div>
       </div>
+  </div>
+
+    ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
+    <div style="margin-top: 2.5rem; background: white; border-radius: 20px; padding: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
+        <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1.5rem; color: #0f172a;">
+            ${currentLang === 'ar' ? 'صور العيادة' : 'Clinic Gallery'}
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+            ${doc.clinic_images.map(url => `
+                <img src="${url}" 
+                     style="width: 100%; height: 120px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border);" 
+                     onerror="this.style.display='none'">
+            `).join('')}
+        </div>
     </div>
+    ` : ''}
 
     ${servicesHtml}
 
