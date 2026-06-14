@@ -1804,12 +1804,13 @@ async function handleDashboardLogin(e) {
         localStorage.setItem('doctorSession', JSON.stringify(sessionData));
         
         // 5. تجهيز البيانات لعرضها في لوحة التحكم
-        const dashboardData = {
-            doctorName: `${doctor.first_name} ${doctor.last_name}`,
-            workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : (doctor.working_days || '{}'),
-            bookingEnabled: doctor.booking_enabled,
-            appointments: appointments || []
-        };
+const dashboardData = {
+    doctorName: `${doctor.first_name} ${doctor.last_name}`,
+    workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : (doctor.working_days || '{}'),
+    bookingEnabled: doctor.booking_enabled,
+    appointments: appointments || [],
+    doctorDetails: doctor // 👈 أضف هذا السطر هنا أيضاً لضمان ظهور الصور عند تحديث الصفحة تلقائياً
+};
         
         // 6. تحديث الواجهة الأمامية وإخفاء نافذة الدخول
         const loginSection = document.getElementById('loginSection');
