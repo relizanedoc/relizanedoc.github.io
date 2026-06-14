@@ -3386,12 +3386,22 @@ window.saveClinicProfile = async function() {
     if (fileInput && fileInput.files.length > 0) {
         const filesToUpload = Array.from(fileInput.files).slice(0, 3);
         try {
-            const base64Images = await Promise.all(filesToUpload.map(file => fileToBase64(file)));
-            
-            // استدعاء دالة Edge Function (يجب أن تكون قد قمت بعمل Deploy لها)
-            const { data: uploadResult, error: uploadError } = await supabaseClient.functions.invoke('upload-github-images', {
-                body: { doctorId: session.doctorId, images: base64Images }
-            });
+// تأكد أن مصفوفة images تحتوي على هذه الهيكلية قبل الإرسال
+const base64Images = await Promise.all(filesToUpload.map(async file => {
+    return {
+        name: file.name,
+        base64: await new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(file);
+        })
+    };
+}));
+
+// الإرسال
+const { data, error } = await supabaseClient.functions.invoke('upload-github-images', {
+    body: { doctorId: session.doctorId, images: base64Images } 
+});
 
             if (uploadError) throw uploadError;
             if (uploadResult && uploadResult.success) {
