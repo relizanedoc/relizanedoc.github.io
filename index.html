@@ -982,16 +982,17 @@
 
 <div class='dialog-overlay hidden' id='forgotPasswordModal' style='z-index: 99999;'>
   <div class='dialog-box' style='max-width: 400px; padding: 1.5rem;'>
-    <h3 style='margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: bold; color: var(--text);'>استعادة كلمة المرور</h3>
-    <p style='color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;'>أدخل بريدك الإلكتروني المسجل أدناه وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.</p>
+    <h3 data-i18n="forgotPasswordTitle" style='margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: bold; color: var(--text);'>استعادة كلمة المرور</h3>
+    
+    <p data-i18n="forgotPasswordDesc" style='color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;'>أدخل بريدك الإلكتروني المسجل أدناه وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.</p>
 
     <div class='form-group' style='text-align: right;'>
-<input id='resetEmailInput' placeholder='your@email.com' type='email' style='width: 100%; text-align: left; direction: ltr;'>
+      <input id='resetEmailInput' placeholder='your@email.com' type='email' style='width: 100%; text-align: left; direction: ltr;'>
     </div>
 
     <div class='dialog-actions' style='margin-top: 1.5rem;'>
-      <button class='btn btn-secondary' onclick='closeForgotPasswordModal()'>إلغاء</button>
-      <button class='btn btn-primary' id='sendResetLinkBtn' onclick='submitPasswordReset()'>إرسال الرابط</button>
+      <button class='btn btn-secondary' data-i18n="cancel" onclick='closeForgotPasswordModal()'>إلغاء</button>
+      <button class='btn btn-primary' id='sendResetLinkBtn' data-i18n="sendResetLink" onclick='submitPasswordReset()'>إرسال الرابط</button>
     </div>
   </div>
 </div>
