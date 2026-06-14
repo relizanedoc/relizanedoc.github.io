@@ -966,7 +966,7 @@ src="http://googleusercontent.com/maps.google.com/${encodeURIComponent(doc.exact
 
   }, 150);
     function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
-
+}
 function updateSEOMetaTags(doc) {
     if (!doc) return;
     // ✅ غيّر الخصائص إلى snake_case
