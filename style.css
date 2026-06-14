@@ -460,12 +460,21 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
   color: #ffffff !important;
 }
+/* إصلاح نهائي وقوي جداً لأزرار لوحة التحكم */
 #view-user-dashboard .card .btn {
-    padding: 0.5rem 1rem !important; /* تقليل حجم الأزرار */
-    font-size: 0.85rem !important;   /* تصغير الخط ليتناسب مع الحجم */
+    padding: 0.3rem 0.6rem !important; 
+    font-size: 0.75rem !important;
+    min-height: 30px !important;
+    white-space: nowrap !important;
+    flex: 0 1 auto !important; /* لمنع الزر من التمدد وتغطية المساحة */
+    margin: 2px !important;
 }
 
-/* تقليل الفراغ العلوي الذي يسبب تضخم الإطار */
-#view-user-dashboard .card > div:nth-child(2) {
-    padding-top: 1rem !important;
+/* التأكد من أن الحاوية المحيطة لا تجبر الأزرار على التمدد */
+#view-user-dashboard .card .grid-container,
+#view-user-dashboard .card > div:last-of-type {
+    display: flex !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 5px !important;
 }
