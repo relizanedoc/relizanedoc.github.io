@@ -959,26 +959,24 @@
   </button>
 <div class='dialog-overlay hidden' id='changePasswordModal' style='z-index: 99999;'>
   <div class='dialog-box' style='max-width: 400px; padding: 1.5rem;'>
-    <h3 style='margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: bold; color: var(--text);'>تغيير كلمة المرور</h3>
-    <p style='color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;'>يرجى إدخال كلمة المرور الجديدة (يجب أن تتكون من 6 أحرف أو أرقام على الأقل).</p>
+    <h3 style='margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: bold; color: var(--text);' data-i18n="changePasswordTitle">تغيير كلمة المرور</h3>
+    <p style='color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;' data-i18n="changePasswordDesc">يرجى إدخال كلمة المرور الجديدة (يجب أن تتكون من 6 أحرف أو أرقام على الأقل).</p>
 
     <div class='form-group' style='text-align: right; margin-bottom: 1rem;'>
       <div style="position: relative; width: 100%; display: block;">
-
-<input id="newPasswordInput" placeholder="أدخل كلمة المرور الجديدة..." type="password" style="width: 100%; padding-left: 50px !important; box-sizing: border-box; display: block; margin: 0;">
+        <input id="newPasswordInput" placeholder="••••••••" type="password" style="width: 100%; padding-left: 50px !important; box-sizing: border-box; display: block; margin: 0;">
         <span onclick="togglePasswordVisibility('newPasswordInput', 'eyeIconModal')" style="position: absolute; left: 5px; top: 0; height: 100%; width: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; z-index: 9999;">
           <svg id="eyeIconModal" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
             <line x1="1" y1="1" x2="23" y2="23"></line>
           </svg>
         </span>
-
       </div>
     </div>
 
     <div class='dialog-actions' style='margin-top: 1.5rem;'>
-      <button class='btn btn-secondary' onclick='closeChangePasswordModal()'>إلغاء</button>
-      <button class='btn btn-primary' id='saveNewPasswordBtn' onclick='submitNewPassword()'>حفظ التغييرات</button>
+      <button class='btn btn-secondary' data-i18n="cancel" onclick='closeChangePasswordModal()'>إلغاء</button>
+      <button class='btn btn-primary' id='saveNewPasswordBtn' data-i18n="saveChangesBtn" onclick='submitNewPassword()'>حفظ التغييرات</button>
     </div>
   </div>
 </div>
