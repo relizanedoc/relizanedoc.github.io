@@ -460,3 +460,56 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
   color: #ffffff !important;
 }
+/* =========================================================
+   تنسيقات أزرار لوحة تحكم العضو (المربعات)
+   ========================================================= */
+.dashboard-actions-grid {
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1rem;
+    width: 100%;
+}
+
+.dashboard-action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.25rem 1rem;
+    min-height: 110px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-weight: 700;
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+}
+
+.dashboard-action-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    color: var(--primary-dark);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+}
+
+.dashboard-action-card.primary-card {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+}
+
+.dashboard-action-card.primary-card:hover {
+    color: white;
+    box-shadow: 0 8px 15px rgba(14, 165, 233, 0.3);
+}
+
+.dashboard-action-card.secondary-card {
+    background: var(--bg);
+}
