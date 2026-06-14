@@ -3445,13 +3445,14 @@ const { data, error } = await supabaseClient.functions.invoke('upload-github-ima
                 clinic_images: finalImageUrls
             };
         }
-
-    } catch (err) {
-        showToast('خطأ: ' + err.message, 'error');
-    } finally {
-        setLoading(btn, false, 'حفظ التغييرات');
-        if(fileInput) fileInput.value = '';
-    }
+// ابحث عن هذا الجزء في دالة saveClinicProfile وقم بتصحيحه:
+} catch (err) { // تأكد أن المتغير اسمه err هنا
+    console.error(err); // قم بتغيير 'uploadError' إلى 'err'
+    showToast('خطأ: ' + err.message, 'error');
+} finally {
+    setLoading(btn, false, 'حفظ التغييرات');
+    if(fileInput) fileInput.value = '';
+}
 };
 window.addServiceCategory = function(category = '', items = '') {
     const container = document.getElementById('servicesContainer');
