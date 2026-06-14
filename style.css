@@ -412,3 +412,17 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     font-weight: 800 !important;
   }
 }
+/* =========================================================
+   توحيد عرض العناصر ومحاذاتها في الصفحة الرئيسية (للحاسوب)
+   ========================================================= */
+@media (min-width: 768px) {
+  #view-home > .hero-section,
+  #view-home > .filters,
+  #view-home > #doctorsList {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
