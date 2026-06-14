@@ -828,7 +828,7 @@ function openDoctorProfileModal(doc, doctorName) {
           
           <div style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: ${doc.map_link ? '1rem' : '0'}; position: relative; padding-bottom: 65%; height: 0; background: #f8fafc;">
             <iframe 
-                src="https://maps.google.com/maps?q=${encodeURIComponent(doc.exact_location + ', ' + t(doc.municipality) + ', Relizane')}&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+src="https://maps.google.com/maps?q=${encodeURIComponent(doc.exact_location + ', ' + t(doc.municipality) + ', Relizane')}&t=&z=15&ie=UTF8&iwloc=&output=embed"
                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
                 allowfullscreen="" 
                 loading="lazy" 
@@ -1192,20 +1192,6 @@ async function handleAddDoctor(e) {
         setLoading(btn, false);
     }
 }
-  function generateTimeSlots(startStr, endStr, intervalMins) {
-    const slots = [];
-    let [startH, startM] = startStr.split(':').map(Number);
-    let [endH, endM] = endStr.split(':').map(Number);
-    let current = startH * 60 + startM;
-    const end = endH * 60 + endM;
-    while (current < end) {
-      let h = Math.floor(current / 60);
-      let m = current % 60;
-      slots.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
-      current += intervalMins;
-    }
-    return slots;
-  }
 
  // ✅ الدالة الجديدة لفتح نموذج الحجز
 function openBooking(doctorId) {
