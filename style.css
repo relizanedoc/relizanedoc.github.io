@@ -388,3 +388,27 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     text-overflow: ellipsis;
   }
 }
+/* =========================================================
+   تحسين جمالية قائمة الهاتف (إضافة خطوط فاصلة)
+   ========================================================= */
+@media (max-width: 768px) {
+  .nav-links .nav-btn {
+    border-bottom: 1px solid var(--border) !important; /* الخط الفاصل بلون هادئ */
+    width: calc(100% - 2rem) !important; /* ترك مسافة صغيرة من الجوانب */
+    margin: 0 auto !important; /* توسيط العنصر */
+    padding: 1rem 0.5rem !important; /* مساحة مريحة للإصبع عند اللمس */
+    border-radius: 0 !important;
+  }
+  
+  /* إزالة الخط من آخر عنصر في القائمة (لتجنب الخط الزائد في الأسفل) */
+  .nav-links .nav-btn:last-of-type {
+    border-bottom: none !important;
+  }
+
+  /* تحسين شكل العنصر النشط (الصفحة الحالية) في الهاتف */
+  .nav-links .nav-btn.active {
+    background: transparent !important;
+    color: var(--primary) !important;
+    font-weight: 800 !important;
+  }
+}
