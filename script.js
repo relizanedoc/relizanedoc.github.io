@@ -862,7 +862,7 @@ src="http://googleusercontent.com/maps.google.com/${encodeURIComponent(doc.exact
             ${currentLang === 'ar' ? 'صور العيادة' : 'Clinic Gallery'}
         </h4>
 
-        <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: 250px;">
+        <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: 450px;">
             
             <div id="clinicSlider_${doc.id}" dir="ltr" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; width: 100%; height: 100%; scrollbar-width: none; -ms-overflow-style: none;">
                 ${doc.clinic_images.map((url, index) => `
