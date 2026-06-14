@@ -964,9 +964,12 @@ src="http://googleusercontent.com/maps.google.com/${encodeURIComponent(doc.exact
           initClinicSlider(`clinicSlider_${doc.id}`, doc.id, doc.clinic_images.length);
       }
 
-  }, 150);
-    function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
-}
+}, 150);
+} 
+
+// 👈 2. الآن أصبحت دالة escapeHtml حرة ومتاحة للجميع
+function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
+
 function updateSEOMetaTags(doc) {
     if (!doc) return;
     // ✅ غيّر الخصائص إلى snake_case
