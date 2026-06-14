@@ -827,8 +827,8 @@ function openDoctorProfileModal(doc, doctorName) {
           </div>
           
           <div style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: ${doc.map_link ? '1rem' : '0'}; position: relative; padding-bottom: 65%; height: 0; background: #f8fafc;">
-            <iframe 
-src="https://maps.google.com/maps?q=${encodeURIComponent(doc.exact_location + ', ' + t(doc.municipality) + ', Relizane')}&t=&z=15&ie=UTF8&iwloc=&output=embed"
+           <iframe 
+                src="https://maps.google.com/maps?q=${encodeURIComponent(doc.exact_location + ', ' + t(doc.municipality) + ', Relizane')}&t=&z=15&ie=UTF8&iwloc=&output=embed" 
                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
                 allowfullscreen="" 
                 loading="lazy" 
@@ -856,17 +856,42 @@ src="https://maps.google.com/maps?q=${encodeURIComponent(doc.exact_location + ',
       </div>
   </div>
 
-    ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
+   ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
     <div style="margin-top: 2.5rem; background: white; border-radius: 20px; padding: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
         <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1.5rem; color: #0f172a;">
             ${currentLang === 'ar' ? 'صور العيادة' : 'Clinic Gallery'}
         </h4>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
-            ${doc.clinic_images.map(url => `
-                <img src="${url}" 
-                     style="width: 100%; height: 120px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border);" 
-                     onerror="this.style.display='none'">
-            `).join('')}
+
+        <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: 250px;">
+            
+            <div id="clinicSlider_${doc.id}" dir="ltr" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; width: 100%; height: 100%; scrollbar-width: none; -ms-overflow-style: none;">
+                ${doc.clinic_images.map((url, index) => `
+                    <img src="${url}" 
+                         style="flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: center;" 
+                         onerror="this.style.display='none'"
+                         alt="Clinic Image ${index + 1}">
+                `).join('')}
+            </div>
+
+            ${doc.clinic_images.length > 1 ? `
+                <button onclick="moveClinicSlide('clinicSlider_${doc.id}', -1)" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 2; transition: all 0.2s;" onmouseover="this.style.background='white'" onmouseout="this.style.background='rgba(255,255,255,0.85)'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <button onclick="moveClinicSlide('clinicSlider_${doc.id}', 1)" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 2; transition: all 0.2s;" onmouseover="this.style.background='white'" onmouseout="this.style.background='rgba(255,255,255,0.85)'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+
+                <div style="position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 2;">
+                    ${doc.clinic_images.map((_, i) => `
+                        <span class="slide-dot-${doc.id}" style="width: 8px; height: 8px; border-radius: 50%; background: ${i === 0 ? 'white' : 'rgba(255,255,255,0.4)'}; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: background 0.3s;"></span>
+                    `).join('')}
+                </div>
+            ` : ''}
+            
+            <style>
+                /* إخفاء شريط التمرير الافتراضي */
+                #clinicSlider_${doc.id}::-webkit-scrollbar { display: none; }
+            </style>
         </div>
     </div>
     ` : ''}
@@ -916,7 +941,6 @@ src="https://maps.google.com/maps?q=${encodeURIComponent(doc.exact_location + ',
           qrContainer.innerHTML = '';
           if (typeof QRCode !== 'undefined') {
               try {
-                  // ✅ حيلة (UTF-8) لضمان عدم انهيار المكتبة مع الحروف العربية
                   const utf8vCard = unescape(encodeURIComponent(vCard));
                   new QRCode(qrContainer, {
                       text: utf8vCard,
@@ -924,10 +948,9 @@ src="https://maps.google.com/maps?q=${encodeURIComponent(doc.exact_location + ',
                       height: 140,
                       colorDark : "#0f172a",
                       colorLight : "#f8fafc",
-                      correctLevel : QRCode.CorrectLevel.L // تم تقليل مستوى التصحيح للسماح بنصوص أطول
+                      correctLevel : QRCode.CorrectLevel.L
                   });
               } catch (e) {
-                  // في حال فشلت المكتبة المحلية لأي سبب، نلجأ فوراً للرابط البديل
                   console.warn("QR Library failed, using fallback APIs...");
                   qrContainer.innerHTML = `<img src="${qrPrimary}" data-fallback-url="${qrFallback}" onerror="handleQrError(this)" alt="QR Code" style="width: 140px; height: 140px; mix-blend-mode: multiply;" />`;
               }
@@ -935,8 +958,13 @@ src="https://maps.google.com/maps?q=${encodeURIComponent(doc.exact_location + ',
               qrContainer.innerHTML = `<img src="${qrPrimary}" data-fallback-url="${qrFallback}" onerror="handleQrError(this)" alt="QR Code" style="width: 140px; height: 140px; mix-blend-mode: multiply;" />`;
           }
       }
+
+      // 🔴 تشغيل السلايدر التلقائي
+      if (Array.isArray(doc.clinic_images) && doc.clinic_images.length > 1) {
+          initClinicSlider(`clinicSlider_${doc.id}`, doc.id, doc.clinic_images.length);
+      }
+
   }, 150);
-}
     function escapeHtml(str) { if (!str) return ''; return DOMPurify.sanitize(str); }
 
 function updateSEOMetaTags(doc) {
@@ -3122,18 +3150,6 @@ async function handleDateSelection(selectedDateStr, workingDays) {
 
     const bookedTimes = bookedSlots.map(s => s.appointment_time);
 
-    // توليد الأوقات المتاحة
-    const slots = generateTimeSlots(shiftStart, shiftEnd, 30);
-    console.log('🕐 جميع الأوقات المولدة:', slots);
-
-    const availableSlots = slots.filter(slot => !bookedTimes.includes(slot));
-    console.log('✅ الأوقات المتاحة:', availableSlots);
-
-    if (availableSlots.length === 0) {
-      container.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;" data-i18n="noSlots">${t('noSlots')}</div>`;
-      return;
-    }
-
     // عرض الأوقات
     displayTimeSlots(container, availableSlots, timeInput);
 
@@ -3478,4 +3494,43 @@ window.handleQrError = function(img) {
         img.dataset.fallback = '1';
         img.src = img.dataset.fallbackUrl;
     }
+};
+// ✅ دالة تحريك السلايدر يدوياً عبر الأزرار
+window.moveClinicSlide = function(sliderId, direction) {
+    const slider = document.getElementById(sliderId);
+    if (!slider) return;
+    const scrollAmount = slider.clientWidth * direction;
+    slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+};
+
+// ✅ دالة التشغيل التلقائي وتحديث النقاط
+window.initClinicSlider = function(sliderId, docId, imagesCount) {
+    const slider = document.getElementById(sliderId);
+    if (!slider || imagesCount <= 1) return;
+
+    let currentIndex = 0;
+    const dots = document.querySelectorAll(`.slide-dot-${docId}`);
+
+    // تحديث النقاط عند التمرير باللمس أو الماوس
+    slider.addEventListener('scroll', () => {
+        const newIndex = Math.round(slider.scrollLeft / slider.clientWidth);
+        if (newIndex !== currentIndex && newIndex < imagesCount && newIndex >= 0) {
+            currentIndex = newIndex;
+            dots.forEach((dot, i) => {
+                dot.style.background = i === currentIndex ? 'white' : 'rgba(255,255,255,0.4)';
+            });
+        }
+    });
+
+    // التشغيل التلقائي كل 3 ثواني
+    let autoPlay = setInterval(() => {
+        // إيقاف مؤقت إذا كان مؤشر الماوس فوق الصور
+        if (slider.matches(':hover')) return; 
+        
+        if (currentIndex >= imagesCount - 1) {
+            slider.scrollTo({ left: 0, behavior: 'smooth' }); // العودة للبداية
+        } else {
+            slider.scrollBy({ left: slider.clientWidth, behavior: 'smooth' }); // الصورة التالية
+        }
+    }, 3000);
 };
