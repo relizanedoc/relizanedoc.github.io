@@ -352,3 +352,40 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     display: block;
     margin: 0 auto;
 }
+/* =========================================================
+   إصلاح شريط اسم العضو وزر الخروج في الموبايل
+   ========================================================= */
+@media (max-width: 768px) {
+  .user-pill {
+    display: flex !important;
+    flex-direction: row !important; /* إجبار العناصر على البقاء بجانب بعضها */
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 0 !important;
+  }
+  
+  /* منع زر تسجيل الخروج من أخذ عرض 100% وإصلاح شكله */
+  .user-pill #logoutBtn {
+    width: auto !important;
+    padding: 0.35rem 0.8rem !important;
+    margin: 0 !important;
+    font-size: 0.8rem !important;
+    text-align: center !important;
+    background: var(--surface) !important;
+    color: var(--danger) !important; /* لتمييز زر الخروج */
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+  }
+  
+  /* تحسين وضوح اسم العضو */
+  .user-pill #userNameDisplay {
+    font-weight: 800 !important;
+    font-size: 1rem !important;
+    color: var(--primary-dark) !important;
+    white-space: nowrap; /* منع الاسم من الانقسام لسطرين */
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
