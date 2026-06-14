@@ -452,10 +452,11 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 }
 
 /* تعديل شارة "المنصة الطبية الأولى" لتصبح زجاجية أنيقة (Glassmorphism) */
-.hero-section div[style*="background: #0ea5e9"] {
-  background: rgba(255, 255, 255, 0.2) !important;
-  backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+.hero-section > div:first-child {
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important; /* لدعم متصفحات سفاري */
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
   color: #ffffff !important;
 }
