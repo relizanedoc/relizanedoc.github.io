@@ -3398,20 +3398,40 @@ const base64Images = await Promise.all(filesToUpload.map(async file => {
     };
 }));
 
-// الإرسال
-const { data, error } = await supabaseClient.functions.invoke('upload-github-images', {
-    body: { doctorId: session.doctorId, images: base64Images } 
+// بعد استدعاء الدالة:
+const { data, error } = await supabase.functions.invoke('upload-github-images', {
+    body: { doctorId: doctorId, images: base64Images }
 });
 
-            if (uploadError) throw uploadError;
-            if (uploadResult && uploadResult.success) {
-                finalImageUrls = uploadResult.urls; 
-            }
-        } catch (imgErr) {
-            console.error('خطأ في الاتصال بـ Edge Function الخاص بـ GitHub:', imgErr);
-            showToast('فشل رفع الصور، تأكد من نشر دالة upload-github-images بنجاح.', 'error');
-        }
+if (error) {
+    console.error("خطأ من الدالة:", error);
+    showToast('حدث خطأ أثناء رفع الصور إلى GitHub', 'error');
+    return;
+}
+
+// 1. تحقق من وصول الـ URLs
+if (data && data.urls && data.urls.length > 0) {
+    console.log("تم رفع الصور بنجاح، الروابط:", data.urls);
+
+    // 2. هنا الجزء الأهم: يجب تحديث قاعدة البيانات بالروابط الجديدة
+    // تأكد أنك تقوم باستدعاء دالة تحديث الملف الشخصي هنا
+    const { error: dbError } = await supabase.rpc('update_clinic_profile_secure', {
+        p_doctor_id: doctorId,
+        p_session_token: sessionToken,
+        // ... (مرر بقية البيانات هنا)
+        p_clinic_images: data.urls // إرسال روابط GitHub الجديدة إلى قاعدة البيانات
+    });
+
+    if (dbError) {
+        showToast('خطأ في حفظ الروابط في قاعدة البيانات', 'error');
+    } else {
+        showToast('تم حفظ الملف بنجاح!', 'success');
+        // قم بتحديث الصفحة أو عرض الصورة هنا
+        location.reload(); 
     }
+} else {
+    showToast('لم يتم استقبال روابط الصور بشكل صحيح', 'error');
+}
 
     // 4. الحفظ في قاعدة بيانات Supabase
     try {
