@@ -724,30 +724,30 @@ function openDoctorProfileModal(doc, doctorName) {
     scheduleHtml = `<div class="text-sm text-gray" style="padding: 1.5rem 0; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px solid var(--border);">${currentLang === 'ar' ? 'غير متوفر حالياً' : 'Not available currently'}</div>`;
   }
 
-  // بناء قسم الخدمات
+ // بناء قسم الخدمات
   let servicesHtml = '';
   if (doc.services && Array.isArray(doc.services) && doc.services.length > 0) {
       servicesHtml = `
-      <div style="margin-top: 2.5rem; background: white; border-radius: 20px; padding: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.03);">
+      <div style="margin-top: 1.5rem; background: white; border-radius: 20px; padding: clamp(1rem, 3vw, 1.5rem); box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.03); width: 100%; box-sizing: border-box; overflow: hidden;">
         <h3 style="margin: 0 0 1.5rem 0; font-size: 1.25rem; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 0.75rem;">
-           <span style="background: rgba(14, 165, 233, 0.1); color: var(--primary); padding: 0.6rem; border-radius: 10px; display: flex; box-shadow: inset 0 2px 4px rgba(14,165,233,0.1);">
+           <span style="background: rgba(14, 165, 233, 0.1); color: var(--primary); padding: 0.6rem; border-radius: 10px; display: flex; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(14,165,233,0.1);">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
            </span>
-           ${t('ourServices')}
+           <span>${t('ourServices')}</span>
         </h3>
-        <div style="display: grid; gap: 1.25rem;">
+        <div style="display: grid; gap: 1rem; width: 100%;">
             ${doc.services.map(service => `
-                <div style="background: white; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border); box-shadow: inset 0 2px 5px rgba(0,0,0,0.01);">
-                    <div style="color: var(--primary-dark); font-size: 1.1rem; font-weight: 800; margin-bottom: ${service.items.length > 0 ? '1rem' : '0'}; display: flex; align-items: center; gap: 10px;">
-                        <span style="display: inline-block; width: 10px; height: 10px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 10px var(--primary-light);"></span>
-                        ${escapeHtml(service.category)}
+                <div style="background: white; border-radius: 12px; padding: clamp(1rem, 3vw, 1.25rem); border: 1px solid var(--border); box-shadow: inset 0 2px 5px rgba(0,0,0,0.01); width: 100%; box-sizing: border-box; overflow: hidden;">
+                    <div style="color: var(--primary-dark); font-size: 1.1rem; font-weight: 800; margin-bottom: ${service.items.length > 0 ? '1rem' : '0'}; display: flex; align-items: center; gap: 10px; word-break: break-word;">
+                        <span style="display: inline-block; width: 10px; height: 10px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 10px var(--primary-light); flex-shrink: 0;"></span>
+                        <span style="flex: 1;">${escapeHtml(service.category)}</span>
                     </div>
                     ${service.items.length > 0 ? `
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; padding-inline-start: 1.25rem;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding-inline-start: clamp(0.5rem, 2vw, 1rem);">
                             ${service.items.map(item => `
-                                <div style="background: #f1f5f9; color: #475569; font-size: 0.9rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 50px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color: #cbd5e1;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                    ${escapeHtml(item)}
+                                <div style="background: #f1f5f9; color: #475569; font-size: 0.9rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 20px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); max-width: 100%; box-sizing: border-box;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color: #cbd5e1; flex-shrink: 0;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <span style="word-break: break-word; overflow-wrap: anywhere; white-space: normal;">${escapeHtml(item)}</span>
                                 </div>
                             `).join('')}
                         </div>
