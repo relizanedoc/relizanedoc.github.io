@@ -3161,8 +3161,21 @@ async function handleDateSelection(selectedDateStr, workingDays) {
 
     const bookedTimes = bookedSlots.map(s => s.appointment_time);
 
-    // عرض الأوقات
-    displayTimeSlots(container, availableSlots, timeInput);
+    // 1. توليد كل فترات العمل الممكنة (بفاصل 30 دقيقة - يمكنك تغيير الرقم حسب مدة الكشف)
+    const intervalMinutes = 30; 
+    const allShiftSlots = generateTimeSlots(shiftStart, shiftEnd, intervalMinutes);
+
+    // 2. فلترة الأوقات المتاحة (استبعاد الأوقات المحجوزة مسبقاً)
+    const finalAvailableSlots = allShiftSlots.filter(slot => !bookedTimes.includes(slot));
+
+    // 3. التحقق مما إذا كانت هناك أوقات متبقية
+    if (finalAvailableSlots.length === 0) {
+      container.innerHTML = `<div class="text-sm text-danger" style="grid-column: 1 / -1; color: var(--danger);" data-i18n="noSlots">${t('noSlots')}</div>`;
+      return;
+    }
+
+    // 4. عرض الأوقات النهائية في الواجهة
+    displayTimeSlots(container, finalAvailableSlots, timeInput);
 
   } catch (err) {
     console.error('❌ خطأ في جلب الأوقات المتاحة:', err);
