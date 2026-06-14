@@ -3341,7 +3341,7 @@ function togglePasswordVisibility(inputId, iconId) {
     icon.style.color = 'var(--text-secondary)';
   }
 }
-// ✅ دالة مساعدة لتحويل الصورة إلى Base64
+// ✅ دالة مساعدة لتحويل الصورة إلى Base64 قبل إرسالها لـ Edge Function
 const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -3354,7 +3354,7 @@ const fileToBase64 = (file) => {
     });
 };
 
-// ✅ حفظ ملف العيادة (محدث لرفع الصور إلى GitHub عبر Edge Function)
+// ✅ دالة حفظ ملف العيادة (باستخدام GitHub Edge Function)
 window.saveClinicProfile = async function() {
     const sessionStr = localStorage.getItem('doctorSession');
     if (!sessionStr) return;
@@ -3379,31 +3379,31 @@ window.saveClinicProfile = async function() {
     // 2. تجميع الشهادات
     const certificatesText = document.getElementById('dash_certificates') ? document.getElementById('dash_certificates').value.trim() : '';
 
-    // 3. رفع الصور لـ GitHub
+    // 3. معالجة الصور وإرسالها إلى Edge Function (مستودع GitHub)
     const fileInput = document.getElementById('dash_clinic_images');
     let finalImageUrls = globalDashboardData.doctorDetails?.clinic_images || [];
 
     if (fileInput && fileInput.files.length > 0) {
-        const filesToUpload = Array.from(fileInput.files).slice(0, 3); // أقصى حد 3 صور
+        const filesToUpload = Array.from(fileInput.files).slice(0, 3);
         try {
             const base64Images = await Promise.all(filesToUpload.map(file => fileToBase64(file)));
             
-            // استدعاء دالة Edge Function للرفع إلى GitHub
+            // استدعاء دالة Edge Function (يجب أن تكون قد قمت بعمل Deploy لها)
             const { data: uploadResult, error: uploadError } = await supabaseClient.functions.invoke('upload-github-images', {
                 body: { doctorId: session.doctorId, images: base64Images }
             });
 
             if (uploadError) throw uploadError;
             if (uploadResult && uploadResult.success) {
-                finalImageUrls = uploadResult.urls; // استبدال الصور القديمة بالجديدة
+                finalImageUrls = uploadResult.urls; 
             }
         } catch (imgErr) {
-            console.error('خطأ في الرفع لـ GitHub:', imgErr);
-            showToast('فشل رفع الصور، سيتم حفظ باقي البيانات فقط.', 'error');
+            console.error('خطأ في الاتصال بـ Edge Function الخاص بـ GitHub:', imgErr);
+            showToast('فشل رفع الصور، تأكد من نشر دالة upload-github-images بنجاح.', 'error');
         }
     }
 
-    // 4. الحفظ النهائي في Supabase
+    // 4. الحفظ في قاعدة بيانات Supabase
     try {
         const { error } = await supabaseClient.rpc('update_clinic_profile_secure', {
             p_doctor_id: session.doctorId,
@@ -3419,9 +3419,9 @@ window.saveClinicProfile = async function() {
 
         if (error) throw error;
 
-        showToast('تم تحديث ملف العيادة والصور بنجاح!', 'success');
-        
-        // تحديث البيانات المحلية
+        showToast('تم حفظ ملف العيادة والصور بنجاح', 'success');
+
+        // تحديث المتغير المحلي
         const docIndex = allDoctors.findIndex(d => d.id === session.doctorId);
         if (docIndex > -1) {
             allDoctors[docIndex] = { 
@@ -3440,7 +3440,7 @@ window.saveClinicProfile = async function() {
         showToast('خطأ: ' + err.message, 'error');
     } finally {
         setLoading(btn, false, 'حفظ التغييرات');
-        if (fileInput) fileInput.value = ''; // تفريغ حقل الصور بعد الرفع
+        if(fileInput) fileInput.value = '';
     }
 };
 window.addServiceCategory = function(category = '', items = '') {
