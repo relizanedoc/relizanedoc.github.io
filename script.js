@@ -3341,31 +3341,70 @@ function togglePasswordVisibility(inputId, iconId) {
     icon.style.color = 'var(--text-secondary)';
   }
 }
+// ✅ دالة مساعدة لتحويل الصورة إلى Base64
+const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve({
+            name: file.name,
+            base64: reader.result.split(',')[1] // أخذ النص المشفر فقط
+        });
+        reader.onerror = error => reject(error);
+    });
+};
+
+// ✅ حفظ ملف العيادة (محدث لرفع الصور إلى GitHub عبر Edge Function)
 window.saveClinicProfile = async function() {
     const sessionStr = localStorage.getItem('doctorSession');
     if (!sessionStr) return;
     const session = JSON.parse(sessionStr);
 
     const btn = document.getElementById('saveProfileBtn');
-    setLoading(btn, true, 'جاري الحفظ...');
+    setLoading(btn, true, 'جاري الحفظ والرفع...');
 
-    // تجميع البيانات من الجدول التفاعلي
+    // 1. تجميع الخدمات
     const formattedServices = [];
     document.querySelectorAll('.service-row').forEach(row => {
         const category = row.querySelector('.svc-category').value.trim();
         const itemsStr = row.querySelector('.svc-items').value.trim();
-        
         if (category || itemsStr) {
             formattedServices.push({
                 category: category || 'خدمات عامة',
-                // تقسيم السلسلة بالفاصلة العربية أو الإنجليزية
                 items: itemsStr ? itemsStr.split(/[,،]/).map(i => i.trim()).filter(Boolean) : []
             });
         }
     });
 
+    // 2. تجميع الشهادات
+    const certificatesText = document.getElementById('dash_certificates') ? document.getElementById('dash_certificates').value.trim() : '';
+
+    // 3. رفع الصور لـ GitHub
+    const fileInput = document.getElementById('dash_clinic_images');
+    let finalImageUrls = globalDashboardData.doctorDetails?.clinic_images || [];
+
+    if (fileInput && fileInput.files.length > 0) {
+        const filesToUpload = Array.from(fileInput.files).slice(0, 3); // أقصى حد 3 صور
+        try {
+            const base64Images = await Promise.all(filesToUpload.map(file => fileToBase64(file)));
+            
+            // استدعاء دالة Edge Function للرفع إلى GitHub
+            const { data: uploadResult, error: uploadError } = await supabaseClient.functions.invoke('upload-github-images', {
+                body: { doctorId: session.doctorId, images: base64Images }
+            });
+
+            if (uploadError) throw uploadError;
+            if (uploadResult && uploadResult.success) {
+                finalImageUrls = uploadResult.urls; // استبدال الصور القديمة بالجديدة
+            }
+        } catch (imgErr) {
+            console.error('خطأ في الرفع لـ GitHub:', imgErr);
+            showToast('فشل رفع الصور، سيتم حفظ باقي البيانات فقط.', 'error');
+        }
+    }
+
+    // 4. الحفظ النهائي في Supabase
     try {
-        // ✅ استخدام RPC الآمن لتخطي حظر RLS
         const { error } = await supabaseClient.rpc('update_clinic_profile_secure', {
             p_doctor_id: session.doctorId,
             p_session_token: session.sessionToken,
@@ -3373,14 +3412,16 @@ window.saveClinicProfile = async function() {
             p_whatsapp_number: document.getElementById('dash_whatsapp').value.trim(),
             p_facebook_link: document.getElementById('dash_facebook').value.trim(),
             p_map_link: document.getElementById('dash_map_link').value.trim(),
-            p_services: formattedServices
+            p_services: formattedServices,
+            p_certificates: certificatesText,
+            p_clinic_images: finalImageUrls
         });
 
         if (error) throw error;
 
-        showToast('تم حفظ ملف العيادة والخدمات بنجاح', 'success');
-
-        // تحديث المتغير المحلي لتنعكس التغييرات فوراً
+        showToast('تم تحديث ملف العيادة والصور بنجاح!', 'success');
+        
+        // تحديث البيانات المحلية
         const docIndex = allDoctors.findIndex(d => d.id === session.doctorId);
         if (docIndex > -1) {
             allDoctors[docIndex] = { 
@@ -3389,7 +3430,9 @@ window.saveClinicProfile = async function() {
                 whatsapp_number: document.getElementById('dash_whatsapp').value.trim(),
                 facebook_link: document.getElementById('dash_facebook').value.trim(),
                 map_link: document.getElementById('dash_map_link').value.trim(),
-                services: formattedServices
+                services: formattedServices,
+                certificates: certificatesText,
+                clinic_images: finalImageUrls
             };
         }
 
@@ -3397,6 +3440,7 @@ window.saveClinicProfile = async function() {
         showToast('خطأ: ' + err.message, 'error');
     } finally {
         setLoading(btn, false, 'حفظ التغييرات');
+        if (fileInput) fileInput.value = ''; // تفريغ حقل الصور بعد الرفع
     }
 };
 window.addServiceCategory = function(category = '', items = '') {
