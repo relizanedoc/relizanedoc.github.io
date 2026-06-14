@@ -2768,8 +2768,8 @@ if (savedSession) {
         (async () => {
             try {
                 const { data: doctor, error } = await supabaseClient
-                    .from('doctors')
-                    .select('id, first_name, last_name, phone, working_days, booking_enabled, session_token')
+    .from('doctors')
+    .select('*') // 👈 🔴 استبدلناها بنجمة لنجلب جميع بيانات الطبيب (ومنها الصور)
                     .eq('id', session.doctorId)
                     .eq('session_token', session.sessionToken) // ✅ التحقق من الرمز
                     .maybeSingle();
@@ -2790,12 +2790,13 @@ if (savedSession) {
 
                     if (apptError) console.error('❌ خطأ في جلب المواعيد (Auto-Login):', apptError);
                     
-                    const dashboardData = {
-                        doctorName: `${doctor.first_name} ${doctor.last_name}`,
-                        workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : (doctor.working_days || '{}'),
-                        bookingEnabled: doctor.booking_enabled,
-                        appointments: appointments || []
-                    };
+                  const dashboardData = {
+    doctorName: `${doctor.first_name} ${doctor.last_name}`,
+    workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : (doctor.working_days || '{}'),
+    bookingEnabled: doctor.booking_enabled,
+    appointments: appointments || [],
+    doctorDetails: doctor // 👈 🔴 أضف هذا السطر لكي تصل الصور إلى الواجهة
+};
                     
                     // تحديث الواجهة
                     const loginSection = document.getElementById('loginSection');
