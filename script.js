@@ -3361,118 +3361,97 @@ window.saveClinicProfile = async function() {
     const session = JSON.parse(sessionStr);
 
     const btn = document.getElementById('saveProfileBtn');
-    setLoading(btn, true, 'جاري الحفظ والرفع...');
+    setLoading(btn, true, 'جاري الحفظ...');
 
-    // 1. تجميع الخدمات
-    const formattedServices = [];
-    document.querySelectorAll('.service-row').forEach(row => {
-        const category = row.querySelector('.svc-category').value.trim();
-        const itemsStr = row.querySelector('.svc-items').value.trim();
-        if (category || itemsStr) {
-            formattedServices.push({
-                category: category || 'خدمات عامة',
-                items: itemsStr ? itemsStr.split(/[,،]/).map(i => i.trim()).filter(Boolean) : []
-            });
-        }
-    });
-
-    // 2. تجميع الشهادات
-    const certificatesText = document.getElementById('dash_certificates') ? document.getElementById('dash_certificates').value.trim() : '';
-
-    // 3. معالجة الصور وإرسالها إلى Edge Function (مستودع GitHub)
-    const fileInput = document.getElementById('dash_clinic_images');
-    let finalImageUrls = globalDashboardData.doctorDetails?.clinic_images || [];
-
-    if (fileInput && fileInput.files.length > 0) {
-        const filesToUpload = Array.from(fileInput.files).slice(0, 3);
-        try {
-// تأكد أن مصفوفة images تحتوي على هذه الهيكلية قبل الإرسال
-const base64Images = await Promise.all(filesToUpload.map(async file => {
-    return {
-        name: file.name,
-        base64: await new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result.split(',')[1]);
-            reader.readAsDataURL(file);
-        })
-    };
-}));
-
-// بعد استدعاء الدالة:
-const { data, error } = await supabase.functions.invoke('upload-github-images', {
-    body: { doctorId: doctorId, images: base64Images }
-});
-
-if (error) {
-    console.error("خطأ من الدالة:", error);
-    showToast('حدث خطأ أثناء رفع الصور إلى GitHub', 'error');
-    return;
-}
-
-// 1. تحقق من وصول الـ URLs
-if (data && data.urls && data.urls.length > 0) {
-    console.log("تم رفع الصور بنجاح، الروابط:", data.urls);
-
-    // 2. هنا الجزء الأهم: يجب تحديث قاعدة البيانات بالروابط الجديدة
-    // تأكد أنك تقوم باستدعاء دالة تحديث الملف الشخصي هنا
-    const { error: dbError } = await supabase.rpc('update_clinic_profile_secure', {
-        p_doctor_id: doctorId,
-        p_session_token: sessionToken,
-        // ... (مرر بقية البيانات هنا)
-        p_clinic_images: data.urls // إرسال روابط GitHub الجديدة إلى قاعدة البيانات
-    });
-
-    if (dbError) {
-        showToast('خطأ في حفظ الروابط في قاعدة البيانات', 'error');
-    } else {
-        showToast('تم حفظ الملف بنجاح!', 'success');
-        // قم بتحديث الصفحة أو عرض الصورة هنا
-        location.reload(); 
-    }
-} else {
-    showToast('لم يتم استقبال روابط الصور بشكل صحيح', 'error');
-}
-
-    // 4. الحفظ في قاعدة بيانات Supabase
     try {
-        const { error } = await supabaseClient.rpc('update_clinic_profile_secure', {
+        // 1. تجميع الخدمات
+        const formattedServices = [];
+        document.querySelectorAll('.service-row').forEach(row => {
+            const category = row.querySelector('.svc-category').value.trim();
+            const itemsStr = row.querySelector('.svc-items').value.trim();
+            if (category || itemsStr) {
+                formattedServices.push({
+                    category: category || 'خدمات عامة',
+                    items: itemsStr ? itemsStr.split(/[,،]/).map(i => i.trim()).filter(Boolean) : []
+                });
+            }
+        });
+
+        const certificatesText = document.getElementById('dash_certificates') ? document.getElementById('dash_certificates').value.trim() : '';
+        let finalImageUrls = globalDashboardData.doctorDetails?.clinic_images || [];
+
+        // 2. معالجة الصور (رفع إلى GitHub إذا وجد ملفات جديدة)
+        const fileInput = document.getElementById('dash_clinic_images');
+        if (fileInput && fileInput.files.length > 0) {
+            const filesToUpload = Array.from(fileInput.files).slice(0, 3);
+            const base64Images = await Promise.all(filesToUpload.map(async file => {
+                return {
+                    name: file.name,
+                    base64: await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                        reader.readAsDataURL(file);
+                    })
+                };
+            }));
+
+            // رفع الصور باستخدام الـ Edge Function
+            const { data, error } = await supabaseClient.functions.invoke('upload-github-images', {
+                body: { doctorId: session.doctorId, images: base64Images }
+            });
+
+            if (error) throw new Error("فشل رفع الصور: " + error.message);
+            
+            if (data && data.urls) {
+                finalImageUrls = [...finalImageUrls, ...data.urls];
+            }
+        }
+
+        // 3. تحديث قاعدة البيانات
+        const contactEmail = document.getElementById('dash_contact_email').value.trim();
+        const whatsapp = document.getElementById('dash_whatsapp').value.trim();
+        const facebook = document.getElementById('dash_facebook').value.trim();
+        const mapLink = document.getElementById('dash_map_link').value.trim();
+
+        const { error: dbError } = await supabaseClient.rpc('update_clinic_profile_secure', {
             p_doctor_id: session.doctorId,
             p_session_token: session.sessionToken,
-            p_contact_email: document.getElementById('dash_contact_email').value.trim(),
-            p_whatsapp_number: document.getElementById('dash_whatsapp').value.trim(),
-            p_facebook_link: document.getElementById('dash_facebook').value.trim(),
-            p_map_link: document.getElementById('dash_map_link').value.trim(),
+            p_contact_email: contactEmail,
+            p_whatsapp_number: whatsapp,
+            p_facebook_link: facebook,
+            p_map_link: mapLink,
             p_services: formattedServices,
             p_certificates: certificatesText,
             p_clinic_images: finalImageUrls
         });
 
-        if (error) throw error;
+        if (dbError) throw dbError;
 
-        showToast('تم حفظ ملف العيادة والصور بنجاح', 'success');
-
-        // تحديث المتغير المحلي
+        // 4. تحديث المصفوفة المحلية
         const docIndex = allDoctors.findIndex(d => d.id === session.doctorId);
         if (docIndex > -1) {
             allDoctors[docIndex] = { 
                 ...allDoctors[docIndex], 
-                contact_email: document.getElementById('dash_contact_email').value.trim(),
-                whatsapp_number: document.getElementById('dash_whatsapp').value.trim(),
-                facebook_link: document.getElementById('dash_facebook').value.trim(),
-                map_link: document.getElementById('dash_map_link').value.trim(),
+                contact_email: contactEmail,
+                whatsapp_number: whatsapp,
+                facebook_link: facebook,
+                map_link: mapLink,
                 services: formattedServices,
                 certificates: certificatesText,
                 clinic_images: finalImageUrls
             };
         }
-// ابحث عن هذا الجزء في دالة saveClinicProfile وقم بتصحيحه:
-} catch (err) { // تأكد أن المتغير اسمه err هنا
-    console.error(err); // قم بتغيير 'uploadError' إلى 'err'
-    showToast('خطأ: ' + err.message, 'error');
-} finally {
-    setLoading(btn, false, 'حفظ التغييرات');
-    if(fileInput) fileInput.value = '';
-}
+
+        showToast('تم حفظ الملف بنجاح!', 'success');
+        location.reload(); 
+
+    } catch (err) {
+        console.error("خطأ الحفظ:", err);
+        showToast('خطأ: ' + err.message, 'error');
+    } finally {
+        setLoading(btn, false, 'حفظ التغييرات');
+        if (fileInput) fileInput.value = '';
+    }
 };
 window.addServiceCategory = function(category = '', items = '') {
     const container = document.getElementById('servicesContainer');
