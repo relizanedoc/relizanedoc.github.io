@@ -431,3 +431,7 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 .app-container, .nav-inner {
    max-width: 1350px !important; 
 }
+/* توسيط عنوان ابحث عن طبيب في الصفحة الرئيسية */
+#view-home > h2[data-i18n='findDoctor'] {
+    text-align: center !important;
+}
