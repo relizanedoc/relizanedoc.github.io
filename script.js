@@ -3061,7 +3061,6 @@ async function testSupabaseConnection() {
       showToast('فشل الاتصال بـ Supabase: ' + error.message, 'error');
     } else {
       console.log('✅ نجح الاتصال! البيانات:', data);
-      showToast('✅ تم الاتصال بـ Supabase بنجاح!', 'success');
     }
   } catch (err) {
     console.error('❌ خطأ غير متوقع:', err);
