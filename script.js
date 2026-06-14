@@ -1589,7 +1589,8 @@ if (data.doctorDetails) {
     document.getElementById('dash_whatsapp').value = data.doctorDetails.whatsapp_number || '';
     document.getElementById('dash_facebook').value = data.doctorDetails.facebook_link || '';
     document.getElementById('dash_map_link').value = data.doctorDetails.map_link || '';
-    
+    window.dashboardCurrentImages = data.doctorDetails.clinic_images || [];
+    window.renderClinicImageThumbnails();
     // رسم جدول الخدمات
     const srvContainer = document.getElementById('servicesContainer');
     if (srvContainer) srvContainer.innerHTML = ''; // مسح القديم
@@ -3373,7 +3374,53 @@ const fileToBase64 = (file) => {
         reader.onerror = error => reject(error);
     });
 };
+// مصفوفة عامة لتتبع الصور المتبقية
+window.dashboardCurrentImages = [];
 
+// دالة رسم الصور المصغرة مع أزرار الحذف
+window.renderClinicImageThumbnails = function() {
+    let container = document.getElementById('currentClinicImagesContainer');
+    
+    // إنشاء الحاوية برمجياً إذا لم تكن موجودة ووضعها تحت حقل رفع الصور
+    if (!container) {
+        const fileInput = document.getElementById('dash_clinic_images');
+        if (fileInput) {
+            container = document.createElement('div');
+            container.id = 'currentClinicImagesContainer';
+            container.style.cssText = 'display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;';
+            fileInput.parentNode.insertBefore(container, fileInput.nextSibling);
+        } else {
+            return;
+        }
+    }
+
+    container.innerHTML = ''; // مسح المحتوى القديم
+
+    // رسم الصور المتبقية
+    window.dashboardCurrentImages.forEach((url, index) => {
+        const imgDiv = document.createElement('div');
+        imgDiv.style.cssText = 'position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 2px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.05);';
+        
+        imgDiv.innerHTML = `
+            <img src="${url}" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="Clinic Image">
+            <button type="button" onclick="removeClinicImage(${index})" 
+                style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;"
+                onmouseover="this.style.background='red'" onmouseout="this.style.background='rgba(239, 68, 68, 0.9)'" title="حذف الصورة">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        `;
+        container.appendChild(imgDiv);
+    });
+};
+
+// دالة حذف الصورة من المصفوفة وإعادة الرسم
+window.removeClinicImage = function(index) {
+    const confirmMsg = currentLang === 'ar' ? 'هل أنت متأكد من إزالة هذه الصورة؟' : 'Are you sure you want to remove this image?';
+    if (confirm(confirmMsg)) {
+        window.dashboardCurrentImages.splice(index, 1); // مسح الصورة من المصفوفة
+        window.renderClinicImageThumbnails(); // إعادة رسم الواجهة
+    }
+};
 // ✅ دالة حفظ ملف العيادة (باستخدام GitHub Edge Function)
 window.saveClinicProfile = async function() {
     const sessionStr = localStorage.getItem('doctorSession');
@@ -3398,8 +3445,7 @@ window.saveClinicProfile = async function() {
         });
 
         const certificatesText = document.getElementById('dash_certificates') ? document.getElementById('dash_certificates').value.trim() : '';
-        let finalImageUrls = globalDashboardData.doctorDetails?.clinic_images || [];
-
+let finalImageUrls = [...window.dashboardCurrentImages]; // أخذ الصور التي لم يتم حذفها فقط
         // 2. معالجة الصور (رفع إلى GitHub إذا وجد ملفات جديدة)
         const fileInput = document.getElementById('dash_clinic_images');
         if (fileInput && fileInput.files.length > 0) {
