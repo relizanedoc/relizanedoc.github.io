@@ -628,9 +628,9 @@
             هل أنت طبيب؟ ضاعف نجاح عيادتك معنا!
           </h3>
 
-          <div class="pitch-visual-grid">
+<div class="pitch-slider-container pitch-animate pitch-delay-2">
             
-            <div class="pitch-v-card pitch-animate pitch-delay-2">
+            <div class="pitch-slide active">
               <div class="pitch-v-thumb">
                 <img src="images/relizane1.png" alt="إدارة المواعيد">
               </div>
@@ -645,7 +645,7 @@
               </div>
             </div>
 
-            <div class="pitch-v-card pitch-animate pitch-delay-3">
+            <div class="pitch-slide">
               <div class="pitch-v-thumb">
                 <img src="images/relizane2.png" alt="حضور رقمي">
               </div>
@@ -660,7 +660,7 @@
               </div>
             </div>
 
-            <div class="pitch-v-card pitch-animate pitch-delay-4">
+            <div class="pitch-slide">
               <div class="pitch-v-thumb">
                 <img src="images/relizane3.png" alt="بناء الثقة">
               </div>
@@ -675,8 +675,13 @@
               </div>
             </div>
 
-          </div>
+            <div class="slider-dots">
+              <span class="dot active" onclick="currentSlide(1)"></span>
+              <span class="dot" onclick="currentSlide(2)"></span>
+              <span class="dot" onclick="currentSlide(3)"></span>
+            </div>
 
+          </div>
           <div class="pitch-animate pitch-delay-4" style="text-align: center; max-width: 400px; margin: 0 auto;">
             <a href="contact.html" class="btn btn-primary" style="padding: 1rem 1.5rem; font-size: 1rem; font-weight: 900; border-radius: 50px; display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; text-decoration: none; width: 100%; box-shadow: 0 10px 20px rgba(14, 165, 233, 0.2); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
