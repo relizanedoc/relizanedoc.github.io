@@ -513,3 +513,31 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 .dashboard-action-card.secondary-card {
     background: var(--bg);
 }
+/* حركات قسم التسويق في صفحة الدخول */
+@keyframes fadeInUpBounce {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.pitch-animate {
+  opacity: 0;
+  animation: fadeInUpBounce 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.pitch-delay-1 { animation-delay: 0.1s; }
+.pitch-delay-2 { animation-delay: 0.25s; }
+.pitch-delay-3 { animation-delay: 0.4s; }
+.pitch-delay-4 { animation-delay: 0.55s; }
+
+.pitch-card {
+  transition: all 0.3s ease;
+  padding: 0.5rem;
+  border-radius: 12px;
+  background: transparent;
+}
+
+.pitch-card:hover {
+  background: white;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
