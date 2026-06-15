@@ -604,3 +604,30 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
         grid-template-columns: 1fr;
     }
 }
+/* تخطيط صفحة تسجيل الدخول (نظام العمودين) */
+.auth-split-layout {
+    display: grid;
+    grid-template-columns: 1fr; /* عمود واحد للهواتف */
+    gap: 2rem;
+    max-width: 1100px;
+    margin: 2rem auto;
+    align-items: start;
+}
+
+/* للشاشات الكبيرة (كمبيوتر) */
+@media (min-width: 900px) {
+    .auth-split-layout {
+        /* نموذج الدخول يأخذ 420 بكسل، وقسم التسويق يأخذ المساحة المتبقية */
+        grid-template-columns: 420px 1fr; 
+        gap: 3rem;
+        margin-top: 3rem;
+    }
+}
+
+/* تعديل بسيط لشبكة الصور لتناسب المساحة الجديدة */
+.pitch-visual-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
