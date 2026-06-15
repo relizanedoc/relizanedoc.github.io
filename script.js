@@ -973,9 +973,9 @@ function openDoctorProfileModal(doc, doctorName) {
     <div style="position: sticky; bottom: 0; background: var(--surface); padding: 1rem; margin-top: 2rem; border-top: 1px solid var(--border); box-shadow: 0 -4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 0.75rem; z-index: 100; border-radius: 20px 20px 0 0;">
       
       <div style="display: flex; gap: 0.5rem; width: 100%;">
-          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.9rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
-            <span style="color: #f59e0b; font-size: 1.1rem;">★</span> ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
-          </button>
+          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.9rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="openReviewsPage('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
+  <span style="color: #f59e0b; font-size: 1.1rem;">★</span> ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
+</button>
           
           <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.9rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="navigator.clipboard.writeText('${profileUrl}'); showToast(currentLang==='ar'?'تم نسخ الرابط بنجاح':'Copied', 'success');">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--primary)" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -3745,3 +3745,236 @@ document.addEventListener("DOMContentLoaded", () => {
     showPitchSlides(pitchSlideIndex);
     startPitchSlider();
 });
+// متغير لحفظ بيانات الطبيب الحالي في صفحة التقييم
+let currentReviewDoctor = null;
+
+window.openReviewsPage = async function(doctorId, doctorName) {
+    currentReviewDoctor = { id: doctorId, name: doctorName };
+    document.getElementById('reviewsPageDoctorName').textContent = (currentLang === 'ar' ? 'تقييمات د. ' : 'Reviews for Dr. ') + doctorName;
+    document.getElementById('reviewPageDoctorId').value = doctorId;
+    
+    // التحقق من حالة الدخول
+    const user = await getCurrentUser();
+    if (user) {
+        document.getElementById('addReviewSectionPage').classList.remove('hidden');
+        document.getElementById('loginToReviewMsgPage').classList.add('hidden');
+    } else {
+        document.getElementById('addReviewSectionPage').classList.add('hidden');
+        document.getElementById('loginToReviewMsgPage').classList.remove('hidden');
+    }
+
+    // الانتقال للصفحة
+    router('reviews');
+    loadReviewsPageData(doctorId);
+}
+
+// زر العودة من صفحة التقييمات
+document.getElementById('backToProfileFromReviewsBtn').onclick = () => {
+    if (currentReviewDoctor) {
+        // العودة لملف الطبيب بنفس التفاصيل
+        const targetDoc = allDoctors.find(d => d.id === currentReviewDoctor.id);
+        if (targetDoc) {
+            openDoctorProfileModal(targetDoc, currentReviewDoctor.name);
+        } else {
+            router('home');
+        }
+    } else {
+        router('home');
+    }
+};
+
+// دالة جلب وعرض التقييمات مع الإحصائيات
+async function loadReviewsPageData(doctorId) {
+    const list = document.getElementById('reviewsListPage');
+    list.innerHTML = `<div class='p-4 text-center text-gray'>${currentLang === 'ar' ? 'جاري تحميل التقييمات...' : 'Loading reviews...'}</div>`;
+
+    try {
+        const currentUser = await getCurrentUser();
+        
+        // جلب التقييمات
+        const { data: reviews, error } = await supabaseClient
+            .from('reviews')
+            .select('*')
+            .eq('doctor_id', doctorId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // حساب الإحصائيات
+        const total = reviews ? reviews.length : 0;
+        let sum = 0;
+        const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+
+        if (total > 0) {
+            reviews.forEach(r => {
+                if(r.status !== 'deleted') {
+                    sum += r.rating;
+                    if(counts[r.rating] !== undefined) counts[r.rating]++;
+                }
+            });
+        }
+
+        const average = total > 0 ? (sum / total).toFixed(1) : '0.0';
+        
+        // تحديث واجهة الإحصائيات
+        document.getElementById('averageRatingNumber').textContent = average;
+        document.getElementById('totalReviewsCount').textContent = currentLang === 'ar' ? `بناءً على ${total} تقييم` : `Based on ${total} reviews`;
+        
+        // رسم النجوم للمتوسط
+        const avgRounded = Math.round(average);
+        document.getElementById('averageRatingStars').innerHTML = 
+            '<span style="color:#f59e0b">' + '★'.repeat(avgRounded) + '</span>' +
+            '<span style="color:var(--border)">' + '★'.repeat(5 - avgRounded) + '</span>';
+
+        // رسم أشرطة التقدم
+        let barsHtml = '';
+        for (let i = 5; i >= 1; i--) {
+            const percentage = total > 0 ? ((counts[i] / total) * 100).toFixed(0) : 0;
+            barsHtml += `
+                <div class="rating-bar-row">
+                    <span style="width: 15px;">${i}</span>
+                    <span style="color: #f59e0b; font-size: 1rem; line-height: 1;">★</span>
+                    <div class="rating-bar-track">
+                        <div class="rating-bar-fill" style="width: ${percentage}%;"></div>
+                    </div>
+                    <span style="width: 35px; text-align: left;" dir="ltr">${percentage}%</span>
+                </div>
+            `;
+        }
+        document.getElementById('ratingBarsContainer').innerHTML = barsHtml;
+
+        // رسم التقييمات
+        if (total === 0) {
+            list.innerHTML = `
+                <div class="empty-state" style="background: var(--surface); border-radius: 16px; border: 1px dashed var(--border);">
+                    <div class="empty-state-icon" style="color: #f59e0b;">⭐</div>
+                    <div style="font-weight: bold; color: var(--text);">${currentLang === 'ar' ? 'لا توجد تقييمات بعد' : 'No reviews yet'}</div>
+                    <p class="text-sm text-gray" style="margin-top: 0.5rem;">${currentLang === 'ar' ? 'كن أول من يشارك تجربته مع هذا الطبيب!' : 'Be the first to share your experience!'}</p>
+                </div>`;
+            return;
+        }
+
+        list.innerHTML = reviews.map(r => {
+            const isPending = r.status === 'pending';
+            const pendingBadge = isPending 
+                ? `<span style="font-size: 0.7rem; background: #f59e0b; color: white; padding: 2px 8px; border-radius: 12px; margin-inline-start: 8px;">${currentLang === 'ar' ? 'قيد المراجعة' : 'Pending'}</span>` 
+                : '';
+            
+            const authorName = escapeHtml(r.patient_name || (currentLang === 'ar' ? 'مراجع' : 'Reviewer'));
+            const initial = authorName.charAt(0).toUpperCase();
+
+            return `
+            <div class="review-card" id="review-card-${r.id}" style="${isPending ? 'opacity: 0.7;' : ''}">
+                <div class="review-card-header">
+                    <div class="review-user-info">
+                        <div class="review-avatar">${initial}</div>
+                        <div>
+                            <div style="font-weight: 800; color: var(--text);">${authorName} ${pendingBadge}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);" dir="ltr">${new Date(r.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-DZ' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+                        </div>
+                    </div>
+                    ${currentUser && r.user_id === currentUser.UserID ? `
+                    <button onclick="deleteReview('${r.id}', '${doctorId}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: all 0.2s;">
+                        ${currentLang === 'ar' ? 'حذف' : 'Delete'}
+                    </button>
+                    ` : ''}
+                </div>
+                <div class="star-display" style="margin-bottom: 0.5rem;">
+                    ${'★'.repeat(r.rating)}<span style="color:var(--border)">${'★'.repeat(5 - r.rating)}</span>
+                </div>
+                <div class="review-content-text">
+                    ${escapeHtml(r.comment).replace(/\n/g, '<br>')}
+                </div>
+            </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error('❌ خطأ في جلب التقييمات:', err);
+        list.innerHTML = `<div class='p-4 text-center text-danger'>${currentLang === 'ar' ? 'حدث خطأ أثناء تحميل التقييمات.' : 'Error loading reviews.'}</div>`;
+    }
+}
+
+// تأثير النجوم في صفحة التقييم
+let currentReviewRatingPage = 0;
+document.querySelectorAll('#starRatingInputPage .star').forEach(star => {
+    star.addEventListener('mouseover', function() {
+        let val = parseInt(this.getAttribute('data-val'));
+        document.querySelectorAll('#starRatingInputPage .star').forEach(s => {
+            s.style.color = parseInt(s.getAttribute('data-val')) <= val ? '#f59e0b' : 'var(--border)';
+        });
+    });
+    star.addEventListener('mouseout', function() {
+        document.querySelectorAll('#starRatingInputPage .star').forEach(s => {
+            s.style.color = parseInt(s.getAttribute('data-val')) <= currentReviewRatingPage ? '#f59e0b' : 'var(--border)';
+        });
+    });
+    star.addEventListener('click', function() {
+        currentReviewRatingPage = parseInt(this.getAttribute('data-val'));
+        document.getElementById('ratingValuePage').value = currentReviewRatingPage;
+    });
+});
+
+// معالجة إرسال التقييم من الصفحة الجديدة
+document.getElementById('reviewFormPage').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitReviewBtnPage');
+    const doctorId = document.getElementById('reviewPageDoctorId').value;
+    const rating = document.getElementById('ratingValuePage').value;
+    const comment = document.getElementById('reviewCommentPage').value;
+
+    if (!rating || rating === "0") {
+        showToast(currentLang === 'ar' ? 'الرجاء اختيار التقييم بالنجوم' : 'Please select a star rating', 'error');
+        return;
+    }
+
+    setLoading(btn, true);
+
+    try {
+        const user = await getCurrentUser();
+        if (!user) throw new Error('يرجى تسجيل الدخول');
+
+        const { error } = await supabaseClient
+            .from('reviews')
+            .insert([{
+                doctor_id: doctorId,
+                user_id: user.UserID,
+                patient_name: user.Name || user.Email.split('@')[0],
+                rating: parseInt(rating),
+                comment: comment.trim(),
+                status: 'pending' 
+            }]);
+
+        if (error) {
+            if (error.code === '23505') throw new Error(currentLang === 'ar' ? 'لقد قمت بتقييم هذا الطبيب مسبقاً!' : 'You already reviewed this doctor!');
+            throw error;
+        }
+
+        showToast(currentLang === 'ar' ? 'تم إرسال تقييمك للمراجعة بنجاح.' : 'Review submitted for moderation.', 'success');
+        e.target.reset();
+        currentReviewRatingPage = 0;
+        document.getElementById('ratingValuePage').value = '';
+        document.querySelectorAll('#starRatingInputPage .star').forEach(s => s.style.color = 'var(--border)');
+        loadReviewsPageData(doctorId); // إعادة التحميل لظهور التقييم كـ Pending
+
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        setLoading(btn, false, currentLang === 'ar' ? 'نشر التقييم' : 'Submit Review');
+    }
+});
+
+// تحديث الدالة deleteReview لتحديث صفحة التقييم الجديدة بدلاً من الدالة القديمة
+window.deleteReview = async function(reviewId, doctorId) {
+    if (!confirm(currentLang === 'ar' ? 'هل أنت متأكد من حذف تقييمك؟' : 'Are you sure?')) return;
+    try {
+        document.getElementById('review-card-' + reviewId).style.opacity = '0.5';
+        const { error } = await supabaseClient.from('reviews').update({ status: 'deleted' }).eq('id', reviewId);
+        if (error) throw error;
+        showToast(currentLang === 'ar' ? 'تم الحذف بنجاح' : 'Deleted successfully', 'success');
+        loadReviewsPageData(doctorId);
+    } catch (err) {
+        showToast(err.message, 'error');
+        document.getElementById('review-card-' + reviewId).style.opacity = '1';
+    }
+};
