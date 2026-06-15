@@ -637,11 +637,3 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
         margin-top: 3rem;
     }
 }
-
-/* تعديل بسيط لشبكة الصور لتناسب المساحة الجديدة */
-.pitch-visual-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
