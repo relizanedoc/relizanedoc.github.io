@@ -106,12 +106,12 @@
 
       <div class='form-group hidden' id='nameFieldGroup'>
         <label data-i18n='fullName'>Full Name</label>
-<input id='authName' placeholder='Your full name' type='text'>
+<input id='authName' data-i18n-placeholder='fullNamePlaceholder' placeholder='Your full name' type='text'>
       </div>
 
       <div class='form-group'>
         <label data-i18n='email'>Email *</label>
-        <input id='authEmail' placeholder='your@email.com' required='required' type='email'>
+<input id='authEmail' data-i18n-placeholder='emailPlaceholder' placeholder='your@email.com' required='required' type='email'>
       </div>
 
       <div class='form-group'>
@@ -119,7 +119,7 @@
           <label data-i18n='password' style="margin: 0;">Password *</label>
 <a href="#" onclick="handleForgotPassword(event)" id="forgotPasswordLink" data-i18n="forgotPassword" style="color: var(--primary); font-size: 0.85rem; text-decoration: none; font-weight: 600; transition: opacity 0.3s;">هل نسيت كلمة المرور؟</a>
         </div>
-<input id='authPassword' autocomplete='current-password' minlength='6' placeholder='••••••••' required='required' type='password'>
+<input id='authPassword' data-i18n-placeholder='passwordPlaceholder' autocomplete='current-password' minlength='6' placeholder='••••••••' required='required' type='password'>
       </div>
 
       <button class='btn btn-primary btn-block' id='authSubmitBtn' type='button'>
@@ -284,15 +284,13 @@
     <div class='form-group'>
 
       <label data-i18n='firstName'>First Name *</label>
-
-<input name='FirstName' placeholder='e.g. Amine' required='required' type='text'>
+<input name='FirstName' data-i18n-placeholder='firstNamePlaceholder' placeholder='e.g. Amine' required='required' type='text'>
     </div>
 
     <div class='form-group'>
 
       <label data-i18n='lastName'>Last Name *</label>
-
-<input name='LastName' placeholder='e.g. Benali' required='required' type='text'>
+<input name='LastName' data-i18n-placeholder='lastNamePlaceholder' placeholder='e.g. Benali' required='required' type='text'>
     </div>
 
   </div>
@@ -300,15 +298,13 @@
   <div class='form-group'>
 
     <label data-i18n='phone'>Phone Number *</label>
-
-<input name='Phone' placeholder='e.g. 0550 123 456' required='required' type='tel'>
+<input name='Phone' data-i18n-placeholder='phonePlaceholder' placeholder='e.g. 0550 123 456' required='required' type='tel'>
   </div>
 
   <div class='form-group'>
 
     <label data-i18n='exactLocation'>Exact Location / Address *</label>
-
-  <input name='ExactLocation' placeholder='Street, Building, Floor, Landmark...' required='required' type='text'>
+<input name='ExactLocation' data-i18n-placeholder='locationPlaceholder' placeholder='Street, Building, Floor, Landmark...' required='required' type='text'>
   </div>
 
   <div class='grid grid-1 grid-2'>
@@ -493,8 +489,7 @@
 
     <label data-i18n='extraInfo'>Extra Information</label>
 
-    <textarea name='ExtraInfo' placeholder='Working hours, consultation fees, languages spoken, diplomas...' rows='3'></textarea>
-
+<textarea name='ExtraInfo' data-i18n-placeholder='extraInfoPlaceholder' placeholder='Working hours, consultation fees, languages spoken, diplomas...' rows='3'></textarea>
   </div>
 
   <button class='btn btn-primary btn-block' id='addDoctorBtn' type='submit'>Register Doctor</button>
@@ -520,15 +515,13 @@
           <div class='form-group'>
 
             <label data-i18n='bookingIdLabel'>رقم الحجز (مثال: APT-20240526-143022)</label>
-
-<input id='trackBookingId' placeholder='APT-000000000-000000' required='required' type='text'>
+<input id='trackBookingId' data-i18n-placeholder='trackBookingIdPlaceholder' placeholder='ABcEfgh' required='required' type='text'>
           </div>
 
           <div class='form-group'>
 
             <label data-i18n='trackPhoneLabel'>رقم الهاتف المرفق بالحجز</label>
-
-<input dir='ltr' id='trackPhone' placeholder='07/ 05 / 06' required='required' type='tel'>
+<input dir='ltr' id='trackPhone' data-i18n-placeholder='trackPhonePlaceholder' placeholder='0770/ 0550 / 0660' required='required' type='tel'>
           </div>
 
           <button class='btn btn-primary btn-block' data-i18n='trackSearchBtn' id='trackBtn' type='submit'>بحث عن الحجز</button>
@@ -559,22 +552,19 @@
           <div class='form-group'>
 
             <label data-i18n='patientName'>Patient Full Name *</label>
-
-<input name='PatientName' placeholder='Full name' required='required' type='text'>
+<input name='PatientName' data-i18n-placeholder='patientNamePlaceholder' placeholder='Full name' required='required' type='text'>
           </div>
 
           <div class='form-group'>
 
             <label data-i18n='patientPhone'>Patient Phone *</label>
-
-<input name='PatientPhone' placeholder='Contact number' required='required' type='tel'>
+<input name='PatientPhone' data-i18n-placeholder='patientPhonePlaceholder' placeholder='Contact number' required='required' type='tel'>
           </div>
 
           <div class='form-group'>
 
             <label>البريد الإلكتروني (اختياري للإشعارات)</label>
-
-<input name='PatientEmail' placeholder='your@email.com' type='email'>
+<input name='PatientEmail' data-i18n-placeholder='emailPlaceholder' placeholder='your@email.com' type='email'>
           </div>
 
           <div class='grid grid-1 grid-2'>
@@ -618,13 +608,12 @@
 <form id='dashboardLoginForm'>
   <div class='form-group'>
     <label data-i18n='loginPhone'>Phone Number</label>
-<input id='loginPhone' autocomplete='tel' placeholder='Your registered phone' required='required' type='tel'>
+<input id='loginPhone' data-i18n-placeholder='loginPhonePlaceholder' autocomplete='tel' placeholder='Your registered phone' required='required' type='tel'>
   </div>
   <div class='form-group'>
 
     <label data-i18n='password'>Password *</label>
-
-<input id='loginDoctorPassword' autocomplete='current-password' placeholder='••••••••' required='required' type='password'>
+<input id='loginDoctorPassword' data-i18n-placeholder='passwordPlaceholder' autocomplete='current-password' placeholder='••••••••' required='required' type='password'>
   </div>
 
   <button class='btn btn-primary btn-block' id='dashboardLoginBtn' type='submit'>View My Appointments</button>
@@ -711,8 +700,8 @@
         <div class="form-group" style="margin-top: 1rem;">
             <label style="font-weight: bold; color: var(--primary-dark);">الشهادات والتخصص الدقيق</label>
             <p class="text-sm text-gray mb-2">اكتب شهاداتك أو تخصصاتك مفصولة بفاصلة (مثال: دبلوم طب أطفال، خريج جامعة الجزائر)</p>
-            <textarea id="dash_certificates" rows="2" class="input" placeholder="اكتب شهاداتك هنا..."></textarea>
-        </div>
+<textarea id="dash_certificates" data-i18n-placeholder='certificatesPh' rows="2" class="input" placeholder="اكتب شهاداتك هنا..."></textarea>
+                  </div>
 
         <div class="form-group" style="margin-top: 1rem; padding: 1.5rem; border: 1px dashed var(--primary); border-radius: 12px; background: #f8fafc; text-align: center;">
             <label style="font-weight: bold; color: var(--primary-dark); display: block;">صور العيادة (لإعطاء ثقة للمرضى)</label>
@@ -970,7 +959,7 @@
 
     <div class='form-group' style='text-align: right; margin-bottom: 1rem;'>
       <div style="position: relative; width: 100%; display: block;">
-        <input id="newPasswordInput" placeholder="••••••••" type="password" style="width: 100%; padding-left: 50px !important; box-sizing: border-box; display: block; margin: 0;">
+<input id="newPasswordInput" data-i18n-placeholder='passwordPlaceholder' placeholder="••••••••" type="password" style="width: 100%; padding-left: 50px !important; box-sizing: border-box; display: block; margin: 0;">
         <span onclick="togglePasswordVisibility('newPasswordInput', 'eyeIconModal')" style="position: absolute; left: 5px; top: 0; height: 100%; width: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; z-index: 9999;">
           <svg id="eyeIconModal" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
@@ -994,7 +983,7 @@
     <p data-i18n="forgotPasswordDesc" style='color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;'>أدخل بريدك الإلكتروني المسجل أدناه وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.</p>
 
     <div class='form-group' style='text-align: right;'>
-      <input id='resetEmailInput' placeholder='your@email.com' type='email' style='width: 100%; text-align: left; direction: ltr;'>
+<input id='resetEmailInput' data-i18n-placeholder='emailPlaceholder' placeholder='your@email.com' type='email' style='width: 100%; text-align: left; direction: ltr;'>
     </div>
 
     <div class='dialog-actions' style='margin-top: 1.5rem;'>
