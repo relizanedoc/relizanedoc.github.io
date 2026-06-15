@@ -43,7 +43,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     // 🔴 الحل السحري: لا تقم بتشغيل الراوتر إذا كان الرابط يحتوي على توكن المصادقة!
     if (!hash.includes('access_token') && !hash.includes('error=')) {
         const cleanHash = hash.replace('#', '');
-const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard', 'doctor-profile'].includes(cleanHash) ? cleanHash : 'home';
+const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard', 'doctor-profile', 'reviews'].includes(cleanHash) ? cleanHash : 'home';
       router(startView, false);
     }
     
@@ -465,8 +465,8 @@ function updateUserUI(user) {
   }
 }
     function getCurrentVisibleView() {
-      for (const view of ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'doctor-profile']) { // 👈 تم إضافة القوس هنا
-        const el = document.getElementById('view-' + view);
+for (const view of ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'doctor-profile', 'reviews']) {
+              const el = document.getElementById('view-' + view);
         if (el && !el.classList.contains('hidden')) return view;
       }
       return 'home';
@@ -2517,8 +2517,7 @@ document.addEventListener('submit', async function(e) {
 
       const hash = window.location.hash.replace('#', '');
 
-      const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(hash) ? hash : 'home';
-
+const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard', 'doctor-profile', 'reviews'].includes(hash) ? hash : 'home';
       // قراءة اللغة المحفوظة، وإذا لم تكن موجودة نجعل العربية هي الافتراضية
       const savedLang = localStorage.getItem('appLanguage') || 'ar';
       setLang(savedLang);
