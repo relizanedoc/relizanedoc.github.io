@@ -3781,33 +3781,41 @@ document.getElementById('backToProfileFromReviewsBtn').onclick = () => {
     }
 };
 
-// دالة جلب وعرض التقييمات مع الإحصائيات
+// متغيرات لتتبع حالة الـ Pagination
+let currentReviewPage = 0;
+const REVIEWS_PER_PAGE = 10;
+let activeDoctorIdForReviews = null;
+
+// دالة جلب الإحصائيات وأول دفعة من التقييمات
 async function loadReviewsPageData(doctorId) {
+    activeDoctorIdForReviews = doctorId;
+    currentReviewPage = 0; // تصفير العداد عند فتح طبيب جديد
+    
     const list = document.getElementById('reviewsListPage');
+    const loadMoreContainer = document.getElementById('loadMoreReviewsContainer');
+    
     list.innerHTML = `<div class='p-4 text-center text-gray'>${currentLang === 'ar' ? 'جاري تحميل التقييمات...' : 'Loading reviews...'}</div>`;
+    loadMoreContainer.classList.add('hidden');
 
     try {
-        const currentUser = await getCurrentUser();
-        
-        // جلب التقييمات
-        const { data: reviews, error } = await supabaseClient
+        // 1. الطلب الأول: جلب التقييمات الخفيفة لحساب الإحصائيات فقط (توفير للبيانات)
+        const { data: statsData, error: statsError } = await supabaseClient
             .from('reviews')
-            .select('*')
-            .eq('doctor_id', doctorId)
-            .order('created_at', { ascending: false });
+            .select('rating, status')
+            .eq('doctor_id', doctorId);
 
-        if (error) throw error;
+        if (statsError) throw statsError;
 
         // حساب الإحصائيات
-        const total = reviews ? reviews.length : 0;
+        const total = statsData ? statsData.length : 0;
         let sum = 0;
         const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
 
         if (total > 0) {
-            reviews.forEach(r => {
-                if(r.status !== 'deleted') {
+            statsData.forEach(r => {
+                if (r.status !== 'deleted') {
                     sum += r.rating;
-                    if(counts[r.rating] !== undefined) counts[r.rating]++;
+                    if (counts[r.rating] !== undefined) counts[r.rating]++;
                 }
             });
         }
@@ -3818,13 +3826,11 @@ async function loadReviewsPageData(doctorId) {
         document.getElementById('averageRatingNumber').textContent = average;
         document.getElementById('totalReviewsCount').textContent = currentLang === 'ar' ? `بناءً على ${total} تقييم` : `Based on ${total} reviews`;
         
-        // رسم النجوم للمتوسط
         const avgRounded = Math.round(average);
         document.getElementById('averageRatingStars').innerHTML = 
             '<span style="color:#f59e0b">' + '★'.repeat(avgRounded) + '</span>' +
             '<span style="color:var(--border)">' + '★'.repeat(5 - avgRounded) + '</span>';
 
-        // رسم أشرطة التقدم
         let barsHtml = '';
         for (let i = 5; i >= 1; i--) {
             const percentage = total > 0 ? ((counts[i] / total) * 100).toFixed(0) : 0;
@@ -3841,7 +3847,9 @@ async function loadReviewsPageData(doctorId) {
         }
         document.getElementById('ratingBarsContainer').innerHTML = barsHtml;
 
-        // رسم التقييمات
+        // تفريغ القائمة استعداداً لجلب الدفعة الأولى
+        list.innerHTML = '';
+
         if (total === 0) {
             list.innerHTML = `
                 <div class="empty-state" style="background: var(--surface); border-radius: 16px; border: 1px dashed var(--border);">
@@ -3852,7 +3860,45 @@ async function loadReviewsPageData(doctorId) {
             return;
         }
 
-        list.innerHTML = reviews.map(r => {
+        // 2. جلب الدفعة الأولى من التفاصيل
+        await fetchMoreReviews();
+
+    } catch (err) {
+        console.error('❌ خطأ في الإحصائيات:', err);
+        list.innerHTML = `<div class='p-4 text-center text-danger'>${currentLang === 'ar' ? 'حدث خطأ أثناء تحميل التقييمات.' : 'Error loading reviews.'}</div>`;
+    }
+}
+
+// دالة جلب الدفعات (تُستدعى عند فتح الصفحة وعند الضغط على عرض المزيد)
+async function fetchMoreReviews() {
+    const list = document.getElementById('reviewsListPage');
+    const loadMoreContainer = document.getElementById('loadMoreReviewsContainer');
+    const btn = document.getElementById('loadMoreReviewsBtn');
+    
+    // تعطيل الزر مؤقتاً أثناء التحميل
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = currentLang === 'ar' ? 'جاري التحميل...' : 'Loading...';
+    }
+
+    try {
+        const currentUser = await getCurrentUser();
+        
+        // حساب النطاق (Range) المطلوب جلبه من Supabase
+        const from = currentReviewPage * REVIEWS_PER_PAGE;
+        const to = from + REVIEWS_PER_PAGE - 1;
+
+        const { data: reviewsChunk, error } = await supabaseClient
+            .from('reviews')
+            .select('*')
+            .eq('doctor_id', activeDoctorIdForReviews)
+            .order('created_at', { ascending: false })
+            .range(from, to);
+
+        if (error) throw error;
+
+        // معالجة البيانات وتحويلها إلى HTML
+        const chunkHtml = reviewsChunk.map(r => {
             const isPending = r.status === 'pending';
             const pendingBadge = isPending 
                 ? `<span style="font-size: 0.7rem; background: #f59e0b; color: white; padding: 2px 8px; border-radius: 12px; margin-inline-start: 8px;">${currentLang === 'ar' ? 'قيد المراجعة' : 'Pending'}</span>` 
@@ -3872,7 +3918,7 @@ async function loadReviewsPageData(doctorId) {
                         </div>
                     </div>
                     ${currentUser && r.user_id === currentUser.UserID ? `
-                    <button onclick="deleteReview('${r.id}', '${doctorId}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: all 0.2s;">
+                    <button onclick="deleteReview('${r.id}', '${activeDoctorIdForReviews}')" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: all 0.2s;">
                         ${currentLang === 'ar' ? 'حذف' : 'Delete'}
                     </button>
                     ` : ''}
@@ -3887,9 +3933,28 @@ async function loadReviewsPageData(doctorId) {
             `;
         }).join('');
 
+        // إضافة الدفعة الجديدة إلى القائمة
+        list.insertAdjacentHTML('beforeend', chunkHtml);
+
+        // التحكم في زر "عرض المزيد"
+        if (reviewsChunk.length === REVIEWS_PER_PAGE) {
+            // هناك المزيد من التقييمات المحتملة، نعرض الزر ونزيد العداد
+            loadMoreContainer.classList.remove('hidden');
+            currentReviewPage++;
+        } else {
+            // وصلنا لنهاية التقييمات، نخفي الزر
+            loadMoreContainer.classList.add('hidden');
+        }
+
     } catch (err) {
-        console.error('❌ خطأ في جلب التقييمات:', err);
-        list.innerHTML = `<div class='p-4 text-center text-danger'>${currentLang === 'ar' ? 'حدث خطأ أثناء تحميل التقييمات.' : 'Error loading reviews.'}</div>`;
+        console.error('❌ خطأ في جلب تفاصيل التقييمات:', err);
+        showToast(currentLang === 'ar' ? 'حدث خطأ في تحميل التقييمات.' : 'Error loading more reviews.', 'error');
+    } finally {
+        // إعادة تفعيل الزر
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = currentLang === 'ar' ? 'عرض المزيد ↓' : 'Load More ↓';
+        }
     }
 }
 
