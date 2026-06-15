@@ -169,29 +169,35 @@
           </div>
 
         </div>
+<div class="card" style="margin-top: 2.5rem; padding: 1rem 1.5rem;">
+  
+  <div class="accordion-header open" onclick="document.getElementById('userBookingsContent').classList.toggle('open'); this.classList.toggle('open');" style="cursor: pointer;">
+    
+    <div style="display:flex; align-items:center; gap:0.75rem;">
+      <div style="background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;">
+        <svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20"><rect height="18" rx="2" ry="2" width="18" x="3" y="4"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+      </div>
+      <h3 class="text-lg font-bold" data-i18n="myRecentBookings" style="font-size: 1.1rem; margin:0; color: var(--text);">حجوزاتي الأخيرة</h3>
+    </div>
+    
+    <div style="display:flex; align-items:center; gap:1rem;">
+      <button class="btn" onclick="event.stopPropagation(); router('track')" style="background: transparent; border: 1px solid var(--border); color: var(--primary); padding: 0.3rem 0.6rem; font-size: 0.8rem; border-radius: 6px;">
+        <svg fill="none" height="14" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.3rem; vertical-align: middle;" viewBox="0 0 24 24" width="14"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+        <span data-i18n="trackAnotherBooking">تتبع حجز آخر</span>
+      </button>
+      
+      <svg class="accordion-icon" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" width="24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    
+  </div>
 
+  <div class="accordion-content open" id="userBookingsContent">
+    <div style="padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;">
+      <div id="userBookingsContainer"></div>
+    </div>
+  </div>
 
-
-        <div style='margin-top: 2.5rem;'>
-
-          <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;'>
-
-            <h3 class='text-lg font-bold' data-i18n='myRecentBookings' style='color: var(--text);'>حجوزاتي الأخيرة</h3>
-
-            <button class='btn' onclick='router("track")' style='background: transparent; border: 1px solid var(--border); color: var(--primary); padding: 0.4rem 0.8rem; font-size: 0.875rem;'>
-
-              <svg fill='none' height='16' stroke='currentColor' stroke-width='2' style='margin-inline-end: 0.4rem; vertical-align: middle;' viewBox='0 0 24 24' width='16'><circle cx='11' cy='11' r='8'/><line x1='21' x2='16.65' y1='21' y2='16.65'/></svg>
-
-              <span data-i18n='trackAnotherBooking'>تتبع حجز آخر</span>
-
-            </button>
-
-          </div>
-
-          <div id='userBookingsContainer'></div>
-
-        </div>
-
+</div>
       </div>
 
     </div>
