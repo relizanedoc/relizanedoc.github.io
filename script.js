@@ -7,7 +7,7 @@ const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
 // ✅ الاستماع لتغيير حالة المصادقة (Supabase)
 let isAuthInitialized = false;
-
+الغ
 supabaseClient.auth.onAuthStateChange((event, session) => {
   console.log('🔄 حدث المصادقة:', event);
 
@@ -282,7 +282,7 @@ feature3Title: 'بناء ثقة المرضى',
 feature3Desc: 'نظام تقييمات شفاف يزيد من مصداقية عيادتك ويجلب مرضى جدد.',
 contactSalesBtn: 'تواصل معنا للاشتراك',
        changePasswordDesc: 'يرجى إدخال كلمة المرور الجديدة (يجب أن تتكون من 6 أحرف على الأقل).',
-        municipalityPlaceholder: 'مثال: غليزان', extraInfo: 'معلومات إضافية', extraInfoPlaceholder: 'أوقات العمل، أجرة الكشف، اللغات المحكية، الشهادات...', registerBtn: 'تسجيل الطبيب',
+        municipalityPlaceholder: 'مثال: غليزان', extraInfo: 'معلومات إضافية', extraInfoPlaceholder: 'أوقات العمل، أجرة الكشف، الشهادات...', registerBtn: 'تسجيل الطبيب',
         backToDirectory: '→ العودة للدليل', backToHome: '→ العودة للدليل', bookAppointment: 'حجز موعد', patientName: 'اسم المريض الكامل *', patientNamePlaceholder: 'الاسم الكامل',
         patientPhone: 'هاتف المريض *', patientPhonePlaceholder: 'رقم الاتصال', appointmentDate: 'تاريخ الموعد *', appointmentTime: 'الوقت *', confirmBooking: 'تأكيد الحجز',
         confirmDialogTitle: 'تأكيد الموعد', confirmDialogMsg: 'هل أنت متأكد من حجز هذا الموعد؟', cancel: 'إلغاء', doctorLogin: 'تسجيل دخول الطبيب', patientLabel: 'المريض: ',
