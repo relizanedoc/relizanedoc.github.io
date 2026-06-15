@@ -1809,8 +1809,14 @@ async function handleDashboardLogin(e) {
         }
 
         // استخراج بيانات الطبيب
-        const doctor = responseData.doctor;
-        
+        const { data: fullDoctorData } = await supabaseClient
+            .from('doctors')
+            .select('*')
+            .eq('id', responseData.doctor.id)
+            .single();
+
+        // دمج البيانات الكاملة مع رمز الجلسة الآمن (Session Token)
+        const doctor = fullDoctorData ? { ...fullDoctorData, session_token: responseData.doctor.session_token } : responseData.doctor;        
         // 2. جلب المواعيد الخاصة بهذا الطبيب
 // 2. جلب المواعيد الخاصة بهذا الطبيب باستخدام الدالة الآمنة
         // 2. جلب المواعيد الخاصة بهذا الطبيب باستخدام الدالة الآمنة
