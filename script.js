@@ -3703,3 +3703,45 @@ window.initClinicSlider = function(sliderId, docId, imagesCount) {
         }
     }, 3000);
 };
+/* منطق تشغيل السلايدر التسويقي */
+let pitchSlideIndex = 1;
+let pitchSlideTimer;
+
+function showPitchSlides(n) {
+    let slides = document.getElementsByClassName("pitch-slide");
+    let dots = document.getElementsByClassName("dot");
+    
+    if (!slides || slides.length === 0) return;
+
+    if (n > slides.length) { pitchSlideIndex = 1 }
+    if (n < 1) { pitchSlideIndex = slides.length }
+    
+    for (let i = 0; i < slides.length; i++) {
+        slides[i].classList.remove("active");
+    }
+    for (let i = 0; i < dots.length; i++) {
+        dots[i].classList.remove("active");
+    }
+    
+    slides[pitchSlideIndex - 1].classList.add("active");
+    dots[pitchSlideIndex - 1].classList.add("active");
+}
+
+function currentSlide(n) {
+    clearTimeout(pitchSlideTimer);
+    showPitchSlides(pitchSlideIndex = n);
+    startPitchSlider();
+}
+
+function startPitchSlider() {
+    pitchSlideTimer = setTimeout(function() {
+        pitchSlideIndex++;
+        showPitchSlides(pitchSlideIndex);
+        startPitchSlider();
+    }, 4000);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    showPitchSlides(pitchSlideIndex);
+    startPitchSlider();
+});
