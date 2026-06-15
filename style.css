@@ -573,21 +573,18 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 
 .pitch-v-thumb {
     width: 100%;
-    height: 240px; /* يمكنك تعديل الارتفاع حسب رغبتك */
-    background: #ffffff; /* جعل الخلفية بيضاء لتندمج مع البطاقة */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem; /* إضافة مساحة داخلية لتبدو الصورة أنيقة */
-    box-sizing: border-box;
+    height: 240px; /* يمكنك تعديل هذا الرقم لزيادة أو تقليل ارتفاع الصورة */
+    margin: 0;
+    padding: 0; /* إزالة المساحات البيضاء تماماً */
     overflow: hidden;
+    background: transparent;
 }
 
 .pitch-v-thumb img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain; /* تضمن ظهور الصورة كاملة دون قص */
-    border-radius: 8px; /* اختياري: حواف دائرية ناعمة للصورة نفسها */
+    width: 100%;
+    height: 100%;
+    object-fit: fill; /* هذا الأمر يجبر الصورة على أخذ كامل أبعاد الإطار بدون ترك فراغ وبدون قص */
+    display: block;
 }
 
 .pitch-v-content {
