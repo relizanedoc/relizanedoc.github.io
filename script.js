@@ -3884,18 +3884,25 @@ async function fetchMoreReviews() {
     try {
         const currentUser = await getCurrentUser();
         
-        // حساب النطاق (Range) المطلوب جلبه من Supabase
+        // 💡 الحل هنا: نطلب جلب 11 عنصر (REVIEWS_PER_PAGE + 1) لمعرفة ما إذا كان هناك المزيد فعلاً
         const from = currentReviewPage * REVIEWS_PER_PAGE;
-        const to = from + REVIEWS_PER_PAGE - 1;
+        const to = from + REVIEWS_PER_PAGE; 
 
-        const { data: reviewsChunk, error } = await supabaseClient
+        const { data: fetchedData, error } = await supabaseClient
             .from('reviews')
             .select('*')
             .eq('doctor_id', activeDoctorIdForReviews)
+            .neq('status', 'deleted') // 🔥 إصلاح هام: استبعاد التقييمات المحذوفة كي لا تشغل مساحة فارغة
             .order('created_at', { ascending: false })
             .range(from, to);
 
         if (error) throw error;
+
+        // التحقق: هل يوجد فعلاً عناصر إضافية للصفحة القادمة؟ (أي هل جلبنا أكثر من 10)
+        const hasMore = fetchedData.length > REVIEWS_PER_PAGE;
+        
+        // أخذ الـ 10 عناصر الخاصة بالصفحة الحالية فقط لعرضها
+        const reviewsChunk = hasMore ? fetchedData.slice(0, REVIEWS_PER_PAGE) : fetchedData;
 
         // معالجة البيانات وتحويلها إلى HTML
         const chunkHtml = reviewsChunk.map(r => {
@@ -3936,14 +3943,12 @@ async function fetchMoreReviews() {
         // إضافة الدفعة الجديدة إلى القائمة
         list.insertAdjacentHTML('beforeend', chunkHtml);
 
-        // التحكم في زر "عرض المزيد"
-        if (reviewsChunk.length === REVIEWS_PER_PAGE) {
-            // هناك المزيد من التقييمات المحتملة، نعرض الزر ونزيد العداد
+        // التحكم الذكي في زر "عرض المزيد"
+        if (hasMore) {
             loadMoreContainer.classList.remove('hidden');
-            currentReviewPage++;
+            currentReviewPage++; // نزيد رقم الصفحة للدفعة القادمة
         } else {
-            // وصلنا لنهاية التقييمات، نخفي الزر
-            loadMoreContainer.classList.add('hidden');
+            loadMoreContainer.classList.add('hidden'); // إخفاء الزر نهائياً
         }
 
     } catch (err) {
