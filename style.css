@@ -581,7 +581,8 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 .pitch-v-thumb img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain; 
+    background-color: transparent; 
 }
 
 .pitch-v-content {
