@@ -137,7 +137,7 @@
     <div style='max-width: 800px; margin: 2rem auto;'>
       <h2 class='text-xl font-bold mb-6' data-i18n='memberDashboardTitle'>لوحة تحكم العضو</h2>
     <div class='card mb-4' style='padding: 1rem 1.5rem;'>
-        <div class='accordion-header open' onclick="document.getElementById('memberProfileContent').classList.toggle('open'); this.classList.toggle('open');" style="cursor: pointer;">
+        <div class='accordion-header' onclick="document.getElementById('memberProfileContent').classList.toggle('open'); this.classList.toggle('open');" style="cursor: pointer;">
           <div style='display:flex; align-items:center; gap:0.75rem;'>
             <div style='background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;'>
               <svg fill='none' height='20' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='20'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>
@@ -146,7 +146,7 @@
           </div>
           <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
         </div>
-        <div class='accordion-content open' id='memberProfileContent'>
+        <div class='accordion-content ' id='memberProfileContent'>
           <div style='padding-top: 1.5rem; border-top: 1px dashed var(--border); margin-top: 0.75rem; text-align: center;'>
             <div class='avatar' id='memberDashAvatar' style='margin: 0 auto 1rem auto; width: 88px; height: 88px; font-size: 2.5rem; background: var(--surface); color: var(--primary); border: 2px solid var(--border); box-shadow: var(--shadow-sm); z-index: 1;'>U</div>
             <h3 class='font-bold text-xl mb-1' id='memberDashName' style='color: var(--text);'>الاسم</h3>
