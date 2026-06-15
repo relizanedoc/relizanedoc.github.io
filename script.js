@@ -2396,30 +2396,33 @@ async function fetchReviewsPage(doctorId, pageIndex) {
         }
 
         const currentUser = await getCurrentUser();
-        const reviewsHtml = reviews.map(r => {
-            const isPending = r.status === 'pending';
-            const pendingBadge = isPending ? `<span style="font-size: 0.7rem; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; margin-inline-start: 8px;">قيد المراجعة</span>` : '';
-            const dateStr = new Date(r.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-DZ' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-            const avatarChar = (r.patient_name ? r.patient_name.charAt(0) : 'U').toUpperCase();
-            
-            return `
+       return `
             <div class="review-card" id="review-${r.id}" style="${isPending ? 'opacity: 0.8;' : ''}">
                 <div class="review-card-header">
                     <div class="review-user-info">
                         <div class="review-avatar">${avatarChar}</div>
                         <div>
-                            <div style="font-weight: 800; color: var(--text);">${escapeHtml(r.patient_name || 'مستخدم')} ${pendingBadge}</div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary);">${dateStr}</div>
+                            <div style="font-weight: 900; color: #0f172a; font-size: 1.05rem;">
+                                ${escapeHtml(r.patient_name || 'مستخدم')} ${pendingBadge}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                <div style="color: #f59e0b; font-size: 0.95rem; letter-spacing: 1px;">
+                                    ${'★'.repeat(r.rating)}<span style="color:#e2e8f0">${'★'.repeat(5 - r.rating)}</span>
+                                </div>
+                                <span style="color: #cbd5e1; font-size: 0.8rem;">•</span>
+                                <div style="font-size: 0.8rem; color: #64748b; font-weight: 500;">${dateStr}</div>
+                            </div>
                         </div>
                     </div>
                     ${currentUser && r.user_id === currentUser.UserID ? `
-                        <button onclick="deleteReview('${r.id}', '${doctorId}')" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:0.85rem;">حذف</button>
+                        <button onclick="deleteReview('${r.id}', '${doctorId}')" class="delete-review-btn" title="حذف التقييم">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
+                        </button>
                     ` : ''}
                 </div>
-                <div style="color: #f59e0b; font-size: 1.1rem; letter-spacing: 1px; margin-bottom: 0.5rem;">
-                    ${'★'.repeat(r.rating)}<span style="color:var(--border)">${'★'.repeat(5 - r.rating)}</span>
+                <div class="review-content-text">
+                    ${escapeHtml(r.comment)}
                 </div>
-                <div class="review-content-text">${escapeHtml(r.comment)}</div>
             </div>
             `;
         }).join('');
