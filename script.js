@@ -3264,7 +3264,7 @@ function createDoctorGitHubPageAsync(doctorData, doctorId) {
         console.error('❌ فشل استدعاء Edge Function:', err);
     });
 }
-// ✅ دالة تأكيد أو إلغاء الحجز من لوحة تحكم الطبيب (بنسخة آمنة تتخطى RLS)
+// ✅ دالة تأكيد أو إلغاء الحجز من لوحة تحكم الطبيب
 window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doctorName, appointmentDate) {
     const confirmMsg = newStatus === 'confirmed' 
         ? (currentLang === 'ar' ? 'هل أنت متأكد من تأكيد هذا الموعد؟' : 'Are you sure you want to confirm this appointment?')
@@ -3278,7 +3278,7 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
         if (!sessionStr) throw new Error('يرجى تسجيل الدخول مجدداً');
         const session = JSON.parse(sessionStr);
 
-        // ✅ 1. تحديث حالة الحجز باستخدام الدالة الآمنة (RPC) لتخطي حماية RLS
+        // 1. تحديث حالة الحجز باستخدام الدالة الآمنة (RPC) في قاعدة البيانات
         const { error } = await supabaseClient.rpc('update_booking_status_secure', {
             p_booking_id: bookingId,
             p_new_status: newStatus,
@@ -3288,10 +3288,30 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
 
         if (error) throw error;
 
-        // 2. إظهار رسالة نجاح
+        // 🔴 2. الجزء الجديد: إرسال إيميل التفعيل عبر الـ Edge Function إذا تم التأكيد
+        if (newStatus === 'confirmed' && userEmail) {
+            console.log('📨 جاري إرسال إيميل التأكيد للمريض عبر Mailtrap...');
+            
+            // ملاحظة: استبدل 'send-confirmation-email' باسم مجلد الدالة لديك في Supabase
+            supabaseClient.functions.invoke('send-confirmation-email', {
+                body: { 
+                    userEmail: userEmail, 
+                    doctorName: doctorName, 
+                    appointmentDate: appointmentDate 
+                }
+            }).then(({ data, error: funcError }) => {
+                if (funcError) {
+                    console.error('❌ خطأ أثناء استدعاء دالة إرسال الإيميل:', funcError);
+                } else {
+                    console.log('✅ تم إرسال إيميل التأكيد بنجاح عبر Mailtrap!', data);
+                }
+            });
+        }
+
+        // 3. إظهار رسالة نجاح في الواجهة للمستخدم
         showToast(currentLang === 'ar' ? 'تم تحديث حالة الحجز بنجاح' : 'Booking status updated successfully', 'success');
 
-        // 4. إعادة تحميل بيانات المواعيد لتحديث الواجهة فوراً باستخدام الدالة الآمنة
+        // 4. إعادة تحميل بيانات المواعيد لتحديث الجدول فوراً
         const { data: updatedAppointments, error: fetchError } = await supabaseClient
             .rpc('get_doctor_appointments_secure', {
                 p_doctor_id: session.doctorId,
