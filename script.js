@@ -1555,60 +1555,74 @@ async function submitBooking() {
 // 1. دالة جديدة مساعدة لرسم لوحة تحكم الطبيب (مع الترجمة الديناميكية)
 // ✅ رسم لوحة تحكم الطبيب (محدّثة لـ Supabase)
 function renderDashboardUI(data, doctorId) {
-  globalDashboardData = data;
-  globalDashboardDoctorId = doctorId;
+  globalDashboardData = data;
+  globalDashboardDoctorId = doctorId;
 
-  // تحديث العنوان
-  document.getElementById('dashboardSubtitle').textContent = 
-    data.doctorName ? (currentLang === 'ar' ? `د. ${data.doctorName}` : `Dr. ${data.doctorName}`) : doctorId;
+  // تحديث العنوان
+  document.getElementById('dashboardSubtitle').textContent = 
+    data.doctorName ? (currentLang === 'ar' ? `د. ${data.doctorName}` : `Dr. ${data.doctorName}`) : doctorId;
 
-  // بناء قائمة أيام العمل
-  const daysNames = currentLang === 'ar' 
-    ? ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
-    : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  // بناء قائمة أيام العمل
+  const daysNames = currentLang === 'ar' 
+    ? ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
+    : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  let savedDays = {};
-  try { savedDays = JSON.parse(data.workingDays || '{}'); } catch(e) {}
+  let savedDays = {};
+  try { savedDays = JSON.parse(data.workingDays || '{}'); } catch(e) {}
 
-  const container = document.getElementById('daysListContainer');
-  container.innerHTML = '';
-  for (let i = 0; i <= 6; i++) {
-    const dayData = savedDays[i.toString()] || { active: true, start: '08:00', end: '16:00' };
-    const row = document.createElement('div');
-    row.style.cssText = 'display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; background: var(--bg); padding: 0.75rem; border-radius: var(--radius); border: 1px solid var(--border);';
-    row.innerHTML = `
-      <div style="flex: 1; min-width: 100px; display: flex; align-items: center; gap: 0.5rem;">
-        <input type="checkbox" id="day_active_${i}" ${dayData.active ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
-        <label for="day_active_${i}" style="margin: 0; cursor: pointer; font-weight: bold;">${daysNames[i]}</label>
-      </div>
-      <div style="display: flex; gap: 0.5rem; align-items: center;">
-        <input type="time" id="day_start_${i}" value="${dayData.start}" style="padding: 0.4rem; max-width: 110px;">
-        <span>-</span>
-        <input type="time" id="day_end_${i}" value="${dayData.end}" style="padding: 0.4rem; max-width: 110px;">
-      </div>
-    `;
-    container.appendChild(row);
-  }
+  const container = document.getElementById('daysListContainer');
+  container.innerHTML = '';
+  for (let i = 0; i <= 6; i++) {
+    const dayData = savedDays[i.toString()] || { active: true, start: '08:00', end: '16:00' };
+    const row = document.createElement('div');
+    row.style.cssText = 'display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; background: var(--bg); padding: 0.75rem; border-radius: var(--radius); border: 1px solid var(--border);';
+    row.innerHTML = `
+      <div style="flex: 1; min-width: 100px; display: flex; align-items: center; gap: 0.5rem;">
+        <input type="checkbox" id="day_active_${i}" ${dayData.active ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+        <label for="day_active_${i}" style="margin: 0; cursor: pointer; font-weight: bold;">${daysNames[i]}</label>
+      </div>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="time" id="day_start_${i}" value="${dayData.start}" style="padding: 0.4rem; max-width: 110px;">
+        <span>-</span>
+        <input type="time" id="day_end_${i}" value="${dayData.end}" style="padding: 0.4rem; max-width: 110px;">
+      </div>
+    `;
+    container.appendChild(row);
+  }
 // استبدل كود تعبئة حقول ملف العيادة القديم بهذا:
 if (data.doctorDetails) {
     document.getElementById('dash_contact_email').value = data.doctorDetails.contact_email || '';
     document.getElementById('dash_whatsapp').value = data.doctorDetails.whatsapp_number || '';
     document.getElementById('dash_facebook').value = data.doctorDetails.facebook_link || '';
     document.getElementById('dash_map_link').value = data.doctorDetails.map_link || '';
+    
+    // 👇 هذا هو السطر الذي كان مفقوداً لإظهار الشهادات 👇
+    const certInput = document.getElementById('dash_certificates');
+    if (certInput) certInput.value = data.doctorDetails.certificates || '';
+    
+    // استرجاع صور العيادة
     window.dashboardCurrentImages = data.doctorDetails.clinic_images || [];
-    window.renderClinicImageThumbnails();
+    if (typeof window.renderClinicImageThumbnails === 'function') {
+        window.renderClinicImageThumbnails();
+    }
+    
     // رسم جدول الخدمات
     const srvContainer = document.getElementById('servicesContainer');
     if (srvContainer) srvContainer.innerHTML = ''; // مسح القديم
     
     if (data.doctorDetails.services && Array.isArray(data.doctorDetails.services) && data.doctorDetails.services.length > 0) {
         data.doctorDetails.services.forEach(s => {
-            addServiceCategory(s.category, s.items.join('، '));
+            if (typeof window.addServiceCategory === 'function') {
+                window.addServiceCategory(s.category, s.items.join('، '));
+            }
         });
     } else {
-        addServiceCategory(); // إضافة سطر فارغ افتراضي
+        if (typeof window.addServiceCategory === 'function') {
+            window.addServiceCategory(); // إضافة سطر فارغ افتراضي
+        }
     }
 }
+
   // تحديث زر إيقاف/تشغيل الحجوزات
   const isEnabled = !!data.bookingEnabled;
   const toggleSwitch = document.getElementById('bookingToggleSwitch');
