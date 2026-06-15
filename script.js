@@ -941,9 +941,9 @@ function openDoctorProfileModal(doc, doctorName) {
     <div style="position: sticky; bottom: 0; background: var(--surface); padding: 1rem; margin-top: 2rem; border-top: 1px solid var(--border); box-shadow: 0 -4px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 0.75rem; z-index: 100; border-radius: 20px 20px 0 0;">
       
       <div style="display: flex; gap: 0.5rem; width: 100%;">
-          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.9rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="openReviewsModal('${doc.id}', '${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')">
-            <span style="color: #f59e0b; font-size: 1.1rem;">★</span> ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
-          </button>
+          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.9rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="openFullReviewsPage('${doc.id}')">
+  <span style="color: #f59e0b; font-size: 1.2rem;">★</span> ${currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
+</button>
           
           <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.9rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="navigator.clipboard.writeText('${profileUrl}'); showToast(currentLang==='ar'?'تم نسخ الرابط بنجاح':'Copied', 'success');">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--primary)" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -2288,90 +2288,162 @@ async function router(viewName, pushHistory = true) {
         });
     });
 
-    // 2. دالة فتح نافذة التقييمات
-    window.openReviewsModal = async function(doctorId, doctorName) {
-        document.getElementById('reviewsDoctorName').textContent = (currentLang === 'ar' ? 'تقييمات د. ' : 'Reviews for Dr. ') + doctorName;
-        document.getElementById('reviewDoctorId').value = doctorId;
-        document.getElementById('reviewsModal').classList.remove('hidden');
+// ========================================================================
+// FULL REVIEWS PAGE SYSTEM (Pagination: 11 per page)
+// ========================================================================
 
-        // التحقق من تسجيل الدخول للسماح بالتقييم
-        const user = await getCurrentUser();
-        if (user) {
-            document.getElementById('addReviewSection').classList.remove('hidden');
-            document.getElementById('loginToReviewMsg').classList.add('hidden');
-        } else {
-            document.getElementById('addReviewSection').classList.add('hidden');
-            document.getElementById('loginToReviewMsg').classList.remove('hidden');
+let currentReviewPage = 0;
+const REVIEWS_PER_PAGE = 11;
+let currentReviewsDoctorId = null;
+
+window.openFullReviewsPage = async function(doctorId) {
+    currentReviewsDoctorId = doctorId;
+    currentReviewPage = 0; // تصفير الصفحة
+    document.getElementById('reviewDoctorId').value = doctorId; // لتجهيز فورم الإضافة
+    
+    // الانتقال للواجهة الجديدة
+    router('doctor-reviews');
+    
+    // فحص تسجيل الدخول لإظهار/إخفاء نموذج الإضافة
+    const user = await getCurrentUser();
+    if (user) {
+        document.getElementById('addReviewSectionFull').classList.remove('hidden');
+        document.getElementById('loginToReviewMsgFull').classList.add('hidden');
+    } else {
+        document.getElementById('addReviewSectionFull').classList.add('hidden');
+        document.getElementById('loginToReviewMsgFull').classList.remove('hidden');
+    }
+
+    const container = document.getElementById('fullReviewsContainer');
+    container.innerHTML = `<div class="text-center p-4 text-gray"><div class="spinner" style="margin: 0 auto 10px auto; border-top-color: var(--primary);"></div>جاري التحميل...</div>`;
+    document.getElementById('loadMoreReviewsBtn').classList.add('hidden');
+
+    await Promise.all([
+        fetchReviewStats(doctorId),
+        fetchReviewsPage(doctorId, currentReviewPage)
+    ]);
+};
+
+async function fetchReviewStats(doctorId) {
+    try {
+        const { data: stats, error } = await supabaseClient
+            .from('reviews')
+            .select('rating')
+            .eq('doctor_id', doctorId);
+
+        if (error) throw error;
+
+        const totalReviews = stats.length;
+        document.getElementById('fullTotalReviews').textContent = totalReviews;
+
+        if (totalReviews === 0) {
+            document.getElementById('fullAvgRating').textContent = "0.0";
+            document.getElementById('fullStarDisplay').innerHTML = '<span style="color:#e2e8f0;">★★★★★</span>';
+            document.getElementById('ratingBarsContainer').innerHTML = '';
+            return;
         }
 
-        loadReviews(doctorId);
-    }
+        const sum = stats.reduce((acc, curr) => acc + curr.rating, 0);
+        const avg = (sum / totalReviews).toFixed(1);
+        document.getElementById('fullAvgRating').textContent = avg;
 
-    // ✅ جلب التقييمات من Supabase مباشرة
-// ✅ جلب التقييمات من Supabase مباشرة
-async function loadReviews(doctorId) {
-  const list = document.getElementById('reviewsList');
-  list.innerHTML = `<div class='p-4 text-center text-gray text-sm'>${currentLang === 'ar' ? 'جاري تحميل التقييمات...' : 'Loading reviews...'}</div>`;
+        const fullStars = Math.floor(avg);
+        const emptyStars = 5 - fullStars;
+        document.getElementById('fullStarDisplay').innerHTML = '★'.repeat(fullStars) + '<span style="color:#e2e8f0;">' + '★'.repeat(emptyStars) + '</span>';
 
-  try {
-    // جلب المستخدم الحالي
-    const currentUser = await getCurrentUser();
+        const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        stats.forEach(r => ratingCounts[r.rating]++);
 
-    // ✅ جلب التقييمات (بدون فلترة الحالة، لأن RLS سيتكفل بالباقي: سيحضر المعتمدة للجميع، وقيد المراجعة لصاحبها فقط)
-    const { data: reviews, error } = await supabaseClient
-      .from('reviews')
-      .select('*')
-      .eq('doctor_id', doctorId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    console.log('✅ التقييمات:', reviews);
-
-    if (!reviews || reviews.length === 0) {
-      list.innerHTML = `<div class='p-4 text-center text-gray text-sm'>${currentLang === 'ar' ? 'لا توجد تقييمات بعد. كن أول من يقيّم!' : 'No reviews yet. Be the first to review!'}</div>`;
-      return;
-    }
-
-    list.innerHTML = reviews.map(r => {
-      // ✅ اللمسة السحرية: التحقق من الحالة لطباعة شارة المراجعة باللغتين
-      const isPending = r.status === 'pending';
-      const pendingBadge = isPending 
-        ? `<span style="font-size: 0.7rem; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; margin-inline-start: 8px;">${currentLang === 'ar' ? 'قيد المراجعة' : 'Pending Approval'}</span>` 
-        : '';
-
-      return `
-      <div class="review-item" id="review-${r.id}" style="${isPending ? 'opacity: 0.8; background: var(--bg);' : ''}">
-        <div class="review-header">
-          <div>
-            <span class="review-author">${escapeHtml(r.patient_name || (currentLang === 'ar' ? 'مستخدم' : 'User'))} ${pendingBadge}</span>
-            <span class="review-date" dir="ltr" style="margin: 0 0.5rem;">
-              ${new Date(r.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-DZ' : 'en-US')}
-            </span>
-          </div>
-          ${currentUser && r.user_id === currentUser.UserID ? `
-            <button onclick="deleteReview('${r.id}', '${doctorId}')" 
-              style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:0.2rem;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
-              </svg>
-              ${currentLang === 'ar' ? 'حذف' : 'Delete'}
-            </button>
-          ` : ''}
-        </div>
-        <div class="star-display">
-          ${'★'.repeat(r.rating)}<span style="color:var(--border)">${'★'.repeat(5 - r.rating)}</span>
-        </div>
-        <div class="review-text">${escapeHtml(r.comment)}</div>
-      </div>
-      `;
-    }).join('');
-
-  } catch (err) {
-    console.error('❌ خطأ في جلب التقييمات:', err);
-    list.innerHTML = `<div class='p-4 text-center text-danger text-sm'>${currentLang === 'ar' ? 'خطأ في جلب التقييمات' : 'Error loading reviews'}</div>`;
-  }
+        let barsHtml = '';
+        for (let i = 5; i >= 1; i--) {
+            const percentage = ((ratingCounts[i] / totalReviews) * 100).toFixed(0);
+            barsHtml += `
+                <div class="rating-bar-row">
+                    <span style="width: 35px;">${i} نجوم</span>
+                    <div class="rating-bar-track"><div class="rating-bar-fill" style="width: ${percentage}%;"></div></div>
+                    <span style="width: 35px; text-align: right;" dir="ltr">${percentage}%</span>
+                </div>
+            `;
+        }
+        document.getElementById('ratingBarsContainer').innerHTML = barsHtml;
+    } catch (err) { console.error("خطأ الإحصائيات:", err); }
 }
+
+async function fetchReviewsPage(doctorId, pageIndex) {
+    const container = document.getElementById('fullReviewsContainer');
+    const loadMoreBtn = document.getElementById('loadMoreReviewsBtn');
+
+    // حساب الـ 11 تعليق المطلوبة (0 إلى 10، ثم 11 إلى 21، إلخ)
+    const start = pageIndex * REVIEWS_PER_PAGE;
+    const end = start + (REVIEWS_PER_PAGE - 1);
+
+    try {
+        const { data: reviews, error } = await supabaseClient
+            .from('reviews')
+            .select('*')
+            .eq('doctor_id', doctorId)
+            .order('created_at', { ascending: false })
+            .range(start, end);
+
+        if (error) throw error;
+
+        if (pageIndex === 0) container.innerHTML = '';
+
+        if (!reviews || reviews.length === 0) {
+            if (pageIndex === 0) container.innerHTML = `<div class="card text-center text-gray" style="padding: 2rem;">لا توجد تقييمات حتى الآن.</div>`;
+            loadMoreBtn.classList.add('hidden');
+            return;
+        }
+
+        const currentUser = await getCurrentUser();
+        const reviewsHtml = reviews.map(r => {
+            const isPending = r.status === 'pending';
+            const pendingBadge = isPending ? `<span style="font-size: 0.7rem; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; margin-inline-start: 8px;">قيد المراجعة</span>` : '';
+            const dateStr = new Date(r.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-DZ' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const avatarChar = (r.patient_name ? r.patient_name.charAt(0) : 'U').toUpperCase();
+            
+            return `
+            <div class="review-card" id="review-${r.id}" style="${isPending ? 'opacity: 0.8;' : ''}">
+                <div class="review-card-header">
+                    <div class="review-user-info">
+                        <div class="review-avatar">${avatarChar}</div>
+                        <div>
+                            <div style="font-weight: 800; color: var(--text);">${escapeHtml(r.patient_name || 'مستخدم')} ${pendingBadge}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">${dateStr}</div>
+                        </div>
+                    </div>
+                    ${currentUser && r.user_id === currentUser.UserID ? `
+                        <button onclick="deleteReview('${r.id}', '${doctorId}')" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:0.85rem;">حذف</button>
+                    ` : ''}
+                </div>
+                <div style="color: #f59e0b; font-size: 1.1rem; letter-spacing: 1px; margin-bottom: 0.5rem;">
+                    ${'★'.repeat(r.rating)}<span style="color:var(--border)">${'★'.repeat(5 - r.rating)}</span>
+                </div>
+                <div class="review-content-text">${escapeHtml(r.comment)}</div>
+            </div>
+            `;
+        }).join('');
+
+        container.insertAdjacentHTML('beforeend', reviewsHtml);
+
+        // إذا جلب 11 تعليق كاملة، نظهر الزر لجلب المزيد
+        if (reviews.length === REVIEWS_PER_PAGE) {
+            loadMoreBtn.classList.remove('hidden');
+            setLoading(loadMoreBtn, false, 'عرض المزيد من التقييمات (11) ↓');
+        } else {
+            loadMoreBtn.classList.add('hidden');
+        }
+    } catch (err) {
+        console.error("خطأ جلب التقييمات:", err);
+    }
+}
+
+window.loadNextReviewsPage = function() {
+    currentReviewPage++;
+    const loadMoreBtn = document.getElementById('loadMoreReviewsBtn');
+    setLoading(loadMoreBtn, true, 'جاري التحميل...');
+    fetchReviewsPage(currentReviewsDoctorId, currentReviewPage);
+};
 
     // ✅ حذف التقييم من Supabase
 window.deleteReview = async function(reviewId, doctorId) {
@@ -2391,7 +2463,7 @@ window.deleteReview = async function(reviewId, doctorId) {
     if (error) throw error;
 
     showToast(currentLang === 'ar' ? 'تم حذف التقييم بنجاح' : 'Review deleted successfully', 'success');
-    loadReviews(doctorId);
+openFullReviewsPage(doctorId);
 
   } catch (err) {
     console.error('❌ خطأ في حذف التقييم:', err);
@@ -2458,7 +2530,7 @@ document.addEventListener('submit', async function(e) {
         currentReviewRating = 0;
         document.getElementById('ratingValue').value = '';
         document.querySelectorAll('#starRatingInput .star').forEach(s => s.style.color = 'var(--border)');
-        loadReviews(doctorId);
+openFullReviewsPage(doctorId);
       }
 
     } catch (err) {
