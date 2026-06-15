@@ -541,3 +541,66 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
+/* تنسيقات بطاقات الصور التسويقية */
+.pitch-visual-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.pitch-v-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.pitch-v-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+    border-color: var(--primary-light);
+}
+
+.pitch-v-thumb {
+    width: 100%;
+    height: 180px; /* طول مناسب للصورة */
+    overflow: hidden;
+    background: #f1f5f9; /* لون احتياطي */
+}
+
+.pitch-v-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* لضمان ملء الصورة للمساحة بدون تمديد */
+    transition: transform 0.5s ease;
+}
+
+.pitch-v-card:hover .pitch-v-thumb img {
+    transform: scale(1.05); /* زوم خفيف عند التمرير */
+}
+
+.pitch-v-content {
+    padding: 1.25rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    text-align: start;
+}
+
+.pitch-v-icon-box {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* تعديل الـ Media Query للهواتف لضمان ظهور البطاقات بشكل جيد */
+@media (max-width: 600px) {
+    .pitch-visual-grid {
+        grid-template-columns: 1fr;
+    }
+}
