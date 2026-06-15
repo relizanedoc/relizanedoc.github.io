@@ -713,16 +713,16 @@
         </div>
 
         <div class="form-group" style="margin-top: 1rem;">
-            <label style="font-weight: bold; color: var(--primary-dark);">الشهادات والتخصص الدقيق</label>
-            <p class="text-sm text-gray mb-2">اكتب شهاداتك أو تخصصاتك مفصولة بفاصلة (مثال: دبلوم طب أطفال، خريج جامعة الجزائر)</p>
-<textarea id="dash_certificates" data-i18n-placeholder='certificatesPh' rows="2" class="input" placeholder="اكتب شهاداتك هنا..."></textarea>
-                  </div>
+    <label style="font-weight: bold; color: var(--primary-dark);" data-i18n="certificatesLabel">الشهادات والتخصص الدقيق</label>
+    <p class="text-sm text-gray mb-2" data-i18n="certificatesHelp">اكتب شهاداتك أو تخصصاتك مفصولة بفاصلة (مثال: دبلوم طب أطفال، خريج جامعة الجزائر)</p>
+    <textarea id="dash_certificates" rows="2" class="input" data-i18n-placeholder="certificatesPh" placeholder="اكتب شهاداتك هنا..."></textarea>
+</div>
 
-        <div class="form-group" style="margin-top: 1rem; padding: 1.5rem; border: 1px dashed var(--primary); border-radius: 12px; background: #f8fafc; text-align: center;">
-            <label style="font-weight: bold; color: var(--primary-dark); display: block;">صور العيادة (لإعطاء ثقة للمرضى)</label>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">يمكنك رفع حتى 3 صور كحد أقصى (سيتم حفظها وعرضها في ملفك)</p>
-            <input type="file" id="dash_clinic_images" accept="image/png, image/jpeg, image/webp" multiple class="input" style="padding: 0.5rem; background: white; margin: 0 auto; max-width: 300px;">
-        </div>
+<div class="form-group" style="margin-top: 1rem; padding: 1.5rem; border: 1px dashed var(--primary); border-radius: 12px; background: #f8fafc; text-align: center;">
+    <label style="font-weight: bold; color: var(--primary-dark); display: block;" data-i18n="clinicImagesLabel">صور العيادة (لإعطاء ثقة للمرضى)</label>
+    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;" data-i18n="clinicImagesHelp">يمكنك رفع حتى 3 صور كحد أقصى (سيتم حفظها وعرضها في ملفك)</p>
+    <input type="file" id="dash_clinic_images" accept="image/png, image/jpeg, image/webp" multiple class="input" style="padding: 0.5rem; background: white; margin: 0 auto; max-width: 300px;">
+</div>
 
         <div class="form-group" style="margin-top: 1rem;">
             <label data-i18n='servicesProvided'>الخدمات المقدمة (جدول الخدمات)</label>
