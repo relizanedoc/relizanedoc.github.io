@@ -2373,7 +2373,7 @@ async function fetchReviewsPage(doctorId, pageIndex) {
     const container = document.getElementById('fullReviewsContainer');
     const loadMoreBtn = document.getElementById('loadMoreReviewsBtn');
 
-    // حساب الـ 11 تعليق المطلوبة (0 إلى 10، ثم 11 إلى 21، إلخ)
+    // حساب الـ 11 تعليق المطلوبة
     const start = pageIndex * REVIEWS_PER_PAGE;
     const end = start + (REVIEWS_PER_PAGE - 1);
 
@@ -2396,7 +2396,13 @@ async function fetchReviewsPage(doctorId, pageIndex) {
         }
 
         const currentUser = await getCurrentUser();
-       return `
+        const reviewsHtml = reviews.map(r => {
+            const isPending = r.status === 'pending';
+            const pendingBadge = isPending ? `<span style="font-size: 0.7rem; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; margin-inline-start: 8px;">قيد المراجعة</span>` : '';
+            const dateStr = new Date(r.created_at).toLocaleDateString(currentLang === 'ar' ? 'ar-DZ' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const avatarChar = (r.patient_name ? r.patient_name.charAt(0) : 'U').toUpperCase();
+            
+            return `
             <div class="review-card" id="review-${r.id}" style="${isPending ? 'opacity: 0.8;' : ''}">
                 <div class="review-card-header">
                     <div class="review-user-info">
