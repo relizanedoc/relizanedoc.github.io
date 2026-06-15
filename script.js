@@ -3303,24 +3303,32 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
         if (error) throw error;
 
         // 🔴 2. الجزء الجديد: إرسال إيميل التفعيل عبر الـ Edge Function إذا تم التأكيد
-        if (newStatus === 'confirmed' && userEmail) {
-            console.log('📨 جاري إرسال إيميل التأكيد للمريض عبر Mailtrap...');
-            
-            // ملاحظة: استبدل 'send-confirmation-email' باسم مجلد الدالة لديك في Supabase
-            supabaseClient.functions.invoke('send-confirmation-email', {
-                body: { 
-                    userEmail: userEmail, 
-                    doctorName: doctorName, 
-                    appointmentDate: appointmentDate 
-                }
-            }).then(({ data, error: funcError }) => {
-                if (funcError) {
-                    console.error('❌ خطأ أثناء استدعاء دالة إرسال الإيميل:', funcError);
-                } else {
-                    console.log('✅ تم إرسال إيميل التأكيد بنجاح عبر Mailtrap!', data);
-                }
-            });
-        }
+if (newStatus === 'confirmed') {
+    // 1. التحقق من صحة البريد قبل استدعاء الدالة
+    if (!userEmail || userEmail.trim() === '' || userEmail === 'null' || userEmail === 'undefined') {
+        console.warn('⚠️ لا يمكن إرسال إيميل: البريد الإلكتروني للمريض غير متوفر.');
+        showToast('تم تأكيد الحجز، ولكن لا يمكن إرسال إيميل (البريد مفقود).', 'warning');
+    } else {
+        console.log('📨 جاري إرسال إيميل التأكيد للمريض...');
+        
+        // 2. استخدام الاسم الصحيح للدالة (send-booking-email)
+        supabaseClient.functions.invoke('send-booking-email', {
+            body: { 
+                userEmail: userEmail, 
+                doctorName: doctorName, 
+                appointmentDate: appointmentDate 
+            }
+        }).then(({ data, error: funcError }) => {
+            if (funcError) {
+                console.error('❌ خطأ في الإرسال:', funcError);
+                showToast('حدث خطأ أثناء إرسال إيميل التأكيد.', 'error');
+            } else {
+                console.log('✅ تم إرسال إيميل التأكيد بنجاح عبر Mailtrap!', data);
+                showToast('تم تأكيد الموعد وإرسال إيميل للمريض.', 'success');
+            }
+        });
+    }
+}
 
         // 3. إظهار رسالة نجاح في الواجهة للمستخدم
         showToast(currentLang === 'ar' ? 'تم تحديث حالة الحجز بنجاح' : 'Booking status updated successfully', 'success');
