@@ -573,20 +573,21 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 
 .pitch-v-thumb {
     width: 100%;
-    height: 240px; /* يمكنك تعديل هذا الرقم لزيادة أو تقليل ارتفاع الصورة */
+    aspect-ratio: 4 / 3; /* أو جرب 16 / 9 إذا كانت صورك مستطيلة وعريضة أكثر */
     margin: 0;
-    padding: 0; /* إزالة المساحات البيضاء تماماً */
+    padding: 0;
     overflow: hidden;
     background: transparent;
+    border-radius: 12px 12px 0 0; /* لضمان تناسق الحواف العلوية مع البطاقة */
 }
 
 .pitch-v-thumb img {
     width: 100%;
     height: 100%;
-    object-fit: fill; /* هذا الأمر يجبر الصورة على أخذ كامل أبعاد الإطار بدون ترك فراغ وبدون قص */
+    object-fit: cover; /* نعود للـ cover لأنه يحافظ على الجودة تماماً */
+    object-position: top; /* هذه الخاصية تضمن التركيز على الجزء العلوي/المنتصف من الصورة إذا حدث قص طفيف */
     display: block;
 }
-
 .pitch-v-content {
     padding: 1.5rem;
     text-align: start;
