@@ -7,7 +7,6 @@ const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
 // ✅ الاستماع لتغيير حالة المصادقة (Supabase)
 let isAuthInitialized = false;
-الغ
 supabaseClient.auth.onAuthStateChange((event, session) => {
   console.log('🔄 حدث المصادقة:', event);
 
