@@ -744,3 +744,105 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   font-size: 0.95rem;
   margin-top: 0.5rem;
 }
+/* =========================================================
+   تحسينات تصميم صفحة التقييمات (Premium Reviews UI)
+   ========================================================= */
+
+/* تخطيط الصفحة (الأعمدة) */
+.reviews-page-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+@media (min-width: 900px) {
+  .reviews-page-layout {
+    /* صندوق الملخص يأخذ 350 بكسل، والتعليقات تأخذ باقي المساحة */
+    grid-template-columns: 350px 1fr; 
+  }
+}
+
+/* صندوق الملخص الثابت (Sticky) */
+.rating-summary-box {
+  background: white;
+  padding: 1.75rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+  border: 1px solid rgba(0,0,0,0.04);
+  position: sticky;
+  top: 90px; /* يجعله يتحرك معك عند النزول لقراءة التعليقات */
+  z-index: 10;
+}
+
+/* بطاقة التقييم الاحترافية */
+.review-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  margin-bottom: 1rem;
+}
+.review-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+  border-color: var(--primary-light);
+}
+
+/* ترتيب رأس البطاقة */
+.review-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.review-user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* الأيقونة الدائرية (الحرف الأول من الاسم) */
+.review-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.2);
+}
+
+/* نص التعليق */
+.review-content-text {
+  color: #334155;
+  line-height: 1.7;
+  font-size: 0.95rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border); /* خط فاصل خفيف وأنيق */
+}
+
+/* زر الحذف الأنيق */
+.delete-review-btn {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #ef4444;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.delete-review-btn:hover {
+  background: #ef4444;
+  color: white;
+  transform: scale(1.05);
+}
