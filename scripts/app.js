@@ -445,8 +445,10 @@ window.openBooking = function(doctorId) {
   
   document.getElementById('bookingDoctorId').value = doctorId;
   const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
-  const doctorName = `${docPrefix} ${escapeHtml(state.currentDoctor.first_name)} ${escapeHtml(state.currentDoctor.last_name)}`;
-  
+const rawName = state.currentLang === 'en' && state.currentDoctor.first_name_en && state.currentDoctor.last_name_en 
+    ? `${state.currentDoctor.first_name_en} ${state.currentDoctor.last_name_en}` 
+    : `${state.currentDoctor.first_name} ${state.currentDoctor.last_name}`;
+const doctorName = `${docPrefix} ${escapeHtml(rawName)}`;  
   let infoHtml = `<div class="doctor-header"><div class="avatar">${(state.currentDoctor.first_name?.[0]||'')+(state.currentDoctor.last_name?.[0]||'')}</div><div><div class="font-bold text-lg">${doctorName}</div><div class="text-sm text-gray">${escapeHtml(t(state.currentDoctor.specialty))} • ${escapeHtml(t(state.currentDoctor.municipality))}</div></div></div>`;
   
   let scheduleHtml = '';
@@ -646,8 +648,11 @@ window.loadUserBookings = async function() {
       let displayStatus = t('statusPending');
       if (b.status === 'confirmed') { statusStyle = 'background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;'; statusIndicator = '#10b981'; displayStatus = t('statusConfirmed'); } 
       else if (b.status === 'cancelled') { statusStyle = 'background: #fef2f2; color: #ef4444; border: 1px solid #fecaca;'; statusIndicator = '#ef4444'; displayStatus = t('statusCancelled'); }
-      
-      const doctorName = b.doctors ? `${b.doctors.first_name} ${b.doctors.last_name}` : 'طبيب';
+      const doctorName = b.doctors 
+    ? (state.currentLang === 'en' && b.doctors.first_name_en && b.doctors.last_name_en 
+        ? `${b.doctors.first_name_en} ${b.doctors.last_name_en}` 
+        : `${b.doctors.first_name} ${b.doctors.last_name}`) 
+    : 'طبيب';
       const shortId = b.id.substring(0, 8).toUpperCase();
       
       html += `
