@@ -1,0 +1,28 @@
+name: Generate Dynamic Sitemap
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # يعمل تلقائياً كل يوم في منتصف الليل
+  workflow_dispatch: # يسمح لك بتشغيله يدوياً متى شئت
+
+jobs:
+  build-sitemap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Fetch Sitemap from Supabase Edge Function
+        run: |
+          # استبدل هذا الرابط برابط الـ Edge Function الخاص بك من Supabase
+          curl -s https://iirjtmobphgmkgwkwumc.supabase.co/functions/v1/sitemap > sitemap.xml
+
+      - name: Commit and Push Sitemap
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add sitemap.xml
+          # يتحقق مما إذا كان هناك تغييرات جديدة لرفعها، لتجنب الأخطاء
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update dynamic sitemap"
+          git push
