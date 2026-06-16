@@ -198,13 +198,14 @@ window.handleSEOAndRender = function() {
           updateSEOMetaTags(targetDoc);
           renderDoctors([targetDoc]);
           window.populateFilters();
-
-          const doctorName = (state.currentLang === 'ar' ? 'د. ' : 'Dr. ') + targetDoc.first_name + ' ' + targetDoc.last_name;
+const rawName = state.currentLang === 'en' && targetDoc.first_name_en && targetDoc.last_name_en 
+    ? `${targetDoc.first_name_en} ${targetDoc.last_name_en}` 
+    : `${targetDoc.first_name} ${targetDoc.last_name}`;
+const doctorName = (state.currentLang === 'ar' ? 'د. ' : 'Dr. ') + rawName;
           setTimeout(() => {
               try { openDoctorProfileModal(targetDoc, doctorName); } 
               catch(e) { console.error("Error opening modal:", e); }
           }, 300);
-
           let backBtn = document.getElementById('seoBackBtn');
           if(!backBtn) {
              backBtn = document.createElement('button');
@@ -268,7 +269,10 @@ window.filterDoctors = function() {
   
   const suggestionsHtml = filtered.slice(0, 5).map(doc => {
       const avatarText = (doc.first_name?.[0] || '') + (doc.last_name?.[0] || '');
-      const doctorName = escapeHtml(doc.first_name) + ' ' + escapeHtml(doc.last_name);
+const rawName = state.currentLang === 'en' && doc.first_name_en && doc.last_name_en 
+    ? `${doc.first_name_en} ${doc.last_name_en}` 
+    : `${doc.first_name} ${doc.last_name}`;
+const doctorName = escapeHtml(rawName);
       return `
       <div class="suggestion-item" onclick="window.selectSuggestion('${doc.id}')">
           <div class="sugg-avatar">${avatarText}</div>
