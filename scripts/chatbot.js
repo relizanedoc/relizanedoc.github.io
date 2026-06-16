@@ -18,158 +18,7 @@ function normalizeText(text) {
 }
 
 // ==========================================
-// 2. رسائل الترحيب الذكية
-// ==========================================
-function getSmartWelcome() {
-    const hour = new Date().getHours();
-    const lang = state.currentLang;
-    const user = JSON.parse(localStorage.getItem('medicalUser') || 'null');
-    
-    let greeting = '';
-    if (hour < 12) greeting = lang === 'ar' ? 'صباح الخير' : 'Good morning';
-    else if (hour < 18) greeting = lang === 'ar' ? 'مساء الخير' : 'Good afternoon';
-    else greeting = lang === 'ar' ? 'مساء النور' : 'Good evening';
-    
-    if (user) {
-        greeting += ` ${user.Name}! 👋`;
-    } else {
-        greeting += '! 👋';
-    }
-    
-    const subtitle = lang === 'ar' 
-        ? 'كيف يمكنني مساعدتك اليوم؟' 
-        : 'How can I help you today?';
-    
-    return `${greeting}<br><span style="color: var(--text-secondary); font-size: 0.9rem;">${subtitle}</span>`;
-}
-
-// ==========================================
-// 3. الأزرار التفاعلية السريعة (Quick Replies)
-// ==========================================
-function showQuickReplies(chatMessages, replies = []) {
-    // إزالة الأزرار القديمة إذا وجدت
-    const existingQuick = chatMessages.querySelector('.quick-replies-container');
-    if (existingQuick) existingQuick.remove();
-
-    const quickDiv = document.createElement('div');
-    quickDiv.className = 'quick-replies-container';
-    quickDiv.style.cssText = 'display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding: 8px; animation: fadeIn 0.3s ease;';
-    
-    replies.forEach(reply => {
-        const btn = document.createElement('button');
-        btn.className = 'quick-reply-btn';
-        btn.innerHTML = reply.icon ? `${reply.icon} ${reply.label}` : reply.label;
-        btn.style.cssText = `
-            background: linear-gradient(135deg, var(--primary-light), var(--primary));
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
-        `;
-        btn.onmouseover = () => {
-            btn.style.transform = 'translateY(-2px)';
-            btn.style.boxShadow = '0 4px 12px rgba(14, 165, 233, 0.3)';
-        };
-        btn.onmouseout = () => {
-            btn.style.transform = 'translateY(0)';
-            btn.style.boxShadow = '0 2px 8px rgba(14, 165, 233, 0.2)';
-        };
-        btn.onclick = () => {
-            quickDiv.remove();
-            document.getElementById('chatInputText').value = reply.value;
-            handleSend();
-        };
-        quickDiv.appendChild(btn);
-    });
-    
-    chatMessages.appendChild(quickDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-// ==========================================
-// 4. نظام الاقتراحات التلقائية (Autocomplete)
-// ==========================================
-function showChatSuggestions(text) {
-    let suggestionsDiv = document.getElementById('chatSuggestions');
-    if (!suggestionsDiv) {
-        suggestionsDiv = document.createElement('div');
-        suggestionsDiv.id = 'chatSuggestions';
-        // ✅ استخدام position: fixed لإبقاء الاقتراحات ثابتة
-        suggestionsDiv.style.cssText = 'position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto; z-index: 10000; display: none;';
-        document.body.appendChild(suggestionsDiv);
-    }
-
-    if (text.length < 2) {
-        suggestionsDiv.style.display = 'none';
-        return;
-    }
-
-    const suggestions = [];
-    const lowerText = text.toLowerCase();
-
-    // اقتراحات الأطباء
-    state.allDoctors.forEach(doc => {
-        const fullName = `${doc.first_name} ${doc.last_name}`.toLowerCase();
-        if (fullName.includes(lowerText)) {
-            suggestions.push({
-                type: 'doctor',
-                icon: '👨⚕️',
-                text: `${state.currentLang === 'ar' ? 'د.' : 'Dr.'} ${doc.first_name} ${doc.last_name}`,
-                value: `ابحث عن د. ${doc.first_name} ${doc.last_name}`
-            });
-        }
-    });
-
-    // اقتراحات التخصصات
-    const specialties = [...new Set(state.allDoctors.map(d => d.specialty))];
-    specialties.forEach(spec => {
-        if (spec.toLowerCase().includes(lowerText)) {
-            suggestions.push({
-                type: 'specialty',
-                icon: '🩺',
-                text: t(spec),
-                value: `أريد طبيب ${t(spec)}`
-            });
-        }
-    });
-
-    // اقتراحات البلديات
-    const municipalities = [...new Set(state.allDoctors.map(d => d.municipality))];
-    municipalities.forEach(mun => {
-        if (mun.toLowerCase().includes(lowerText)) {
-            suggestions.push({
-                type: 'municipality',
-                icon: '📍',
-                text: t(mun),
-                value: `طبيب في ${t(mun)}`
-            });
-        }
-    });
-
-    if (suggestions.length > 0) {
-        suggestionsDiv.innerHTML = suggestions.slice(0, 5).map(s => `
-            <div class="chat-suggestion" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s; display: flex; align-items: center; gap: 10px;" 
-                 onmouseover="this.style.background='var(--bg)'" 
-                 onmouseout="this.style.background='white'"
-                 onclick="document.getElementById('chatInputText').value='${s.value}'; document.getElementById('chatSuggestions').style.display='none'; window.handleSend();">
-                <span style="font-size: 1.2rem;">${s.icon}</span>
-                <span style="flex: 1; font-size: 0.9rem; color: var(--text);">${s.text}</span>
-                <span style="color: var(--text-secondary); font-size: 0.8rem;"></span>
-            </div>
-        `).join('');
-        suggestionsDiv.style.display = 'block';
-    } else {
-        suggestionsDiv.style.display = 'none';
-    }
-}
-
-// ==========================================
-// 5. نظام الطوارئ الذكي
+// 2. نظام الطوارئ الذكي
 // ==========================================
 const EMERGENCY_KEYWORDS = {
     ar: ['طوارئ', 'طارئ', 'إسعاف', 'نوبة قلبية', 'جلطة', 'نزيف', 'اختناق', 'حادث', 'حريق'],
@@ -192,11 +41,11 @@ function getEmergencyResponse() {
                 إذا كانت الحالة خطيرة، اتصل فوراً بـ:
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-                <a href="tel:141" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-                    <span style="font-size: 1.2rem;"></span> الإسعاف: 141
+                <a href="tel:115" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                    <span style="font-size: 1.2rem;">📞</span> الخدمات الصحية: 115
                 </a>
-                <a href="tel:100" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-                    <span style="font-size: 1.2rem;">🚑</span> الحماية المدنية: 100
+                <a href="tel:1021" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                    <span style="font-size: 1.2rem;">🚑</span> الحماية المدنية: 1021
                 </a>
                 <a href="tel:1055" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
                     <span style="font-size: 1.2rem;">🚓</span> الشرطة: 1055
@@ -216,10 +65,10 @@ function getEmergencyResponse() {
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
                 <a href="tel:141" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span style="font-size: 1.2rem;"></span> Ambulance: 141
+                    <span style="font-size: 1.2rem;">📞</span> Ambulance: 141
                 </a>
                 <a href="tel:100" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span style="font-size: 1.2rem;"></span> Civil Protection: 100
+                    <span style="font-size: 1.2rem;">🚑</span> Civil Protection: 100
                 </a>
             </div>
         </div>
@@ -227,7 +76,7 @@ function getEmergencyResponse() {
 }
 
 // ==========================================
-// 6. معالجة رسائل المستخدم
+// 3. معالجة رسائل المستخدم
 // ==========================================
 function processUserMessage(rawMsg) {
     // التحقق من الحالة الطارئة أولاً
@@ -325,7 +174,7 @@ function processUserMessage(rawMsg) {
 }
 
 // ==========================================
-// 7. دالة الإرسال (مصدرة)
+// 4. دالة الإرسال (مصدرة) - ✅ تم نقلها للأعلى
 // ==========================================
 export function handleSend() {
     const chatInputText = document.getElementById('chatInputText');
@@ -368,6 +217,156 @@ export function handleSend() {
 window.handleSend = handleSend;
 
 // ==========================================
+// 5. رسائل الترحيب الذكية
+// ==========================================
+function getSmartWelcome() {
+    const hour = new Date().getHours();
+    const lang = state.currentLang;
+    const user = JSON.parse(localStorage.getItem('medicalUser') || 'null');
+    
+    let greeting = '';
+    if (hour < 12) greeting = lang === 'ar' ? 'صباح الخير' : 'Good morning';
+    else if (hour < 18) greeting = lang === 'ar' ? 'مساء الخير' : 'Good afternoon';
+    else greeting = lang === 'ar' ? 'مساء النور' : 'Good evening';
+    
+    if (user) {
+        greeting += ` ${user.Name}! 👋`;
+    } else {
+        greeting += '! 👋';
+    }
+    
+    const subtitle = lang === 'ar' 
+        ? 'كيف يمكنني مساعدتك اليوم؟' 
+        : 'How can I help you today?';
+    
+    return `${greeting}<br><span style="color: var(--text-secondary); font-size: 0.9rem;">${subtitle}</span>`;
+}
+
+// ==========================================
+// 6. الأزرار التفاعلية السريعة (Quick Replies)
+// ==========================================
+function showQuickReplies(chatMessages, replies = []) {
+    // إزالة الأزرار القديمة إذا وجدت
+    const existingQuick = chatMessages.querySelector('.quick-replies-container');
+    if (existingQuick) existingQuick.remove();
+
+    const quickDiv = document.createElement('div');
+    quickDiv.className = 'quick-replies-container';
+    quickDiv.style.cssText = 'display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding: 8px; animation: fadeIn 0.3s ease;';
+    
+    replies.forEach(reply => {
+        const btn = document.createElement('button');
+        btn.className = 'quick-reply-btn';
+        btn.innerHTML = reply.icon ? `${reply.icon} ${reply.label}` : reply.label;
+        btn.style.cssText = `
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+        `;
+        btn.onmouseover = () => {
+            btn.style.transform = 'translateY(-2px)';
+            btn.style.boxShadow = '0 4px 12px rgba(14, 165, 233, 0.3)';
+        };
+        btn.onmouseout = () => {
+            btn.style.transform = 'translateY(0)';
+            btn.style.boxShadow = '0 2px 8px rgba(14, 165, 233, 0.2)';
+        };
+        btn.onclick = () => {
+            quickDiv.remove();
+            document.getElementById('chatInputText').value = reply.value;
+            window.handleSend(); // ✅ استخدام window.handleSend
+        };
+        quickDiv.appendChild(btn);
+    });
+    
+    chatMessages.appendChild(quickDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// ==========================================
+// 7. نظام الاقتراحات التلقائية (Autocomplete)
+// ==========================================
+function showChatSuggestions(text) {
+    let suggestionsDiv = document.getElementById('chatSuggestions');
+    if (!suggestionsDiv) {
+        suggestionsDiv = document.createElement('div');
+        suggestionsDiv.id = 'chatSuggestions';
+        suggestionsDiv.style.cssText = 'position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto; z-index: 10000; display: none;';
+        document.body.appendChild(suggestionsDiv);
+    }
+
+    if (text.length < 2) {
+        suggestionsDiv.style.display = 'none';
+        return;
+    }
+
+    const suggestions = [];
+    const lowerText = text.toLowerCase();
+
+    // اقتراحات الأطباء
+    state.allDoctors.forEach(doc => {
+        const fullName = `${doc.first_name} ${doc.last_name}`.toLowerCase();
+        if (fullName.includes(lowerText)) {
+            suggestions.push({
+                type: 'doctor',
+                icon: '👨⚕️',
+                text: `${state.currentLang === 'ar' ? 'د.' : 'Dr.'} ${doc.first_name} ${doc.last_name}`,
+                value: `ابحث عن د. ${doc.first_name} ${doc.last_name}`
+            });
+        }
+    });
+
+    // اقتراحات التخصصات
+    const specialties = [...new Set(state.allDoctors.map(d => d.specialty))];
+    specialties.forEach(spec => {
+        if (spec.toLowerCase().includes(lowerText)) {
+            suggestions.push({
+                type: 'specialty',
+                icon: '🩺',
+                text: t(spec),
+                value: `أريد طبيب ${t(spec)}`
+            });
+        }
+    });
+
+    // اقتراحات البلديات
+    const municipalities = [...new Set(state.allDoctors.map(d => d.municipality))];
+    municipalities.forEach(mun => {
+        if (mun.toLowerCase().includes(lowerText)) {
+            suggestions.push({
+                type: 'municipality',
+                icon: '📍',
+                text: t(mun),
+                value: `طبيب في ${t(mun)}`
+            });
+        }
+    });
+
+    if (suggestions.length > 0) {
+        suggestionsDiv.innerHTML = suggestions.slice(0, 5).map(s => `
+            <div class="chat-suggestion" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s; display: flex; align-items: center; gap: 10px;" 
+                 onmouseover="this.style.background='var(--bg)'" 
+                 onmouseout="this.style.background='white'"
+                 onclick="document.getElementById('chatInputText').value='${s.value}'; document.getElementById('chatSuggestions').style.display='none'; window.handleSend();">
+                <span style="font-size: 1.2rem;">${s.icon}</span>
+                <span style="flex: 1; font-size: 0.9rem; color: var(--text);">${s.text}</span>
+                <span style="color: var(--text-secondary); font-size: 0.8rem;">↵</span>
+            </div>
+        `).join('');
+        suggestionsDiv.style.display = 'block';
+    } else {
+        suggestionsDiv.style.display = 'none';
+    }
+}
+
+// ==========================================
 // 8. تهيئة الشات بوت (مصدرة)
 // ==========================================
 export function initChatbot() {
@@ -385,8 +384,7 @@ export function initChatbot() {
         if (!medicalChatbot.classList.contains('hidden')) {
             chatInputText.focus();
             
-            // ✅ الإصلاح: إظهار الأزرار السريعة دائماً عند الفتح (مع إزالة القديمة)
-            // هذا يحل مشكلة عدم ظهور الأزرار إذا كانت هناك رسالة ترحيب موجودة مسبقاً
+            // ✅ إظهار الأزرار السريعة دائماً عند الفتح
             showQuickReplies(chatMessages, [
                 { icon: '🔍', label: state.currentLang === 'ar' ? 'ابحث عن طبيب' : 'Find Doctor', value: 'أريد طبيب' },
                 { icon: '📅', label: state.currentLang === 'ar' ? 'احجز موعد' : 'Book Appointment', value: 'حجز موعد' },
@@ -394,8 +392,7 @@ export function initChatbot() {
                 { icon: '💡', label: state.currentLang === 'ar' ? 'نصيحة طبية' : 'Medical Advice', value: 'نصيحة' }
             ]);
 
-            // ✅ إضافة رسالة الترحيب الديناميكية فقط إذا كان الشات فارغاً تماماً
-            // (هذا يمنع تكرار الرسالة إذا كانت موجودة في HTML)
+            // إضافة رسالة الترحيب الديناميكية فقط إذا كان الشات فارغاً تماماً
             if (chatMessages.children.length === 0) {
                 const welcomeMsg = document.createElement('div');
                 welcomeMsg.className = 'chat-msg bot-msg';
