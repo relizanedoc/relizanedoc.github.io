@@ -1,5 +1,5 @@
 // ==========================================
-// chatbot.js - نظام الشات بوت الذكي
+// chatbot.js - نظام الشات بوت الذكي (المصحح)
 // ==========================================
 import { state } from './state.js';
 import { t, escapeHtml } from './utils.js';
@@ -159,7 +159,7 @@ function showChatSuggestions(text) {
                  onclick="document.getElementById('chatInputText').value='${s.value}'; document.getElementById('chatSuggestions').style.display='none'; window.handleSend();">
                 <span style="font-size: 1.2rem;">${s.icon}</span>
                 <span style="flex: 1; font-size: 0.9rem; color: var(--text);">${s.text}</span>
-                <span style="color: var(--text-secondary); font-size: 0.8rem;">↵</span>
+                <span style="color: var(--text-secondary); font-size: 0.8rem;"></span>
             </div>
         `).join('');
         suggestionsDiv.style.display = 'block';
@@ -193,7 +193,7 @@ function getEmergencyResponse() {
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
                 <a href="tel:141" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-                    <span style="font-size: 1.2rem;">📞</span> الإسعاف: 141
+                    <span style="font-size: 1.2rem;"></span> الإسعاف: 141
                 </a>
                 <a href="tel:100" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
                     <span style="font-size: 1.2rem;">🚑</span> الحماية المدنية: 100
@@ -216,10 +216,10 @@ function getEmergencyResponse() {
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
                 <a href="tel:141" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span style="font-size: 1.2rem;">📞</span> Ambulance: 141
+                    <span style="font-size: 1.2rem;"></span> Ambulance: 141
                 </a>
                 <a href="tel:100" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span style="font-size: 1.2rem;">🚑</span> Civil Protection: 100
+                    <span style="font-size: 1.2rem;"></span> Civil Protection: 100
                 </a>
             </div>
         </div>
@@ -308,7 +308,7 @@ function processUserMessage(rawMsg) {
     if (remaining > 0) {
         response += state.currentLang === 'ar' 
             ? `<br><span style="color: var(--text-secondary); font-size: 0.85rem;">📋 و ${remaining} نتيجة أخرى متاحة في الدليل الرئيسي</span>` 
-            : `<br><span style="color: var(--text-secondary); font-size: 0.85rem;">📋 And ${remaining} more results available</span>`;
+            : `<br><span style="color: var(--text-secondary); font-size: 0.85rem;"> And ${remaining} more results available</span>`;
     }
     
     response += matchedDoctors.slice(0, 3).map(doc => {
@@ -385,20 +385,22 @@ export function initChatbot() {
         if (!medicalChatbot.classList.contains('hidden')) {
             chatInputText.focus();
             
-            // عرض رسالة الترحيب الذكية والأزرار السريعة عند فتح الشات لأول مرة
+            // ✅ الإصلاح: إظهار الأزرار السريعة دائماً عند الفتح (مع إزالة القديمة)
+            // هذا يحل مشكلة عدم ظهور الأزرار إذا كانت هناك رسالة ترحيب موجودة مسبقاً
+            showQuickReplies(chatMessages, [
+                { icon: '🔍', label: state.currentLang === 'ar' ? 'ابحث عن طبيب' : 'Find Doctor', value: 'أريد طبيب' },
+                { icon: '📅', label: state.currentLang === 'ar' ? 'احجز موعد' : 'Book Appointment', value: 'حجز موعد' },
+                { icon: '🆘', label: state.currentLang === 'ar' ? 'حالة طارئة' : 'Emergency', value: 'طوارئ' },
+                { icon: '💡', label: state.currentLang === 'ar' ? 'نصيحة طبية' : 'Medical Advice', value: 'نصيحة' }
+            ]);
+
+            // ✅ إضافة رسالة الترحيب الديناميكية فقط إذا كان الشات فارغاً تماماً
+            // (هذا يمنع تكرار الرسالة إذا كانت موجودة في HTML)
             if (chatMessages.children.length === 0) {
                 const welcomeMsg = document.createElement('div');
                 welcomeMsg.className = 'chat-msg bot-msg';
                 welcomeMsg.innerHTML = getSmartWelcome();
                 chatMessages.appendChild(welcomeMsg);
-                
-                // عرض الأزرار السريعة
-                showQuickReplies(chatMessages, [
-                    { icon: '🔍', label: state.currentLang === 'ar' ? 'ابحث عن طبيب' : 'Find Doctor', value: 'أريد طبيب' },
-                    { icon: '📅', label: state.currentLang === 'ar' ? 'احجز موعد' : 'Book Appointment', value: 'حجز موعد' },
-                    { icon: '🆘', label: state.currentLang === 'ar' ? 'حالة طارئة' : 'Emergency', value: 'طوارئ' },
-                    { icon: '💡', label: state.currentLang === 'ar' ? 'نصيحة طبية' : 'Medical Advice', value: 'نصيحة' }
-                ]);
             }
         }
     };
