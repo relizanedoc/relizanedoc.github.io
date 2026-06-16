@@ -30,29 +30,22 @@ function detectEmergency(message) {
     const lowerMsg = message.toLowerCase();
     return keywords.some(kw => lowerMsg.includes(kw));
 }
-
 function getEmergencyResponse() {
     return state.currentLang === 'ar' ? `
         <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 16px; color: #991b1b; animation: pulse 2s infinite;">
             <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.5rem;">🚨</span> حالة طارئة!
+                <span style="font-size: 1.5rem;"></span> حالة طارئة!
             </div>
             <div style="margin-bottom: 12px; font-size: 0.95rem;">
                 إذا كانت الحالة خطيرة، اتصل فوراً بـ:
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-                <a href="tel:141" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-                    <span style="font-size: 1.2rem;">📞</span> الإسعاف: 141
-                </a>
-                <a href="tel:100" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-                    <span style="font-size: 1.2rem;">🚑</span> الحماية المدنية: 100
-                </a>
-                <a href="tel:1055" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-                    <span style="font-size: 1.2rem;"></span> الشرطة: 1055
+                <a href="tel:1021" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                    <span style="font-size: 1.2rem;">🚑</span> الحماية المدنية: 1021
                 </a>
             </div>
             <div style="margin-top: 12px; font-size: 0.85rem; color: #b91c1c; text-align: center;">
-                ⚠️ لا تنتظر - اتصل الآن إذا كانت الحالة خطيرة
+                ️ لا تنتظر - اتصل الآن إذا كانت الحالة خطيرة
             </div>
         </div>
     ` : `
@@ -64,11 +57,8 @@ function getEmergencyResponse() {
                 If the situation is serious, call immediately:
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-                <a href="tel:141" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span style="font-size: 1.2rem;">📞</span> Ambulance: 141
-                </a>
                 <a href="tel:100" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span style="font-size: 1.2rem;">🚑</span> Civil Protection: 100
+                    <span style="font-size: 1.2rem;"></span> Civil Protection: 100
                 </a>
             </div>
         </div>
