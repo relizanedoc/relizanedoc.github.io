@@ -568,18 +568,16 @@ window.submitBooking = async function() {
     form.reset();
     document.getElementById('timeSlotsContainer').innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;">${t('selectDateFirst')}</div>`;
     
-   // --- بناء التذكرة الإلكترونية ---
     const bId = booking.id;
     const shortId = bId.substring(0, 8).toUpperCase();
     const targetDoctorData = state.allDoctors.find(d => d.id === data.DoctorID);
     const bDoctor = targetDoctorData ? `${targetDoctorData.first_name} ${targetDoctorData.last_name}` : '';
 
-    // 👈 تجهيز النص الكامل ليوضع داخل الـ QR ليقرأه المريض بدون إنترنت
     const qrText = state.currentLang === 'ar' 
       ? `تفاصيل الحجز:\nرقم الحجز: ${shortId}\nالمريض: ${data.PatientName}\nالطبيب: د. ${bDoctor}\nالتاريخ: ${data.AppointmentDate}\nالوقت: ${data.AppointmentTime}`
       : `Booking Details:\nID: ${shortId}\nPatient: ${data.PatientName}\nDoctor: Dr. ${bDoctor}\nDate: ${data.AppointmentDate}\nTime: ${data.AppointmentTime}`;
 
-   document.getElementById('eTicketContainer').innerHTML = `
+    document.getElementById('eTicketContainer').innerHTML = `
       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1.25rem 1rem; text-align: center; color: white; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 290px; margin: 0 auto;">
         <div style="background: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem auto; color: #10b981;">
           <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -1058,7 +1056,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- الشات بوت ---
+  // ==========================================
+  // 🚀 الشات بوت المحسّن - الميزات الثلاث الجديدة
+  // ==========================================
   const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
   const closeChatBtn = document.getElementById('closeChatBtn');
   const medicalChatbot = document.getElementById('medicalChatbot');
@@ -1067,76 +1067,333 @@ document.addEventListener('DOMContentLoaded', () => {
   const chatMessages = document.getElementById('chatMessages');
 
   if(chatbotToggleBtn && medicalChatbot) {
-    const toggleChat = () => { medicalChatbot.classList.toggle('hidden'); if (!medicalChatbot.classList.contains('hidden')) chatInputText.focus(); };
+    // ✅ الميزة 1: رسائل ترحيب ذكية حسب الوقت والسياق
+    function getSmartWelcome() {
+      const hour = new Date().getHours();
+      const lang = state.currentLang;
+      const user = JSON.parse(localStorage.getItem('medicalUser') || 'null');
+      
+      let greeting = '';
+      if (hour < 12) greeting = lang === 'ar' ? 'صباح الخير' : 'Good morning';
+      else if (hour < 18) greeting = lang === 'ar' ? 'مساء الخير' : 'Good afternoon';
+      else greeting = lang === 'ar' ? 'مساء النور' : 'Good evening';
+      
+      if (user) {
+        greeting += ` ${user.Name}! 👋`;
+      } else {
+        greeting += '! 👋';
+      }
+      
+      const subtitle = lang === 'ar' 
+        ? 'كيف يمكنني مساعدتك اليوم؟' 
+        : 'How can I help you today?';
+      
+      return `${greeting}<br><span style="color: var(--text-secondary); font-size: 0.9rem;">${subtitle}</span>`;
+    }
+
+    // ✅ الميزة 2: الأزرار التفاعلية السريعة (Quick Replies)
+    function showQuickReplies(replies = []) {
+      // إزالة الأزرار القديمة إذا وجدت
+      const existingQuick = chatMessages.querySelector('.quick-replies-container');
+      if (existingQuick) existingQuick.remove();
+
+      const quickDiv = document.createElement('div');
+      quickDiv.className = 'quick-replies-container';
+      quickDiv.style.cssText = 'display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding: 8px; animation: fadeIn 0.3s ease;';
+      
+      replies.forEach(reply => {
+        const btn = document.createElement('button');
+        btn.className = 'quick-reply-btn';
+        btn.innerHTML = reply.icon ? `${reply.icon} ${reply.label}` : reply.label;
+        btn.style.cssText = `
+          background: linear-gradient(135deg, var(--primary-light), var(--primary));
+          color: white;
+          border: none;
+          padding: 10px 16px;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          font-weight: 600;
+          transition: all 0.2s;
+          box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+        `;
+        btn.onmouseover = () => {
+          btn.style.transform = 'translateY(-2px)';
+          btn.style.boxShadow = '0 4px 12px rgba(14, 165, 233, 0.3)';
+        };
+        btn.onmouseout = () => {
+          btn.style.transform = 'translateY(0)';
+          btn.style.boxShadow = '0 2px 8px rgba(14, 165, 233, 0.2)';
+        };
+        btn.onclick = () => {
+          quickDiv.remove();
+          chatInputText.value = reply.value;
+          handleSend();
+        };
+        quickDiv.appendChild(btn);
+      });
+      
+      chatMessages.appendChild(quickDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // ✅ الميزة 3: نظام الاقتراحات التلقائية (Autocomplete)
+    function showChatSuggestions(text) {
+      let suggestionsDiv = document.getElementById('chatSuggestions');
+      if (!suggestionsDiv) {
+        suggestionsDiv = document.createElement('div');
+        suggestionsDiv.id = 'chatSuggestions';
+        suggestionsDiv.style.cssText = 'position: absolute; bottom: 70px; left: 10px; right: 10px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto; z-index: 1000; display: none;';
+        medicalChatbot.style.position = 'relative';
+        medicalChatbot.appendChild(suggestionsDiv);
+      }
+
+      if (text.length < 2) {
+        suggestionsDiv.style.display = 'none';
+        return;
+      }
+
+      const suggestions = [];
+      const lowerText = text.toLowerCase();
+
+      // اقتراحات الأطباء
+      state.allDoctors.forEach(doc => {
+        const fullName = `${doc.first_name} ${doc.last_name}`.toLowerCase();
+        if (fullName.includes(lowerText)) {
+          suggestions.push({
+            type: 'doctor',
+            icon: '👨‍⚕️',
+            text: `${state.currentLang === 'ar' ? 'د.' : 'Dr.'} ${doc.first_name} ${doc.last_name}`,
+            value: `ابحث عن د. ${doc.first_name} ${doc.last_name}`
+          });
+        }
+      });
+
+      // اقتراحات التخصصات
+      const specialties = [...new Set(state.allDoctors.map(d => d.specialty))];
+      specialties.forEach(spec => {
+        if (spec.toLowerCase().includes(lowerText)) {
+          suggestions.push({
+            type: 'specialty',
+            icon: '🩺',
+            text: t(spec),
+            value: `أريد طبيب ${t(spec)}`
+          });
+        }
+      });
+
+      // اقتراحات البلديات
+      const municipalities = [...new Set(state.allDoctors.map(d => d.municipality))];
+      municipalities.forEach(mun => {
+        if (mun.toLowerCase().includes(lowerText)) {
+          suggestions.push({
+            type: 'municipality',
+            icon: '📍',
+            text: t(mun),
+            value: `طبيب في ${t(mun)}`
+          });
+        }
+      });
+
+      if (suggestions.length > 0) {
+        suggestionsDiv.innerHTML = suggestions.slice(0, 5).map(s => `
+          <div class="chat-suggestion" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s; display: flex; align-items: center; gap: 10px;" 
+               onmouseover="this.style.background='var(--bg)'" 
+               onmouseout="this.style.background='white'"
+               onclick="document.getElementById('chatInputText').value='${s.value}'; document.getElementById('chatSuggestions').style.display='none'; handleSend();">
+            <span style="font-size: 1.2rem;">${s.icon}</span>
+            <span style="flex: 1; font-size: 0.9rem; color: var(--text);">${s.text}</span>
+            <span style="color: var(--text-secondary); font-size: 0.8rem;">↵</span>
+          </div>
+        `).join('');
+        suggestionsDiv.style.display = 'block';
+      } else {
+        suggestionsDiv.style.display = 'none';
+      }
+    }
+
+    // ربط الاقتراحات بحقل الإدخال
+    chatInputText.addEventListener('input', function() {
+      showChatSuggestions(this.value.trim());
+    });
+
+    // إخفاء الاقتراحات عند الضغط خارجها
+    document.addEventListener('click', function(e) {
+      const suggestionsDiv = document.getElementById('chatSuggestions');
+      if (suggestionsDiv && !e.target.closest('#chatSuggestions') && e.target !== chatInputText) {
+        suggestionsDiv.style.display = 'none';
+      }
+    });
+
+    const toggleChat = () => { 
+      medicalChatbot.classList.toggle('hidden'); 
+      if (!medicalChatbot.classList.contains('hidden')) {
+        chatInputText.focus();
+        
+        // عرض رسالة الترحيب الذكية والأزرار السريعة عند فتح الشات لأول مرة
+        if (chatMessages.children.length === 0) {
+          const welcomeMsg = document.createElement('div');
+          welcomeMsg.className = 'chat-msg bot-msg';
+          welcomeMsg.innerHTML = getSmartWelcome();
+          chatMessages.appendChild(welcomeMsg);
+          
+          // عرض الأزرار السريعة
+          showQuickReplies([
+            { icon: '🔍', label: state.currentLang === 'ar' ? 'ابحث عن طبيب' : 'Find Doctor', value: 'أريد طبيب' },
+            { icon: '📅', label: state.currentLang === 'ar' ? 'احجز موعد' : 'Book Appointment', value: 'حجز موعد' },
+            { icon: '🆘', label: state.currentLang === 'ar' ? 'حالة طارئة' : 'Emergency', value: 'طوارئ' },
+            { icon: '💡', label: state.currentLang === 'ar' ? 'نصيحة طبية' : 'Medical Advice', value: 'نصيحة' }
+          ]);
+        }
+      }
+    };
+    
     chatbotToggleBtn.addEventListener('click', toggleChat);
     closeChatBtn.addEventListener('click', toggleChat);
 
     const normalizeText = (text) => text ? text.trim().toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/[ًٌٍَُِّْ]/g, '').replace(/[^a-z0-9ا-ي\s]/g, '') : "";
 
+    // ✅ الميزة 4: نظام الطوارئ الذكي
+    const EMERGENCY_KEYWORDS = {
+      ar: ['طوارئ', 'طارئ', 'إسعاف', 'نوبة قلبية', 'جلطة', 'نزيف', 'اختناق', 'حادث', 'حريق'],
+      en: ['emergency', 'urgent', 'ambulance', 'heart attack', 'stroke', 'bleeding', 'accident']
+    };
+
+    function detectEmergency(message) {
+      const keywords = EMERGENCY_KEYWORDS[state.currentLang] || [];
+      const lowerMsg = message.toLowerCase();
+      return keywords.some(kw => lowerMsg.includes(kw));
+    }
+
+    function getEmergencyResponse() {
+      return state.currentLang === 'ar' ? `
+        <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 16px; color: #991b1b; animation: pulse 2s infinite;">
+          <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.5rem;">🚨</span> حالة طارئة!
+          </div>
+          <div style="margin-bottom: 12px; font-size: 0.95rem;">
+            إذا كانت الحالة خطيرة، اتصل فوراً بـ:
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <a href="tel:141" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+              <span style="font-size: 1.2rem;">📞</span> الإسعاف: 141
+            </a>
+            <a href="tel:100" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+              <span style="font-size: 1.2rem;">🚑</span> الحماية المدنية: 100
+            </a>
+            <a href="tel:1055" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+              <span style="font-size: 1.2rem;">🚓</span> الشرطة: 1055
+            </a>
+          </div>
+          <div style="margin-top: 12px; font-size: 0.85rem; color: #b91c1c; text-align: center;">
+            ⚠️ لا تنتظر - اتصل الآن إذا كانت الحالة خطيرة
+          </div>
+        </div>
+      ` : `
+        <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 16px; color: #991b1b; animation: pulse 2s infinite;">
+          <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.5rem;">🚨</span> Emergency!
+          </div>
+          <div style="margin-bottom: 12px; font-size: 0.95rem;">
+            If the situation is serious, call immediately:
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <a href="tel:141" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span style="font-size: 1.2rem;">📞</span> Ambulance: 141
+            </a>
+            <a href="tel:100" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span style="font-size: 1.2rem;">🚑</span> Civil Protection: 100
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
     const processUserMessage = (rawMsg) => {
-        const cleanMsg = normalizeText(rawMsg);
-        if (!state.allDoctors || state.allDoctors.length === 0) return t('chatLoadingDB');
-        const availableSpecialties = [...new Set(state.allDoctors.map(d => d.specialty).filter(Boolean))];
-        const availableMunicipalities = [...new Set(state.allDoctors.map(d => d.municipality).filter(Boolean))];
-        let detectedSpecialty = null, detectedMunicipality = null, detectedName = null;
+      // ✅ التحقق من الحالة الطارئة أولاً
+      if (detectEmergency(rawMsg)) {
+        return getEmergencyResponse();
+      }
 
-        for (const spec of availableSpecialties) { if (cleanMsg.includes(normalizeText(t(spec)))) { detectedSpecialty = spec; break; } }
-        for (const mun of availableMunicipalities) { if (cleanMsg.includes(normalizeText(t(mun)))) { detectedMunicipality = mun; break; } }
-        detectedName = state.allDoctors.find(doc => { const fullName = normalizeText((doc.first_name || "") + " " + (doc.last_name || "")); return cleanMsg.split(' ').some(w => w.length >= 3 && fullName.includes(w)); });
+      const cleanMsg = normalizeText(rawMsg);
+      if (!state.allDoctors || state.allDoctors.length === 0) return t('chatLoadingDB');
+      const availableSpecialties = [...new Set(state.allDoctors.map(d => d.specialty).filter(Boolean))];
+      const availableMunicipalities = [...new Set(state.allDoctors.map(d => d.municipality).filter(Boolean))];
+      let detectedSpecialty = null, detectedMunicipality = null, detectedName = null;
 
-        let matchedDoctors = [];
-        let responsePrefix = '';
-        if (detectedSpecialty && detectedMunicipality) {
-            matchedDoctors = state.allDoctors.filter(doc => doc.specialty === detectedSpecialty && doc.municipality === detectedMunicipality);
-            responsePrefix = state.currentLang === 'ar' ? `وجدت لك ${matchedDoctors.length} طبيباً متخصصاً في <strong>${t(detectedSpecialty)}</strong> في <strong>${t(detectedMunicipality)}</strong>. إليك أبرز النتائج:` : `Found ${matchedDoctors.length} <strong>${t(detectedSpecialty)}</strong> doctors in <strong>${t(detectedMunicipality)}</strong>. Here are the top results:`;
-        } else if (detectedSpecialty) {
-            matchedDoctors = state.allDoctors.filter(doc => doc.specialty === detectedSpecialty);
-            responsePrefix = state.currentLang === 'ar' ? `إليك قائمة بأفضل الأطباء المتخصصين في <strong>${t(detectedSpecialty)}</strong>:` : `Here is a list of top <strong>${t(detectedSpecialty)}</strong> specialists:`;
-        } else if (detectedMunicipality) {
-            matchedDoctors = state.allDoctors.filter(doc => doc.municipality === detectedMunicipality);
-            responsePrefix = state.currentLang === 'ar' ? `إليك جميع الأطباء المتوفرين في بلدية <strong>${t(detectedMunicipality)}</strong>:` : `Here are all available doctors in <strong>${t(detectedMunicipality)}</strong>:`;
-        } else if (detectedName) {
-            matchedDoctors = state.allDoctors.filter(doc => { const fullName = normalizeText((doc.first_name || "") + " " + (doc.last_name || "")); return cleanMsg.split(' ').some(w => w.length >= 3 && fullName.includes(w)); });
-            responsePrefix = state.currentLang === 'ar' ? `وجدت نتائج مطابقة لاسم "<strong>${detectedName.first_name} ${detectedName.last_name}</strong>":` : `Found results matching "<strong>${detectedName.first_name} ${detectedName.last_name}</strong>":`;
-        } else {
-            matchedDoctors = state.allDoctors.filter(doc => { const text = normalizeText(`${doc.first_name||''} ${doc.last_name||''} ${doc.specialty||''} ${doc.municipality||''} ${doc.exact_location||''}`); return cleanMsg.split(' ').some(w => w.length >= 3 && text.includes(w)); });
-            if (matchedDoctors.length > 0) responsePrefix = state.currentLang === 'ar' ? `إليك أفضل النتائج المطابقة لبحثك:` : `Here are the best results matching your search:`;
-        }
+      for (const spec of availableSpecialties) { if (cleanMsg.includes(normalizeText(t(spec)))) { detectedSpecialty = spec; break; } }
+      for (const mun of availableMunicipalities) { if (cleanMsg.includes(normalizeText(t(mun)))) { detectedMunicipality = mun; break; } }
+      detectedName = state.allDoctors.find(doc => { const fullName = normalizeText((doc.first_name || "") + " " + (doc.last_name || "")); return cleanMsg.split(' ').some(w => w.length >= 3 && fullName.includes(w)); });
 
-        if (matchedDoctors.length === 0) return state.currentLang === 'ar' ? `عذراً، لم أتمكن من العثور على أطباء يطابقون بحثك "<strong>${rawMsg}</strong>".` : `Sorry, I couldn't find any doctors matching "<strong>${rawMsg}</strong>".`;
+      let matchedDoctors = [];
+      let responsePrefix = '';
+      if (detectedSpecialty && detectedMunicipality) {
+        matchedDoctors = state.allDoctors.filter(doc => doc.specialty === detectedSpecialty && doc.municipality === detectedMunicipality);
+        responsePrefix = state.currentLang === 'ar' ? `وجدت لك ${matchedDoctors.length} طبيباً متخصصاً في <strong>${t(detectedSpecialty)}</strong> في <strong>${t(detectedMunicipality)}</strong>. إليك أبرز النتائج:` : `Found ${matchedDoctors.length} <strong>${t(detectedSpecialty)}</strong> doctors in <strong>${t(detectedMunicipality)}</strong>. Here are the top results:`;
+      } else if (detectedSpecialty) {
+        matchedDoctors = state.allDoctors.filter(doc => doc.specialty === detectedSpecialty);
+        responsePrefix = state.currentLang === 'ar' ? `إليك قائمة بأفضل الأطباء المتخصصين في <strong>${t(detectedSpecialty)}</strong>:` : `Here is a list of top <strong>${t(detectedSpecialty)}</strong> specialists:`;
+      } else if (detectedMunicipality) {
+        matchedDoctors = state.allDoctors.filter(doc => doc.municipality === detectedMunicipality);
+        responsePrefix = state.currentLang === 'ar' ? `إليك جميع الأطباء المتوفرين في بلدية <strong>${t(detectedMunicipality)}</strong>:` : `Here are all available doctors in <strong>${t(detectedMunicipality)}</strong>:`;
+      } else if (detectedName) {
+        matchedDoctors = state.allDoctors.filter(doc => { const fullName = normalizeText((doc.first_name || "") + " " + (doc.last_name || "")); return cleanMsg.split(' ').some(w => w.length >= 3 && fullName.includes(w)); });
+        responsePrefix = state.currentLang === 'ar' ? `وجدت نتائج مطابقة لاسم "<strong>${detectedName.first_name} ${detectedName.last_name}</strong>":` : `Found results matching "<strong>${detectedName.first_name} ${detectedName.last_name}</strong>":`;
+      } else {
+        matchedDoctors = state.allDoctors.filter(doc => { const text = normalizeText(`${doc.first_name||''} ${doc.last_name||''} ${doc.specialty||''} ${doc.municipality||''} ${doc.exact_location||''}`); return cleanMsg.split(' ').some(w => w.length >= 3 && text.includes(w)); });
+        if (matchedDoctors.length > 0) responsePrefix = state.currentLang === 'ar' ? `إليك أفضل النتائج المطابقة لبحثك:` : `Here are the best results matching your search:`;
+      }
 
-        let response = responsePrefix;
-        const remaining = matchedDoctors.length - Math.min(3, matchedDoctors.length);
-        if (remaining > 0) response += state.currentLang === 'ar' ? `<br><span style="color: var(--text-secondary); font-size: 0.85rem;">📋 و ${remaining} نتيجة أخرى متاحة في الدليل الرئيسي</span>` : `<br><span style="color: var(--text-secondary); font-size: 0.85rem;">📋 And ${remaining} more results available</span>`;
-        
-        response += matchedDoctors.slice(0, 3).map(doc => {
-            const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
-            return `<div class="bot-card-result" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 12px; background: var(--surface);">
-                <div style="font-weight: bold; color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 8px;">${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}</div>
-                <div style="color: var(--text); font-size: 0.9rem; margin-bottom: 4px;"><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.specialty))}</div>
-                <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;"><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.municipality))}</div>
-                <button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); window.openDoctorProfileModal(state.allDoctors.find(d => d.id === '${doc.id}'), '${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')" style="margin-top: 12px; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; width: 100%;">${t('chatBookDetailsBtn')}</button>
-            </div>`;
-        }).join('');
-        return response;
+      if (matchedDoctors.length === 0) return state.currentLang === 'ar' ? `عذراً، لم أتمكن من العثور على أطباء يطابقون بحثك "<strong>${rawMsg}</strong>".` : `Sorry, I couldn't find any doctors matching "<strong>${rawMsg}</strong>".`;
+
+      let response = responsePrefix;
+      const remaining = matchedDoctors.length - Math.min(3, matchedDoctors.length);
+      if (remaining > 0) response += state.currentLang === 'ar' ? `<br><span style="color: var(--text-secondary); font-size: 0.85rem;">📋 و ${remaining} نتيجة أخرى متاحة في الدليل الرئيسي</span>` : `<br><span style="color: var(--text-secondary); font-size: 0.85rem;">📋 And ${remaining} more results available</span>`;
+      
+      response += matchedDoctors.slice(0, 3).map(doc => {
+        const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
+        return `<div class="bot-card-result" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 12px; background: var(--surface);">
+          <div style="font-weight: bold; color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 8px;">${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}</div>
+          <div style="color: var(--text); font-size: 0.9rem; margin-bottom: 4px;"><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.specialty))}</div>
+          <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;"><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.municipality))}</div>
+          <button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); window.openDoctorProfileModal(state.allDoctors.find(d => d.id === '${doc.id}'), '${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')" style="margin-top: 12px; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; width: 100%;">${t('chatBookDetailsBtn')}</button>
+        </div>`;
+      }).join('');
+      return response;
     };
 
     const handleSend = () => {
-        const text = chatInputText.value.trim();
-        if (!text) return;
-        const userMsg = document.createElement('div'); userMsg.className = `chat-msg user-msg`; userMsg.innerHTML = escapeHtml(text); chatMessages.appendChild(userMsg);
-        chatInputText.value = '';
+      const text = chatInputText.value.trim();
+      if (!text) return;
+      
+      // إخفاء الاقتراحات
+      const suggestionsDiv = document.getElementById('chatSuggestions');
+      if (suggestionsDiv) suggestionsDiv.style.display = 'none';
+      
+      const userMsg = document.createElement('div'); 
+      userMsg.className = `chat-msg user-msg`; 
+      userMsg.innerHTML = escapeHtml(text); 
+      chatMessages.appendChild(userMsg);
+      chatInputText.value = '';
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      const typingId = "typing-" + Date.now();
+      const botTyping = document.createElement('div'); 
+      botTyping.className = `chat-msg bot-msg`; 
+      botTyping.innerHTML = `<div id="${typingId}" class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`; 
+      chatMessages.appendChild(botTyping); 
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      setTimeout(() => {
+        const typingIndicator = document.getElementById(typingId);
+        if (typingIndicator) typingIndicator.parentElement.remove();
+        const botResponseHtml = processUserMessage(text);
+        const botRes = document.createElement('div'); 
+        botRes.className = `chat-msg bot-msg`; 
+        botRes.innerHTML = botResponseHtml; 
+        chatMessages.appendChild(botRes); 
         chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        const typingId = "typing-" + Date.now();
-        const botTyping = document.createElement('div'); botTyping.className = `chat-msg bot-msg`; botTyping.innerHTML = `<div id="${typingId}" class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`; chatMessages.appendChild(botTyping); chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        setTimeout(() => {
-            const typingIndicator = document.getElementById(typingId);
-            if (typingIndicator) typingIndicator.parentElement.remove();
-            const botResponseHtml = processUserMessage(text);
-            const botRes = document.createElement('div'); botRes.className = `chat-msg bot-msg`; botRes.innerHTML = botResponseHtml; chatMessages.appendChild(botRes); chatMessages.scrollTop = chatMessages.scrollHeight;
-        }, 800);
+      }, 800);
     };
 
     sendChatBtn.addEventListener('click', handleSend);
