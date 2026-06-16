@@ -1,13 +1,23 @@
 // ==========================================
-// chatbot.js - نظام الشات بوت الذكي (النسخة النهائية)
+// chatbot.js - نظام الشات بوت الذكي (النسخة النهائية والمصححة)
 // ==========================================
 import { state } from './state.js';
 import { t, escapeHtml } from './utils.js';
 import { openDoctorProfileModal } from './ui.js';
 
 // ==========================================
-// 1. دوال مساعدة
+// 1. دوال مساعدة (لحل مشاكل النطاق ومعالجة النصوص)
 // ==========================================
+
+// ✅ ربط الدالة بالنطاق العام (window) لتتمكن أزرار الـ HTML من الوصول إليها بدون أخطاء
+window.triggerDoctorProfile = function(doctorId, doctorName) {
+    document.getElementById('medicalChatbot').classList.add('hidden');
+    const doctor = state.allDoctors.find(d => d.id === doctorId);
+    if (doctor) {
+        openDoctorProfileModal(doctor, doctorName);
+    }
+};
+
 function normalizeText(text) {
     if (!text) return "";
     return text.trim().toLowerCase()
@@ -30,11 +40,12 @@ function detectEmergency(message) {
     const lowerMsg = message.toLowerCase();
     return keywords.some(kw => lowerMsg.includes(kw));
 }
+
 function getEmergencyResponse() {
     return state.currentLang === 'ar' ? `
         <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 16px; color: #991b1b; animation: pulse 2s infinite;">
             <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.5rem;"></span> حالة طارئة!
+                <span style="font-size: 1.5rem;">🚨</span> حالة طارئة!
             </div>
             <div style="margin-bottom: 12px; font-size: 0.95rem;">
                 إذا كانت الحالة خطيرة، اتصل فوراً بـ:
@@ -45,7 +56,7 @@ function getEmergencyResponse() {
                 </a>
             </div>
             <div style="margin-top: 12px; font-size: 0.85rem; color: #b91c1c; text-align: center;">
-                ️ لا تنتظر - اتصل الآن إذا كانت الحالة خطيرة
+                ⚠️ لا تنتظر - اتصل الآن إذا كانت الحالة خطيرة
             </div>
         </div>
     ` : `
@@ -58,7 +69,7 @@ function getEmergencyResponse() {
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
                 <a href="tel:100" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span style="font-size: 1.2rem;"></span> Civil Protection: 100
+                    <span style="font-size: 1.2rem;">🚑</span> Civil Protection: 100
                 </a>
             </div>
         </div>
@@ -71,11 +82,11 @@ function getEmergencyResponse() {
 function processUserMessage(rawMsg) {
     const cleanMsg = normalizeText(rawMsg);
     
-    // ✅ معالجة الأوامر العامة
+    // معالجة الأوامر العامة
     if (cleanMsg.includes('حجز موعد') || cleanMsg.includes('احجز موعد') || cleanMsg === 'حجز') {
         return state.currentLang === 'ar' 
             ? `لحجز موعد، يمكنك:<br><br>
-               1️ <strong>البحث عن طبيب</strong> أولاً (اكتب التخصص أو الاسم)<br>
+               1️⃣ <strong>البحث عن طبيب</strong> أولاً (اكتب التخصص أو الاسم)<br>
                2️⃣ ثم اضغط على زر "عرض التفاصيل والحجز"<br><br>
                💡 <strong>مثال:</strong> اكتب "طبيب عيون في غليزان"`
             : `To book an appointment:<br><br>
@@ -165,13 +176,16 @@ function processUserMessage(rawMsg) {
             : `<br><span style="color: var(--text-secondary); font-size: 0.85rem;"> And ${remaining} more results available</span>`;
     }
     
+    // ✅ استخدام الدالة المساعدة window.triggerDoctorProfile لتجنب أخطاء النطاق
     response += matchedDoctors.slice(0, 3).map(doc => {
         const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
+        const cleanName = `${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}`;
+        
         return `<div class="bot-card-result" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 12px; background: var(--surface);">
-            <div style="font-weight: bold; color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 8px;">${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}</div>
+            <div style="font-weight: bold; color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 8px;">${cleanName}</div>
             <div style="color: var(--text); font-size: 0.9rem; margin-bottom: 4px;"><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.specialty))}</div>
             <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;"><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.municipality))}</div>
-            <button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); window.openDoctorProfileModal(state.allDoctors.find(d => d.id === '${doc.id}'), '${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')" style="margin-top: 12px; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; width: 100%;">${t('chatBookDetailsBtn')}</button>
+            <button onclick="window.triggerDoctorProfile('${doc.id}', '${cleanName}')" style="margin-top: 12px; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; width: 100%;">${t('chatBookDetailsBtn')}</button>
         </div>`;
     }).join('');
     
@@ -248,10 +262,9 @@ function getSmartWelcome() {
 }
 
 // ==========================================
-// 6. الأزرار التفاعلية السريعة (Quick Replies) - زرّان فقط
+// 6. الأزرار التفاعلية السريعة (Quick Replies)
 // ==========================================
 function showQuickReplies(chatMessages, replies = []) {
-    // إزالة الأزرار القديمة إذا وجدت
     const existingQuick = chatMessages.querySelector('.quick-replies-container');
     if (existingQuick) existingQuick.remove();
 
@@ -321,7 +334,7 @@ function showChatSuggestions(text) {
         if (fullName.includes(lowerText)) {
             suggestions.push({
                 type: 'doctor',
-                icon: '👨️',
+                icon: '👨‍⚕️',
                 text: `${state.currentLang === 'ar' ? 'د.' : 'Dr.'} ${doc.first_name} ${doc.last_name}`,
                 value: `ابحث عن د. ${doc.first_name} ${doc.last_name}`
             });
@@ -362,7 +375,6 @@ function showChatSuggestions(text) {
                  onclick="document.getElementById('chatInputText').value='${s.value}'; document.getElementById('chatSuggestions').style.display='none'; window.handleSend();">
                 <span style="font-size: 1.2rem;">${s.icon}</span>
                 <span style="flex: 1; font-size: 0.9rem; color: var(--text);">${s.text}</span>
-                <span style="color: var(--text-secondary); font-size: 0.8rem;"></span>
             </div>
         `).join('');
         suggestionsDiv.style.display = 'block';
@@ -389,19 +401,19 @@ export function initChatbot() {
         if (!medicalChatbot.classList.contains('hidden')) {
             chatInputText.focus();
             
-            // ✅ إظهار الأزرار السريعة دائماً عند الفتح (زرّان فقط)
-            showQuickReplies(chatMessages, [
-                { icon: '', label: state.currentLang === 'ar' ? 'احجز موعد' : 'Book Appointment', value: 'حجز موعد' },
-                { icon: '🆘', label: state.currentLang === 'ar' ? 'حالة طارئة' : 'Emergency', value: 'طوارئ' }
-            ]);
-
-            // إضافة رسالة الترحيب الديناميكية فقط إذا كان الشات فارغاً تماماً
+            // ✅ الترتيب الصحيح: إضافة رسالة الترحيب الديناميكية أولاً إذا كان الشات فارغاً
             if (chatMessages.children.length === 0) {
                 const welcomeMsg = document.createElement('div');
                 welcomeMsg.className = 'chat-msg bot-msg';
                 welcomeMsg.innerHTML = getSmartWelcome();
                 chatMessages.appendChild(welcomeMsg);
             }
+            
+            // ✅ ثم إظهار الأزرار السريعة أسفلها لكي لا تتداخل
+            showQuickReplies(chatMessages, [
+                { icon: '📅', label: state.currentLang === 'ar' ? 'احجز موعد' : 'Book Appointment', value: 'حجز موعد' },
+                { icon: '🚨', label: state.currentLang === 'ar' ? 'حالة طارئة' : 'Emergency', value: 'طوارئ' }
+            ]);
         }
     };
     
