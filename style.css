@@ -769,9 +769,6 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.03);
   border: 1px solid rgba(0,0,0,0.04);
-  position: sticky;
-  top: 90px; /* يجعله يتحرك معك عند النزول لقراءة التعليقات */
-  z-index: 10;
 }
 
 /* بطاقة التقييم الاحترافية */
