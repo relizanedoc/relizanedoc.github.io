@@ -88,8 +88,10 @@ export function renderDoctors(doctors) {
     avatar.textContent = (doc.first_name?.[0] || '') + (doc.last_name?.[0] || '');
 
     const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
-    const doctorName = `${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}`;
-
+const rawName = state.currentLang === 'en' && doc.first_name_en && doc.last_name_en 
+    ? `${doc.first_name_en} ${doc.last_name_en}` 
+    : `${doc.first_name} ${doc.last_name}`;
+const doctorName = `${docPrefix} ${escapeHtml(rawName)}`;
     const headerRight = document.createElement('div');
     headerRight.style.cssText = 'flex: 1; min-width: 0;'; 
     headerRight.innerHTML = `
