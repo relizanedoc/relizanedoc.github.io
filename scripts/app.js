@@ -568,13 +568,18 @@ window.submitBooking = async function() {
     form.reset();
     document.getElementById('timeSlotsContainer').innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;">${t('selectDateFirst')}</div>`;
     
+   // --- بناء التذكرة الإلكترونية ---
     const bId = booking.id;
     const shortId = bId.substring(0, 8).toUpperCase();
     const targetDoctorData = state.allDoctors.find(d => d.id === data.DoctorID);
     const bDoctor = targetDoctorData ? `${targetDoctorData.first_name} ${targetDoctorData.last_name}` : '';
-const trackingUrl = `${window.location.origin}/#track?id=${shortId}`;
 
-    document.getElementById('eTicketContainer').innerHTML = `
+    // 👈 تجهيز النص الكامل ليوضع داخل الـ QR ليقرأه المريض بدون إنترنت
+    const qrText = state.currentLang === 'ar' 
+      ? `تفاصيل الحجز:\nرقم الحجز: ${shortId}\nالمريض: ${data.PatientName}\nالطبيب: د. ${bDoctor}\nالتاريخ: ${data.AppointmentDate}\nالوقت: ${data.AppointmentTime}`
+      : `Booking Details:\nID: ${shortId}\nPatient: ${data.PatientName}\nDoctor: Dr. ${bDoctor}\nDate: ${data.AppointmentDate}\nTime: ${data.AppointmentTime}`;
+
+   document.getElementById('eTicketContainer').innerHTML = `
       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1.25rem 1rem; text-align: center; color: white; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 290px; margin: 0 auto;">
         <div style="background: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem auto; color: #10b981;">
           <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -598,7 +603,7 @@ const trackingUrl = `${window.location.origin}/#track?id=${shortId}`;
         </div>
         
         <div style="background: white; padding: 0.4rem; border-radius: 8px; display: inline-block;">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(trackingUrl)}&color=667eea" alt="QR" style="width: 85px; height: 85px; display: block;" />
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrText)}&color=667eea" alt="QR" style="width: 85px; height: 85px; display: block;" />
         </div>
       </div>
     `;
