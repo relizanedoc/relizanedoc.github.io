@@ -4,12 +4,70 @@
 import { supabaseClient } from './api.js';
 import { state, i18n } from './state.js';
 import { t, escapeHtml, formatPhoneNumber, showToast, setLoading } from './utils.js';
-import { updateUserUI, updateToggleText, updateSEOMetaTags, renderDoctors, openDoctorProfileModal, renderDashboardUI, generateTimeSlots, displayTimeSlots } from './ui.js';
+import { updateUserUI, updateToggleText, updateSEOMetaTags, renderDoctors, openDoctorProfileModal, renderDashboardUI, generateTimeSlots, displayTimeSlots, openScheduleModal } from './ui.js';
 import { isAccountLocked, recordFailedAttempt, resetLoginAttempts, getCurrentUser } from './auth.js';
 
 const REVIEWS_PER_PAGE = 11;
 let currentReviewPage = 0;
 let currentReviewsDoctorId = null;
+
+// ✅ ✅ ✅ الكود المفقود المهم جداً: الاستماع لتغيير حالة المصادقة
+let isAuthInitialized = false;
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    console.log('🔄 حدث المصادقة:', event);
+    
+    // 🔴 التقاط حدث استعادة كلمة المرور
+    if (event === 'PASSWORD_RECOVERY') {
+        console.log('✅ تم التقاط حدث استعادة كلمة المرور');
+        setTimeout(() => {
+            window.handleChangePassword();
+        }, 500);
+    }
+    
+    if (['INITIAL_SESSION', 'SIGNED_IN', 'USER_UPDATED', 'TOKEN_REFRESHED'].includes(event)) {
+        if (session) {
+            console.log('✅ جلسة نشطة:', session.user);
+            updateUserUI(session.user);
+            if (event === 'SIGNED_IN') {
+                window.router('user-dashboard');
+                window.history.replaceState(null, '', window.location.pathname + '#user-dashboard');
+            }
+        } else if (event === 'INITIAL_SESSION') {
+            updateUserUI(null);
+        }
+    } else if (event === 'SIGNED_OUT') {
+        console.log('❌ تم تسجيل الخروج');
+        updateUserUI(null);
+    }
+    
+    if (!isAuthInitialized) {
+        const hash = window.location.hash;
+        if (!hash.includes('access_token') && !hash.includes('error=')) {
+            const cleanHash = hash.replace('#', '');
+            const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard', 'doctor-profile'].includes(cleanHash) ? cleanHash : 'home';
+            window.router(startView, false);
+        }
+        isAuthInitialized = true;
+    }
+});
+
+// ✅ التحقق من الجلسة الحالية عند تحميل الصفحة
+window.addEventListener('load', async () => {
+    console.log('🔍 التحقق من الجلسة الحالية...');
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+        console.log('✅ جلسة موجودة، تحديث الواجهة');
+        updateUserUI(session.user);
+    } else {
+        console.log('❌ لا توجد جلسة');
+        updateUserUI(null);
+    }
+});
+
+// ✅ الدالة المفقودة: تحديث نص زر التبديل
+function updateAuthToggle() { 
+    document.getElementById('authToggleText').textContent = t(state.isSignUp ? 'hasAccount' : 'noAccount'); 
+}
 
 // ==========================================
 // 1. نظام التوجيه (Router) واللغة
@@ -71,7 +129,7 @@ window.setLang = function(lang) {
   const addMunSel = document.querySelector('select[name="Municipality"]');
   if (addMunSel && addMunSel.options[0]) addMunSel.options[0].text = t('selectMun');
 
-  if (window.toggleAuthMode) window.toggleAuthMode(true); // Update text safely
+  if (window.toggleAuthMode) window.toggleAuthMode(true);
   updateUserUI();
 
   if (state.allDoctors.length > 0) {
@@ -939,6 +997,26 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) { localStorage.removeItem('doctorSession'); }
   }
 
+  // ✅ ✅ ✅ الكود المفقود: تفعيل النجوم في التقييمات
+  let currentReviewRating = 0;
+  document.querySelectorAll('#starRatingInput .star').forEach(star => {
+      star.addEventListener('mouseover', function() {
+          let val = parseInt(this.getAttribute('data-val'));
+          document.querySelectorAll('#starRatingInput .star').forEach(s => {
+              s.style.color = parseInt(s.getAttribute('data-val')) <= val ? '#f59e0b' : 'var(--border)';
+          });
+      });
+      star.addEventListener('mouseout', function() {
+          document.querySelectorAll('#starRatingInput .star').forEach(s => {
+              s.style.color = parseInt(s.getAttribute('data-val')) <= currentReviewRating ? '#f59e0b' : 'var(--border)';
+          });
+      });
+      star.addEventListener('click', function() {
+          currentReviewRating = parseInt(this.getAttribute('data-val'));
+          document.getElementById('ratingValue').value = currentReviewRating;
+      });
+  });
+
   // --- إعداد فورم التقييمات ---
   document.addEventListener('submit', async function(e) {
     if (e.target && e.target.id === 'reviewForm') {
@@ -962,6 +1040,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           showToast(state.currentLang === 'ar' ? 'تم إرسال تقييمك بنجاح. سيتم نشره بعد المراجعة.' : 'Review submitted successfully.', 'success');
           e.target.reset();
+          currentReviewRating = 0;
           document.getElementById('ratingValue').value = '';
           document.querySelectorAll('#starRatingInput .star').forEach(s => s.style.color = 'var(--border)');
           window.openFullReviewsPage(doctorId);
