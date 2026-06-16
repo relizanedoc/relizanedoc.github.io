@@ -711,8 +711,7 @@ function openDoctorProfileModal(doc, doctorName) {
   if (fbLink && !fbLink.match(/^https?:\/\//i)) {
       fbLink = 'https://' + fbLink;
   }
-
-  const profileUrl = `${window.location.origin}${window.location.pathname}?doc=${doc.id}`;
+  const profileUrl = `${window.location.origin}/doctors/${doc.id}.html`;
   const shareText = currentLang === 'ar' ? 'مشاركة الرابط' : 'Share Link';
   const isBookingEnabled = doc.booking_enabled === true;
 
