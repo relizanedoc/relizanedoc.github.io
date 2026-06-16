@@ -1,68 +1,91 @@
 // ==========================================
-// chatbot.js - نظام المستشار الطبي (كامل ومصلح)
+// chatbot.js - نظام الشات بوت الذكي (النسخة النهائية)
 // ==========================================
 import { state } from './state.js';
-import { t, escapeHtml, formatPhoneNumber } from './utils.js';
+import { t, escapeHtml } from './utils.js';
+import { openDoctorProfileModal } from './ui.js';
 
-// 1. تنظيف النصوص
-const normalizeText = (text) => {
+// ==========================================
+// 1. دوال مساعدة
+// ==========================================
+function normalizeText(text) {
     if (!text) return "";
     return text.trim().toLowerCase()
         .replace(/[أإآ]/g, 'ا')
         .replace(/ة/g, 'ه')
-        .replace(/[ًٌٍَُِّْ]/g, '') 
-        .replace(/[^a-z0-9ا-ي\s]/g, ''); 
+        .replace(/[ًٌٍَُِّْ]/g, '')
+        .replace(/[^a-z0-9ا-ي\s]/g, '');
+}
+
+// ==========================================
+// 2. نظام الطوارئ الذكي
+// ==========================================
+const EMERGENCY_KEYWORDS = {
+    ar: ['طوارئ', 'طارئ', 'إسعاف', 'نوبة قلبية', 'جلطة', 'نزيف', 'اختناق', 'حادث', 'حريق'],
+    en: ['emergency', 'urgent', 'ambulance', 'heart attack', 'stroke', 'bleeding', 'accident']
 };
 
-// 2. فحص الطوارئ
-function detectEmergency(rawMsg) {
-    if (!rawMsg) return false;
-    const msg = rawMsg.toLowerCase();
-    const emergencyKeywords = [
-        'نزيف', 'جلطة', 'غيبوبة', 'حادث', 'طوارئ', 'نوبة قلبية', 'اختناق', 'حرق شديد',
-        'emergency', 'stroke', 'bleeding', 'coma', 'accident', 'heart attack', 'choking'
-    ];
-    return emergencyKeywords.some(keyword => msg.includes(keyword));
+function detectEmergency(message) {
+    const keywords = EMERGENCY_KEYWORDS[state.currentLang] || [];
+    const lowerMsg = message.toLowerCase();
+    return keywords.some(kw => lowerMsg.includes(kw));
 }
 
 function getEmergencyResponse() {
-    return state.currentLang === 'ar'
-        ? `🚨 <strong>تنبيه حالة طارئة:</strong><br><br>عذراً، أنا مساعد آلي ولا يمكنني التعامل مع الحالات الطبية الحرجة الحية.<br><br>📞 <strong>الرجاء الاتصال فوراً بالحماية المدنية أو الإسعاف على الرقم: <span style="color: #ef4444; font-size: 1.3rem;">141</span></strong>`
-        : `🚨 <strong>Emergency Alert:</strong><br><br>Sorry, I am an AI assistant and cannot handle acute or critical medical emergencies.<br><br>📞 <strong>Please immediately call emergency services at: <span style="color: #ef4444; font-size: 1.3rem;">141</span></strong>`;
-}
-
-// 3. بناء بطاقات الأطباء
-function generateCardsHtml(doctorsList) {
-    return doctorsList.map(doc => {
-        const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
-        return `
-        <div class="bot-card-result" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 12px; background: var(--surface); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <div style="font-weight: bold; color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                ${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}
+    return state.currentLang === 'ar' ? `
+        <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 16px; color: #991b1b; animation: pulse 2s infinite;">
+            <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.5rem;">🚨</span> حالة طارئة!
             </div>
-            <div style="color: var(--text); font-size: 0.9rem; margin-bottom: 4px;"><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.specialty))}</div>
-            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;"><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.municipality))}</div>
-            <div style="font-size: 0.9rem; margin-bottom: 4px;"><strong>${t('chatPhoneLabel')}</strong> <span dir="ltr" style="display: inline-block; direction: ltr; color: var(--primary); font-weight: 600;">${escapeHtml(formatPhoneNumber(doc.phone))}</span></div>
-            
-            <button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); window.openDoctorProfileModal(window.state.allDoctors.find(d => d.id === '${doc.id}'), '${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')" 
-                    style="margin-top: 12px; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.9rem; font-weight: bold; width: 100%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                ${t('chatBookDetailsBtn')}
-            </button>
-        </div>`;
-    }).join('');
+            <div style="margin-bottom: 12px; font-size: 0.95rem;">
+                إذا كانت الحالة خطيرة، اتصل فوراً بـ:
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="tel:141" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                    <span style="font-size: 1.2rem;">📞</span> الإسعاف: 141
+                </a>
+                <a href="tel:100" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                    <span style="font-size: 1.2rem;">🚑</span> الحماية المدنية: 100
+                </a>
+                <a href="tel:1055" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                    <span style="font-size: 1.2rem;"></span> الشرطة: 1055
+                </a>
+            </div>
+            <div style="margin-top: 12px; font-size: 0.85rem; color: #b91c1c; text-align: center;">
+                ⚠️ لا تنتظر - اتصل الآن إذا كانت الحالة خطيرة
+            </div>
+        </div>
+    ` : `
+        <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 16px; color: #991b1b; animation: pulse 2s infinite;">
+            <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.5rem;">🚨</span> Emergency!
+            </div>
+            <div style="margin-bottom: 12px; font-size: 0.95rem;">
+                If the situation is serious, call immediately:
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="tel:141" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span style="font-size: 1.2rem;">📞</span> Ambulance: 141
+                </a>
+                <a href="tel:100" style="background: #ef4444; color: white; padding: 12px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span style="font-size: 1.2rem;">🚑</span> Civil Protection: 100
+                </a>
+            </div>
+        </div>
+    `;
 }
 
-// 4. الدالة الرئيسية للمنطق (كودك الأصلي المحدّث)
-const processUserMessage = (rawMsg) => {
+// ==========================================
+// 3. معالجة رسائل المستخدم
+// ==========================================
+function processUserMessage(rawMsg) {
     const cleanMsg = normalizeText(rawMsg);
     
-    // معالجة الأوامر العامة أولاً
+    // ✅ معالجة الأوامر العامة
     if (cleanMsg.includes('حجز موعد') || cleanMsg.includes('احجز موعد') || cleanMsg === 'حجز') {
         return state.currentLang === 'ar' 
             ? `لحجز موعد، يمكنك:<br><br>
-               1️⃣ <strong>البحث عن طبيب</strong> أولاً (اكتب التخصص أو الاسم)<br>
+               1️ <strong>البحث عن طبيب</strong> أولاً (اكتب التخصص أو الاسم)<br>
                2️⃣ ثم اضغط على زر "عرض التفاصيل والحجز"<br><br>
                💡 <strong>مثال:</strong> اكتب "طبيب عيون في غليزان"`
             : `To book an appointment:<br><br>
@@ -71,48 +94,12 @@ const processUserMessage = (rawMsg) => {
                💡 <strong>Example:</strong> Type "eye doctor in Relizane"`;
     }
     
-    if (cleanMsg.includes('أريد طبيب') || cleanMsg.includes('ابحث عن طبيب') || cleanMsg === 'طبيب') {
-        return state.currentLang === 'ar'
-            ? `أهلاً بك! 👋<br><br>
-               💡 <strong>كيف يمكنني مساعدتك في العثور على الطبيب المناسب؟</strong><br><br>
-               يمكنك البحث عن طريق:<br>
-               • <strong>التخصص:</strong> "طبيب عيون"، "طبيب أسنان"<br>
-               • <strong>البلدية:</strong> "أطباء في غليزان"<br>
-               • <strong>الاسم:</strong> "د. أمين"<br>
-               • <strong>أو الكل معاً:</strong> "طبيب أطفال في مازونة"`
-            : `Welcome! 👋<br><br>
-               💡 <strong>How can I help you find the right doctor?</strong><br><br>
-               You can search by:<br>
-               • <strong>Specialty:</strong> "eye doctor", "dentist"<br>
-               • <strong>Municipality:</strong> "doctors in Relizane"<br>
-               • <strong>Name:</strong> "Dr. Amine"<br>
-               • <strong>Or combined:</strong> "pediatrician in Mazouna"`;
-    }
-    
-    if (cleanMsg.includes('نصيحة') || cleanMsg.includes('نصائح طبية') || cleanMsg === 'نصيحة' || cleanMsg === 'نصائح') {
-        return state.currentLang === 'ar'
-            ? `🩺 <strong>نصائح طبية عامة:</strong><br><br>
-               ✅ اشرب 8 أكواب ماء يومياً<br>
-               ✅ نم 7-8 ساعات يومياً<br>
-               ✅ مارس الرياضة 30 دقيقة يومياً<br>
-               ✅ تناول الفواكه والخضروات<br>
-               ✅ تجنب التدخين<br><br>
-               ⚠️ <strong>للحالات الطارئة، اتصل بـ 141</strong>`
-            : `🩺 <strong>General Medical Advice:</strong><br><br>
-               ✅ Drink 8 glasses of water daily<br>
-               ✅ Sleep 7-8 hours daily<br>
-               ✅ Exercise 30 minutes daily<br>
-               ✅ Eat fruits and vegetables<br>
-               ✅ Avoid smoking<br><br>
-               ⚠️ <strong>For emergencies, call 141</strong>`;
-    }
-
     // التحقق من الحالة الطارئة
     if (detectEmergency(rawMsg)) {
         return getEmergencyResponse();
     }
 
-    // البحث في قاعدة البيانات
+    // البحث عن الأطباء
     if (!state.allDoctors || state.allDoctors.length === 0) return t('chatLoadingDB');
     
     const availableSpecialties = [...new Set(state.allDoctors.map(d => d.specialty).filter(Boolean))];
@@ -185,14 +172,218 @@ const processUserMessage = (rawMsg) => {
     if (remaining > 0) {
         response += state.currentLang === 'ar' 
             ? `<br><span style="color: var(--text-secondary); font-size: 0.85rem;">📋 و ${remaining} نتيجة أخرى متاحة في الدليل الرئيسي</span>` 
-            : `<br><span style="color: var(--text-secondary); font-size: 0.85rem;">📋 And ${remaining} more results available in the main directory</span>`;
+            : `<br><span style="color: var(--text-secondary); font-size: 0.85rem;"> And ${remaining} more results available</span>`;
     }
     
-    response += generateCardsHtml(matchedDoctors.slice(0, 3));
+    response += matchedDoctors.slice(0, 3).map(doc => {
+        const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
+        return `<div class="bot-card-result" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 12px; background: var(--surface);">
+            <div style="font-weight: bold; color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 8px;">${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}</div>
+            <div style="color: var(--text); font-size: 0.9rem; margin-bottom: 4px;"><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.specialty))}</div>
+            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;"><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.municipality))}</div>
+            <button onclick="document.getElementById('medicalChatbot').classList.add('hidden'); window.openDoctorProfileModal(state.allDoctors.find(d => d.id === '${doc.id}'), '${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}')" style="margin-top: 12px; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; width: 100%;">${t('chatBookDetailsBtn')}</button>
+        </div>`;
+    }).join('');
+    
     return response;
-};
+}
 
-// 5. ربط الواجهة وتفعيل الأحداث
+// ==========================================
+// 4. دالة الإرسال (مصدرة)
+// ==========================================
+export function handleSend() {
+    const chatInputText = document.getElementById('chatInputText');
+    const chatMessages = document.getElementById('chatMessages');
+    
+    const text = chatInputText.value.trim();
+    if (!text) return;
+    
+    // إخفاء الاقتراحات
+    const suggestionsDiv = document.getElementById('chatSuggestions');
+    if (suggestionsDiv) suggestionsDiv.style.display = 'none';
+    
+    const userMsg = document.createElement('div'); 
+    userMsg.className = `chat-msg user-msg`; 
+    userMsg.innerHTML = escapeHtml(text); 
+    chatMessages.appendChild(userMsg);
+    chatInputText.value = '';
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    const typingId = "typing-" + Date.now();
+    const botTyping = document.createElement('div'); 
+    botTyping.className = `chat-msg bot-msg`; 
+    botTyping.innerHTML = `<div id="${typingId}" class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`; 
+    chatMessages.appendChild(botTyping); 
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    setTimeout(() => {
+        const typingIndicator = document.getElementById(typingId);
+        if (typingIndicator) typingIndicator.parentElement.remove();
+        const botResponseHtml = processUserMessage(text);
+        const botRes = document.createElement('div'); 
+        botRes.className = `chat-msg bot-msg`; 
+        botRes.innerHTML = botResponseHtml; 
+        chatMessages.appendChild(botRes); 
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 800);
+}
+
+// تصدير الدالة على window لاستخدامها في onclick
+window.handleSend = handleSend;
+
+// ==========================================
+// 5. رسائل الترحيب الذكية
+// ==========================================
+function getSmartWelcome() {
+    const hour = new Date().getHours();
+    const lang = state.currentLang;
+    const user = JSON.parse(localStorage.getItem('medicalUser') || 'null');
+    
+    let greeting = '';
+    if (hour < 12) greeting = lang === 'ar' ? 'صباح الخير' : 'Good morning';
+    else if (hour < 18) greeting = lang === 'ar' ? 'مساء الخير' : 'Good afternoon';
+    else greeting = lang === 'ar' ? 'مساء النور' : 'Good evening';
+    
+    if (user) {
+        greeting += ` ${user.Name}! 👋`;
+    } else {
+        greeting += '! ';
+    }
+    
+    const subtitle = lang === 'ar' 
+        ? 'كيف يمكنني مساعدتك اليوم؟' 
+        : 'How can I help you today?';
+    
+    return `${greeting}<br><span style="color: var(--text-secondary); font-size: 0.9rem;">${subtitle}</span>`;
+}
+
+// ==========================================
+// 6. الأزرار التفاعلية السريعة (Quick Replies) - زرّان فقط
+// ==========================================
+function showQuickReplies(chatMessages, replies = []) {
+    // إزالة الأزرار القديمة إذا وجدت
+    const existingQuick = chatMessages.querySelector('.quick-replies-container');
+    if (existingQuick) existingQuick.remove();
+
+    const quickDiv = document.createElement('div');
+    quickDiv.className = 'quick-replies-container';
+    quickDiv.style.cssText = 'display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding: 8px; animation: fadeIn 0.3s ease;';
+    
+    replies.forEach(reply => {
+        const btn = document.createElement('button');
+        btn.className = 'quick-reply-btn';
+        btn.innerHTML = reply.icon ? `${reply.icon} ${reply.label}` : reply.label;
+        btn.style.cssText = `
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+        `;
+        btn.onmouseover = () => {
+            btn.style.transform = 'translateY(-2px)';
+            btn.style.boxShadow = '0 4px 12px rgba(14, 165, 233, 0.3)';
+        };
+        btn.onmouseout = () => {
+            btn.style.transform = 'translateY(0)';
+            btn.style.boxShadow = '0 2px 8px rgba(14, 165, 233, 0.2)';
+        };
+        btn.onclick = () => {
+            quickDiv.remove();
+            document.getElementById('chatInputText').value = reply.value;
+            window.handleSend();
+        };
+        quickDiv.appendChild(btn);
+    });
+    
+    chatMessages.appendChild(quickDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// ==========================================
+// 7. نظام الاقتراحات التلقائية (Autocomplete)
+// ==========================================
+function showChatSuggestions(text) {
+    let suggestionsDiv = document.getElementById('chatSuggestions');
+    if (!suggestionsDiv) {
+        suggestionsDiv = document.createElement('div');
+        suggestionsDiv.id = 'chatSuggestions';
+        suggestionsDiv.style.cssText = 'position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto; z-index: 10000; display: none;';
+        document.body.appendChild(suggestionsDiv);
+    }
+
+    if (text.length < 2) {
+        suggestionsDiv.style.display = 'none';
+        return;
+    }
+
+    const suggestions = [];
+    const lowerText = text.toLowerCase();
+
+    // اقتراحات الأطباء
+    state.allDoctors.forEach(doc => {
+        const fullName = `${doc.first_name} ${doc.last_name}`.toLowerCase();
+        if (fullName.includes(lowerText)) {
+            suggestions.push({
+                type: 'doctor',
+                icon: '👨️',
+                text: `${state.currentLang === 'ar' ? 'د.' : 'Dr.'} ${doc.first_name} ${doc.last_name}`,
+                value: `ابحث عن د. ${doc.first_name} ${doc.last_name}`
+            });
+        }
+    });
+
+    // اقتراحات التخصصات
+    const specialties = [...new Set(state.allDoctors.map(d => d.specialty))];
+    specialties.forEach(spec => {
+        if (spec.toLowerCase().includes(lowerText)) {
+            suggestions.push({
+                type: 'specialty',
+                icon: '🩺',
+                text: t(spec),
+                value: `أريد طبيب ${t(spec)}`
+            });
+        }
+    });
+
+    // اقتراحات البلديات
+    const municipalities = [...new Set(state.allDoctors.map(d => d.municipality))];
+    municipalities.forEach(mun => {
+        if (mun.toLowerCase().includes(lowerText)) {
+            suggestions.push({
+                type: 'municipality',
+                icon: '📍',
+                text: t(mun),
+                value: `طبيب في ${t(mun)}`
+            });
+        }
+    });
+
+    if (suggestions.length > 0) {
+        suggestionsDiv.innerHTML = suggestions.slice(0, 5).map(s => `
+            <div class="chat-suggestion" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s; display: flex; align-items: center; gap: 10px;" 
+                 onmouseover="this.style.background='var(--bg)'" 
+                 onmouseout="this.style.background='white'"
+                 onclick="document.getElementById('chatInputText').value='${s.value}'; document.getElementById('chatSuggestions').style.display='none'; window.handleSend();">
+                <span style="font-size: 1.2rem;">${s.icon}</span>
+                <span style="flex: 1; font-size: 0.9rem; color: var(--text);">${s.text}</span>
+                <span style="color: var(--text-secondary); font-size: 0.8rem;"></span>
+            </div>
+        `).join('');
+        suggestionsDiv.style.display = 'block';
+    } else {
+        suggestionsDiv.style.display = 'none';
+    }
+}
+
+// ==========================================
+// 8. تهيئة الشات بوت (مصدرة)
+// ==========================================
 export function initChatbot() {
     const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
     const closeChatBtn = document.getElementById('closeChatBtn');
@@ -203,50 +394,45 @@ export function initChatbot() {
 
     if (!chatbotToggleBtn || !medicalChatbot) return;
 
-    const toggleChat = () => {
-        medicalChatbot.classList.toggle('hidden');
+    const toggleChat = () => { 
+        medicalChatbot.classList.toggle('hidden'); 
         if (!medicalChatbot.classList.contains('hidden')) {
             chatInputText.focus();
+            
+            // ✅ إظهار الأزرار السريعة دائماً عند الفتح (زرّان فقط)
+            showQuickReplies(chatMessages, [
+                { icon: '', label: state.currentLang === 'ar' ? 'احجز موعد' : 'Book Appointment', value: 'حجز موعد' },
+                { icon: '🆘', label: state.currentLang === 'ar' ? 'حالة طارئة' : 'Emergency', value: 'طوارئ' }
+            ]);
+
+            // إضافة رسالة الترحيب الديناميكية فقط إذا كان الشات فارغاً تماماً
+            if (chatMessages.children.length === 0) {
+                const welcomeMsg = document.createElement('div');
+                welcomeMsg.className = 'chat-msg bot-msg';
+                welcomeMsg.innerHTML = getSmartWelcome();
+                chatMessages.appendChild(welcomeMsg);
+            }
         }
     };
-
+    
     chatbotToggleBtn.addEventListener('click', toggleChat);
     closeChatBtn.addEventListener('click', toggleChat);
 
-    const handleSend = () => {
-        const text = chatInputText.value.trim();
-        if (!text) return;
+    // ربط الاقتراحات بحقل الإدخال
+    chatInputText.addEventListener('input', function() {
+        showChatSuggestions(this.value.trim());
+    });
 
-        const userMsg = document.createElement('div');
-        userMsg.className = `chat-msg user-msg`;
-        userMsg.innerHTML = escapeHtml(text);
-        chatMessages.appendChild(userMsg);
-
-        chatInputText.value = '';
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        const typingId = "typing-" + Date.now();
-        const botTyping = document.createElement('div');
-        botTyping.className = `chat-msg bot-msg`;
-        botTyping.innerHTML = `<div id="${typingId}" class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
-        chatMessages.appendChild(botTyping);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        setTimeout(() => {
-            const typingIndicator = document.getElementById(typingId);
-            if (typingIndicator) typingIndicator.parentElement.remove();
-            
-            const botResponseHtml = processUserMessage(text);
-            const botRes = document.createElement('div');
-            botRes.className = `chat-msg bot-msg`;
-            botRes.innerHTML = botResponseHtml;
-            chatMessages.appendChild(botRes);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }, 800);
-    };
+    // إخفاء الاقتراحات عند الضغط خارجها
+    document.addEventListener('click', function(e) {
+        const suggestionsDiv = document.getElementById('chatSuggestions');
+        if (suggestionsDiv && !e.target.closest('#chatSuggestions') && e.target !== chatInputText) {
+            suggestionsDiv.style.display = 'none';
+        }
+    });
 
     sendChatBtn.addEventListener('click', handleSend);
-    chatInputText.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleSend();
+    chatInputText.addEventListener('keypress', (e) => { 
+        if (e.key === 'Enter') handleSend(); 
     });
 }
