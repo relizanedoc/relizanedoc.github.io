@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الصفحة غير موجودة - دليل أطباء غليزان</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  
+  <style>
+    /* تنسيق خاص لجعل الرسالة في منتصف الشاشة تماماً */
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: var(--bg); /* سيقرأ اللون من ملف style.css */
+      font-family: 'Tajawal', sans-serif;
+    }
+    
+    .error-container {
+      text-align: center;
+      background: white;
+      padding: 3.5rem 2rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.04);
+      max-width: 450px;
+      width: 90%;
+      animation: fadeInUpBounce 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+    
+    .error-code {
+      font-size: 6rem;
+      font-weight: 900;
+      color: var(--primary);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 10px 20px rgba(14, 165, 233, 0.2);
+    }
+    
+    .error-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 1rem;
+    }
+    
+    .error-desc {
+      color: #64748b;
+      margin-bottom: 2.5rem;
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+
+    /* تأثير الظهور الأنيق */
+    @keyframes fadeInUpBounce {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="error-container">
+    <div style="background: rgba(14, 165, 233, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: var(--primary);">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+    </div>
+    
+    <div class="error-code">404</div>
+    <h1 class="error-title">عذراً، الصفحة غير موجودة!</h1>
+    <p class="error-desc">يبدو أنك وصلت إلى رابط خاطئ أو أن الصفحة التي تبحث عنها قد تم نقلها. لا تقلق، يمكنك العودة إلى الدليل الرئيسي بكل سهولة.</p>
+    
+    <a href="index.html" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.85rem 2rem; border-radius: 50px; font-weight: 800; font-size: 1rem; width: 100%;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      العودة للرئيسية
+    </a>
+  </div>
+
+</body>
+</html>
