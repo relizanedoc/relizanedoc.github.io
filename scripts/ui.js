@@ -401,7 +401,16 @@ export function renderDashboardUI(data, doctorId) {
     `;
     container.appendChild(row);
   }
-
+// 🔴 جلب الأسماء باللغتين
+    const fNameAr = document.getElementById('dash_first_name_ar');
+    const lNameAr = document.getElementById('dash_last_name_ar');
+    const fNameEn = document.getElementById('dash_first_name_en');
+    const lNameEn = document.getElementById('dash_last_name_en');
+    
+    if(fNameAr) fNameAr.value = data.doctorDetails.first_name || '';
+    if(lNameAr) lNameAr.value = data.doctorDetails.last_name || '';
+    if(fNameEn) fNameEn.value = data.doctorDetails.first_name_en || '';
+    if(lNameEn) lNameEn.value = data.doctorDetails.last_name_en || '';
   if (data.doctorDetails) {
     document.getElementById('dash_contact_email').value = data.doctorDetails.contact_email || '';
     document.getElementById('dash_whatsapp').value = data.doctorDetails.whatsapp_number || '';
