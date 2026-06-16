@@ -574,28 +574,30 @@ window.submitBooking = async function() {
     const bDoctor = targetDoctorData ? `${targetDoctorData.first_name} ${targetDoctorData.last_name}` : '';
 
     document.getElementById('eTicketContainer').innerHTML = `
-      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1.5rem; text-align: center; color: white; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 320px; margin: 0 auto;">
-        <div style="background: white; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; color: #10b981;">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1.25rem 1rem; text-align: center; color: white; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 290px; margin: 0 auto;">
+        <div style="background: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem auto; color: #10b981;">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
-        <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem; font-weight: bold;">${state.currentLang === 'ar' ? 'تم تأكيد الحجز' : 'Booking Confirmed'}</h3>
-        <div style="font-size: 0.85rem; opacity: 0.95; margin-bottom: 1.5rem;">${state.currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(bDoctor)}</div>
-        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
-            <span style="opacity: 0.9; font-size: 0.9rem;">${state.currentLang === 'ar' ? 'رقم الحجز' : 'Booking ID'}</span>
-            <span style="font-family: monospace; font-weight: bold; letter-spacing: 2px; font-size: 1.1rem;">${shortId}</span>
+        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.2rem; font-weight: bold;">${state.currentLang === 'ar' ? 'تم تأكيد الحجز' : 'Booking Confirmed'}</h3>
+        <div style="font-size: 0.85rem; opacity: 0.95; margin-bottom: 1rem;">${state.currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(bDoctor)}</div>
+        
+        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.7rem; padding-bottom: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
+            <span style="opacity: 0.9; font-size: 0.85rem;">${state.currentLang === 'ar' ? 'رقم الحجز' : 'Booking ID'}</span>
+            <span style="font-family: monospace; font-weight: bold; letter-spacing: 1px; font-size: 1rem;">${shortId}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
-            <span style="opacity: 0.9; font-size: 0.9rem;">${state.currentLang === 'ar' ? 'المريض' : 'Patient'}</span>
-            <span style="font-weight: 600;">${escapeHtml(data.PatientName)}</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.7rem; padding-bottom: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
+            <span style="opacity: 0.9; font-size: 0.85rem;">${state.currentLang === 'ar' ? 'المريض' : 'Patient'}</span>
+            <span style="font-weight: 600; font-size: 0.9rem;">${escapeHtml(data.PatientName)}</span>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="opacity: 0.9; font-size: 0.9rem;">${state.currentLang === 'ar' ? 'التاريخ والوقت' : 'Date & Time'}</span>
+            <span style="opacity: 0.9; font-size: 0.85rem;">${state.currentLang === 'ar' ? 'الوقت' : 'Time'}</span>
             <span dir="ltr" style="font-weight: 600; font-size: 0.85rem;">${data.AppointmentDate} | ${data.AppointmentTime}</span>
           </div>
         </div>
-        <div style="background: white; padding: 1rem; border-radius: 8px; display: inline-block;">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${bId}&color=667eea" alt="QR" style="width: 120px; height: 120px;" />
+        
+        <div style="background: white; padding: 0.4rem; border-radius: 8px; display: inline-block;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${bId}&color=667eea" alt="QR" style="width: 85px; height: 85px; display: block;" />
         </div>
       </div>
     `;
