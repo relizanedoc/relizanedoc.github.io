@@ -797,14 +797,28 @@ window.saveClinicProfile = async function() {
       if (error) throw new Error("فشل رفع الصور: " + error.message);
       if (data && data.urls) finalImageUrls = [...finalImageUrls, ...data.urls];
     }
+// 🔴 قراءة الأسماء من الحقول
+const firstNameAr = document.getElementById('dash_first_name_ar').value.trim();
+const lastNameAr = document.getElementById('dash_last_name_ar').value.trim();
+const firstNameEn = document.getElementById('dash_first_name_en') ? document.getElementById('dash_first_name_en').value.trim() : '';
+const lastNameEn = document.getElementById('dash_last_name_en') ? document.getElementById('dash_last_name_en').value.trim() : '';
 
+// التحقق من أن الاسم العربي ليس فارغاً (لأنه إجباري)
+if (!firstNameAr || !lastNameAr) {
+    showToast(state.currentLang === 'ar' ? 'الاسم واللقب بالعربية إجباريان' : 'Arabic First and Last names are required', 'error');
+    setLoading(btn, false);
+    return;
+}
     const contactEmail = document.getElementById('dash_contact_email').value.trim();
     const whatsapp = document.getElementById('dash_whatsapp').value.trim();
     const facebook = document.getElementById('dash_facebook').value.trim();
     const mapLink = document.getElementById('dash_map_link').value.trim();
 
     const { error: dbError } = await supabaseClient.rpc('update_clinic_profile_secure', {
-      p_doctor_id: session.doctorId, p_session_token: session.sessionToken, p_contact_email: contactEmail, p_whatsapp_number: whatsapp, p_facebook_link: facebook,
+      p_doctor_id: session.doctorId, p_session_token: session.sessionToken,p_first_name: firstNameAr,       // 🆕 أضفنا هذا
+      p_last_name: lastNameAr,         // 🆕 أضفنا هذا
+      p_first_name_en: firstNameEn,    // 🆕 أضفنا هذا
+      p_last_name_en: lastNameEn,      // 🆕 أ p_contact_email: contactEmail, p_whatsapp_number: whatsapp, p_facebook_link: facebook,
       p_map_link: mapLink, p_services: formattedServices, p_certificates: certificatesText, p_clinic_images: finalImageUrls
     });
     if (dbError) throw dbError;
@@ -812,7 +826,10 @@ window.saveClinicProfile = async function() {
     showToast('تم حفظ الملف بنجاح!', 'success');
     const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
     if (docIndex > -1) {
-      state.allDoctors[docIndex] = { ...state.allDoctors[docIndex], contact_email: contactEmail, whatsapp_number: whatsapp, facebook_link: facebook, map_link: mapLink, services: formattedServices, certificates: certificatesText, clinic_images: finalImageUrls };
+      state.allDoctors[docIndex] = { ...state.allDoctors[docIndex], first_name: firstNameAr,            // 🆕
+    last_name: lastNameAr,              // 🆕
+    first_name_en: firstNameEn,         // 🆕
+    last_name_en: lastNameEn,           // 🆕contact_email: contactEmail, whatsapp_number: whatsapp, facebook_link: facebook, map_link: mapLink, services: formattedServices, certificates: certificatesText, clinic_images: finalImageUrls };
       window.createDoctorGitHubPageAsync(state.allDoctors[docIndex], session.doctorId);
     }
     setTimeout(() => location.reload(), 1000);
