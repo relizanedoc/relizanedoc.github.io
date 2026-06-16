@@ -791,96 +791,88 @@
           </div>
         </div>
 
-        <div class='card mb-4' style='padding: 1rem 1.5rem;'>
-          <div class='accordion-header' id='clinicProfileToggle' onclick='document.getElementById("clinicProfileContent").classList.toggle("open"); this.classList.toggle("open");'>
-            <div style='display:flex; align-items:center; gap:0.75rem;'>
-              <div style='background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;'>
-                <svg fill='none' height='20' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24' width='20'><path d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/><circle cx='12' cy='10' r='3'/></svg>
-              </div>
-              <h3 class='text-lg font-bold' data-i18n='clinicProfileTitle' style='font-size: 1.1rem; margin:0;'>ملف العيادة والخدمات</h3>
-            </div>
-            <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
-          </div>
-          <div class='accordion-content' id='clinicProfileContent'>
-            <div style='padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;'>
-                <form id='clinicProfileForm'>
-
-  <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px dashed var(--border);">
-    <h4 style="font-size: 1.05rem; font-weight: bold; margin-bottom: 1rem; color: var(--primary-dark);">المعلومات الشخصية للطبيب</h4>
-    
-    <div class="grid grid-1 grid-2">
-      <div class="form-group">
-        <label>الاسم (بالعربية) *</label>
-        <input type="text" id="dash_first_name_ar" placeholder="مثال: محمد" required>
+       <div class='card mb-4' style='padding: 1rem 1.5rem;'>
+  <div class='accordion-header' id='clinicProfileToggle' onclick='document.getElementById("clinicProfileContent").classList.toggle("open"); this.classList.toggle("open");'>
+    <div style='display:flex; align-items:center; gap:0.75rem;'>
+      <div style='background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;'>
+        <svg fill='none' height='20' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24' width='20'><path d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/><circle cx='12' cy='10' r='3'/></svg>
       </div>
-      
-      <div class="form-group">
-        <label>اللقب (بالعربية) *</label>
-        <input type="text" id="dash_last_name_ar" placeholder="مثال: حمر العين" required>
-      </div>
-      
-      <div class="form-group">
-        <label>الاسم (بالإنجليزية)</label>
-        <input type="text" id="dash_first_name_en" dir="ltr" placeholder="e.g. Mohammed">
-      </div>
-      
-      <div class="form-group">
-        <label>اللقب (بالإنجليزية)</label>
-        <input type="text" id="dash_last_name_en" dir="ltr" placeholder="e.g. Hamr El Ain">
-      </div>
+      <h3 class='text-lg font-bold' data-i18n='clinicProfileTitle' style='font-size: 1.1rem; margin:0;'>ملف العيادة والخدمات</h3>
     </div>
+    <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
   </div>
-  <div class="grid grid-1 grid-2">
-      <div class="form-group">
-          <label data-i18n='clinicEmail'>البريد الإلكتروني للعيادة</label>
-          <input type="email" id="dash_contact_email" data-i18n-placeholder='clinicEmailPh' placeholder="contact@clinic.com">
-      </div>
-                <div class="grid grid-1 grid-2">
-                    <div class="form-group">
-                        <label data-i18n='clinicEmail'>البريد الإلكتروني للعيادة</label>
-                        <input type="email" id="dash_contact_email" data-i18n-placeholder='clinicEmailPh' placeholder="contact@clinic.com">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n='whatsappNum'>رقم الواتساب</label>
-                        <input type="tel" id="dash_whatsapp" data-i18n-placeholder='whatsappPh' placeholder="مثال: 213550000000+">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n='facebookLink'>رابط حساب الفيسبوك</label>
-                        <input type="url" id="dash_facebook" data-i18n-placeholder='facebookPh' placeholder="https://facebook.com/...">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n='mapLink'>رابط موقع العيادة (Google Maps)</label>
-                        <input type="url" id="dash_map_link" data-i18n-placeholder='mapLinkPh' placeholder="رابط خرائط جوجل...">
-                    </div>
-                </div>
+  <div class='accordion-content' id='clinicProfileContent'>
+    <div style='padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;'>
+      <form id='clinicProfileForm'>
 
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label style="font-weight: bold; color: var(--primary-dark);" data-i18n="certificatesLabel">الشهادات والتخصص الدقيق</label>
-                    <p class="text-sm text-gray mb-2" data-i18n="certificatesHelp">اكتب شهاداتك أو تخصصاتك مفصولة بفاصلة (مثال: دبلوم طب أطفال، خريج جامعة الجزائر)</p>
-                    <textarea id="dash_certificates" rows="2" class="input" data-i18n-placeholder="certificatesPh" placeholder="اكتب شهاداتك هنا..."></textarea>
-                </div>
-
-                <div class="form-group" style="margin-top: 1rem; padding: 1.5rem; border: 1px dashed var(--primary); border-radius: 12px; background: #f8fafc; text-align: center;">
-                    <label style="font-weight: bold; color: var(--primary-dark); display: block;" data-i18n="clinicImagesLabel">صور العيادة (لإعطاء ثقة للمرضى)</label>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;" data-i18n="clinicImagesHelp">يمكنك رفع حتى 3 صور كحد أقصى (سيتم حفظها وعرضها في ملفك)</p>
-                    <input type="file" id="dash_clinic_images" accept="image/png, image/jpeg, image/webp" multiple class="input" style="padding: 0.5rem; background: white; margin: 0 auto; max-width: 300px;">
-                </div>
-
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label data-i18n='servicesProvided'>الخدمات المقدمة (جدول الخدمات)</label>
-                    <p class="text-sm text-gray mb-2" data-i18n='servicesHelp'>أضف فئات الخدمات (مثال: طب الأطفال) ثم اكتب الخدمات التابعة لها مفصولة بفاصلة (,)</p>
-                    <div id="servicesContainer" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;"></div>
-                    <button class="btn btn-secondary btn-block" type="button" onclick="addServiceCategory()" style="border: 1px dashed var(--primary); color: var(--primary); background: var(--primary-light);">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        <span data-i18n='addServiceBtn'>إضافة فئة خدمات جديدة</span>
-                    </button>
-                </div>
-
-                <button class='btn btn-primary' id='saveProfileBtn' onclick='saveClinicProfile()' type='button'><span data-i18n='saveChangesBtn'>حفظ التغييرات</span></button>
-              </form>
+        <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px dashed var(--border);">
+          <h4 style="font-size: 1.05rem; font-weight: bold; margin-bottom: 1rem; color: var(--primary-dark);">المعلومات الشخصية للطبيب</h4>
+          <div class="grid grid-1 grid-2">
+            <div class="form-group">
+              <label>الاسم (بالعربية) *</label>
+              <input type="text" id="dash_first_name_ar" placeholder="مثال: محمد" required>
+            </div>
+            <div class="form-group">
+              <label>اللقب (بالعربية) *</label>
+              <input type="text" id="dash_last_name_ar" placeholder="مثال: حمر العين" required>
+            </div>
+            <div class="form-group">
+              <label>الاسم (بالإنجليزية)</label>
+              <input type="text" id="dash_first_name_en" dir="ltr" placeholder="e.g. Mohammed">
+            </div>
+            <div class="form-group">
+              <label>اللقب (بالإنجليزية)</label>
+              <input type="text" id="dash_last_name_en" dir="ltr" placeholder="e.g. Hamr El Ain">
             </div>
           </div>
         </div>
+
+        <div class="grid grid-1 grid-2">
+            <div class="form-group">
+                <label data-i18n='clinicEmail'>البريد الإلكتروني للعيادة</label>
+                <input type="email" id="dash_contact_email" data-i18n-placeholder='clinicEmailPh' placeholder="contact@clinic.com">
+            </div>
+            <div class="form-group">
+                <label data-i18n='whatsappNum'>رقم الواتساب</label>
+                <input type="tel" id="dash_whatsapp" data-i18n-placeholder='whatsappPh' placeholder="مثال: 213550000000+">
+            </div>
+            <div class="form-group">
+                <label data-i18n='facebookLink'>رابط حساب الفيسبوك</label>
+                <input type="url" id="dash_facebook" data-i18n-placeholder='facebookPh' placeholder="https://facebook.com/...">
+            </div>
+            <div class="form-group">
+                <label data-i18n='mapLink'>رابط موقع العيادة (Google Maps)</label>
+                <input type="url" id="dash_map_link" data-i18n-placeholder='mapLinkPh' placeholder="رابط خرائط جوجل...">
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label style="font-weight: bold; color: var(--primary-dark);" data-i18n="certificatesLabel">الشهادات والتخصص الدقيق</label>
+            <p class="text-sm text-gray mb-2" data-i18n="certificatesHelp">اكتب شهاداتك أو تخصصاتك مفصولة بفاصلة (مثال: دبلوم طب أطفال، خريج جامعة الجزائر)</p>
+            <textarea id="dash_certificates" rows="2" class="input" data-i18n-placeholder="certificatesPh" placeholder="اكتب شهاداتك هنا..."></textarea>
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem; padding: 1.5rem; border: 1px dashed var(--primary); border-radius: 12px; background: #f8fafc; text-align: center;">
+            <label style="font-weight: bold; color: var(--primary-dark); display: block;" data-i18n="clinicImagesLabel">صور العيادة (لإعطاء ثقة للمرضى)</label>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;" data-i18n="clinicImagesHelp">يمكنك رفع حتى 3 صور كحد أقصى (سيتم حفظها وعرضها في ملفك)</p>
+            <input type="file" id="dash_clinic_images" accept="image/png, image/jpeg, image/webp" multiple class="input" style="padding: 0.5rem; background: white; margin: 0 auto; max-width: 300px;">
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label data-i18n='servicesProvided'>الخدمات المقدمة (جدول الخدمات)</label>
+            <p class="text-sm text-gray mb-2" data-i18n='servicesHelp'>أضف فئات الخدمات (مثال: طب الأطفال) ثم اكتب الخدمات التابعة لها مفصولة بفاصلة (,)</p>
+            <div id="servicesContainer" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;"></div>
+            <button class="btn btn-secondary btn-block" type="button" onclick="addServiceCategory()" style="border: 1px dashed var(--primary); color: var(--primary); background: var(--primary-light);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span data-i18n='addServiceBtn'>إضافة فئة خدمات جديدة</span>
+            </button>
+        </div>
+
+        <button class='btn btn-primary' id='saveProfileBtn' onclick='saveClinicProfile()' type='button'><span data-i18n='saveChangesBtn'>حفظ التغييرات</span></button>
+      </form>
+    </div>
+  </div>
+</div>
 
         <div class='card mb-4' style='padding: 1rem 1.5rem;'>
           <div class='accordion-header' id='appointmentsToggle' onclick='toggleAppointments()'>
