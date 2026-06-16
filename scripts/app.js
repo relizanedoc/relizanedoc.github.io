@@ -814,17 +814,27 @@ if (!firstNameAr || !lastNameAr) {
     const facebook = document.getElementById('dash_facebook').value.trim();
     const mapLink = document.getElementById('dash_map_link').value.trim();
 
-    const { error: dbError } = await supabaseClient.rpc('update_clinic_profile_secure', {
-      p_doctor_id: session.doctorId, p_session_token: session.sessionToken,p_first_name: firstNameAr,       // 🆕 أضفنا هذا
-      p_last_name: lastNameAr,         // 🆕 أضفنا هذا
-      p_first_name_en: firstNameEn,    // 🆕 أضفنا هذا
-      p_last_name_en: lastNameEn,      // 🆕 أ p_contact_email: contactEmail, p_whatsapp_number: whatsapp, p_facebook_link: facebook,
-      p_map_link: mapLink, p_services: formattedServices, p_certificates: certificatesText, p_clinic_images: finalImageUrls
-    });
-    if (dbError) throw dbError;
+   // إرسال البيانات المحدثة إلى Supabase (13 متغيراً بالتمام)
+        const { error: dbError } = await supabaseClient.rpc('update_clinic_profile_secure', {
+            p_doctor_id: session.doctorId,
+            p_session_token: session.sessionToken,
+            p_first_name: firstNameAr,
+            p_last_name: lastNameAr,
+            p_first_name_en: firstNameEn,
+            p_last_name_en: lastNameEn,
+            p_contact_email: contactEmail,
+            p_whatsapp_number: whatsapp,
+            p_facebook_link: facebook,
+            p_map_link: mapLink,
+            p_services: formattedServices,
+            p_certificates: certificatesText,
+            p_clinic_images: finalImageUrls
+        });
 
-    showToast('تم حفظ الملف بنجاح!', 'success');
-const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
+        if (dbError) throw dbError;
+
+        // تحديث المصفوفة المحلية
+        const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
         if (docIndex > -1) {
             state.allDoctors[docIndex] = { 
                 ...state.allDoctors[docIndex], 
