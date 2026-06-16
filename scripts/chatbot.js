@@ -396,20 +396,28 @@ export function initChatbot() {
 
     if (!chatbotToggleBtn || !medicalChatbot) return;
 
+    // ✅ متغير لتتبع أول فتح للشات
+    let isFirstOpen = true;
+
     const toggleChat = () => { 
         medicalChatbot.classList.toggle('hidden'); 
         if (!medicalChatbot.classList.contains('hidden')) {
             chatInputText.focus();
             
-            // ✅ الترتيب الصحيح: إضافة رسالة الترحيب الديناميكية أولاً إذا كان الشات فارغاً
-            if (chatMessages.children.length === 0) {
+            // ✅ الترتيب الصحيح والمنطق الجديد:
+            // إذا كانت هذه هي المرة الأولى لفتح الشات، امسح الرسالة الثابتة واطبع الذكية
+            if (isFirstOpen) {
+                chatMessages.innerHTML = ''; // تفريغ الرسالة الثابتة القادمة من HTML
+                
                 const welcomeMsg = document.createElement('div');
                 welcomeMsg.className = 'chat-msg bot-msg';
                 welcomeMsg.innerHTML = getSmartWelcome();
                 chatMessages.appendChild(welcomeMsg);
+                
+                isFirstOpen = false; // تغيير الحالة حتى لا تمسح المحادثة في المرات القادمة
             }
             
-            // ✅ ثم إظهار الأزرار السريعة أسفلها لكي لا تتداخل
+            // ✅ إظهار الأزرار السريعة أسفلها لكي لا تتداخل
             showQuickReplies(chatMessages, [
                 { icon: '📅', label: state.currentLang === 'ar' ? 'احجز موعد' : 'Book Appointment', value: 'حجز موعد' },
                 { icon: '🚨', label: state.currentLang === 'ar' ? 'حالة طارئة' : 'Emergency', value: 'طوارئ' }
