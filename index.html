@@ -19,6 +19,9 @@
   <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0ea5e9">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
 </head>
 <body>
   <nav>
@@ -1043,6 +1046,20 @@
     </div>
   </div>
 </div>
+    <script>
+    // تسجيل Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((registration) => {
+            console.log('تم تسجيل Service Worker بنجاح، النطاق:', registration.scope);
+          })
+          .catch((error) => {
+            console.error('فشل تسجيل Service Worker:', error);
+          });
+      });
+    }
+  </script>
 </body>
 
 </html> 
