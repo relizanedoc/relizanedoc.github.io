@@ -12,7 +12,7 @@ const REVIEWS_PER_PAGE = 11;
 let currentReviewPage = 0;
 let currentReviewsDoctorId = null;
 
-// ✅ ✅ ✅ الكود المفقود المهم جداً: الاستماع لتغيير حالة المصادقة
+// ✅ ✅ ✅ الاستماع لتغيير حالة المصادقة
 let isAuthInitialized = false;
 supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log('🔄 حدث المصادقة:', event);
@@ -29,9 +29,15 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         if (session) {
             console.log('✅ جلسة نشطة:', session.user);
             updateUserUI(session.user);
+            
+            // 🟢 التعديل لحل مشكلة التحديث (Refresh Bug):
             if (event === 'SIGNED_IN') {
-                window.router('user-dashboard');
-                window.history.replaceState(null, '', window.location.pathname + '#user-dashboard');
+                const hash = window.location.hash;
+                // نوجه للوحة التحكم فقط إذا كان الدخول للتو عبر حساب Google (يوجد توكن في الرابط)
+                if (hash.includes('access_token')) {
+                    window.router('user-dashboard');
+                    window.history.replaceState(null, '', window.location.pathname + '#user-dashboard');
+                }
             }
         } else if (event === 'INITIAL_SESSION') {
             updateUserUI(null);
@@ -46,12 +52,11 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         if (!hash.includes('access_token') && !hash.includes('error=')) {
             const cleanHash = hash.replace('#', '');
             const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard', 'doctor-profile'].includes(cleanHash) ? cleanHash : 'home';
-            window.router(startView, false);
+            window.router(startView, false); // هذا السطر هو الذي يبقيك في صفحتك الحالية
         }
         isAuthInitialized = true;
     }
 });
-
 // ✅ التحقق من الجلسة الحالية عند تحميل الصفحة
 window.addEventListener('load', async () => {
     console.log('🔍 التحقق من الجلسة الحالية...');
