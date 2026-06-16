@@ -572,6 +572,7 @@ window.submitBooking = async function() {
     const shortId = bId.substring(0, 8).toUpperCase();
     const targetDoctorData = state.allDoctors.find(d => d.id === data.DoctorID);
     const bDoctor = targetDoctorData ? `${targetDoctorData.first_name} ${targetDoctorData.last_name}` : '';
+const trackingUrl = `${window.location.origin}/#track?id=${shortId}`;
 
     document.getElementById('eTicketContainer').innerHTML = `
       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1.25rem 1rem; text-align: center; color: white; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 290px; margin: 0 auto;">
@@ -597,7 +598,7 @@ window.submitBooking = async function() {
         </div>
         
         <div style="background: white; padding: 0.4rem; border-radius: 8px; display: inline-block;">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${bId}&color=667eea" alt="QR" style="width: 85px; height: 85px; display: block;" />
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(trackingUrl)}&color=667eea" alt="QR" style="width: 85px; height: 85px; display: block;" />
         </div>
       </div>
     `;
