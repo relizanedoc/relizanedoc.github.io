@@ -3,6 +3,7 @@
 // ==========================================
 import { state } from './state.js';
 import { t, escapeHtml, formatPhoneNumber, showToast } from './utils.js';
+
 export function updateUserUI(user) {
   const pill = document.getElementById('userPill');
   const loginBtn = document.getElementById('navLoginBtn');
@@ -333,7 +334,7 @@ export function openDoctorProfileModal(doc, doctorName) {
             <span style="color: #f59e0b; font-size: 1.2rem;">★</span> ${state.currentLang === 'ar' ? 'التقييمات' : 'Reviews'}
           </button>
           
-          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.9rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="navigator.clipboard.writeText('${profileUrl}'); window.showToast(window.state.currentLang==='ar'?'تم نسخ الرابط بنجاح':'Copied', 'success');">
+          <button class="btn" style="background: white; border: 1px solid var(--border); color: #0f172a; padding: 0.75rem; font-size: 0.9rem; flex: 1; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="navigator.clipboard.writeText('${profileUrl}'); window.showToast('${state.currentLang === 'ar' ? 'تم نسخ الرابط بنجاح' : 'Copied'}', 'success');">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--primary)" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
             ${shareText}
           </button>
@@ -575,6 +576,32 @@ export function displayTimeSlots(container, slots, timeInput) {
 
   if (morningDiv.querySelector('.slots-grid').hasChildNodes()) container.appendChild(morningDiv);
   if (eveningDiv.querySelector('.slots-grid').hasChildNodes()) container.appendChild(eveningDiv);
+}
+
+// ✅ الدالة المفقودة: فتح نافذة الجدول الأسبوعي
+export function openScheduleModal(doctorName, scheduleHtml) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; padding: 1rem;';
+    const modal = document.createElement('div');
+    modal.className = 'card';
+    modal.style.cssText = 'width: 100%; max-width: 380px; transform: translateY(30px); transition: transform 0.3s ease; position: relative; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); text-align: center; border-top: 4px solid var(--primary);';
+    const titleText = state.currentLang === 'ar' ? 'الجدول الأسبوعي' : 'Weekly Schedule';
+    const closeText = state.currentLang === 'ar' ? 'إغلاق النافذة' : 'Close';
+    modal.innerHTML = `
+        <div style="background: #e6f4ea; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; color: var(--primary);">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: bold; color: var(--text); margin-bottom: 0.25rem;">${titleText}</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem; font-weight: 600;">Dr. ${doctorName}</p>
+        <div style="background: var(--bg); border-radius: 8px; padding: 1rem; border: 1px solid var(--border); margin-bottom: 1.5rem; text-align: ${state.currentLang === 'ar' ? 'right' : 'left'};">${scheduleHtml}</div>
+        <button class="btn btn-primary btn-block" id="closeScheduleModalBtn">${closeText}</button>
+    `;
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => { overlay.style.opacity = '1'; modal.style.transform = 'translateY(0)'; });
+    const closeModal = () => { overlay.style.opacity = '0'; modal.style.transform = 'translateY(30px)'; setTimeout(() => overlay.remove(), 300); };
+    modal.querySelector('#closeScheduleModalBtn').onclick = closeModal;
+    overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
 }
 
 // --- ربط الدوال المساعدة للواجهة بنافذة المتصفح (Window) ---
