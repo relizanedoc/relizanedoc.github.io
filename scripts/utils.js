@@ -48,3 +48,12 @@ export function setLoading(btn, isLoading, originalText = null) {
         btn.innerHTML = originalText || btn.dataset.originalHtml || (state.currentLang === 'ar' ? 'إرسال' : 'Submit');
     }
 }
+// دالة مساعدة لاختيار اسم الطبيب حسب لغة الموقع
+export function getLocalizedName(doc, currentLang) {
+    // إذا كانت لغة الموقع إنجليزية، والطبيب لديه اسم إنجليزي في قاعدة البيانات
+    if (currentLang === 'en' && doc.first_name_en && doc.last_name_en) {
+        return `${doc.first_name_en} ${doc.last_name_en}`;
+    }
+    // في كل الحالات الأخرى (الموقع بالعربية، أو الطبيب لم يكتب اسمه الإنجليزي بعد)
+    return `${doc.first_name} ${doc.last_name}`;
+}
