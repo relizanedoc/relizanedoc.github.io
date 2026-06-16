@@ -377,8 +377,13 @@ export function renderDashboardUI(data, doctorId) {
   state.globalDashboardData = data;
   state.globalDashboardDoctorId = doctorId;
 
-  document.getElementById('dashboardSubtitle').textContent = data.doctorName ? (state.currentLang === 'ar' ? `د. ${data.doctorName}` : `Dr. ${data.doctorName}`) : doctorId;
-
+let rawDashName = data.doctorName;
+if (data.doctorDetails) {
+    rawDashName = state.currentLang === 'en' && data.doctorDetails.first_name_en && data.doctorDetails.last_name_en 
+        ? `${data.doctorDetails.first_name_en} ${data.doctorDetails.last_name_en}` 
+        : `${data.doctorDetails.first_name} ${data.doctorDetails.last_name}`;
+}
+document.getElementById('dashboardSubtitle').textContent = rawDashName ? (state.currentLang === 'ar' ? `د. ${rawDashName}` : `Dr. ${rawDashName}`) : doctorId;
   const daysNames = state.currentLang === 'ar' ? ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'] : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   let savedDays = {};
