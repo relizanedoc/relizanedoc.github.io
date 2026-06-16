@@ -958,6 +958,8 @@ function openDoctorProfileModal(doc, doctorName) {
   `;
   // الانتقال للصفحة أولاً للسماح للمتصفح برسم العناصر
   router('doctor-profile');
+  // تغيير الرابط في شريط المتصفح ليصبح نظيفاً واحترافياً
+  window.history.replaceState({ view: 'doctor-profile' }, document.title, `/doctors/${doc.id}.html`);
 
   // رسم الـ QR Code والتأكد من ظهوره
   setTimeout(() => {
