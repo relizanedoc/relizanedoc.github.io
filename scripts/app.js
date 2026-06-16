@@ -1139,78 +1139,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ✅ الميزة 3: نظام الاقتراحات التلقائية (Autocomplete)
     function showChatSuggestions(text) {
-      let suggestionsDiv = document.getElementById('chatSuggestions');
-      if (!suggestionsDiv) {
+    let suggestionsDiv = document.getElementById('chatSuggestions');
+    if (!suggestionsDiv) {
         suggestionsDiv = document.createElement('div');
         suggestionsDiv.id = 'chatSuggestions';
-        suggestionsDiv.style.cssText = 'position: absolute; bottom: 70px; left: 10px; right: 10px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto; z-index: 1000; display: none;';
-        medicalChatbot.style.position = 'relative';
-        medicalChatbot.appendChild(suggestionsDiv);
-      }
+        suggestionsDiv.style.cssText = 'position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto; z-index: 10000; display: none;';
+        document.body.appendChild(suggestionsDiv); // ← أضفها مباشرة للـ body
+    }
 
-      if (text.length < 2) {
+    if (text.length < 2) {
         suggestionsDiv.style.display = 'none';
         return;
-      }
+    }
 
-      const suggestions = [];
-      const lowerText = text.toLowerCase();
+    const suggestions = [];
+    const lowerText = text.toLowerCase();
 
-      // اقتراحات الأطباء
-      state.allDoctors.forEach(doc => {
+    // اقتراحات الأطباء
+    state.allDoctors.forEach(doc => {
         const fullName = `${doc.first_name} ${doc.last_name}`.toLowerCase();
         if (fullName.includes(lowerText)) {
-          suggestions.push({
-            type: 'doctor',
-            icon: '👨‍⚕️',
-            text: `${state.currentLang === 'ar' ? 'د.' : 'Dr.'} ${doc.first_name} ${doc.last_name}`,
-            value: `ابحث عن د. ${doc.first_name} ${doc.last_name}`
-          });
+            suggestions.push({
+                type: 'doctor',
+                icon: '👨⚕️',
+                text: `${state.currentLang === 'ar' ? 'د.' : 'Dr.'} ${doc.first_name} ${doc.last_name}`,
+                value: `ابحث عن د. ${doc.first_name} ${doc.last_name}`
+            });
         }
-      });
+    });
 
-      // اقتراحات التخصصات
-      const specialties = [...new Set(state.allDoctors.map(d => d.specialty))];
-      specialties.forEach(spec => {
+    // اقتراحات التخصصات
+    const specialties = [...new Set(state.allDoctors.map(d => d.specialty))];
+    specialties.forEach(spec => {
         if (spec.toLowerCase().includes(lowerText)) {
-          suggestions.push({
-            type: 'specialty',
-            icon: '🩺',
-            text: t(spec),
-            value: `أريد طبيب ${t(spec)}`
-          });
+            suggestions.push({
+                type: 'specialty',
+                icon: '',
+                text: t(spec),
+                value: `أريد طبيب ${t(spec)}`
+            });
         }
-      });
+    });
 
-      // اقتراحات البلديات
-      const municipalities = [...new Set(state.allDoctors.map(d => d.municipality))];
-      municipalities.forEach(mun => {
+    // اقتراحات البلديات
+    const municipalities = [...new Set(state.allDoctors.map(d => d.municipality))];
+    municipalities.forEach(mun => {
         if (mun.toLowerCase().includes(lowerText)) {
-          suggestions.push({
-            type: 'municipality',
-            icon: '📍',
-            text: t(mun),
-            value: `طبيب في ${t(mun)}`
-          });
+            suggestions.push({
+                type: 'municipality',
+                icon: '📍',
+                text: t(mun),
+                value: `طبيب في ${t(mun)}`
+            });
         }
-      });
+    });
 
-      if (suggestions.length > 0) {
+    if (suggestions.length > 0) {
         suggestionsDiv.innerHTML = suggestions.slice(0, 5).map(s => `
-          <div class="chat-suggestion" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s; display: flex; align-items: center; gap: 10px;" 
-               onmouseover="this.style.background='var(--bg)'" 
-               onmouseout="this.style.background='white'"
-               onclick="document.getElementById('chatInputText').value='${s.value}'; document.getElementById('chatSuggestions').style.display='none'; handleSend();">
-            <span style="font-size: 1.2rem;">${s.icon}</span>
-            <span style="flex: 1; font-size: 0.9rem; color: var(--text);">${s.text}</span>
-            <span style="color: var(--text-secondary); font-size: 0.8rem;">↵</span>
-          </div>
+            <div class="chat-suggestion" style="padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.2s; display: flex; align-items: center; gap: 10px;" 
+                 onmouseover="this.style.background='var(--bg)'" 
+                 onmouseout="this.style.background='white'"
+                 onclick="document.getElementById('chatInputText').value='${s.value}'; document.getElementById('chatSuggestions').style.display='none'; window.handleSend();">
+                <span style="font-size: 1.2rem;">${s.icon}</span>
+                <span style="flex: 1; font-size: 0.9rem; color: var(--text);">${s.text}</span>
+                <span style="color: var(--text-secondary); font-size: 0.8rem;">↵</span>
+            </div>
         `).join('');
         suggestionsDiv.style.display = 'block';
-      } else {
+    } else {
         suggestionsDiv.style.display = 'none';
-      }
     }
+}
 
     // ربط الاقتراحات بحقل الإدخال
     chatInputText.addEventListener('input', function() {
