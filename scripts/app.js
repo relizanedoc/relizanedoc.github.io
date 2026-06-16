@@ -824,14 +824,24 @@ if (!firstNameAr || !lastNameAr) {
     if (dbError) throw dbError;
 
     showToast('تم حفظ الملف بنجاح!', 'success');
-    const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
-    if (docIndex > -1) {
-      state.allDoctors[docIndex] = { ...state.allDoctors[docIndex], first_name: firstNameAr,            // 🆕
-    last_name: lastNameAr,              // 🆕
-    first_name_en: firstNameEn,         // 🆕
-    last_name_en: lastNameEn,           // 🆕contact_email: contactEmail, whatsapp_number: whatsapp, facebook_link: facebook, map_link: mapLink, services: formattedServices, certificates: certificatesText, clinic_images: finalImageUrls };
-      window.createDoctorGitHubPageAsync(state.allDoctors[docIndex], session.doctorId);
-    }
+const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
+        if (docIndex > -1) {
+            state.allDoctors[docIndex] = { 
+                ...state.allDoctors[docIndex], 
+                first_name: firstNameAr,
+                last_name: lastNameAr,
+                first_name_en: firstNameEn,
+                last_name_en: lastNameEn,
+                contact_email: contactEmail, 
+                whatsapp_number: whatsapp, 
+                facebook_link: facebook, 
+                map_link: mapLink, 
+                services: formattedServices, 
+                certificates: certificatesText, 
+                clinic_images: finalImageUrls 
+            };
+            window.createDoctorGitHubPageAsync(state.allDoctors[docIndex], session.doctorId);
+        }
     setTimeout(() => location.reload(), 1000);
   } catch (err) { showToast('خطأ: ' + err.message, 'error'); } 
   finally { setLoading(btn, false, 'حفظ التغييرات'); if (document.getElementById('dash_clinic_images')) document.getElementById('dash_clinic_images').value = ''; }
