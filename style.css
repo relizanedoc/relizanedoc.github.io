@@ -1155,6 +1155,8 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 
 .hero-section {
   position: relative;
+  /* ضع مسار صورتك هنا بدلاً من الـ HTML */
+  background-image: url('images/hero-bg.jpg') !important; 
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
