@@ -1241,3 +1241,25 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(1.2); }
 }
+/* ===== العنوان الرئيسي ===== */
+.hero-title {
+  color: #ffffff !important;
+  text-shadow: 
+    0 2px 4px rgba(0,0,0,0.1),
+    0 4px 20px rgba(0,0,0,0.15),
+    0 0 60px rgba(14, 165, 233, 0.2);
+  font-size: clamp(1.75rem, 5vw, 2.8rem);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+  
+  /* تأثير الدخول */
+  animation: titleReveal 1s 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes titleReveal {
+  to { opacity: 1; transform: translateY(0); }
+}
