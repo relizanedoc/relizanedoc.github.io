@@ -1150,8 +1150,8 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     text-align: start;
 }
 /* =========================================================
-   تصميم الـ Hero Section الجديد (صورة خلفية + تداخل الصندوق)
    تصميم الـ Hero Section النهائي (صورة خلفية + تداخل الصندوق)
+   تصميم Hero Section المحسّن - بسيط وأنيق
    ========================================================= */
 
 .hero-section {
@@ -1166,19 +1166,19 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   padding: 4rem 1.5rem 8rem 1.5rem !important;
   border: none !important;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
-  
+
   /* تحسين الظل مع إضافة توهج أزرق */
   box-shadow: 
     0 20px 60px rgba(14, 165, 233, 0.25),
     inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  /* ظل بسيط وأنيق */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08) !important;
   margin-bottom: 0 !important;
   
   /* إضافة تأثير حركي ناعم */
   transition: all 0.4s ease;
 }
 
-/* تعديل التظليل ليظهر الوجه في اليسار بوضوح */
 /* تأثير التوهج عند التمرير */
 .hero-section:hover {
   box-shadow: 
@@ -1187,13 +1187,13 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 }
 
 /* الطبقة الأولى: التدرج اللوني المحسن مع تأثير زجاجي */
+/* طبقة تظليل بسيطة لتحسين قراءة النص */
 .hero-section::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  /* التدرج يبدأ شفافاً من اليسار (الوجه) وينتهي بداكن في اليمين (النصوص) */
-  background: linear-gradient(to right, rgba(15, 23, 42, 0.1) 0%, rgba(14, 165, 233, 0.5) 50%, rgba(15, 23, 42, 0.9) 100%);
   /* تدرج أزرق-بنفسجي عصري يبدأ شفافاً من اليسار (الوجه) وينتهي غامقاً في اليمين (النصوص) */
+  /* تدرج بسيط - أزرق فاتح وشفاف */
   background: linear-gradient(135deg, 
     rgba(59, 130, 246, 0.15) 0%, 
     rgba(14, 165, 233, 0.5) 40%,
@@ -1201,6 +1201,8 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     rgba(139, 92, 246, 0.85) 100%);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
+    rgba(14, 165, 233, 0.15) 0%, 
+    rgba(14, 165, 233, 0.35) 100%);
   z-index: 1;
   
   /* تأثير حركي عند التمرير */
@@ -1247,14 +1249,17 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 }
 
 /* تحسين تباين النصوص للقراءة */
+/* تحسين النصوص */
 .hero-section h1, 
 .hero-section p {
   color: #ffffff !important;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   opacity: 1;
 }
 
 /* تحسين شارة "المنصة الطبية الأولى" */
+/* شارة "المنصة الطبية الأولى" - بسيطة */
 .hero-section > div:first-child {
   background: rgba(255, 255, 255, 0.15) !important;
   backdrop-filter: blur(8px) !important;
@@ -1263,14 +1268,21 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
   color: #ffffff !important;
   text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  color: var(--primary-dark) !important;
+  font-weight: 700;
 }
 
 /* صندوق محرك الحجز مع تحسينات */
+/* صندوق البحث */
 .booking-engine-wrapper {
     position: relative;
     z-index: 10;
     margin-top: -3.5rem !important; 
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12) !important; 
     box-shadow: 
       0 15px 35px rgba(0, 0, 0, 0.12),
       0 0 0 1px rgba(255, 255, 255, 0.05) !important;
@@ -1281,6 +1293,7 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     box-shadow: 
       0 20px 45px rgba(0, 0, 0, 0.15),
       0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* الوضع المظلم */
@@ -1296,24 +1309,29 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     box-shadow: 
       0 25px 70px rgba(14, 165, 233, 0.45),
       inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
   }
-  
+
   .hero-section::before {
     background: linear-gradient(135deg, 
       rgba(59, 130, 246, 0.25) 0%, 
       rgba(14, 165, 233, 0.6) 40%,
       rgba(14, 165, 233, 0.8) 60%,
       rgba(139, 92, 246, 0.95) 100%);
+      rgba(14, 165, 233, 0.25) 0%, 
+      rgba(14, 165, 233, 0.45) 100%);
   }
-  
+
   .hero-section:hover::before {
     background: linear-gradient(135deg, 
       rgba(59, 130, 246, 0.3) 0%, 
       rgba(14, 165, 233, 0.7) 40%,
       rgba(14, 165, 233, 0.9) 60%,
       rgba(139, 92, 246, 1) 100%);
+  .hero-section > div:first-child {
+    background: rgba(255, 255, 255, 0.95) !important;
   }
-  
+
   .booking-engine-wrapper {
     background: var(--surface);
     border: 1px solid var(--border);
