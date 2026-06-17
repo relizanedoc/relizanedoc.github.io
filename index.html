@@ -265,10 +265,10 @@
             <div class="suggestions-dropdown hidden" id="searchSuggestions"></div>
           </div>
 
-          <button class="search-action-btn" type="button" onclick="document.getElementById('searchInput').focus()">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <span data-i18n="searchBtnText">بحث</span>
-          </button>
+        <button class="search-action-btn" type="button" onclick="if(window.filterDoctors) window.filterDoctors(); document.getElementById('doctorsList').scrollIntoView({ behavior: 'smooth', block: 'start' });">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+  <span data-i18n="searchBtnText">بحث</span>
+</button>
           
         </div>
       </div>
