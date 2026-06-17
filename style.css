@@ -1158,10 +1158,10 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   /* مسار الصورة هنا */
   background-image: url('images/hero-bg.png') !important; 
   background-size: cover !important;
-  background-position: center !important;
+  background-position: center 25% !important; /* التعديل الأول: إنزال الصورة قليلاً لإظهار رأس الطبيب */
   background-repeat: no-repeat !important;
   border-radius: 20px;
-  padding: 4rem 1.5rem 6.5rem 1.5rem !important;
+  padding: 4.5rem 1.5rem 8.5rem 1.5rem !important; /* التعديل الثاني: زيادة المساحة السفلية لراحة العين */
   border: none !important;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
