@@ -814,12 +814,36 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
    تصميم شريط الحجز الاحترافي (Booking Engine Style)
    ========================================================= */
 .booking-engine-wrapper {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    margin: 0 auto 3rem auto;
-    width: 100%;
-    border: 1px solid rgba(0,0,0,0.05);
+  position: relative;
+  z-index: 10;
+  margin-top: -3rem !important; /* يسحب الصندوق للأعلى فوق الـ Hero */
+  margin-bottom: 3rem;
+  background: var(--surface);
+  border-radius: 16px;
+  /* لا تضف padding هنا - دعه على الحاويات الداخلية */
+  box-shadow: 
+    0 -4px 20px rgba(0,0,0,0.03),
+    0 8px 30px rgba(0,0,0,0.08),
+    0 0 0 1px rgba(0,0,0,0.04) !important;
+  border: 1px solid rgba(0,0,0,0.05);
+  
+  /* تأثير الدخول */
+  animation: bookingFloat 1s 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+@keyframes bookingFloat {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* تأثير hover */
+.booking-engine-wrapper:hover {
+  box-shadow: 
+    0 -4px 20px rgba(0,0,0,0.04),
+    0 12px 40px rgba(0,0,0,0.1),
+    0 0 0 1px rgba(14, 165, 233, 0.1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* --- التبويبات العلوية (Tabs) --- */
@@ -1262,4 +1286,21 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 
 @keyframes titleReveal {
   to { opacity: 1; transform: translateY(0); }
+}
+/* ===== الوصف الفرعي ===== */
+.hero-subtitle {
+  color: rgba(255, 255, 255, 0.92) !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+  line-height: 1.7;
+  max-width: 520px;
+  margin: 0 auto 2rem auto;
+  
+  /* تأثير الدخول */
+  animation: textFade 1s 0.7s ease forwards;
+  opacity: 0;
+}
+
+@keyframes textFade {
+  to { opacity: 1; }
 }
