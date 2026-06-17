@@ -377,7 +377,7 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
+
   /* أزرار القائمة السفلية مع خطوط فاصلة */
   .nav-links .nav-btn {
     border-bottom: 1px solid var(--border) !important;
@@ -406,7 +406,7 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 
 @media (min-width: 768px) { 
   .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } 
-  
+
  /* تأكيد اصطفاف الأقسام الثلاثة كالمسطرة من اليمين واليسار */
   #view-home > .hero-section,
   #view-home > .modern-search-bar,
@@ -1155,28 +1155,24 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 
 .hero-section {
   position: relative;
-  background-image: url('images/hero-bg.png') !important; 
-  /* محاذاة الصورة لليسار لترك مساحة للنصوص على اليمين */
-  background-position: left center !important; 
-  background-size: cover !important;
-  background-repeat: no-repeat !important;
-  
+  /* دمج الصورة مع تدرج لوني */
+  background: 
+    linear-gradient(to right, rgba(255,255,255,0) 0%, var(--surface) 100%), /* تدرج لتنعيم الحافة اليمنى */
+    url('hero-bg.png') no-repeat left center; /* الصورة على اليسار */
+    url('images/hero-bg.png') no-repeat left center; /* الصورة على اليسار */
+  background-color: #f0f4f8; /* لون خلفية مشابه للصورة (اختر لوناً دقيقاً من يمين الصورة) */
+  background-size: contain !important; /* إظهار الصورة بالكامل دون قص */
   border-radius: 20px;
-  padding: 4rem 1.5rem 8rem 1.5rem !important;
+  padding: 4rem 1.5rem 5rem 1.5rem !important; 
   border: none !important;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
   margin-bottom: 0 !important;
 }
 
-/* تعديل التظليل ليظهر الوجه في اليسار بوضوح */
+/* إزالة الطبقة الداكنة السابقة إذا استخدمت هذا الحل */
 .hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  /* التدرج يبدأ شفافاً من اليسار (الوجه) وينتهي بداكن في اليمين (النصوص) */
-  background: linear-gradient(to right, rgba(15, 23, 42, 0.1) 0%, rgba(14, 165, 233, 0.5) 50%, rgba(15, 23, 42, 0.9) 100%);
-  z-index: 1;
+  display: none;
 }
 
 .hero-section > * {
