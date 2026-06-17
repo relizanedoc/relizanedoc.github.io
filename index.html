@@ -215,24 +215,43 @@
 <h1 class='text-xl font-bold mb-3' data-i18n='heroTitle' style='color: #0f172a; font-size: clamp(1.1rem, 4.5vw, 1.8rem); white-space: nowrap; letter-spacing: -0.5px;'>دليل أطباء ولاية غليزان</h1>
 <p class='text-sm text-gray' data-i18n='heroSubtitle' style='max-width: 100%; margin: 0 auto; line-height: 1.6; padding: 0 1rem; font-size: clamp(0.8rem, 3vw, 0.95rem);'>منصتك الشاملة للبحث عن العيادات وحجز المواعيد الطبية في غليزان.</p>
       </div>
+<h2 class='text-xl font-bold mb-4 text-center' data-i18n='findDoctor'>ابحث عن طبيب</h2>
 
+<div class="modern-search-bar">
+  <div class="search-field">
+    <label data-i18n="selectSpecialtyLabel">الاختصاص</label>
+    <div class="input-wrapper">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <select id="specialtyFilter"><option value="">جميع الاختصاصات</option></select>
+    </div>
+  </div>
 
-<h2 class='text-xl font-bold mb-4 text-center' data-i18n='findDoctor'>Find a Doctor</h2>
+  <div class="search-divider"></div>
 
-      <div class='filters'>
+  <div class="search-field">
+    <label data-i18n="selectCityLabel">البلدية</label>
+    <div class="input-wrapper">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+      <select id="municipalityFilter"><option value="">جميع البلديات</option></select>
+    </div>
+  </div>
 
-        <div style='position: relative; flex: 1;'>
+  <div class="search-divider"></div>
 
-<input autocomplete='off' data-i18n-placeholder='searchPlaceholder' id='searchInput' placeholder='🔍 Search by name, specialty, or location...' type='text'>
-          <div class='suggestions-dropdown hidden' id='searchSuggestions'></div>
+  <div class="search-field" style="flex: 1.5; position: relative;">
+    <label data-i18n="searchByNameLabel">أو ابحث باسم الطبيب</label>
+    <div class="input-wrapper">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <input autocomplete="off" data-i18n-placeholder="searchPlaceholder" id="searchInput" placeholder="اسم الطبيب..." type="text" style="width: 100%;">
+    </div>
+    <div class="suggestions-dropdown hidden" id="searchSuggestions"></div>
+  </div>
 
-        </div>
-
-        <select id='specialtyFilter'><option value=''>All Specialties</option></select>
-
-        <select id='municipalityFilter'><option value=''>All Municipalities</option></select>
-
-      </div>
+  <button class="search-action-btn" onclick="document.getElementById('searchInput').focus()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <span data-i18n="searchBtnText">بحث</span>
+  </button>
+</div>
 
     <div class='grid grid-1 grid-2 grid-3 grid-4' id='doctorsList'>
 
