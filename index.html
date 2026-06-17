@@ -1,1339 +1,1157 @@
-/* ==========================================================================
-   Relizane Medical Directory - Master Stylesheet (Clean & Centered)
-   ========================================================================== */
+<!DOCTYPE html>
 
-/* === المتغيرات والألوان الأساسية === */
-:root {
-  --primary: #0ea5e9; --primary-dark: #0284c7; --primary-light: #e0f2fe;
-  --bg: #f8fafc; --surface: #ffffff; --text: #0f172a; --text-secondary: #64748b;
-  --border: #e2e8f0; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
-  --radius: 14px;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-}
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relizane Medical - دليل أطباء ولاية غليزان</title>
+  <meta name="description" content="دليل أطباء ولاية غليزان الشامل. ابحث واحجز موعدك الطبي عبر الإنترنت مع أفضل الأطباء والأخصائيين في غليزان وجميع بلدياتها. عناوين وأرقام هواتف العيادات.">
+  <meta name="keywords" content="أطباء غليزان, طبيب عام غليزان, دليل أطباء غليزان, مواعيد طبية غليزان, طبيب أسنان غليزان, عيادات غليزان, Medecin Relizane, Docteur Relizane">
+  <meta property="og:title" content="دليل أطباء ولاية غليزان - Relizane Medical">
+  <meta property="og:description" content="المنصة الأولى للبحث وحجز المواعيد الطبية في ولاية غليزان.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.min.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=4">
+  <script src="https://www.google.com/recaptcha/api.js?render=6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0ea5e9">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+</head>
+<body>
+  <nav>
+    <div class='nav-inner'>
 
-/* === الوضع المظلم (Dark Mode) === */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --primary: #0ea5e9; --primary-dark: #38bdf8; --primary-light: #082f49;
-    --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --text-secondary: #94a3b8; --border: #334155;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5); 
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5); 
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
-  }
-  tr:hover td { background: var(--bg); }
-  .btn-google { background: var(--surface); color: var(--text); }
-  .btn-google:hover { background: var(--bg); }
-  .toast { background: var(--text); color: var(--bg); }
-.hero-section { border-color: transparent !important; }
-}
+      <div class='logo' id='logoHomeBtn' style='cursor: pointer;'>
 
-/* === الإعدادات العامة === */
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body { 
-  font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
-  background: var(--bg); color: var(--text); line-height: 1.6; display: flex; flex-direction: column; min-height: 100vh; 
-   overflow-x: hidden;
-}
+        <svg fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' viewBox='0 0 24 24' width='24'>
 
-/* === شريط التمرير المخصص === */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg); border-radius: 10px; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+          <path d='M22 12h-4l-3 9L9 3l-3 9H2'/>
 
-/* === الفئات المساعدة === */
-.hidden { display: none !important; }
-.text-center { text-align: center; } 
-.text-sm { font-size: 0.875rem; } 
-.text-lg { font-size: 1.125rem; } 
-.text-xl { font-size: 1.25rem; }
-.font-semibold { font-weight: 600; } 
-.font-bold { font-weight: 700; } 
-.text-gray { color: var(--text-secondary); }
-.mb-2 { margin-bottom: 0.5rem; } 
-.mb-4 { margin-bottom: 1rem; } 
-.mb-6 { margin-bottom: 1.5rem; } 
-.mt-4 { margin-top: 1rem; } 
-.p-4 { padding: 1rem; }
+        </svg>
 
-/* === الحاويات المركزية (تم إصلاح التمدد هنا) === */
-nav { 
-  background: var(--surface); border-bottom: 1px solid var(--border); 
-  padding: 0.75rem 0; position: sticky; top: 0; z-index: 50; box-shadow: var(--shadow-sm); 
-  width: 100%;
-  background: var(--surface); 
-  border-bottom: 1px solid var(--border); 
-  padding: 0.75rem 0; 
-  position: sticky; 
-  top: 0; 
-  z-index: 50; 
-  box-shadow: var(--shadow-sm); 
-  /* اختياري: يمكنك إضافة حواف دائرية بالأسفل ليتناسب مع التصميم الحديث */
-  /* border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); */
-}
-.nav-inner { 
-  max-width: 1200px; 
-margin-left: auto !important;
-margin-right: auto !important;
-   padding: 0 1.5rem; 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  flex-wrap: wrap; 
-  gap: 0.75rem; 
-  width: 100%; /* يضمن أن المحتوى يملأ العرض الأقصى 1200 بكسل */
-}
-.app-container { 
-  max-width: 1200px; 
-  margin-left: auto !important;
-margin-right: auto !important;
-  padding: 2rem 1.5rem; 
-  flex: 1; 
-  width: 100%; 
-}
-footer { 
-  background: var(--surface); border-top: 1px solid var(--border); 
-  padding: 1.5rem 1rem; text-align: center; margin-top: 2rem; 
-  color: var(--text-secondary); font-size: 0.875rem; 
-}
-footer .footer-inner { /* لتوسيط محتوى الفوتر إذا لزم الأمر */
-  max-width: 1000px; margin: 0 auto;
-}
+        <span data-i18n='appName'>Relizane Medical</span>
 
-/* === الشبكة (Grid) المحسنة === */
-.grid { display: grid; gap: 1rem; }
-.grid-1 { grid-template-columns: 1fr; }
-@media (min-width: 640px) { .grid-2 { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 768px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1024px) { .grid-4 { grid-template-columns: repeat(4, 1fr); } } /* تم التعديل لـ 3 لراحة العين */
+      </div>
 
-/* === العناصر في الشريط العلوي === */
-.logo { font-size: 1.25rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
-.right-nav-controls { display: flex; align-items: center; gap: 0.75rem; margin-inline-start: auto; }
-.lang-switch { display: flex; gap: 0.25rem; background: var(--bg); padding: 0.25rem; border-radius: var(--radius); border: 1px solid var(--border); }
-.lang-btn { background: transparent; border: none; padding: 0.5rem 0.875rem; border-radius: 10px; cursor: pointer; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-.lang-btn:active { transform: scale(0.95); }
-.lang-btn:hover { color: var(--primary); }
-.lang-btn.active { background: var(--primary); color: white; }
-.nav-links { display: flex; gap: 0.25rem; flex-wrap: wrap; align-items: center; }
-.nav-btn { background: transparent; border: none; padding: 0.5rem 0.875rem; border-radius: var(--radius); cursor: pointer; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); transition: all 0.2s; }
-.nav-btn:hover { background: var(--bg); color: var(--primary); }
-.nav-btn.active { background: var(--primary-light); color: var(--primary-dark); font-weight: 600; }
-.user-pill { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; background: var(--primary-light); color: var(--primary-dark); border-radius: var(--radius); font-size: 0.875rem; font-weight: 600; }
-.hamburger-btn { display: none; background: var(--surface); border: 1px solid var(--border); color: var(--text); cursor: pointer; padding: 0.4rem 0.5rem; border-radius: 10px; transition: all 0.2s ease; box-shadow: var(--shadow-sm); flex-shrink: 0; }
-.hamburger-btn:hover, .hamburger-btn:active { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); transform: scale(0.95); }
+      <div class='right-nav-controls' style='display: flex; align-items: center; gap: 0.75rem;'>
 
-/* === قائمة الموبايل === */
-@media (max-width: 768px) {
-  .hamburger-btn { display: flex; align-items: center; justify-content: center; }
-  .lang-switch { flex-shrink: 0; }
-  .logo { font-size: 1.1rem; flex: 1; min-width: 0; }
-  .logo svg { width: 20px; height: 20px; flex-shrink: 0; }
-  .nav-inner { flex-wrap: wrap; }
-  .nav-links { display: flex; flex-direction: column; width: 100%; background: var(--surface); order: 3; max-height: 0; opacity: 0; overflow: hidden; padding: 0; margin-top: 0; border-top: 1px solid transparent; transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease, margin-top 0.3s ease, border-color 0.3s ease; }
-  .nav-links.show { max-height: 400px; opacity: 1; padding: 0.5rem 0; margin-top: 0.75rem; border-top: 1px solid var(--border); }
-  .nav-btn { width: 100%; text-align: right; padding: 0.75rem 1rem; border-radius: 0; }
-  [dir="ltr"] .nav-btn { text-align: left; }
-  .user-pill { justify-content: space-between; border-radius: 0; margin-top: 0.25rem; }
-} 
+        <div class='lang-switch'>
 
-/* === البطاقات والتأثيرات === */
-.card { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; position: relative; }
-.card-hover { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-.card-hover:hover { box-shadow: 0 14px 28px rgba(0,0,0,0.05), 0 10px 10px rgba(0,0,0,0.02); transform: translateY(-6px); border-color: var(--primary); z-index: 10; }
+          <button class='lang-btn active' id='btn-en'>EN</button>
 
-/* === النماذج والأزرار === */
-.form-group { margin-bottom: 1.25rem; }
-label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.375rem; color: var(--text); }
-input, select, textarea { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; font-family: 'Tajawal', sans-serif; background: var(--surface); color: var(--text); transition: border-color 0.2s ease, box-shadow 0.2s ease; }
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: var(--radius); border: none; font-family: 'Tajawal', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-.btn-primary { background: var(--primary); color: white; transition: all 0.3s ease; }
-.btn-primary:hover { background: var(--primary-dark); box-shadow: 0 0 12px rgba(14, 165, 233, 0.5); }
-.btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
-.btn-secondary:hover { background: var(--border); }
-.btn-success { background: var(--success); color: white; }
-.btn-success:hover { filter: brightness(0.95); }
-.btn-block { width: 100%; }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn-google { background: #ffffff; color: #444; border: 1.5px solid var(--border); }
-.btn-google:hover { background: #f8f9fa; }
+          <button class='lang-btn' id='btn-ar'>عربي</button>
 
-/* === بطاقات الأطباء والبحث === */
-.doctor-card { display: flex; flex-direction: column; gap: 0.75rem; height: 100%; }
-.doctor-header { display: flex; align-items: center; gap: 0.875rem; }
-[dir="rtl"] .doctor-header { flex-direction: row-reverse; }
-.avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.125rem; flex-shrink: 0; box-shadow: var(--shadow); }
-.doctor-meta { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; }
-.doctor-meta div { display: flex; align-items: center; margin-bottom: 0.25rem; gap: 0.3rem; }
-.badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--primary-light); color: var(--primary-dark); }
+        </div>
 
-/* === القوائم المنسدلة الذكية (Tom Select & Suggestions) === */
-.suggestions-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 0.35rem; box-shadow: var(--shadow-lg); z-index: 100; max-height: 280px; overflow-y: auto; }
-.suggestion-item { padding: 0.75rem 1rem; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; transition: background 0.2s; }
-.suggestion-item:last-child { border-bottom: none; }
-.suggestion-item:hover { background: var(--bg); }
-.sugg-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: bold; flex-shrink: 0; }
-.ts-control { border: 1px solid var(--border) !important; border-radius: var(--radius) !important; padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; font-family: inherit; background: var(--surface) !important; color: var(--text) !important; font-size: 1rem !important; box-shadow: none !important; }
-.ts-control.focus { border-color: var(--primary) !important; box-shadow: 0 0 8px rgba(14, 165, 233, 0.35) !important; }
-.ts-dropdown { border-radius: var(--radius); border-color: var(--border); box-shadow: var(--shadow-lg); }
-.ts-dropdown .active { background-color: var(--primary-light) !important; color: var(--primary-dark) !important; }
-[dir="ltr"] .ts-control { padding-right: 2.5rem !important; padding-left: 1rem !important; }
-[dir="rtl"] .ts-control { padding-left: 2.5rem !important; padding-right: 1rem !important; text-align: right; }
-[dir="rtl"] .ts-wrapper.single .ts-control::after { right: auto; left: 15px; }
+        <button aria-label='Menu' class='hamburger-btn' id='hamburgerBtn'>
 
-/* === تأثير التحميل الوهمي (Skeleton) === */
-.skeleton-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; position: relative; overflow: hidden; height: 100%; }
-.skeleton-card::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform: translateX(-100%); background: linear-gradient(90deg, rgba(255,255,255,0) 0, rgba(255,255,255,0.4) 20%, rgba(255,255,255,0.6) 60%, rgba(255,255,255,0)); animation: shimmer 1.5s infinite; }
-.s-header { display: flex; gap: 0.875rem; margin-bottom: 1rem; }
-.s-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
-.s-line { height: 12px; background: var(--border); border-radius: 4px; margin-bottom: 8px; }
-.s-w-50 { width: 50%; } .s-w-75 { width: 75%; } .s-w-100 { width: 100%; margin-top: 1rem;}
-[dir="rtl"] .skeleton-card::after { animation: shimmer-rtl 1.5s infinite; }
-@keyframes shimmer { 100% { transform: translateX(100%); } }
-@keyframes shimmer-rtl { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+          <svg fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='24'>
 
-/* === النوافذ المنبثقة والتنبيهات (Modals & Toasts) === */
-.dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1rem; }
-.dialog-box { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 2rem; max-width: 420px; width: 100%; text-align: center; transform: scale(0.95); opacity: 0; animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-@keyframes modalPop { to { transform: scale(1); opacity: 1; } }
-.dialog-box h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.75rem; }
-.dialog-box p { color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9375rem; }
-.dialog-actions { display: flex; gap: 0.75rem; justify-content: center; }
-#toastContainer { position: fixed; bottom: 2.5rem; left: 50%; transform: translateX(-50%); z-index: 99999; display: flex; flex-direction: column; gap: 0.75rem; pointer-events: none; align-items: center; width: 100%; max-width: 400px; }
-.toast { background: var(--text); color: white; padding: 0.875rem 1.5rem; border-radius: 50px; box-shadow: var(--shadow-lg); font-size: 0.9375rem; font-weight: 500; animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; max-width: 90%; line-height: 1.4; text-align: center; }
-.toast.success { background: var(--success); }
-.toast.error { background: var(--danger); }
-@keyframes slideUp { from { transform: translateY(120%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-@keyframes fadeOutDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(120%); } }
+            <path d='M3 12h18M3 6h18M3 18h18'/>
 
-/* === واجهة ملف الطبيب والتذكرة (E-Ticket) === */
-.doctor-profile-modal { max-width: 600px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
-.dp-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; position: relative; }
-.dp-close { position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-.dp-close:hover { background: rgba(255,255,255,0.3); }
-[dir="rtl"] .dp-close { right: auto; left: 1rem; }
-.dp-body { padding: 1.5rem; overflow-y: auto; flex: 1; background: var(--bg); }
-.dp-info-row { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed var(--border); }
-.dp-info-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-.dp-info-icon { color: var(--primary); background: var(--primary-light); padding: 0.5rem; border-radius: 8px; display: flex; }
-.dp-footer { padding: 1rem 1.5rem; background: var(--surface); border-top: 1px solid var(--border); }
+          </svg>
 
-.e-ticket { 
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-  border-radius: 12px; padding: 1.5rem; text-align: center; color: white; 
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 320px; margin: 0 auto; position: relative; overflow: hidden;
-}
-.e-ticket-top { margin-bottom: 1rem; }
-.e-ticket-top h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: bold; }
-.e-ticket-top .doctor-name { font-size: 0.85rem; opacity: 0.95; margin-bottom: 1rem; font-weight: 500; }
-.e-ticket-divider { height: 0; border-top: 2px dashed rgba(255,255,255,0.3); margin: 1rem 0; position: relative; }
-.e-ticket-divider::before, .e-ticket-divider::after { content: ''; position: absolute; top: -12px; width: 24px; height: 24px; background: var(--bg); border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); }
-.e-ticket-divider::before { right: -1.5rem; transform: translateX(50%); }
-.e-ticket-divider::after { left: -1.5rem; transform: translateX(-50%); }
-.e-ticket-bottom { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
-.e-ticket-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.2); }
-.e-ticket-info:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
-.e-ticket-label { font-size: 0.8rem; opacity: 0.9; }
-.e-ticket-value { font-size: 0.85rem; font-weight: 600; }
-.e-ticket-value.booking-id { font-family: 'Courier New', monospace; font-weight: bold; letter-spacing: 1.5px; font-size: 0.9rem; }
-.e-ticket-qr { background: white; padding: 0.75rem; border-radius: 6px; display: inline-block; margin-top: 1rem; }
-.e-ticket-qr img { width: 80px; height: 80px; display: block; }
-.e-ticket-footer { margin-top: 1rem; font-size: 0.75rem; opacity: 0.9; }
+        </button>
 
-/* === التقييمات والأكورديون والفترات الزمنية === */
-.star-rating { display: inline-flex; align-items: center; direction: ltr; }
-.star { cursor: pointer; font-size: 1.8rem; color: var(--border); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); line-height: 1; display: inline-block; }
-.star:hover, .star.selected { transform: scale(1.15); }
-.star.selected { color: #f59e0b; }
-.star-display { color: #f59e0b; font-size: 1rem; letter-spacing: 1px; }
-.review-item { padding: 1rem; border-bottom: 1px dashed var(--border); text-align: right; }
-[dir="ltr"] .review-item { text-align: left; }
-.review-item:last-child { border-bottom: none; }
-.review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-.review-author { font-weight: bold; color: var(--text); font-size: 0.95rem; }
-.review-date { font-size: 0.75rem; color: var(--text-secondary); }
-.review-text { font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem; }
-.rating-badge { display: inline-flex; align-items: center; gap: 0.3rem; background: #fef3c7; color: #b45309; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: bold; font-size: 0.85rem; border: 1px solid #fde68a; cursor: pointer; transition: transform 0.2s; }
-.rating-badge:hover { transform: scale(1.05); }
+      </div>
 
-.time-slot-btn { padding: 0.6rem 0.5rem; border: 1.5px solid var(--border); border-radius: 50px; background: var(--surface); color: var(--text-secondary); cursor: pointer; text-align: center; font-size: 0.9rem; font-weight: 700; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-.time-slot-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.1); }
-.time-slot-btn.selected { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3); transform: scale(1.05); }
-.accordion-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 0.5rem 0; transition: color 0.2s ease; }
-.accordion-header:hover { color: var(--primary); }
-.accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.8s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease, padding 0.4s ease; opacity: 0; }
-.accordion-content.open { max-height: 4000px; opacity: 1; padding-bottom: 2rem; }
-.accordion-icon { transition: transform 0.3s ease; color: var(--text-secondary); }
-.accordion-header.open .accordion-icon { transform: rotate(180deg); color: var(--primary); }
+      <div class='nav-links' id='navLinks'>
 
-/* === التبديل والجداول والأشياء الإضافية === */
-.toggle-container { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.875rem; color: var(--text); }
-.switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;}
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--danger); transition: .4s; border-radius: 24px; }
-.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: var(--shadow-sm); }
-input:checked + .slider { background-color: var(--success); }
-input:checked + .slider:before { transform: translateX(20px); }
-[dir="rtl"] .slider:before { left: auto; right: 3px; }
-[dir="rtl"] input:checked + .slider:before { transform: translateX(-20px); }
+        <button class='nav-btn active' data-nav='home'>Directory</button>
 
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 0.875rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
-th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); font-weight: 600; background: var(--bg); }
-.table-container { overflow-x: auto; border-radius: var(--radius); }
-.empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-secondary); grid-column: 1 / -1; }
-.empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
-.login-box { max-width: 420px; margin: 2rem auto; }
-.auth-divider { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0; color: var(--text-secondary); font-size: 0.875rem; }
-.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-.auth-toggle { text-align: center; margin-top: 1rem; color: var(--primary); cursor: pointer; font-weight: 600; font-size: 0.9375rem; }
-.auth-toggle:hover { text-decoration: underline; }
-.spinner { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+        <button class='nav-btn' data-nav='track'>تتبع حجزي</button> 
 
-.footer-links { margin-top: 0.5rem; display: flex; justify-content: center; gap: 1rem; }
-.footer-links a { color: var(--primary); text-decoration: none; font-weight: 500; }
-.footer-links a:hover { text-decoration: underline; }
+        <button class='nav-btn' data-nav='add-doctor'>Add Doctor</button>
 
-#backToTop { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 900; background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); cursor: pointer; transition: opacity 0.3s, transform 0.2s, background 0.2s; }
-#backToTop:hover { background: var(--primary-dark); transform: translateY(-3px); }
-#backToTop.hidden { opacity: 0; pointer-events: none; transform: translateY(10px); }
+        <button class='nav-btn' data-nav='dashboard'>Doctor Login</button>
 
-/* ==========================================================================
-   Chatbot System Styles
-   ========================================================================== */
-.chatbot-toggle-btn { position: fixed; bottom: 1.5rem; left: 1.5rem; z-index: 900; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; border-radius: var(--radius); padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.5rem; box-shadow: var(--shadow-lg); cursor: pointer; font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 0.95rem; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-.chatbot-toggle-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(14, 165, 233, 0.4); filter: brightness(1.1); }
-.chatbot-container { position: fixed; bottom: 5rem; left: 1.5rem; width: 350px; max-width: calc(100% - 3rem); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); z-index: 1000; display: flex; flex-direction: column; height: 450px; max-height: 70vh; overflow: hidden; transition: opacity 0.3s ease, transform 0.3s ease; transform-origin: bottom left; }
-.chatbot-container.hidden { opacity: 0; transform: scale(0.9); pointer-events: none; }
-.chatbot-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
-.chatbot-header h3 { color: white !important; font-weight: 700; font-size: 1.1rem; margin: 0; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
-.chatbot-header span { color: rgba(255, 255, 255, 0.95) !important; font-size: 0.75rem; font-weight: 500; display: block; margin-top: 2px; }
-.chatbot-header button { color: white !important; transition: transform 0.2s; padding: 0.25rem; background: transparent; border: none; cursor: pointer;}
-.chatbot-header button:hover { transform: rotate(90deg); }
-.chatbot-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; background: var(--bg); }
-.chatbot-messages::-webkit-scrollbar { width: 6px; }
-.chatbot-messages::-webkit-scrollbar-track { background: var(--bg); }
-.chatbot-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-.chatbot-messages::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-.chat-msg { max-width: 85%; padding: 0.75rem 1rem; border-radius: var(--radius); font-size: 0.9rem; line-height: 1.5; word-wrap: break-word; }
-.bot-msg { background: var(--surface); color: var(--text); border: 1px solid var(--border); align-self: flex-start; border-top-right-radius: 4px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
-.user-msg { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; align-self: flex-end; border-top-left-radius: 4px; box-shadow: 0 2px 5px rgba(14, 165, 233, 0.2); }
-.bot-card-result { background: var(--surface); border: 1px solid var(--border); padding: 0.85rem; border-radius: 10px; margin-top: 0.75rem; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); transition: all 0.2s; }
-.bot-card-result:hover { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transform: translateY(-1px); }
-.bot-card-result strong { color: var(--primary-dark); font-weight: 700; }
-.bot-card-result button { background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important; color: white !important; border: none; padding: 0.6rem 1rem !important; border-radius: 8px !important; font-weight: 600 !important; transition: all 0.2s !important; box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2); }
-.bot-card-result button:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(14, 165, 233, 0.3); }
-.chatbot-input { display: flex; padding: 0.75rem; background: var(--surface); border-top: 1px solid var(--border); gap: 0.5rem; }
-.chatbot-input input { flex: 1; border: 1px solid var(--border); border-radius: 50px; padding: 0.6rem 1rem; font-size: 0.9rem; background: var(--bg); color: var(--text); transition: all 0.2s; }
-.chatbot-input input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
-.chatbot-input input::placeholder { color: var(--text-secondary); }
-.chatbot-input button { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0; box-shadow: 0 2px 5px rgba(14, 165, 233, 0.3); }
-.chatbot-input button:hover { filter: brightness(1.1); transform: scale(1.05); box-shadow: 0 4px 8px rgba(14, 165, 233, 0.4); }
-.typing-indicator { display: flex; gap: 4px; padding: 0.5rem 1rem; align-items: center; }
-.typing-dot { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; }
-.typing-dot:nth-child(1) { animation-delay: -0.32s; }
-.typing-dot:nth-child(2) { animation-delay: -0.16s; }
-@keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-#vcard-qrcode {
-    width: 130px !important;
-    height: 130px !important;
-    display: block;
-    margin: 0 auto;
-}
-/* =========================================================
-   1. تحسينات الموبايل (أزرار القائمة واسم العضو)
-   ========================================================= */
-@media (max-width: 768px) {
-  /* شريط المستخدم */
-  .user-pill:not(.hidden) {
-    display: flex !important;
-    flex-direction: row !important; 
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
-    padding: 0.75rem 1rem !important;
-    border-radius: 0 !important;
-  }
-  .user-pill #logoutBtn {
-    width: auto !important;
-    padding: 0.35rem 0.8rem !important;
-    margin: 0 !important;
-    font-size: 0.8rem !important;
-    text-align: center !important;
-    background: var(--surface) !important;
-    color: var(--danger) !important; 
-    border: 1px solid var(--border) !important;
-    border-radius: 6px !important;
-  }
-  .user-pill #userNameDisplay {
-    font-weight: 800 !important;
-    font-size: 1rem !important;
-    color: var(--primary-dark) !important;
-    white-space: nowrap; 
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+        <button class='nav-btn' data-nav='login' id='navLoginBtn'>Login</button>
 
-  /* أزرار القائمة السفلية مع خطوط فاصلة */
-  .nav-links .nav-btn {
-    border-bottom: 1px solid var(--border) !important;
-    width: calc(100% - 2rem) !important;
-    margin: 0 auto !important;
-    padding: 1rem 0.5rem !important;
-    border-radius: 0 !important;
-  }
-  .nav-links .nav-btn:last-of-type {
-    border-bottom: none !important;
-  }
-  .nav-links .nav-btn.active {
-    background: transparent !important;
-    color: var(--primary) !important;
-    font-weight: 800 !important;
-  }
-}
+        <div class='user-pill hidden' id='userPill'>
 
-/* =========================================================
-   2. إصلاحات الشبكة (Grid) ومحاذاة الشاشات الكبيرة
-   ========================================================= */
-/* إجبار الشبكة على احترام الحدود ومنع التمدد (Grid Blowout Fix) */
-.grid-1 { grid-template-columns: minmax(0, 1fr) !important; }
-@media (min-width: 640px) { .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
-@media (min-width: 1024px) { .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } }
+          <span id='userNameDisplay'></span>
+<button class='nav-btn' id='logoutBtn' data-i18n='logout' style='padding: 0.25rem 0.5rem; font-size: 0.75rem;'>Logout</button>
+        </div>
 
-@media (min-width: 768px) { 
-  .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } 
+      </div>
 
- /* تأكيد اصطفاف الأقسام الثلاثة كالمسطرة من اليمين واليسار */
-  #view-home > .hero-section,
-  #view-home > .modern-search-bar,
-  #view-home > #doctorsList {
-     width: 100% !important;
-     max-width: 100% !important;
-     margin-left: 0 !important;
-     margin-right: 0 !important;
-     box-sizing: border-box !important;
-  }
-}
+    </div>
 
-/* توسيع الحاوية الرئيسية للموقع لراحة العين */
-.app-container, .nav-inner {
-   max-width: 1350px !important; 
-}
-/* توسيط عنوان ابحث عن طبيب في الصفحة الرئيسية */
-#view-home > h2[data-i18n='findDoctor'] {
-    text-align: center !important;
-}
-/* =========================================================
-   تصميم البانر الاحترافي (أزرق عميق زجاجي - الخيار الأول)
-   ========================================================= */
-.hero-section {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
-  border: none !important;
-  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.25) !important;
-}
+  </nav>
 
-/* إجبار النصوص على اللون الأبيض لتناسب الخلفية الداكنة */
-.hero-section h1, 
-.hero-section p {
-  color: #ffffff !important;
-  opacity: 0.95;
-}
 
-/* تعديل شارة "المنصة الطبية الأولى" لتصبح زجاجية أنيقة (Glassmorphism) */
-.hero-section > div:first-child {
-  background: rgba(255, 255, 255, 0.15) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important; /* لدعم متصفحات سفاري */
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
-  color: #ffffff !important;
-}
-/* =========================================================
-   تنسيقات أزرار لوحة تحكم العضو (المربعات)
-   ========================================================= */
-.dashboard-actions-grid {
-    border-top: 1px solid var(--border);
-    padding-top: 1.5rem;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 1rem;
-    width: 100%;
-}
 
-.dashboard-action-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 1.25rem 1rem;
-    min-height: 110px;
-    border-radius: var(--radius);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-weight: 700;
-    font-size: 0.9rem;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--shadow-sm);
-}
+  <div class='app-container'>
 
-.dashboard-action-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--primary);
-    color: var(--primary-dark);
-    box-shadow: 0 8px 15px rgba(0,0,0,0.05);
-}
+    <div class='view hidden' id='view-login'>
+  <div class='card login-box' style='max-width: 450px; margin: 0 auto;'>
 
-.dashboard-action-card.primary-card {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
-    border: none;
-}
+    <button class='btn btn-google btn-block' id='googleSignInBtn'>
+      <svg height='20' viewBox='0 0 48 48' width='20' xmlns='http://www.w3.org/2000/svg'>
+        <path d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z' fill='#EA4335'/>
+        <path d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z' fill='#4285F4'/>
+        <path d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z' fill='#FBBC05'/>
+        <path d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z' fill='#34A853'/>
+      </svg>
+      <span data-i18n='googleSignIn'>Sign in with Google</span>
+    </button>
 
-.dashboard-action-card.primary-card:hover {
-    color: white;
-    box-shadow: 0 8px 15px rgba(14, 165, 233, 0.3);
-}
+    <div class='auth-divider'><span data-i18n='or'>or</span></div>
 
-.dashboard-action-card.secondary-card {
-    background: var(--bg);
-}
-/* حركات قسم التسويق في صفحة الدخول */
-@keyframes fadeInUpBounce {
-  0% { opacity: 0; transform: translateY(30px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
+    <form id='emailAuthForm'>
+      <h3 class='text-lg font-bold mb-4 text-center' data-i18n='loginTitle' id='authFormTitle'>Member Login</h3>
 
-.pitch-animate {
-  opacity: 0;
-  animation: fadeInUpBounce 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-}
+      <div class='form-group hidden' id='nameFieldGroup'>
+        <label data-i18n='fullName'>Full Name</label>
+<input id='authName' data-i18n-placeholder='fullNamePlaceholder' placeholder='Your full name' type='text'>
+      </div>
 
-.pitch-delay-1 { animation-delay: 0.1s; }
-.pitch-delay-2 { animation-delay: 0.25s; }
-.pitch-delay-3 { animation-delay: 0.4s; }
-.pitch-delay-4 { animation-delay: 0.55s; }
+      <div class='form-group'>
+        <label data-i18n='email'>Email *</label>
+<input id='authEmail' data-i18n-placeholder='emailPlaceholder' placeholder='your@email.com' required='required' type='email'>
+      </div>
 
-.pitch-card {
-  transition: all 0.3s ease;
-  padding: 0.5rem;
-  border-radius: 12px;
-  background: transparent;
-}
+      <div class='form-group'>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <label data-i18n='password' style="margin: 0;">Password *</label>
+<a href="#" onclick="handleForgotPassword(event)" id="forgotPasswordLink" data-i18n="forgotPassword" style="color: var(--primary); font-size: 0.85rem; text-decoration: none; font-weight: 600; transition: opacity 0.3s;">هل نسيت كلمة المرور؟</a>
+        </div>
+<input id='authPassword' data-i18n-placeholder='passwordPlaceholder' autocomplete='current-password' minlength='6' placeholder='••••••••' required='required' type='password'>
+      </div>
 
-.pitch-card:hover {
-  background: white;
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-}
-/* تنسيقات السلايدر التسويقي */
-.pitch-slider-container {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-    position: relative;
-    transition: box-shadow 0.3s ease;
-}
+      <button class='btn btn-primary btn-block' id='authSubmitBtn' type='button'>
+        <span data-i18n='loginBtn'>Login</span>
+      </button>
 
-.pitch-slider-container:hover {
-    box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-}
+      <div class='auth-toggle mt-4' id='authToggleText' style="text-align: center; font-size: 0.9rem; cursor: pointer; color: var(--primary); font-weight: bold;"></div>
+   </form>
+    </div> 
 
-.pitch-slide {
-    display: none;
-    animation: fadeSlide 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
+    <div class='mt-4 text-center'>
+      <button class='btn btn-secondary' data-i18n='backToHome' id='backToHomeBtn'>&#8592; Back to Directory</button>
+    </div>
+</div> <div class='view hidden' id='view-user-dashboard'>
+    <div style='max-width: 800px; margin: 2rem auto;'>
+      <h2 class='text-xl font-bold mb-6' data-i18n='memberDashboardTitle'>لوحة تحكم العضو</h2>
+    <div class='card mb-4' style='padding: 1rem 1.5rem;'>
+        <div class='accordion-header' onclick="document.getElementById('memberProfileContent').classList.toggle('open'); this.classList.toggle('open');" style="cursor: pointer;">
+          <div style='display:flex; align-items:center; gap:0.75rem;'>
+            <div style='background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;'>
+              <svg fill='none' height='20' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='20'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>
+            </div>
+<h3 class='text-lg font-bold' data-i18n='memberProfileData' style='font-size: 1.1rem; margin:0; color: var(--text);'>الملف الشخصي والبيانات الأساسية</h3>
+          </div>
+          <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
+        </div>
+        <div class='accordion-content ' id='memberProfileContent'>
+          <div style='padding-top: 1.5rem; border-top: 1px dashed var(--border); margin-top: 0.75rem; text-align: center;'>
+            <div class='avatar' id='memberDashAvatar' style='margin: 0 auto 1rem auto; width: 88px; height: 88px; font-size: 2.5rem; background: var(--surface); color: var(--primary); border: 2px solid var(--border); box-shadow: var(--shadow-sm); z-index: 1;'>U</div>
+            <h3 class='font-bold text-xl mb-1' id='memberDashName' style='color: var(--text);'>الاسم</h3>
+            <p class='text-gray text-sm mb-4' id='memberDashEmail'>البريد الإلكتروني</p>
+            <div data-i18n='registeredMember' style='display: inline-block; padding: 0.25rem 1rem; border-radius: 99px; background: var(--primary-light); color: var(--primary-dark); font-size: 0.85rem; font-weight: 600; border: 1px solid var(--primary-light); margin-bottom: 2rem;'>عضو مسجل</div>
+            <div class="dashboard-actions-grid">
+              <button class="dashboard-action-card primary-card" onclick="router('add-doctor')">
+                <svg fill="none" height="28" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="28"><path d="M12 5v14M5 12h14"/></svg>
+                <span data-i18n="navAdd">إضافة طبيب</span>
+              </button>
+              <button class="dashboard-action-card" onclick="handleChangePassword()">
+                <svg fill="none" height="28" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="28" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span data-i18n="changePassword">تغيير كلمة المرور</span>
+              </button>
+              <button class="dashboard-action-card secondary-card" onclick="router('home')">
+                <svg fill="none" height="28" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="28"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span data-i18n="backToHome">العودة للرئيسية</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+<div class="card" style="margin-top: 2.5rem; padding: 1rem 1.5rem;">
+  <div class="accordion-header " onclick="document.getElementById('userBookingsContent').classList.toggle('open'); this.classList.toggle('open');" style="cursor: pointer;">
+    <div style="display:flex; align-items:center; gap:0.75rem;">
 
-.pitch-slide.active {
-    display: block;
-}
+      <div style="background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;">
 
-@keyframes fadeSlide {
-    from { opacity: 0; transform: translateX(20px); }
-    to { opacity: 1; transform: translateX(0); }
-}
+        <svg fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20"><rect height="18" rx="2" ry="2" width="18" x="3" y="4"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
 
-.pitch-v-thumb {
-    width: 100%;
-    aspect-ratio: 4 / 3; /* أو جرب 16 / 9 إذا كانت صورك مستطيلة وعريضة أكثر */
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: transparent;
-    border-radius: 12px 12px 0 0; /* لضمان تناسق الحواف العلوية مع البطاقة */
-}
+      </div>
 
-.pitch-v-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* نعود للـ cover لأنه يحافظ على الجودة تماماً */
-    object-position: top; /* هذه الخاصية تضمن التركيز على الجزء العلوي/المنتصف من الصورة إذا حدث قص طفيف */
-    display: block;
-}
-.pitch-v-content {
-    padding: 1.5rem;
-    text-align: start;
-}
+      <h3 class="text-lg font-bold" data-i18n="myRecentBookings" style="font-size: 1.1rem; margin:0; color: var(--text);">حجوزاتي الأخيرة</h3>
 
-.pitch-v-icon-box {
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
+    </div>
+    <div style="display:flex; align-items:center; gap:1rem;">
+      <button class="btn" onclick="event.stopPropagation(); router('track')" style="background: transparent; border: 1px solid var(--border); color: var(--primary); padding: 0.3rem 0.6rem; font-size: 0.8rem; border-radius: 6px;">
+        <svg fill="none" height="14" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.3rem; vertical-align: middle;" viewBox="0 0 24 24" width="14"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+        <span data-i18n="trackAnotherBooking">تتبع حجز آخر</span>
+      </button>
+           <svg class="accordion-icon" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" width="24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
 
-.slider-dots {
-    text-align: center;
-    padding: 0 0 1.5rem 0;
-    background: white;
-}
+ </div>
 
-.slider-dots .dot {
-    cursor: pointer;
-    height: 8px;
-    width: 8px;
-    margin: 0 4px;
-    background-color: #cbd5e1;
-    border-radius: 50%;
-    display: inline-block;
-    transition: all 0.3s ease;
-}
+  <div class="accordion-content " id="userBookingsContent">
 
-.slider-dots .dot:hover, .slider-dots .dot.active {
-    background-color: var(--primary);
-    width: 24px;
-    border-radius: 10px;
-}
-/* تخطيط صفحة تسجيل الدخول (نظام العمودين) */
-.auth-split-layout {
-    display: grid;
-    grid-template-columns: 1fr; /* عمود واحد للهواتف */
-    gap: 2rem;
-    max-width: 1100px;
-    margin: 2rem auto;
-    align-items: start;
-}
+    <div style="padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;">
 
-/* للشاشات الكبيرة (كمبيوتر) */
-@media (min-width: 900px) {
-    .auth-split-layout {
-        /* نموذج الدخول يأخذ 420 بكسل، وقسم التسويق يأخذ المساحة المتبقية */
-        grid-template-columns: 420px 1fr; 
-        gap: 3rem;
-        margin-top: 3rem;
+      <div id="userBookingsContainer"></div>
+
+    </div>
+  </div>
+
+</div>
+      </div>
+    </div>
+
+<div class='view' id='view-home'>
+
+      <div class='card text-center hero-section' style="background-image: url('images/hero-bg.png');">
+<div class='card text-center hero-section'>
+        <div data-i18n='heroBadge' style='display: inline-block; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.3); color: white; padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.85rem; font-weight: bold; margin-bottom: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1);'>المنصة الطبية الأولى</div>
+        <h1 class='text-xl font-bold mb-3' data-i18n='heroTitle' style='color: #ffffff; font-size: clamp(1.5rem, 4.5vw, 2.2rem); white-space: nowrap; letter-spacing: -0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);'>دليل أطباء ولاية غليزان</h1>
+        <p class='text-sm' data-i18n='heroSubtitle' style='color: #f8fafc; max-width: 100%; margin: 0 auto; line-height: 1.6; padding: 0 1rem; font-size: clamp(0.9rem, 3vw, 1.05rem); text-shadow: 0 1px 3px rgba(0,0,0,0.3);'>منصتك الشاملة للبحث عن العيادات وحجز المواعيد الطبية في غليزان.</p>
+      </div>
+
+    <div class="booking-engine-wrapper">
+        <div class="booking-tabs">
+          <div class="booking-tab active" id="tabInPerson" onclick="switchBookingTab('inPerson')">
+            <svg class="tab-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><line x1="12" y1="14" x2="12" y2="18"></line><line x1="10" y1="16" x2="14" y2="16"></line></svg>
+            <div class="tab-text">
+              <span class="tab-title" data-i18n="tabBookDoctor">احجز طبيباً</span>
+              <span class="tab-subtitle" data-i18n="tabBookSub">كشف أو إجراء طبي</span>
+            </div>
+          </div>
+          <div class="booking-tab inactive" id="tabTelehealth" onclick="switchBookingTab('telehealth')">
+            <svg class="tab-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path><path d="M14.05 2a9 9 0 0 1 8 7.94"></path><path d="M14.05 6A5 5 0 0 1 18 10"></path></svg>
+            <div class="tab-text">
+              <span class="tab-title" data-i18n="tabTelehealth">استشارة عن بعد</span>
+              <span class="tab-subtitle" data-i18n="tabTelehealthSub">محادثة هاتفية مع الطبيب</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modern-search-bar">
+
+          <div class="search-field" id="specialtySearchField">
+            <label data-i18n="selectSpecialtyLabel">اختر اختصاصاً</label>
+            <div class="input-wrapper">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              <select id="specialtyFilter"><option value="">جميع الاختصاصات</option></select>
+            </div>
+          </div>
+
+          <div class="search-divider" id="divider1"></div>
+
+          <div class="search-field" id="citySearchField">
+            <label data-i18n="selectCityLabel">في هذه البلدية</label>
+            <div class="input-wrapper">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              <select id="municipalityFilter"><option value="">جميع البلديات</option></select>
+            </div>
+          </div>
+
+          <div class="search-divider" id="divider2"></div>
+
+          <div class="search-field" id="nameSearchField" style="flex: 2.2; position: relative;">
+            <label data-i18n="searchByNameLabel">أو ابحث باسم الطبيب</label>
+            <div class="input-wrapper" style="width: 100%;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <input autocomplete="off" data-i18n-placeholder="searchPlaceholder" id="searchInput" placeholder="اسم الطبيب، التخصص، أو الموقع..." type="text" style="width: 100%; font-size: 1.05rem;">
+            </div>
+            <div class="suggestions-dropdown hidden" id="searchSuggestions"></div>
+          </div>
+
+       <button class="search-action-btn" type="button" onclick="document.activeElement.blur(); document.getElementById('doctorsList').scrollIntoView({ behavior: 'smooth', block: 'start' });">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+  <span data-i18n="searchBtnText">بحث</span>
+</button>
+
+        </div>
+      </div>
+      <div class='grid grid-1 grid-2 grid-3 grid-4' id='doctorsList'>
+        <div class='empty-state'><div class='empty-state-icon'>&#9203;</div><div data-i18n='loadingDoctors'>Loading doctors...</div></div>
+      </div>
+
+    </div>
+
+<div class='view hidden' id='view-doctor-profile'>
+      <div style="max-width: 100%; margin: 0 auto;">
+
+        <div class="mb-4" style="display: flex; align-items: center;">
+  <button onclick="router('home')" style="background: transparent; border: none; color: var(--text-secondary); font-size: 1.1rem; font-weight: bold; cursor: pointer; padding: 0; transition: color 0.2s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)'">
+    <span data-i18n="backToDirectory">→ العودة للدليل</span>
+  </button>
+</div>
+
+        <div class="card" style="padding: 0; overflow: hidden; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+          <div style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 2.5rem 2rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <div id="fullProfileAvatar" style="width: 90px; height: 90px; font-size: 2.5rem; background: white; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+              </div>
+            <div>
+              <h2 id="fullProfileName" style="margin: 0 0 0.5rem 0; font-size: 1.8rem; font-weight: 800;">اسم الطبيب</h2>
+              <div id="fullProfileSpec" style="opacity: 0.9; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <span>التخصص</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding: 2rem;">
+            <div id="fullProfileContent"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+<div class='view hidden' id='view-doctor-reviews'>
+  <div style="max-width: 1000px; margin: 0 auto;">
+
+    <div class="mb-4">
+      <button class="btn btn-secondary" onclick="router('doctor-profile')" style="font-weight: bold;">
+        <span data-i18n="backToProfile">← العودة لملف الطبيب</span>
+      </button>
+    </div>
+
+    <div class="reviews-page-layout">
+      <div>
+        <div class="rating-summary-box">
+          <h3 style="font-size: 1.25rem; font-weight: 900; color: var(--text); margin-bottom: 1rem;" data-i18n="reviewsSummaryTitle">ملخص التقييمات</h3>
+          <div style="display:flex; align-items:center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px dashed var(--border);">
+            <div class="average-rating" id="fullAvgRating">0.0</div>
+            <div>
+              <div id="fullStarDisplay" style="color:#f59e0b; font-size:1.5rem; letter-spacing: 2px;">☆☆☆☆☆</div>
+              <div class="text-gray text-sm mt-1" style="font-weight: 600;">
+                <span id="fullTotalReviews">0</span> <span data-i18n="verifiedReviews">تقييم معتمد</span>
+              </div>
+            </div>
+          </div>
+          <div id="ratingBarsContainer" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+        </div>
+
+        <div class="card mt-4" id="addReviewSectionFull">
+          <h4 style="margin-bottom: 1rem; font-weight: bold;" data-i18n="addYourReviewTitle">أضف تقييمك</h4>
+          <form id='reviewForm'>
+            <input id='reviewDoctorId' type='hidden'>
+            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;'>
+              <label style='font-size: 0.9rem; font-weight: bold;' data-i18n="whatsYourRating">ما هو تقييمك؟</label>
+              <div class='star-rating' id='starRatingInput'>
+                <span class='star' data-val='1'>★</span><span class='star' data-val='2'>★</span><span class='star' data-val='3'>★</span><span class='star' data-val='4'>★</span><span class='star' data-val='5'>★</span>
+              </div>
+              <input id='ratingValue' type='hidden'>
+            </div>
+            <div class='form-group' style='margin-bottom: 0.75rem;'>
+              <textarea id='reviewComment' data-i18n-placeholder="reviewPlaceholder" placeholder='اكتب تجربتك مع هذا الطبيب لمساعدة الآخرين...' required='required' rows='3' style='resize: none;'></textarea>
+            </div>
+            <button class='btn btn-primary btn-block' id='submitReviewBtn' type='submit' data-i18n="publishReview">نشر التقييم</button>
+          </form>
+        </div>
+        <div class='hidden text-center p-3 mt-4' id='loginToReviewMsgFull' style='background: var(--primary-light); border-radius: var(--radius);'>
+          <p class='text-sm mb-2' style='color: var(--primary-dark); font-weight: 600;' data-i18n="mustLoginToReview">يجب تسجيل الدخول لإضافة تقييم.</p>
+          <button class='btn btn-secondary' onclick='router("login");' style='padding: 0.4rem 1rem; font-size: 0.85rem;' data-i18n="loginBtn">تسجيل الدخول</button>
+        </div>
+      </div>
+
+      <div>
+        <div id="fullReviewsContainer" style="display:flex; flex-direction:column; gap:1rem;"></div>
+        <div class="text-center mt-6">
+          <button id="loadMoreReviewsBtn" class="btn btn-secondary hidden" onclick="loadNextReviewsPage()" style="padding: 0.75rem 2rem; border-radius: 50px; font-weight: 800; width: 100%;">
+            <span data-i18n="loadMoreReviewsText">عرض المزيد من التقييمات</span> <span id="loadMoreCountDisplay">(11)</span> ↓
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+    <div class='view hidden' id='view-add-doctor'>
+
+      <div class='card' style='max-width: 800px; margin: 0 auto;'>
+
+        <h2 class='text-xl font-bold mb-6' data-i18n='registerDoctor'>Register New Doctor</h2>
+
+               <form id='addDoctorForm'>
+
+  <div class='grid grid-1 grid-2'>
+
+    <div class='form-group'>
+
+      <label data-i18n='firstName'>First Name *</label>
+<input name='FirstName' data-i18n-placeholder='firstNamePlaceholder' placeholder='e.g. Amine' required='required' type='text'>
+    </div>
+
+    <div class='form-group'>
+
+      <label data-i18n='lastName'>Last Name *</label>
+<input name='LastName' data-i18n-placeholder='lastNamePlaceholder' placeholder='e.g. Benali' required='required' type='text'>
+    </div>
+
+  </div>
+
+  <div class='form-group'>
+
+    <label data-i18n='phone'>Phone Number *</label>
+<input name='Phone' data-i18n-placeholder='phonePlaceholder' placeholder='e.g. 0550 123 456' required='required' type='tel'>
+  </div>
+
+  <div class='form-group'>
+
+    <label data-i18n='exactLocation'>Exact Location / Address *</label>
+<input name='ExactLocation' data-i18n-placeholder='locationPlaceholder' placeholder='Street, Building, Floor, Landmark...' required='required' type='text'>
+  </div>
+
+  <div class='grid grid-1 grid-2'>
+
+    <div class='form-group'>
+
+      <label data-i18n='specialty'>Specialty *</label>
+
+      <select name='Specialty' required='required'>
+
+        <option disabled='disabled' selected='selected' value=''>-- اختر الاختصاص --</option>
+
+        <option data-i18n='الأرطوفونيا (تقويم النطق) - Speech Therapy' value='الأرطوفونيا (تقويم النطق) - Speech Therapy'>الأرطوفونيا (تقويم النطق) - Speech Therapy</option>
+
+        <option data-i18n='الأشعة - Radiology' value='الأشعة - Radiology'>الأشعة - Radiology</option>
+
+        <option data-i18n='الأمراض الجلدية - Dermatology' value='الأمراض الجلدية - Dermatology'>الأمراض الجلدية - Dermatology</option>
+
+        <option data-i18n='الأمراض الصدرية - Pulmonology' value='الأمراض الصدرية - Pulmonology'>الأمراض الصدرية - Pulmonology</option>
+
+        <option data-i18n='الأمراض المعدية - Infectious Disease' value='الأمراض المعدية - Infectious Disease'>الأمراض المعدية - Infectious Disease</option>
+
+        <option data-i18n='الأنف والأذن والحنجرة - ENT (Otolaryngology)' value='الأنف والأذن والحنجرة - ENT (Otolaryngology)'>الأنف والأذن والحنجرة - ENT (Otolaryngology)</option>
+
+        <option data-i18n='التخدير - Anesthesiology' value='التخدير - Anesthesiology'>التخدير - Anesthesiology</option>
+
+        <option data-i18n='التغذية العلاجية - Clinical Nutrition' value='التغذية العلاجية - Clinical Nutrition'>التغذية العلاجية - Clinical Nutrition</option>
+
+        <option data-i18n='الجراحة التجميلية - Plastic Surgery' value='الجراحة التجميلية - Plastic Surgery'>الجراحة التجميلية - Plastic Surgery</option>
+
+        <option data-i18n='الجراحة العامة - General Surgery' value='الجراحة العامة - General Surgery'>الجراحة العامة - General Surgery</option>
+
+        <option data-i18n='الطب الباطني - Internal Medicine' value='الطب الباطني - Internal Medicine'>الطب الباطني - Internal Medicine</option>
+
+        <option data-i18n='الطب المخبري (التحاليل) - Laboratory Medicine' value='الطب المخبري (التحاليل) - Laboratory Medicine'>الطب المخبري (التحاليل) - Laboratory Medicine</option>
+
+        <option data-i18n='الطب النفسي - Psychiatry' value='الطب النفسي - Psychiatry'>الطب النفسي - Psychiatry</option>
+
+        <option data-i18n='العلاج الطبيعي وإعادة التأهيل - Physiotherapy &amp; Rehabilitation' value='العلاج الطبيعي وإعادة التأهيل - Physiotherapy &amp; Rehabilitation'>العلاج الطبيعي وإعادة التأهيل - Physiotherapy &amp; Rehabilitation</option>
+
+        <option data-i18n='الغدد الصماء والسكري - Endocrinology' value='الغدد الصماء والسكري - Endocrinology'>الغدد الصماء والسكري - Endocrinology</option>
+
+        <option data-i18n='أمراض الجهاز الهضمي - Gastroenterology' value='أمراض الجهاز الهضمي - Gastroenterology'>أمراض الجهاز الهضمي - Gastroenterology</option>
+
+        <option data-i18n='أمراض الدم - Hematology' value='أمراض الدم - Hematology'>أمراض الدم - Hematology</option>
+
+        <option data-i18n='أمراض الروماتيزم والمفاصل - Rheumatology' value='أمراض الروماتيزم والمفاصل - Rheumatology'>أمراض الروماتيزم والمفاصل - Rheumatology</option>
+
+        <option data-i18n='أمراض القلب - Cardiology' value='أمراض القلب - Cardiology'>أمراض القلب - Cardiology</option>
+
+        <option data-i18n='أمراض الكلى - Nephrology' value='أمراض الكلى - Nephrology'>أمراض الكلى - Nephrology</option>
+
+        <option data-i18n='أمراض النساء والتوليد - Gynecology &amp; Obstetrics' value='أمراض النساء والتوليد - Gynecology &amp; Obstetrics'>أمراض النساء والتوليد - Gynecology &amp; Obstetrics</option>
+
+        <option data-i18n='جراحة الأوعية الدموية - Vascular Surgery' value='جراحة الأوعية الدموية - Vascular Surgery'>جراحة الأوعية الدموية - Vascular Surgery</option>
+
+        <option data-i18n='جراحة العظام - Orthopedics' value='جراحة العظام - Orthopedics'>جراحة العظام - Orthopedics</option>
+
+        <option data-i18n='جراحة القلب والصدر - Cardiothoracic Surgery' value='جراحة القلب والصدر - Cardiothoracic Surgery'>جراحة القلب والصدر - Cardiothoracic Surgery</option>
+
+        <option data-i18n='جراحة المخ والأعصاب - Neurosurgery' value='جراحة المخ والأعصاب - Neurosurgery'>جراحة المخ والأعصاب - Neurosurgery</option>
+
+        <option data-i18n='جراحة المسالك البولية - Urology' value='جراحة المسالك البولية - Urology'>جراحة المسالك البولية - Urology</option>
+
+        <option data-i18n='طب الأعصاب - Neurology' value='طب الأعصاب - Neurology'>طب الأعصاب - Neurology</option>
+
+        <option data-i18n='طب الأسرة - Family Medicine' value='طب الأسرة - Family Medicine'>طب الأسرة - Family Medicine</option>
+
+        <option data-i18n='طب الأسنان - Dentistry' value='طب الأسنان - Dentistry'>طب الأسنان - Dentistry</option>
+
+        <option data-i18n='طب الأطفال - Pediatrics' value='طب الأطفال - Pediatrics'>طب الأطفال - Pediatrics</option>
+
+        <option data-i18n='طب الأورام - Oncology' value='طب الأورام - Oncology'>طب الأورام - Oncology</option>
+
+        <option data-i18n='طب الحساسية والمناعة - Allergy &amp; Immunology' value='طب الحساسية والمناعة - Allergy &amp; Immunology'>طب الحساسية والمناعة - Allergy &amp; Immunology</option>
+
+        <option data-i18n='طب الشيخوخة - Geriatrics' value='طب الشيخوخة - Geriatrics'>طب الشيخوخة - Geriatrics</option>
+
+        <option data-i18n='طب الطوارئ - Emergency Medicine' value='طب الطوارئ - Emergency Medicine'>طب الطوارئ - Emergency Medicine</option>
+
+        <option data-i18n='طب العيون - Ophthalmology' value='طب العيون - Ophthalmology'>طب العيون - Ophthalmology</option>
+
+        <option data-i18n='طب عام - General Medicine' value='طب عام - General Medicine'>طب عام - General Medicine</option>
+
+        <option data-i18n='علم الوراثة الطبية - Medical Genetics' value='علم الوراثة الطبية - Medical Genetics'>علم الوراثة الطبية - Medical Genetics</option>
+
+      </select>
+
+    </div>
+
+    <div class='form-group'>
+
+      <label data-i18n='municipality'>Municipality (Baladiya) *</label>
+
+      <select name='Municipality' required='required'>
+
+        <option disabled='disabled' selected='selected' value=''>-- اختر البلدية --</option>
+
+        <option data-i18n='أولاد سيدي الميهوب' value='أولاد سيدي الميهوب'>أولاد سيدي الميهوب</option>
+
+        <option data-i18n='أولاد يعيش' value='أولاد يعيش'>أولاد يعيش</option>
+
+        <option data-i18n='الحاسي' value='الحاسي'>الحاسي</option>
+
+        <option data-i18n='الحمادنة' value='الحمادنة'>الحمادنة</option>
+
+        <option data-i18n='القطار' value='القطار'>القطار</option>
+
+        <option data-i18n='القلعة' value='القلعة'>القلعة</option>
+
+        <option data-i18n='المطمر' value='المطمر'>المطمر</option>
+
+        <option data-i18n='المرجة' value='المرجة'>المرجة</option>
+
+        <option data-i18n='الولجة' value='الولجة'>الولجة</option>
+
+        <option data-i18n='بن داود' value='بن داود'>بن داود</option>
+
+        <option data-i18n='بني درقون' value='بني درقون'>بني درقون</option>
+
+        <option data-i18n='بني زنطيس' value='بني زنطيس'>بني زنطيس</option>
+
+        <option data-i18n='بلعسل بوزقزة' value='بلعسل بوزقزة'>بلعسل بوزقزة</option>
+
+        <option data-i18n='جديوية' value='جديوية'>جديوية</option>
+
+        <option data-i18n='حد الشكالة' value='حد الشكالة'>حد الشكالة</option>
+
+        <option data-i18n='حمري' value='حمري'>حمري</option>
+
+        <option data-i18n='دار بن عبد الله' value='دار بن عبد الله'>دار بن عبد الله</option>
+
+        <option data-i18n='رمكة' value='رمكة'>رمكة</option>
+
+        <option data-i18n='زمورة' value='زمورة'>زمورة</option>
+
+        <option data-i18n='سوق الحد' value='سوق الحد'>سوق الحد</option>
+
+        <option data-i18n='سيدي امحمد بن علي' value='سيدي امحمد بن علي'>سيدي امحمد بن علي</option>
+
+        <option data-i18n='سيدي امحمد بن عودة' value='سيدي امحمد بن عودة'>سيدي امحمد بن عودة</option>
+
+        <option data-i18n='سيدي خطاب' value='سيدي خطاب'>سيدي خطاب</option>
+
+        <option data-i18n='سيدي سعادة' value='سيدي سعادة'>سيدي سعادة</option>
+
+        <option data-i18n='سيدي لزرق' value='سيدي لزرق'>سيدي لزرق</option>
+
+        <option data-i18n='عين الرحمة' value='عين الرحمة'>عين الرحمة</option>
+
+        <option data-i18n='عين طارق' value='عين طارق'>عين طارق</option>
+
+        <option data-i18n='عمي موسى' value='عمي موسى'>عمي موسى</option>
+
+        <option data-i18n='غليزان' value='غليزان'>غليزان</option>
+
+        <option data-i18n='لحلاف' value='لحلاف'>لحلاف</option>
+
+        <option data-i18n='مازونة' value='مازونة'>مازونة</option>
+
+        <option data-i18n='مديونة' value='مديونة'>مديونة</option>
+
+        <option data-i18n='منداس' value='منداس'>منداس</option>
+
+        <option data-i18n='وادي الجمعة' value='وادي الجمعة'>وادي الجمعة</option>
+
+        <option data-i18n='وادي السلام' value='وادي السلام'>وادي السلام</option>
+
+        <option data-i18n='وادي رهيو' value='وادي رهيو'>وادي رهيو</option>
+
+        <option data-i18n='واريزان' value='واريزان'>واريزان</option>
+
+        <option data-i18n='يلل' value='يلل'>يلل</option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+  <div class='form-group'>
+
+    <label data-i18n='extraInfo'>Extra Information</label>
+
+<textarea name='ExtraInfo' data-i18n-placeholder='extraInfoPlaceholder' placeholder='Working hours, consultation fees, languages spoken, diplomas...' rows='3'></textarea>
+  </div>
+
+  <button class='btn btn-primary btn-block' id='addDoctorBtn' type='submit'>Register Doctor</button>
+
+</form>
+
+      </div>
+
+    </div>
+
+
+
+    <div class='view hidden' id='view-track'>
+
+      <div class='card' style='max-width: 500px; margin: 0 auto;'>
+
+        <h2 class='text-xl font-bold mb-6 text-center' data-i18n='trackBookingTitle'>تتبع حالة حجزي</h2>
+
+        <p class='text-sm text-gray text-center mb-6' data-i18n='trackBookingDesc'>أدخل رقم الحجز الذي حصلت عليه لمعرفة حالة موعدك.</p>
+
+        <form id='trackBookingForm'>
+
+          <div class='form-group'>
+
+            <label data-i18n='bookingIdLabel'>رقم الحجز (مثال: APT-20240526-143022)</label>
+<input id='trackBookingId' data-i18n-placeholder='trackBookingIdPlaceholder' placeholder='ABcEfgh' required='required' type='text'>
+          </div>
+
+          <div class='form-group'>
+
+            <label data-i18n='trackPhoneLabel'>رقم الهاتف المرفق بالحجز</label>
+<input dir='ltr' id='trackPhone' data-i18n-placeholder='trackPhonePlaceholder' placeholder='0770/ 0550 / 0660' required='required' type='tel'>
+          </div>
+
+          <button class='btn btn-primary btn-block' data-i18n='trackSearchBtn' id='trackBtn' type='submit'>بحث عن الحجز</button>
+
+        </form>
+
+        <div class='hidden mt-6 p-4' id='trackResult' style='background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);'></div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class='view hidden' id='view-booking'>
+
+      <div class='card' style='max-width: 600px; margin: 0 auto;'>
+
+        <div class='back-bar'><button class='btn btn-secondary' id='backToDirBtn'>&#8592; Back to Directory</button></div>
+
+        <div class='mb-6' id='bookingDoctorInfo'></div>
+
+        <h3 class='text-lg font-bold mb-4' data-i18n='bookAppointment'>Book Appointment</h3>
+
+        <form id='bookingForm'>
+
+<input id='bookingDoctorId' name='DoctorID' type='hidden'>
+          <div class='form-group'>
+
+            <label data-i18n='patientName'>Patient Full Name *</label>
+<input name='PatientName' data-i18n-placeholder='patientNamePlaceholder' placeholder='Full name' required='required' type='text'>
+          </div>
+
+          <div class='form-group'>
+
+            <label data-i18n='patientPhone'>Patient Phone *</label>
+<input name='PatientPhone' data-i18n-placeholder='patientPhonePlaceholder' placeholder='Contact number' required='required' type='tel'>
+          </div>
+
+          <div class='form-group'>
+<label data-i18n="patientEmailOptional">البريد الإلكتروني (اختياري للإشعارات)</label>
+<input name='PatientEmail' data-i18n-placeholder='emailPlaceholder' placeholder='your@email.com' type='email'>
+          </div>
+
+          <div class='grid grid-1 grid-2'>
+
+            <div class='form-group'>
+
+              <label data-i18n='appointmentDate'>Appointment Date *</label>
+
+<input id='apptDateInput' name='AppointmentDate' onclick='this.showPicker ? this.showPicker() : null' onkeydown='return false' required='required' type='date'>
+            </div>
+
+            <div class='form-group' style='grid-column: 1 / -1;'>
+
+              <label data-i18n='appointmentTime'>الوقت المتاح *</label>
+
+<input id='apptTimeInput' name='AppointmentTime' type='hidden'>
+              <div id='timeSlotsContainer' style='display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;'>
+
+                <div class='text-sm text-gray' style='grid-column: 1 / -1;'>يرجى تحديد تاريخ الموعد أولا، لعرض الأوقات المتاحة...</div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <button class='btn btn-success btn-block' data-i18n='confirmBooking' id='bookingBtn' type='button'>Confirm Booking</button>
+
+        </form>
+
+      </div>
+
+    </div>
+
+
+
+<div class='view hidden' id='view-dashboard'>
+
+      <div class="auth-split-layout" id="loginSection">
+
+        <div class='card' style='margin: 0; width: 100%; max-width: none;'>
+            <h2 class='text-xl font-bold text-center mb-6' data-i18n='doctorLogin'>تسجيل دخول الطبيب</h2>
+            <p class='text-sm text-gray text-center mb-6' data-i18n='loginDesc'>أدخل رقم الهاتف المسجل وكلمة المرور لعرض مواعيدك.</p>
+
+            <form id='dashboardLoginForm'>
+              <div class='form-group'>
+                <label data-i18n='loginPhone'>رقم الهاتف</label>
+                <input id='loginPhone' data-i18n-placeholder='loginPhonePlaceholder' autocomplete='tel' placeholder='الهاتف المسجل' required='required' type='tel'>
+              </div>
+              <div class='form-group'>
+                <label data-i18n='password'>كلمة المرور *</label>
+                <input id='loginDoctorPassword' data-i18n-placeholder='passwordPlaceholder' autocomplete='current-password' placeholder='••••••••' required='required' type='password'>
+              </div>
+              <button class='btn btn-primary btn-block' id='dashboardLoginBtn' type='submit' data-i18n='viewAppointments'>عرض مواعيدي</button>
+            </form>
+        </div>
+
+        <div class="pitch-animate" style="margin-top: 0; padding: 2rem; background: linear-gradient(145deg, #f8fafc, #f1f5f9); border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+
+          <h3 class="pitch-animate pitch-delay-1" data-i18n="joinUsTitle" style="text-align: center; color: var(--primary-dark); font-size: 1.5rem; font-weight: 900; margin-bottom: 2.5rem;">
+            هل أنت طبيب؟ ضاعف نجاح عيادتك معنا!
+          </h3>
+
+<div class="pitch-slider-container pitch-animate pitch-delay-2">
+
+            <div class="pitch-slide active">
+              <div class="pitch-v-thumb">
+                <img src="images/relizane1.png" alt="إدارة المواعيد">
+              </div>
+              <div class="pitch-v-content">
+                <div class="pitch-v-icon-box">
+                    <div style="background: #e0f2fe; color: #0ea5e9; padding: 0.5rem; border-radius: 8px; display: flex;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    </div>
+                    <h4 data-i18n="feature1Title" style="font-weight: 800; color: #0f172a; font-size: 1.05rem; margin: 0;">إدارة ذكية للمواعيد</h4>
+                </div>
+                <p data-i18n="feature1Desc" style="font-size: 0.85rem; color: #64748b; margin: 0; line-height: 1.6;">وداعاً للفوضى! نظم جدول عيادتك واستقبل الحجوزات بنظام آلي سهل.</p>
+              </div>
+            </div>
+
+            <div class="pitch-slide">
+              <div class="pitch-v-thumb">
+                <img src="images/relizane2.png" alt="حضور رقمي">
+              </div>
+              <div class="pitch-v-content">
+                <div class="pitch-v-icon-box">
+                    <div style="background: #dcfce7; color: #10b981; padding: 0.5rem; border-radius: 8px; display: flex;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    </div>
+                    <h4 data-i18n="feature2Title" style="font-weight: 800; color: #0f172a; font-size: 1.05rem; margin: 0;">حضور رقمي قوي</h4>
+                </div>
+                <p data-i18n="feature2Desc" style="font-size: 0.85rem; color: #64748b; margin: 0; line-height: 1.6;">اعرض خبراتك لآلاف المرضى الباحثين عنك في غليزان.</p>
+              </div>
+            </div>
+
+            <div class="pitch-slide">
+              <div class="pitch-v-thumb">
+                <img src="images/relizane3.png" alt="بناء الثقة">
+              </div>
+              <div class="pitch-v-content">
+                <div class="pitch-v-icon-box">
+                    <div style="background: #fef08a; color: #d97706; padding: 0.5rem; border-radius: 8px; display: flex;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                    </div>
+                    <h4 data-i18n="feature3Title" style="font-weight: 800; color: #0f172a; font-size: 1.05rem; margin: 0;">بناء ثقة المرضى</h4>
+                </div>
+                <p data-i18n="feature3Desc" style="font-size: 0.85rem; color: #64748b; margin: 0; line-height: 1.6;">نظام تقييمات شفاف يزيد من مصداقية عيادتك.</p>
+              </div>
+            </div>
+
+            <div class="slider-dots">
+              <span class="dot active" onclick="currentSlide(1)"></span>
+              <span class="dot" onclick="currentSlide(2)"></span>
+              <span class="dot" onclick="currentSlide(3)"></span>
+            </div>
+
+          </div>
+          <div class="pitch-animate pitch-delay-4" style="text-align: center; max-width: 400px; margin: 0 auto;">
+            <a href="contact.html" class="btn btn-primary" style="padding: 1rem 1.5rem; font-size: 1rem; font-weight: 900; border-radius: 50px; display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; text-decoration: none; width: 100%; box-shadow: 0 10px 20px rgba(14, 165, 233, 0.2); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              <span data-i18n="contactSalesBtn">تواصل معنا لتفعيل حسابك</span>
+            </a>
+          </div>
+
+        </div>
+      </div> 
+
+      <div class='hidden' id='dashboardSection'>
+
+        <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; background: var(--surface); padding: 1rem 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm);'>
+          <div>
+            <h2 class='text-xl font-bold' id='dashboardSubtitle' style='margin: 0; color: var(--primary-dark);'>&nbsp;</h2>
+          </div>
+          <div style='display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;'>
+            <div class='toggle-container'>
+              <span data-i18n='disableBooking' id='bookingStatusText'>إيقاف الحجوزات</span>
+              <label class='switch'>
+                <input id='bookingToggleSwitch' type='checkbox'>
+                <span class='slider'></span>
+              </label>
+            </div>
+            <button class='btn btn-secondary' id='dashboardLogoutBtn' style='padding: 0.4rem 1rem;'>Logout</button>
+          </div>
+        </div>
+
+        <div class='card mb-4' style='padding: 1rem 1.5rem;'>
+          <div class='accordion-header' id='workingHoursToggle' onclick='toggleWorkingHours()'>
+            <div style='display:flex; align-items:center; gap:0.75rem;'>
+              <div style='background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;'>
+                <svg fill='none' height='20' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='20'><rect height='18' rx='2' ry='2' width='18' x='3' y='4'/><line x1='16' x2='16' y1='2' y2='6'/><line x1='8' x2='8' y1='2' y2='6'/><line x1='3' x2='21' y1='10' y2='10'/></svg>
+              </div>
+              <h3 class='text-lg font-bold' data-i18n='workingHoursTitle' style='font-size: 1.1rem; margin:0;'>إعدادات أيام وأوقات العمل</h3>
+            </div>
+            <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
+          </div>
+          <div class='accordion-content' id='workingHoursContent'>
+            <div style='padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;'>
+              <p class='text-sm text-gray mb-4' data-i18n='workingHoursDesc'>قم بتفعيل الأيام التي تعمل فيها وحدد وقت البداية والنهاية لكل يوم.</p>
+              <form id='workingHoursForm'> 
+                <div id='daysListContainer' style='display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;'></div>
+                <button class='btn btn-primary' data-i18n='saveHoursBtnText' id='saveHoursBtn' onclick='saveWorkingHours()' type='button'>حفظ الأوقات</button> 
+              </form>
+            </div>
+          </div>
+        </div>
+
+       <div class='card mb-4' style='padding: 1rem 1.5rem;'>
+  <div class='accordion-header' id='clinicProfileToggle' onclick='document.getElementById("clinicProfileContent").classList.toggle("open"); this.classList.toggle("open");'>
+    <div style='display:flex; align-items:center; gap:0.75rem;'>
+      <div style='background: var(--primary-light); color: var(--primary); padding: 0.5rem; border-radius: 8px; display: flex;'>
+        <svg fill='none' height='20' stroke='currentColor' stroke-width='2' viewBox='0 0 24 24' width='20'><path d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/><circle cx='12' cy='10' r='3'/></svg>
+      </div>
+      <h3 class='text-lg font-bold' data-i18n='clinicProfileTitle' style='font-size: 1.1rem; margin:0;'>ملف العيادة والخدمات</h3>
+    </div>
+    <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
+  </div>
+  <div class='accordion-content' id='clinicProfileContent'>
+    <div style='padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;'>
+      <form id='clinicProfileForm'>
+
+        <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px dashed var(--border);">
+        <h4 data-i18n="personalInfoTitle" style="font-size: 1.05rem; font-weight: bold; margin-bottom: 1rem; color: var(--primary-dark);">المعلومات الشخصية للطبيب</h4>
+<div class="grid grid-1 grid-2">
+  <div class="form-group">
+    <label data-i18n="firstNameAr">الاسم (بالعربية) *</label>
+    <input type="text" id="dash_first_name_ar" placeholder="مثال: محمد" required>
+  </div>
+  <div class="form-group">
+    <label data-i18n="lastNameAr">اللقب (بالعربية) *</label>
+    <input type="text" id="dash_last_name_ar" placeholder="مثال: حمر العين" required>
+  </div>
+  <div class="form-group">
+    <label data-i18n="firstNameEn">الاسم (بالإنجليزية)</label>
+    <input type="text" id="dash_first_name_en" dir="ltr" placeholder="e.g. Mohammed">
+  </div>
+  <div class="form-group">
+    <label data-i18n="lastNameEn">اللقب (بالإنجليزية)</label>
+    <input type="text" id="dash_last_name_en" dir="ltr" placeholder="e.g. Hamr El Ain">
+  </div>
+</div>
+        </div>
+
+        <div class="grid grid-1 grid-2">
+            <div class="form-group">
+                <label data-i18n='clinicEmail'>البريد الإلكتروني للعيادة</label>
+                <input type="email" id="dash_contact_email" data-i18n-placeholder='clinicEmailPh' placeholder="contact@clinic.com">
+            </div>
+            <div class="form-group">
+                <label data-i18n='whatsappNum'>رقم الواتساب</label>
+                <input type="tel" id="dash_whatsapp" data-i18n-placeholder='whatsappPh' placeholder="مثال: 213550000000+">
+            </div>
+            <div class="form-group">
+                <label data-i18n='facebookLink'>رابط حساب الفيسبوك</label>
+                <input type="url" id="dash_facebook" data-i18n-placeholder='facebookPh' placeholder="https://facebook.com/...">
+            </div>
+            <div class="form-group">
+                <label data-i18n='mapLink'>رابط موقع العيادة (Google Maps)</label>
+                <input type="url" id="dash_map_link" data-i18n-placeholder='mapLinkPh' placeholder="رابط خرائط جوجل...">
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label style="font-weight: bold; color: var(--primary-dark);" data-i18n="certificatesLabel">الشهادات والتخصص الدقيق</label>
+            <p class="text-sm text-gray mb-2" data-i18n="certificatesHelp">اكتب شهاداتك أو تخصصاتك مفصولة بفاصلة (مثال: دبلوم طب أطفال، خريج جامعة الجزائر)</p>
+            <textarea id="dash_certificates" rows="2" class="input" data-i18n-placeholder="certificatesPh" placeholder="اكتب شهاداتك هنا..."></textarea>
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem; padding: 1.5rem; border: 1px dashed var(--primary); border-radius: 12px; background: #f8fafc; text-align: center;">
+            <label style="font-weight: bold; color: var(--primary-dark); display: block;" data-i18n="clinicImagesLabel">صور العيادة (لإعطاء ثقة للمرضى)</label>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;" data-i18n="clinicImagesHelp">يمكنك رفع حتى 3 صور كحد أقصى (سيتم حفظها وعرضها في ملفك)</p>
+            <input type="file" id="dash_clinic_images" accept="image/png, image/jpeg, image/webp" multiple class="input" style="padding: 0.5rem; background: white; margin: 0 auto; max-width: 300px;">
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label data-i18n='servicesProvided'>الخدمات المقدمة (جدول الخدمات)</label>
+            <p class="text-sm text-gray mb-2" data-i18n='servicesHelp'>أضف فئات الخدمات (مثال: طب الأطفال) ثم اكتب الخدمات التابعة لها مفصولة بفاصلة (,)</p>
+            <div id="servicesContainer" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;"></div>
+            <button class="btn btn-secondary btn-block" type="button" onclick="addServiceCategory()" style="border: 1px dashed var(--primary); color: var(--primary); background: var(--primary-light);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span data-i18n='addServiceBtn'>إضافة فئة خدمات جديدة</span>
+            </button>
+        </div>
+
+        <button class='btn btn-primary' id='saveProfileBtn' onclick='saveClinicProfile()' type='button'><span data-i18n='saveChangesBtn'>حفظ التغييرات</span></button>
+      </form>
+    </div>
+  </div>
+</div>
+
+        <div class='card mb-4' style='padding: 1rem 1.5rem;'>
+          <div class='accordion-header' id='appointmentsToggle' onclick='toggleAppointments()'>
+            <div style='display:flex; align-items:center; gap:0.75rem;'>
+              <div style='background: var(--success); color: white; padding: 0.5rem; border-radius: 8px; display: flex;'>
+                <svg fill='none' height='20' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='20'><rect height='18' rx='2' ry='2' width='18' x='3' y='4'/><line x1='16' x2='16' y1='2' y2='6'/><line x1='8' x2='8' y1='2' y2='6'/><line x1='3' x2='21' y1='10' y2='10'/></svg>
+              </div>
+              <h3 class='text-lg font-bold' data-i18n='myAppointments' style='font-size: 1.1rem; margin:0;'>My Appointments</h3>
+            </div>
+            <svg class='accordion-icon' fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' viewBox='0 0 24 24' width='24'><polyline points='6 9 12 15 18 9'/></svg>
+          </div>
+          <div class='accordion-content' id='appointmentsContent'>
+            <div id='appointmentsListContainer' style='margin-top: 1.5rem; border-top: 1px dashed var(--border); padding-top: 1.5rem;'>
+              <div id='appointmentsTable' style='display: flex; flex-direction: column; gap: 1rem;'></div>
+              <div class='empty-state hidden' id='noAppointments'>
+                <div class='empty-state-icon' style='opacity: 1; color: var(--text-secondary); margin-bottom: 1rem; display: flex; justify-content: center;'>
+                  <svg fill='none' height='48' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' viewBox='0 0 24 24' width='48'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' x2='8' y1='13' y2='13'/><line x1='16' x2='8' y1='17' y2='17'/><polyline points='10 9 9 9 8 9'/></svg>
+                </div>
+                <div data-i18n='noAppointmentsMsg'>No appointments found.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div> 
+
+    </div>
+  <div class='dialog-overlay hidden' id='doctorProfileModal' style='z-index: 99990;'>
+    <div class='dialog-box doctor-profile-modal' id='dpModalContent'></div>
+  </div>
+
+  <div class='dialog-overlay hidden' id='confirmDialog'>
+
+    <div class='dialog-box'>
+
+      <h3 data-i18n='confirmDialogTitle'>Confirm Appointment</h3>
+
+      <p id='confirmDialogBody'></p>
+
+      <div class='dialog-actions'>
+
+        <button class='btn btn-secondary' data-i18n='cancel' id='cancelDialogBtn'>Cancel</button>
+
+        <button class='btn btn-success' data-i18n='confirmBooking' id='confirmDialogOkBtn'>Confirm Booking</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class='dialog-overlay hidden' id='successDialog'>
+
+    <div class='dialog-box' style='padding: 1.5rem; background: var(--bg);'>
+
+      <div id='eTicketContainer'></div>
+
+      <p style='color: var(--text-secondary); font-size: 0.85rem; margin: 1.25rem 0 1.5rem 0;'>يرجى أخذ لقطة شاشة (Screenshot) لهذه التذكرة للرجوع إليها عند زيارة العيادة.</p>
+
+      <div class='dialog-actions'>
+
+        <button class='btn btn-primary btn-block' onclick='closeSuccessDialog()'>حسناً، العودة للرئيسية</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+<footer>
+  <div data-i18n='footerRights'>&#169; 2026 Relizane Medical Directory. All rights reserved.</div>
+  <div class='footer-links'>
+    <a data-i18n='privacyPolicy' href='privacy.html'>Privacy Policy</a>
+    <a data-i18n='termsOfUse' href='terms.html'>Terms of Use</a>
+    <a data-i18n='contactUs' href='contact.html'>Contact Us</a>
+  </div>
+</footer>
+
+
+
+  <button class='hidden' id='backToTop'>
+
+    <svg fill='none' height='24' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24' width='24'>
+
+      <path d='M18 15l-6-6-6 6'/>
+
+    </svg>
+
+  </button>
+
+  <div id='toastContainer'></div>
+
+<script type="module" src="scripts/app.js"></script>
+  <!-- نافذة المستشار الآلي -->
+
+<div id="medicalChatbot" class="chatbot-container hidden">
+
+    <div class="chatbot-header">
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"></path></svg>
+
+        <div>
+
+          <h3 style="font-size: 1rem; margin: 0; color: white;" data-i18n="chatTitle">المستشار الطبي</h3>
+
+        <span style="font-size: 0.75rem; opacity: 0.8; color: rgba(255,255,255,0.9);" data-i18n="chatSubtitle"> متاح للرد الفوري </span>
+
+        </div>
+
+      </div>
+
+      <button id="closeChatBtn" style="background: transparent; border: none; color: white; cursor: pointer;">
+
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+
+      </button>
+
+    </div>
+
+    <div id="chatMessages" class="chatbot-messages">
+
+      <div class="chat-msg bot-msg" data-i18n="chatWelcome">
+
+        أهلاً بك في دليل أطباء غليزان. أنا مساعدك الآلي 🤖. كيف يمكنني مساعدتك اليوم؟
+
+      </div>
+
+    </div>
+
+    <div class="chatbot-input">
+
+      <input type="text" id="chatInputText" data-i18n-placeholder="chatInputPlaceholder" placeholder="اكتب سؤالك هنا..." autocomplete="off">
+
+      <button id="sendChatBtn" style="transform: scaleX(var(--rtl-scale, 1));"> <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+
+  <button id="chatbotToggleBtn" class="chatbot-toggle-btn">
+
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"></path></svg>
+
+    <span data-i18n="chatToggleBtn">تحدث معنا</span>
+
+  </button>
+<div class='dialog-overlay hidden' id='changePasswordModal' style='z-index: 99999;'>
+  <div class='dialog-box' style='max-width: 400px; padding: 1.5rem;'>
+    <h3 style='margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: bold; color: var(--text);' data-i18n="changePasswordTitle">تغيير كلمة المرور</h3>
+    <p style='color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;' data-i18n="changePasswordDesc">يرجى إدخال كلمة المرور الجديدة (يجب أن تتكون من 6 أحرف أو أرقام على الأقل).</p>
+
+    <div class='form-group' style='text-align: right; margin-bottom: 1rem;'>
+      <div style="position: relative; width: 100%; display: block;">
+<input id="newPasswordInput" data-i18n-placeholder='passwordPlaceholder' placeholder="••••••••" type="password" style="width: 100%; padding-left: 50px !important; box-sizing: border-box; display: block; margin: 0;">
+        <span onclick="togglePasswordVisibility('newPasswordInput', 'eyeIconModal')" style="position: absolute; left: 5px; top: 0; height: 100%; width: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; z-index: 9999;">
+          <svg id="eyeIconModal" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <div class='dialog-actions' style='margin-top: 1.5rem;'>
+      <button class='btn btn-secondary' data-i18n="cancel" onclick='closeChangePasswordModal()'>إلغاء</button>
+      <button class='btn btn-primary' id='saveNewPasswordBtn' data-i18n="saveChangesBtn" onclick='submitNewPassword()'>حفظ التغييرات</button>
+    </div>
+  </div>
+</div>
+
+<div class='dialog-overlay hidden' id='forgotPasswordModal' style='z-index: 99999;'>
+  <div class='dialog-box' style='max-width: 400px; padding: 1.5rem;'>
+    <h3 data-i18n="forgotPasswordTitle" style='margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: bold; color: var(--text);'>استعادة كلمة المرور</h3>
+
+    <p data-i18n="forgotPasswordDesc" style='color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;'>أدخل بريدك الإلكتروني المسجل أدناه وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.</p>
+
+    <div class='form-group' style='text-align: right;'>
+<input id='resetEmailInput' data-i18n-placeholder='emailPlaceholder' placeholder='your@email.com' type='email' style='width: 100%; text-align: left; direction: ltr;'>
+    </div>
+
+    <div class='dialog-actions' style='margin-top: 1.5rem;'>
+      <button class='btn btn-secondary' data-i18n="cancel" onclick='closeForgotPasswordModal()'>إلغاء</button>
+      <button class='btn btn-primary' id='sendResetLinkBtn' data-i18n="sendResetLink" onclick='submitPasswordReset()'>إرسال الرابط</button>
+    </div>
+  </div>
+</div>
+    <script>
+    // تسجيل Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((registration) => {
+            console.log('تم تسجيل Service Worker بنجاح، النطاق:', registration.scope);
+          })
+          .catch((error) => {
+            console.error('فشل تسجيل Service Worker:', error);
+          });
+      });
     }
-}
-/* =========================================================
-   تنسيقات صفحة التقييمات المستقلة (Reviews Page)
-   ========================================================= */
-.reviews-page-layout {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-  align-items: start;
-}
+  </script>
+    <script>
+  function switchBookingTab(tabType) {
+    const tabInPerson = document.getElementById('tabInPerson');
+    const tabTelehealth = document.getElementById('tabTelehealth');
+    const cityField = document.getElementById('citySearchField');
+    const nameField = document.getElementById('nameSearchField');
+    const div1 = document.getElementById('divider1');
+    const div2 = document.getElementById('divider2');
 
-@media (min-width: 900px) {
-  .reviews-page-layout {
-    grid-template-columns: 350px 1fr;
-  }
-}
-
-.rating-summary-box {
-  background: var(--bg);
-  padding: 1.5rem;
-  border-radius: 16px;
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--border);
-}
-
-.average-rating {
-  font-size: 3.5rem;
-  font-weight: 900;
-  color: var(--text);
-  line-height: 1;
-}
-
-.rating-bar-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.rating-bar-track {
-  flex: 1;
-  height: 8px;
-  background: var(--bg);
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.05);
-}
-
-.rating-bar-fill {
-  height: 100%;
-  background: #f59e0b;
-  border-radius: 10px;
-  transition: width 0.5s ease-out;
-}
-
-.review-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.review-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(0,0,0,0.05);
-}
-
-.review-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-}
-
-.review-user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.review-avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-  color: #475569;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 1rem;
-}
-
-.review-content-text {
-  color: var(--text);
-  line-height: 1.7;
-  font-size: 0.95rem;
-  margin-top: 0.5rem;
-}
-/* =========================================================
-   تحسينات تصميم صفحة التقييمات (Premium Reviews UI)
-   ========================================================= */
-
-/* تخطيط الصفحة (الأعمدة) */
-.reviews-page-layout {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-  align-items: start;
-}
-@media (min-width: 900px) {
-  .reviews-page-layout {
-    /* صندوق الملخص يأخذ 350 بكسل، والتعليقات تأخذ باقي المساحة */
-    grid-template-columns: 350px 1fr; 
-  }
-}
-
-/* صندوق الملخص الثابت (Sticky) */
-.rating-summary-box {
-  background: white;
-  padding: 1.75rem;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-  border: 1px solid rgba(0,0,0,0.04);
-}
-
-/* بطاقة التقييم الاحترافية */
-.review-card {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  margin-bottom: 1rem;
-}
-.review-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.06);
-  border-color: var(--primary-light);
-}
-
-/* ترتيب رأس البطاقة */
-.review-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.review-user-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-/* الأيقونة الدائرية (الحرف الأول من الاسم) */
-.review-avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: 1.3rem;
-  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.2);
-}
-
-/* نص التعليق */
-.review-content-text {
-  color: #334155;
-  line-height: 1.7;
-  font-size: 0.95rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px dashed var(--border); /* خط فاصل خفيف وأنيق */
-}
-
-/* زر الحذف الأنيق */
-.delete-review-btn {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #ef4444;
-  border-radius: 8px;
-  padding: 0.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-.delete-review-btn:hover {
-  background: #ef4444;
-  color: white;
-  transform: scale(1.05);
-}
-/* =========================================================
-   تصميم شريط الحجز الاحترافي (Booking Engine Style)
-   ========================================================= */
-.booking-engine-wrapper {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    margin: 0 auto 3rem auto;
-    width: 100%;
-    border: 1px solid rgba(0,0,0,0.05);
-}
-
-/* --- التبويبات العلوية (Tabs) --- */
-.booking-tabs {
-    display: flex;
-    border-bottom: 1px solid #e2e8f0;
-    background: #ffffff;
-    border-radius: 16px 16px 0 0;
-    overflow: hidden;
-}
-
-.booking-tab {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 1.25rem 1rem;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.booking-tab.active {
-    border-bottom: 3px solid var(--primary);
-    background: #f8fafc;
-}
-
-.booking-tab.inactive {
-    opacity: 0.6;
-}
-.booking-tab.inactive:hover {
-    opacity: 1;
-    background: #f1f5f9;
-}
-
-.tab-icon {
-    color: var(--primary-dark);
-}
-.booking-tab.inactive .tab-icon {
-    color: #64748b;
-}
-
-.tab-text {
-    display: flex;
-    flex-direction: column;
-    text-align: right;
-}
-[dir="ltr"] .tab-text { text-align: left; }
-
-.tab-title {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: var(--primary-dark);
-    margin-bottom: 2px;
-}
-.booking-tab.inactive .tab-title { color: #475569; }
-
-.tab-subtitle {
-    font-size: 0.8rem;
-    color: #64748b;
-    font-weight: 500;
-}
-
-/* --- الجزء السفلي: حقول البحث --- */
-.modern-search-bar {
-    display: flex;
-    align-items: stretch;
-    margin: 1.5rem;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-}
-
-.search-field {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 0.75rem 1.25rem;
-    flex: 1;
-    border: none !important; /* إزالة الإطارات الفردية تماماً */
-    border-radius: 0 !important; /* إزالة الحواف الدائرية الفردية */
-    margin: 0 !important; /* التصاق الحقول ببعضها */
-    background: transparent;
-    transition: background 0.2s;
-}
-.search-field:focus-within {
-    background: #f8fafc;
-    box-shadow: none !important;
-}
-.search-divider {
-    display: block !important; 
-    width: 1px;
-    background: #e2e8f0;
-    margin: 15px 0; /* هامش من الأعلى والأسفل لكي لا يلمس حواف الشريط */
-}
-
-.input-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.input-wrapper input {
-    border: none !important;
-    outline: none !important;
-    font-size: 1.05rem !important; /* تكبير خط الكتابة */
-    font-weight: 600 !important;
-    color: var(--text) !important;
-    background: transparent !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-}
-
-.input-wrapper input::placeholder {
-    color: #94a3b8;
-    font-weight: 500;
-}
-
-/* زر البحث (اللون الأحمر البارز) */
-.search-action-btn {
-    background: #e11d48;
-    color: white;
-    border: none;
-    padding: 0 2.5rem;
-    font-size: 1.2rem;
-    font-weight: 800;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    margin: 0 !important;
-    transition: all 0.2s;
-}
-.search-action-btn:hover {
-    background: #be123c;
-}
-/* ضبط حواف الزر في النسخة العربية (الزر يكون على اليسار) */
-[dir="rtl"] .search-action-btn {
-    border-radius: 12px 0 0 12px !important;
-}
-
-/* ضبط حواف الزر في النسخة الإنجليزية (الزر يكون على اليمين) */
-[dir="ltr"] .search-action-btn {
-    border-radius: 0 12px 12px 0 !important;
-}
-/* إصلاحات TomSelect لتندمج بنعومة */
-.modern-search-bar .ts-control {
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    font-weight: 600;
-    font-size: 1.05rem !important;
-}
-
-/* =========================================================
-   إظهار أسهم القوائم المنسدلة (Dropdown Carets)
-   ========================================================= */
-
-/* 1. رسم السهم الرمادي الواضح */
-.modern-search-bar .ts-wrapper.single .ts-control::after {
-    content: "" !important;
-    position: absolute !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    border-width: 6px 5px 0 5px !important;
-    border-style: solid !important;
-    border-color: #94a3b8 transparent transparent transparent !important;
-    display: block !important;
-    pointer-events: none;
-    transition: transform 0.2s ease;
-}
-
-/* 2. لمسة احترافية: قلب السهم للأعلى عند فتح القائمة */
-.modern-search-bar .ts-wrapper.single.focus .ts-control::after {
-    transform: translateY(-50%) rotate(180deg) !important;
-}
-
-/* 3. ضبط مكان السهم في النسخة العربية (اليمين لليسار) */
-[dir="rtl"] .modern-search-bar .ts-wrapper.single .ts-control::after {
-    left: 0 !important;
-    right: auto !important;
-}
-[dir="rtl"] .modern-search-bar .ts-wrapper.single .ts-control {
-    padding-left: 20px !important; /* حجز مساحة للسهم لكي لا يغطي على النص */
-}
-
-/* 4. ضبط مكان السهم في النسخة الإنجليزية (اليسار لليمين) */
-[dir="ltr"] .modern-search-bar .ts-wrapper.single .ts-control::after {
-    right: 0 !important;
-    left: auto !important;
-}
-[dir="ltr"] .modern-search-bar .ts-wrapper.single .ts-control {
-    padding-right: 20px !important; /* حجز مساحة للسهم لكي لا يغطي على النص */
-}
-
-/* التجاوب مع شاشات الهواتف */
-@media (max-width: 900px) {
-    .booking-tabs {
-        flex-direction: column;
+    if (tabType === 'inPerson') {
+      // تفعيل زر حضوري
+      tabInPerson.classList.add('active');
+      tabInPerson.classList.remove('inactive');
+      tabTelehealth.classList.add('inactive');
+      tabTelehealth.classList.remove('active');
+      // إظهار كل الحقول
+      cityField.style.display = 'flex';
+      nameField.style.display = 'flex';
+      div1.style.display = 'block';
+      div2.style.display = 'block';
+    } else {
+      // تفعيل زر استشارة عن بعد
+      tabTelehealth.classList.add('active');
+      tabTelehealth.classList.remove('inactive');
+      tabInPerson.classList.add('inactive');
+      tabInPerson.classList.remove('active');
+      // إخفاء البلدية والاسم (يتبقى الاختصاص فقط)
+      cityField.style.display = 'none';
+      nameField.style.display = 'none';
+      div1.style.display = 'none';
+      div2.style.display = 'none';
     }
-    .booking-tab {
-        justify-content: flex-start;
-        padding: 1rem 1.5rem;
-    }
-    .modern-search-bar {
-        flex-direction: column;
-        padding: 1rem;
-        gap: 0.75rem;
-    }
-    .search-divider {
-        width: 100%;
-        height: 1px;
-        margin: 0.5rem 0;
-    }
-    .search-action-btn {
-        width: 100%;
-        justify-content: center;
-        margin-top: 1rem;
-        margin-inline-start: 0;
-        padding: 1rem;
-    }
-}
-/* =========================================================
-   تحسينات قائمة TomSelect (المساحة والظهور)
-   ========================================================= */
-/* إعطاء مساحة مريحة للكتابة اليدوية داخل الحقل */
-.modern-search-bar .ts-control > input {
-    font-size: 1rem !important;
-    min-width: 130px !important; 
-}
-
-/* =========================================================
-   تطابق القوائم المنسدلة مع حواف الحقول (Respect Frame Bounds)
-   ========================================================= */
-
-/* 1. إجبار القائمة على أخذ 100% من عرض الحقل الأب فقط */
-.modern-search-bar .ts-dropdown {
-    min-width: 100% !important; 
-    width: 100% !important; 
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-    border-radius: 12px !important;
-    left: 0 !important;
-    right: auto !important;
-}
-
-/* ضبط الاتجاه للغة العربية لتطابق الحافة اليمنى */
-[dir="rtl"] .modern-search-bar .ts-dropdown {
-    right: 0 !important;
-    left: auto !important;
-}
-
-/* 2. معالجة النصوص الطويلة جداً لكي لا تكسر إطار القائمة */
-.modern-search-bar .ts-dropdown .option {
-    white-space: nowrap !important; /* منع نزول النص لسطر جديد */
-    overflow: hidden !important; /* قص أي نص يتجاوز الإطار */
-    text-overflow: ellipsis !important; /* إضافة (...) في نهاية النص الطويل */
-    padding: 10px 15px !important;
-    font-size: 0.95rem !important;
-}
-/* =========================================================
-   تحسين دقة ووضوح الخطوط (Typography) في شريط البحث
-   ========================================================= */
-
-/* 1. تلوين وتوضيح النصوص المختارة في القوائم المنسدلة (TomSelect) */
-.modern-search-bar .ts-control,
-.modern-search-bar .ts-control input,
-.modern-search-bar .ts-control .item {
-    color: var(--primary-dark) !important; /* لون أزرق داكن وواضح جداً */
-    font-weight: 800 !important; /* خط سميك وبارز */
-    font-size: 1.1rem !important; /* تكبير الخط قليلاً */
-    -webkit-font-smoothing: antialiased; /* تنعيم حواف الخط لجعله أكثر دقة */
-}
-
-/* 2. تلوين وتوضيح حقل كتابة اسم الطبيب */
-.modern-search-bar input#searchInput {
-    color: var(--primary-dark) !important;
-    font-weight: 800 !important;
-    font-size: 1.1rem !important;
-    -webkit-font-smoothing: antialiased;
-}
-
-/* 3. توضيح العناوين العلوية الصغيرة ("في أي بلدية؟"، "اختر اختصاصاً") */
-.search-field label {
-    color: #475569 !important; /* رمادي أغمق لزيادة التباين (Contrast) */
-    font-weight: 800 !important;
-}
-
-/* 4. زيادة سماكة الأيقونات الزرقاء لتتناسب مع الخط العريض */
-.modern-search-bar .input-wrapper svg {
-    color: var(--primary) !important;
-    stroke-width: 2.5px !important; /* جعل الأيقونة أعرض وأوضح */
-}
-
-/* 5. توضيح النص المؤقت (Placeholder) مثل "ابحث بالاسم..." */
-.modern-search-bar input#searchInput::placeholder {
-    color: #94a3b8 !important;
-    font-weight: 600 !important;
-}
-/* إصلاح اختلاط النصوص العربية والإنجليزية في لوحة التحكم */
-#dashboardSubtitle {
-    unicode-bidi: plaintext; /* يوجه المتصفح لقراءة اللغة بشكل ذكي */
-    text-align: start;
-}
-/* =========================================================
-   تصميم الـ Hero Section النهائي (صورة خلفية + تداخل الصندوق)
-   تصميم Hero Section المحسّن - بسيط وأنيق
-   ========================================================= */
-
-.hero-section {
-  position: relative;
-  background-image: url('images/hero-bg.png') !important; 
-  /* محاذاة الصورة لليسار لترك مساحة للنصوص على اليمين */
-  background-position: left center !important; 
-  background-size: cover !important;
-  background-repeat: no-repeat !important;
-
-  border-radius: 20px;
-  padding: 4rem 1.5rem 8rem 1.5rem !important;
-  border: none !important;
-  overflow: hidden;
-
-  /* تحسين الظل مع إضافة توهج أزرق */
-  box-shadow: 
-    0 20px 60px rgba(14, 165, 233, 0.25),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-  /* ظل بسيط وأنيق */
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08) !important;
-  margin-bottom: 0 !important;
-  
-  /* إضافة تأثير حركي ناعم */
-  transition: all 0.4s ease;
-}
-
-/* تأثير التوهج عند التمرير */
-.hero-section:hover {
-  box-shadow: 
-    0 25px 70px rgba(14, 165, 233, 0.35),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.15) !important;
-}
-
-/* الطبقة الأولى: التدرج اللوني المحسن مع تأثير زجاجي */
-/* طبقة تظليل بسيطة لتحسين قراءة النص */
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  /* تدرج أزرق-بنفسجي عصري يبدأ شفافاً من اليسار (الوجه) وينتهي غامقاً في اليمين (النصوص) */
-  /* تدرج بسيط - أزرق فاتح وشفاف */
-  background: linear-gradient(135deg, 
-    rgba(59, 130, 246, 0.15) 0%, 
-    rgba(14, 165, 233, 0.5) 40%,
-    rgba(14, 165, 233, 0.7) 60%,
-    rgba(139, 92, 246, 0.85) 100%);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-    rgba(14, 165, 233, 0.15) 0%, 
-    rgba(14, 165, 233, 0.35) 100%);
-  z-index: 1;
-  
-  /* تأثير حركي عند التمرير */
-  transition: all 0.4s ease;
-}
-
-/* تكثيف التدرج عند التمرير */
-.hero-section:hover::before {
-  background: linear-gradient(135deg, 
-    rgba(59, 130, 246, 0.2) 0%, 
-    rgba(14, 165, 233, 0.6) 40%,
-    rgba(14, 165, 233, 0.8) 60%,
-    rgba(139, 92, 246, 0.9) 100%);
-}
-
-/* الطبقة الثانية: نقاط ضوئية زخرفية */
-.hero-section::after {
-  content: '';
-  position: absolute;
-  top: 0; right: 0;
-  width: 100%; height: 100%;
-  background-image: 
-    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.12) 1px, transparent 1px),
-    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 1px, transparent 1px),
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.06) 1px, transparent 1px);
-  background-size: 50px 50px, 70px 70px, 90px 90px;
-  z-index: 1;
-  pointer-events: none;
-  
-  /* تأثير حركي خفيف */
-  animation: particleFloat 20s ease-in-out infinite;
-}
-
-/* حركة النقاط الضوئية */
-@keyframes particleFloat {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(-10px, -10px); }
-}
-
-/* ضمان ظهور المحتوى فوق الطبقات */
-.hero-section > * {
-  position: relative;
-  z-index: 2;
-}
-
-/* تحسين تباين النصوص للقراءة */
-/* تحسين النصوص */
-.hero-section h1, 
-.hero-section p {
-  color: #ffffff !important;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  opacity: 1;
-}
-
-/* تحسين شارة "المنصة الطبية الأولى" */
-/* شارة "المنصة الطبية الأولى" - بسيطة */
-.hero-section > div:first-child {
-  background: rgba(255, 255, 255, 0.15) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
-  color: #ffffff !important;
-  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
-  background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-  color: var(--primary-dark) !important;
-  font-weight: 700;
-}
-
-/* صندوق محرك الحجز مع تحسينات */
-/* صندوق البحث */
-.booking-engine-wrapper {
-    position: relative;
-    z-index: 10;
-    margin-top: -3.5rem !important; 
-    box-shadow: 
-      0 15px 35px rgba(0, 0, 0, 0.12),
-      0 0 0 1px rgba(255, 255, 255, 0.05) !important;
-    transition: all 0.3s ease;
-}
-
-.booking-engine-wrapper:hover {
-    box-shadow: 
-      0 20px 45px rgba(0, 0, 0, 0.15),
-      0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
-}
-
-/* الوضع المظلم */
-@media (prefers-color-scheme: dark) {
-  .hero-section {
-    border-color: transparent !important;
-    box-shadow: 
-      0 20px 60px rgba(14, 165, 233, 0.35),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
   }
-  
-  .hero-section:hover {
-    box-shadow: 
-      0 25px 70px rgba(14, 165, 233, 0.45),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
-  }
+</script>
+</body>
 
-  .hero-section::before {
-    background: linear-gradient(135deg, 
-      rgba(59, 130, 246, 0.25) 0%, 
-      rgba(14, 165, 233, 0.6) 40%,
-      rgba(14, 165, 233, 0.8) 60%,
-      rgba(139, 92, 246, 0.95) 100%);
-      rgba(14, 165, 233, 0.25) 0%, 
-      rgba(14, 165, 233, 0.45) 100%);
-  }
-
-  .hero-section:hover::before {
-    background: linear-gradient(135deg, 
-      rgba(59, 130, 246, 0.3) 0%, 
-      rgba(14, 165, 233, 0.7) 40%,
-      rgba(14, 165, 233, 0.9) 60%,
-      rgba(139, 92, 246, 1) 100%);
-  .hero-section > div:first-child {
-    background: rgba(255, 255, 255, 0.95) !important;
-  }
-
-  .booking-engine-wrapper {
-    background: var(--surface);
-    border: 1px solid var(--border);
-  }
-}
+</html> 
