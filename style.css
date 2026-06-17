@@ -1093,3 +1093,32 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     color: #94a3b8 !important;
     font-weight: 600 !important;
 }
+/* =========================================================
+   تحسين تجربة الكتابة والبحث داخل القوائم المنسدلة (TomSelect)
+   ========================================================= */
+
+/* 1. تلوين مؤشر الكتابة (Caret) باللون الأزرق ليكون واضحاً للعين */
+.modern-search-bar .ts-control > input {
+    color: var(--primary-dark) !important;
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    caret-color: var(--primary) !important; /* لون الخط الوامض */
+}
+
+/* 2. السحر: إخفاء الكلمة المحددة *فقط* عندما ينقر المستخدم لفتح القائمة */
+.modern-search-bar .ts-wrapper.focus .ts-control .item {
+    display: none !important;
+}
+
+/* 3. توسيع مساحة الكتابة لتأخذ العرض بالكامل براحة تامة عند الفتح */
+.modern-search-bar .ts-wrapper.focus .ts-control > input {
+    width: 100% !important;
+    min-width: 100% !important;
+    opacity: 1 !important;
+    margin: 0 !important;
+}
+
+/* 4. تغيير شكل مؤشر الماوس إلى (I-beam) ليدل على أن المكان قابل للكتابة */
+.modern-search-bar .ts-control {
+    cursor: text !important;
+}
