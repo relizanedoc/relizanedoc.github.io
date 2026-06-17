@@ -995,11 +995,51 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 /* إصلاحات TomSelect لتندمج بنعومة */
 .modern-search-bar .ts-control {
     border: none !important;
-    padding: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
     font-weight: 600;
     font-size: 1.05rem !important;
+}
+
+/* =========================================================
+   إظهار أسهم القوائم المنسدلة (Dropdown Carets)
+   ========================================================= */
+
+/* 1. رسم السهم الرمادي الواضح */
+.modern-search-bar .ts-wrapper.single .ts-control::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    border-width: 6px 5px 0 5px !important;
+    border-style: solid !important;
+    border-color: #94a3b8 transparent transparent transparent !important;
+    display: block !important;
+    pointer-events: none;
+    transition: transform 0.2s ease;
+}
+
+/* 2. لمسة احترافية: قلب السهم للأعلى عند فتح القائمة */
+.modern-search-bar .ts-wrapper.single.focus .ts-control::after {
+    transform: translateY(-50%) rotate(180deg) !important;
+}
+
+/* 3. ضبط مكان السهم في النسخة العربية (اليمين لليسار) */
+[dir="rtl"] .modern-search-bar .ts-wrapper.single .ts-control::after {
+    left: 0 !important;
+    right: auto !important;
+}
+[dir="rtl"] .modern-search-bar .ts-wrapper.single .ts-control {
+    padding-left: 20px !important; /* حجز مساحة للسهم لكي لا يغطي على النص */
+}
+
+/* 4. ضبط مكان السهم في النسخة الإنجليزية (اليسار لليمين) */
+[dir="ltr"] .modern-search-bar .ts-wrapper.single .ts-control::after {
+    right: 0 !important;
+    left: auto !important;
+}
+[dir="ltr"] .modern-search-bar .ts-wrapper.single .ts-control {
+    padding-right: 20px !important; /* حجز مساحة للسهم لكي لا يغطي على النص */
 }
 
 /* التجاوب مع شاشات الهواتف */
