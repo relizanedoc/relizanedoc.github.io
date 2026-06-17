@@ -355,7 +355,7 @@ async function fetchReviewStats(doctorId) {
       let barsHtml = '';
       for (let i = 5; i >= 1; i--) {
           const percentage = ((ratingCounts[i] / totalReviews) * 100).toFixed(0);
-          barsHtml += `<div class="rating-bar-row"><span style="width: 35px;">${i} نجوم</span><div class="rating-bar-track"><div class="rating-bar-fill" style="width: ${percentage}%;"></div></div><span style="width: 35px; text-align: right;" dir="ltr">${percentage}%</span></div>`;
+barsHtml += `<div class="rating-bar-row"><span style="width: 45px;">${i} ${t('starsText')}</span><div class="rating-bar-track"><div class="rating-bar-fill" style="width: ${percentage}%;"></div></div><span style="width: 35px; text-align: right;" dir="ltr">${percentage}%</span></div>`;
       }
       document.getElementById('ratingBarsContainer').innerHTML = barsHtml;
   } catch (err) { console.error("خطأ الإحصائيات:", err); }
@@ -405,7 +405,7 @@ async function fetchReviewsPage(doctorId, pageIndex) {
       container.insertAdjacentHTML('beforeend', reviewsHtml);
       if (reviews.length === REVIEWS_PER_PAGE) {
           loadMoreBtn.classList.remove('hidden');
-          setLoading(loadMoreBtn, false, 'عرض المزيد من التقييمات (11) ↓');
+setLoading(loadMoreBtn, false, t('loadMoreReviewsText') + ' (11) ↓');
       } else {
           loadMoreBtn.classList.add('hidden');
       }
@@ -415,8 +415,8 @@ async function fetchReviewsPage(doctorId, pageIndex) {
 window.loadNextReviewsPage = function() {
   currentReviewPage++;
   const loadMoreBtn = document.getElementById('loadMoreReviewsBtn');
-  setLoading(loadMoreBtn, true, 'جاري التحميل...');
-  fetchReviewsPage(currentReviewsDoctorId, currentReviewPage);
+setLoading(loadMoreBtn, true, state.currentLang === 'en' ? 'Loading...' : 'جاري التحميل...');
+    fetchReviewsPage(currentReviewsDoctorId, currentReviewPage);
 };
 
 window.deleteReview = async function(reviewId, doctorId) {
