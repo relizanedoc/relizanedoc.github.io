@@ -1049,3 +1049,42 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     padding: 10px 15px !important;
     font-size: 0.95rem !important;
 }
+/* =========================================================
+   تحسين دقة ووضوح الخطوط (Typography) في شريط البحث
+   ========================================================= */
+
+/* 1. تلوين وتوضيح النصوص المختارة في القوائم المنسدلة (TomSelect) */
+.modern-search-bar .ts-control,
+.modern-search-bar .ts-control input,
+.modern-search-bar .ts-control .item {
+    color: var(--primary-dark) !important; /* لون أزرق داكن وواضح جداً */
+    font-weight: 800 !important; /* خط سميك وبارز */
+    font-size: 1.1rem !important; /* تكبير الخط قليلاً */
+    -webkit-font-smoothing: antialiased; /* تنعيم حواف الخط لجعله أكثر دقة */
+}
+
+/* 2. تلوين وتوضيح حقل كتابة اسم الطبيب */
+.modern-search-bar input#searchInput {
+    color: var(--primary-dark) !important;
+    font-weight: 800 !important;
+    font-size: 1.1rem !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* 3. توضيح العناوين العلوية الصغيرة ("في أي بلدية؟"، "اختر اختصاصاً") */
+.search-field label {
+    color: #475569 !important; /* رمادي أغمق لزيادة التباين (Contrast) */
+    font-weight: 800 !important;
+}
+
+/* 4. زيادة سماكة الأيقونات الزرقاء لتتناسب مع الخط العريض */
+.modern-search-bar .input-wrapper svg {
+    color: var(--primary) !important;
+    stroke-width: 2.5px !important; /* جعل الأيقونة أعرض وأوضح */
+}
+
+/* 5. توضيح النص المؤقت (Placeholder) مثل "ابحث بالاسم..." */
+.modern-search-bar input#searchInput::placeholder {
+    color: #94a3b8 !important;
+    font-weight: 600 !important;
+}
