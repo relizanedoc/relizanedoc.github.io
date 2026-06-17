@@ -131,6 +131,7 @@ const doctorName = `${docPrefix} ${escapeHtml(rawName)}`;
 }
 
 export function openDoctorProfileModal(doc, doctorName) {
+window.activeProfileDoctor = doc;
   let fbLink = doc.facebook_link || '';
   if (fbLink && !fbLink.match(/^https?:\/\//i)) {
       fbLink = 'https://' + fbLink;
