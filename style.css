@@ -837,18 +837,83 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   transform: scale(1.05);
 }
 /* =========================================================
-   تصميم شريط البحث الحديث (Booking Style)
+   تصميم شريط الحجز الاحترافي (Booking Engine Style)
    ========================================================= */
+.booking-engine-wrapper {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    margin: 0 auto 3rem auto;
+    max-width: 1050px; /* تم التوسيع لراحة العين */
+    border: 1px solid rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+/* --- التبويبات العلوية (Tabs) --- */
+.booking-tabs {
+    display: flex;
+    border-bottom: 1px solid #e2e8f0;
+    background: #ffffff;
+}
+
+.booking-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 1.25rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.booking-tab.active {
+    border-bottom: 3px solid var(--primary);
+    background: #f8fafc;
+}
+
+.booking-tab.inactive {
+    opacity: 0.6;
+}
+.booking-tab.inactive:hover {
+    opacity: 1;
+    background: #f1f5f9;
+}
+
+.tab-icon {
+    color: var(--primary-dark);
+}
+.booking-tab.inactive .tab-icon {
+    color: #64748b;
+}
+
+.tab-text {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+}
+[dir="ltr"] .tab-text { text-align: left; }
+
+.tab-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin-bottom: 2px;
+}
+.booking-tab.inactive .tab-title { color: #475569; }
+
+.tab-subtitle {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* --- الجزء السفلي: حقول البحث --- */
 .modern-search-bar {
     display: flex;
     align-items: center;
+    padding: 0.75rem;
     background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-    padding: 0.5rem;
-    margin: 0 auto 2.5rem auto;
-    max-width: 1000px;
-    border: 1px solid #e2e8f0;
 }
 
 .search-field {
@@ -861,25 +926,25 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 .search-field label {
     font-size: 0.75rem;
     color: #64748b;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
     font-weight: 700;
-    text-transform: uppercase;
 }
 
 .input-wrapper {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
 }
 
 .input-wrapper input {
-    border: none;
-    outline: none;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text);
-    background: transparent;
-    padding: 0;
+    border: none !important;
+    outline: none !important;
+    font-size: 1.05rem !important; /* تكبير خط الكتابة */
+    font-weight: 600 !important;
+    color: var(--text) !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
 }
 
 .input-wrapper input::placeholder {
@@ -889,19 +954,19 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 
 .search-divider {
     width: 1px;
-    height: 40px;
+    height: 45px;
     background: #e2e8f0;
     margin: 0 0.5rem;
 }
 
-/* زر البحث الأزرق ليتماشى مع هوية الموقع */
+/* زر البحث (اللون الأحمر البارز) */
 .search-action-btn {
-    background: var(--primary);
+    background: #e11d48; 
     color: white;
     border: none;
-    padding: 1rem 2rem;
-    border-radius: 10px;
-    font-size: 1.1rem;
+    padding: 1.1rem 2.5rem;
+    border-radius: 12px;
+    font-size: 1.2rem;
     font-weight: 800;
     cursor: pointer;
     display: flex;
@@ -909,44 +974,49 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     gap: 0.5rem;
     transition: all 0.2s;
     height: 100%;
+    margin-inline-start: 1rem;
 }
 
 .search-action-btn:hover {
-    background: var(--primary-dark);
+    background: #be123c;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+    box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
 }
 
-/* تعديلات TomSelect لدمجها بدون حواف داخل الشريط */
+/* إصلاحات TomSelect لتندمج بنعومة */
 .modern-search-bar .ts-control {
     border: none !important;
     padding: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 1.05rem !important;
 }
 
-/* التجاوب مع شاشات الهواتف (تحويله إلى شكل عمودي) */
-@media (max-width: 768px) {
+/* التجاوب مع شاشات الهواتف */
+@media (max-width: 900px) {
+    .booking-tabs {
+        flex-direction: column;
+    }
+    .booking-tab {
+        justify-content: flex-start;
+        padding: 1rem 1.5rem;
+    }
     .modern-search-bar {
         flex-direction: column;
-        border-radius: 16px;
         padding: 1rem;
-        gap: 0.5rem;
+        gap: 0.75rem;
     }
-    
     .search-divider {
         width: 100%;
         height: 1px;
         margin: 0.5rem 0;
-        background: #e2e8f0;
     }
-    
     .search-action-btn {
         width: 100%;
         justify-content: center;
         margin-top: 1rem;
+        margin-inline-start: 0;
         padding: 1rem;
     }
 }
