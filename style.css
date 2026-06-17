@@ -844,9 +844,8 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     margin: 0 auto 3rem auto;
-    max-width: 1050px; /* تم التوسيع لراحة العين */
+    width: 100%;
     border: 1px solid rgba(0,0,0,0.05);
-    overflow: hidden;
 }
 
 /* --- التبويبات العلوية (Tabs) --- */
@@ -854,6 +853,8 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     display: flex;
     border-bottom: 1px solid #e2e8f0;
     background: #ffffff;
+    border-radius: 16px 16px 0 0;
+    overflow: hidden;
 }
 
 .booking-tab {
