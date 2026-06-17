@@ -1038,19 +1038,31 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     min-width: 130px !important; 
 }
 
-/* ضمان ظهور القائمة المنسدلة بالكامل فوق العناصر الأخرى */
+/* =========================================================
+   تطابق القوائم المنسدلة مع حواف الحقول (Respect Frame Bounds)
+   ========================================================= */
+
+/* 1. إجبار القائمة على أخذ 100% من عرض الحقل الأب فقط */
 .modern-search-bar .ts-dropdown {
-    z-index: 99999 !important;
+    min-width: 100% !important; 
     width: 100% !important; 
-    min-width: 100% !important;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
     border-radius: 12px !important;
     left: 0 !important;
-    right: 0 !important;
+    right: auto !important;
 }
 
-/* تنسيق خيارات القائمة المنسدلة لتبدو أنيقة */
+/* ضبط الاتجاه للغة العربية لتطابق الحافة اليمنى */
+[dir="rtl"] .modern-search-bar .ts-dropdown {
+    right: 0 !important;
+    left: auto !important;
+}
+
+/* 2. معالجة النصوص الطويلة جداً لكي لا تكسر إطار القائمة */
 .modern-search-bar .ts-dropdown .option {
+    white-space: nowrap !important; /* منع نزول النص لسطر جديد */
+    overflow: hidden !important; /* قص أي نص يتجاوز الإطار */
+    text-overflow: ellipsis !important; /* إضافة (...) في نهاية النص الطويل */
     padding: 10px 15px !important;
     font-size: 0.95rem !important;
 }
