@@ -46,22 +46,29 @@ self.addEventListener('fetch', (event) => {
   }
 
   // استراتيجية: Stale-While-Revalidate للملفات الثابتة
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
-        // تحديث الكاش بالنسخة الجديدة في الخلفية
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, networkResponse.clone());
-          });
-        }
-        return networkResponse;
-      }).catch(() => {
-        // إذا انقطع الإنترنت ولم نجد الملف في الكاش، نعرض صفحة 404
-        if (event.request.mode === 'navigate') {
-          return caches.match('./404.html');
-        }
-      });
+ event.respondWith(
+  caches.match(event.request).then((cachedResponse) => {
+    const fetchPromise = fetch(event.request).then((networkResponse) => {
+      // التحقق من أن الاستجابة صالحة
+      if (networkResponse && networkResponse.status === 200) {
+        // 🟢 الحل: نقوم بعمل نسخة (Clone) قبل استخدام الاستجابة في الكاش
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+      }
+      return networkResponse;
+    });
+
+    // نرجع الاستجابة المخزنة إذا وجدت، وإلا نرجع وعود الشبكة
+    return cachedResponse || fetchPromise;
+  }).catch(() => {
+    // في حال فشل كل شيء، نعرض صفحة 404
+    if (event.request.mode === 'navigate') {
+      return caches.match('./404.html');
+    }
+  })
+);
 
       return cachedResponse || fetchPromise;
     })
