@@ -1343,22 +1343,3 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   opacity: 0;
   transform: translateY(20px);
 }
-
-
-/* ===== الوصف الفرعي ===== */
-.hero-subtitle {
-  color: rgba(255, 255, 255, 0.92) !important;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.15);
-  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
-  line-height: 1.7;
-  max-width: 520px;
-  margin: 0 auto 2rem auto;
-  
-  /* تأثير الدخول */
-  animation: textFade 1s 0.7s ease forwards;
-  opacity: 0;
-}
-
-@keyframes textFade {
-  to { opacity: 1; }
-}
