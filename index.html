@@ -215,16 +215,62 @@
 <h1 class='text-xl font-bold mb-3' data-i18n='heroTitle' style='color: #0f172a; font-size: clamp(1.1rem, 4.5vw, 1.8rem); white-space: nowrap; letter-spacing: -0.5px;'>دليل أطباء ولاية غليزان</h1>
 <p class='text-sm text-gray' data-i18n='heroSubtitle' style='max-width: 100%; margin: 0 auto; line-height: 1.6; padding: 0 1rem; font-size: clamp(0.8rem, 3vw, 0.95rem);'>منصتك الشاملة للبحث عن العيادات وحجز المواعيد الطبية في غليزان.</p>
       </div>
-<h2 class='text-xl font-bold mb-4 text-center' data-i18n='findDoctor'>ابحث عن طبيب</h2>
-
-<div class="modern-search-bar">
-  <div class="search-field">
-    <label data-i18n="selectSpecialtyLabel">الاختصاص</label>
-    <div class="input-wrapper">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      <select id="specialtyFilter"><option value="">جميع الاختصاصات</option></select>
+<div class="booking-engine-wrapper">
+  <div class="booking-tabs">
+    <div class="booking-tab active">
+      <svg class="tab-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><line x1="12" y1="14" x2="12" y2="18"></line><line x1="10" y1="16" x2="14" y2="16"></line></svg>
+      <div class="tab-text">
+        <span class="tab-title" data-i18n="tabBookDoctor">احجز طبيباً</span>
+        <span class="tab-subtitle" data-i18n="tabBookSub">كشف أو إجراء طبي</span>
+      </div>
+    </div>
+    <div class="booking-tab inactive">
+      <svg class="tab-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path><path d="M14.05 2a9 9 0 0 1 8 7.94"></path><path d="M14.05 6A5 5 0 0 1 18 10"></path></svg>
+      <div class="tab-text">
+        <span class="tab-title" data-i18n="tabTelehealth">استشارة عن بعد</span>
+        <span class="tab-subtitle" data-i18n="tabTelehealthSub">محادثة هاتفية مع الطبيب</span>
+      </div>
     </div>
   </div>
+
+  <div class="modern-search-bar">
+    
+    <div class="search-field">
+      <label data-i18n="selectSpecialtyLabel">اختر اختصاصاً</label>
+      <div class="input-wrapper">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <select id="specialtyFilter"><option value="">جميع الاختصاصات</option></select>
+      </div>
+    </div>
+
+    <div class="search-divider"></div>
+
+    <div class="search-field">
+      <label data-i18n="selectCityLabel">في هذه البلدية</label>
+      <div class="input-wrapper">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <select id="municipalityFilter"><option value="">جميع البلديات</option></select>
+      </div>
+    </div>
+
+    <div class="search-divider"></div>
+
+    <div class="search-field" style="flex: 1.8; position: relative;">
+      <label data-i18n="searchByNameLabel">أو ابحث باسم الطبيب</label>
+      <div class="input-wrapper" style="width: 100%;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <input autocomplete="off" data-i18n-placeholder="searchPlaceholder" id="searchInput" placeholder="اسم الطبيب، التخصص، أو الموقع..." type="text" style="width: 100%; font-size: 1.05rem;">
+      </div>
+      <div class="suggestions-dropdown hidden" id="searchSuggestions"></div>
+    </div>
+
+    <button class="search-action-btn" type="button" onclick="document.getElementById('searchInput').focus()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <span data-i18n="searchBtnText">بحث</span>
+    </button>
+    
+  </div>
+</div>
 
   <div class="search-divider"></div>
 
