@@ -152,6 +152,17 @@ window.setLang = function(lang) {
       fetchReviewsPage(currentReviewsDoctorId, 0);
   }
 
+  // 🟢 الكود الجديد: إعادة رسم صفحة الطبيب باللغة الجديدة إذا كانت مفتوحة
+  const profileView = document.getElementById('view-doctor-profile');
+  if (profileView && !profileView.classList.contains('hidden') && window.activeProfileDoctor) {
+      const rawName = state.currentLang === 'en' && window.activeProfileDoctor.first_name_en && window.activeProfileDoctor.last_name_en 
+          ? `${window.activeProfileDoctor.first_name_en} ${window.activeProfileDoctor.last_name_en}` 
+          : `${window.activeProfileDoctor.first_name} ${window.activeProfileDoctor.last_name}`;
+      const translatedDocName = (state.currentLang === 'ar' ? 'د. ' : 'Dr. ') + rawName;
+      
+      openDoctorProfileModal(window.activeProfileDoctor, translatedDocName);
+  }
+
   setTimeout(() => {
     if (window.tsAddSpecialty && addSpecSel) {
       const val = window.tsAddSpecialty.getValue();
