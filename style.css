@@ -813,29 +813,7 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 /* =========================================================
    تصميم شريط الحجز الاحترافي (Booking Engine Style)
    ========================================================= */
-.booking-engine-wrapper {
-  position: relative;
-  z-index: 10;
-  margin-top: -3rem !important; /* يسحب الصندوق للأعلى فوق الـ Hero */
-  margin-bottom: 3rem;
-  background: var(--surface);
-  border-radius: 16px;
-  /* لا تضف padding هنا - دعه على الحاويات الداخلية */
-  box-shadow: 
-    0 -4px 20px rgba(0,0,0,0.03),
-    0 8px 30px rgba(0,0,0,0.08),
-    0 0 0 1px rgba(0,0,0,0.04) !important;
-  border: 1px solid rgba(0,0,0,0.05);
-  
-  /* تأثير الدخول */
-  animation: bookingFloat 1s 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  opacity: 0;
-  transform: translateY(30px);
-}
 
-@keyframes bookingFloat {
-  to { opacity: 1; transform: translateY(0); }
-}
 
 /* تأثير hover */
 .booking-engine-wrapper:hover {
@@ -1154,14 +1132,13 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 
 .hero-section {
   position: relative;
-  min-height: 420px; /* قلّلناه لأن الصورة في HTML ليست خلفية */
+  min-height: 380px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
   
-  /* خلفية متدرجة أنيقة (بدون صورة خارجية) */
   background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
   
   border-radius: var(--radius);
@@ -1169,7 +1146,6 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   border: none !important;
   overflow: hidden;
   
-  /* ظل احترافي */
   box-shadow: 
     0 4px 6px rgba(0,0,0,0.05),
     0 10px 20px rgba(14, 165, 233, 0.15),
@@ -1177,7 +1153,6 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   
   margin-bottom: 0 !important;
   
-  /* تأثير الدخول */
   animation: heroReveal 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   opacity: 0;
   transform: translateY(20px);
@@ -1187,7 +1162,6 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* طبقة النمط الدقيق (Pattern) */
 .hero-section::before {
   content: '';
   position: absolute;
@@ -1197,7 +1171,6 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   pointer-events: none;
 }
 
-/* طبقة الإضاءة المتحركة */
 .hero-section::after {
   content: '';
   position: absolute;
@@ -1220,12 +1193,12 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   50% { transform: translateX(10%) rotate(5deg); }
 }
 
-/* المحتوى فوق الطبقات */
 .hero-section > * {
   position: relative;
   z-index: 2;
 }
-/* ===== شارة "المنصة الطبية الأولى" ===== */
+
+/* ===== الشارة ===== */
 .hero-badge {
   display: inline-flex;
   align-items: center;
@@ -1244,7 +1217,6 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   border-radius: 50px;
   margin-bottom: 1.25rem;
   
-  /* تأثير الدخول */
   animation: badgeSlide 0.8s 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   opacity: 0;
   transform: translateY(-15px);
@@ -1265,7 +1237,8 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(1.2); }
 }
-/* ===== العنوان الرئيسي ===== */
+
+/* ===== العنوان ===== */
 .hero-title {
   color: #ffffff !important;
   text-shadow: 
@@ -1278,15 +1251,100 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   margin-bottom: 1rem;
   letter-spacing: -0.02em;
   
+  animation: titleReveal 1s 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+ @keyframes titleReveal {
+
+  to { opacity: 1; transform: translateY(0); }
+}
+   
+/* ===== الوصف ===== */
+.hero-subtitle {
+  color: rgba(255, 255, 255, 0.92) !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+  line-height: 1.7;
+  max-width: 520px;
+  margin: 0 auto 2rem auto;
+  
+  animation: textFade 1s 0.7s ease forwards;
+  opacity: 0;
+}
+
+@keyframes textFade {
+  to { opacity: 1; }
+}
+/* ===== صندوق البحث ===== */
+.booking-engine-wrapper {
+  position: relative;
+  z-index: 10;
+  margin-top: -3rem !important;
+  margin-bottom: 3rem;
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: 
+    0 -4px 20px rgba(0,0,0,0.03),
+    0 8px 30px rgba(0,0,0,0.08),
+    0 0 0 1px rgba(0,0,0,0.04) !important;
+  border: 1px solid rgba(0,0,0,0.05);
+  
+  animation: bookingFloat 1s 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+@keyframes bookingFloat {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .hero-section {
+    min-height: auto;
+    padding: 3rem 1.5rem !important;
+  }
+  
+  .hero-title {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+  
+  .hero-subtitle {
+    font-size: 0.95rem;
+    padding: 0 0.5rem;
+  }
+  
+  .hero-badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 1rem;
+  }
+  
+  .booking-engine-wrapper {
+    margin-top: -2rem !important;
+  }
+}
+
+/* ===== تقليل الحركة (Accessibility) ===== */
+@media (prefers-reduced-motion: reduce) {
+  .hero-section,
+  .hero-badge,
+  .hero-title,
+  .hero-subtitle,
+  .booking-engine-wrapper,
+  .hero-section::after {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
   /* تأثير الدخول */
   animation: titleReveal 1s 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   opacity: 0;
   transform: translateY(20px);
 }
 
-@keyframes titleReveal {
-  to { opacity: 1; transform: translateY(0); }
-}
+
 /* ===== الوصف الفرعي ===== */
 .hero-subtitle {
   color: rgba(255, 255, 255, 0.92) !important;
