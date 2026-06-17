@@ -912,12 +912,11 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 /* --- الجزء السفلي: حقول البحث --- */
 .modern-search-bar {
     display: flex;
-    align-items: stretch; /* لجعل الزر الأحمر يأخذ الارتفاع بالكامل */
-    margin: 1.5rem; /* مسافة مريحة للشريط داخل الصندوق الأبيض */
+    align-items: stretch;
+    margin: 1.5rem;
     background: #ffffff;
-    border: 1px solid #cbd5e1; /* الإطار الموحد الخارجي */
-    border-radius: 12px; /* الحواف الدائرية للشريط كاملاً */
-    overflow: hidden; /* مهم جداً: لقص حواف الزر الأحمر مع الإطار المدمج */
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
 }
 
 .search-field {
@@ -971,7 +970,6 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     color: white;
     border: none;
     padding: 0 2.5rem;
-    border-radius: 0 !important; /* إزالة الحواف الفردية ليلتصق بالشريط */
     font-size: 1.2rem;
     font-weight: 800;
     cursor: pointer;
@@ -979,14 +977,21 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    margin: 0 !important; /* إزالة أي مساحة ليلتصق تماماً */
+    margin: 0 !important;
     transition: all 0.2s;
 }
-
 .search-action-btn:hover {
     background: #be123c;
 }
+/* ضبط حواف الزر في النسخة العربية (الزر يكون على اليسار) */
+[dir="rtl"] .search-action-btn {
+    border-radius: 12px 0 0 12px !important;
+}
 
+/* ضبط حواف الزر في النسخة الإنجليزية (الزر يكون على اليمين) */
+[dir="ltr"] .search-action-btn {
+    border-radius: 0 12px 12px 0 !important;
+}
 /* إصلاحات TomSelect لتندمج بنعومة */
 .modern-search-bar .ts-control {
     border: none !important;
