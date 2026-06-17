@@ -26,7 +26,7 @@
   .btn-google { background: var(--surface); color: var(--text); }
   .btn-google:hover { background: var(--bg); }
   .toast { background: var(--text); color: var(--bg); }
-  .hero-section { background: linear-gradient(135deg, #082f49 0%, #0f172a 100%) !important; border-color: var(--border) !important; }
+.hero-section { border-color: transparent !important; }
 }
 
 /* === الإعدادات العامة === */
