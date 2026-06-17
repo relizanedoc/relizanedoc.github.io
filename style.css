@@ -1158,8 +1158,8 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   /* دمج الصورة مع تدرج لوني */
   background: 
     linear-gradient(to right, rgba(255,255,255,0) 0%, var(--surface) 100%), /* تدرج لتنعيم الحافة اليمنى */
-    url('images/hero-bg.jpg') no-repeat left center; /* الصورة على اليسار */
     url('hero-bg.png') no-repeat left center; /* الصورة على اليسار */
+    url('images/hero-bg.png') no-repeat left center; /* الصورة على اليسار */
   background-color: #f0f4f8; /* لون خلفية مشابه للصورة (اختر لوناً دقيقاً من يمين الصورة) */
   background-size: contain !important; /* إظهار الصورة بالكامل دون قص */
   border-radius: 20px;
