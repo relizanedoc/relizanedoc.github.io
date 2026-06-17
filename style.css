@@ -428,6 +428,31 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     text-align: center !important;
 }
 /* =========================================================
+   تصميم البانر الاحترافي (أزرق عميق زجاجي - الخيار الأول)
+   ========================================================= */
+.hero-section {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
+  border: none !important;
+  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.25) !important;
+}
+
+/* إجبار النصوص على اللون الأبيض لتناسب الخلفية الداكنة */
+.hero-section h1, 
+.hero-section p {
+  color: #ffffff !important;
+  opacity: 0.95;
+}
+
+/* تعديل شارة "المنصة الطبية الأولى" لتصبح زجاجية أنيقة (Glassmorphism) */
+.hero-section > div:first-child {
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important; /* لدعم متصفحات سفاري */
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+  color: #ffffff !important;
+}
+/* =========================================================
    تنسيقات أزرار لوحة تحكم العضو (المربعات)
    ========================================================= */
 .dashboard-actions-grid {
@@ -813,15 +838,13 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 /* =========================================================
    تصميم شريط الحجز الاحترافي (Booking Engine Style)
    ========================================================= */
-
-
-/* تأثير hover */
-.booking-engine-wrapper:hover {
-  box-shadow: 
-    0 -4px 20px rgba(0,0,0,0.04),
-    0 12px 40px rgba(0,0,0,0.1),
-    0 0 0 1px rgba(14, 165, 233, 0.1) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.booking-engine-wrapper {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    margin: 0 auto 3rem auto;
+    width: 100%;
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 /* --- التبويبات العلوية (Tabs) --- */
@@ -1127,70 +1150,33 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     text-align: start;
 }
 /* =========================================================
-   HERO SECTION - النسخة النهائية المُصلحة
+   تصميم الـ Hero Section الجديد (صورة خلفية + تداخل الصندوق)
    ========================================================= */
 
 .hero-section {
   position: relative;
-  min-height: 380px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  background-image: url('images/hero-bg.png') !important; 
+  /* محاذاة الصورة لليسار لترك مساحة للنصوص على اليمين */
+  background-position: left center !important; 
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
   
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
-  
-  border-radius: var(--radius);
-  padding: 4rem 2rem !important;
+  border-radius: 20px;
+  padding: 4rem 1.5rem 8rem 1.5rem !important;
   border: none !important;
   overflow: hidden;
-  
-  box-shadow: 
-    0 4px 6px rgba(0,0,0,0.05),
-    0 10px 20px rgba(14, 165, 233, 0.15),
-    0 20px 40px rgba(14, 165, 233, 0.1) !important;
-  
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
   margin-bottom: 0 !important;
-  
-  animation: heroReveal 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  opacity: 0;
-  transform: translateY(20px);
 }
 
-@keyframes heroReveal {
-  to { opacity: 1; transform: translateY(0); }
-}
-
+/* تعديل التظليل ليظهر الوجه في اليسار بوضوح */
 .hero-section::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  top: 0; left: 0; right: 0; bottom: 0;
+  /* التدرج يبدأ شفافاً من اليسار (الوجه) وينتهي بداكن في اليمين (النصوص) */
+  background: linear-gradient(to right, rgba(15, 23, 42, 0.1) 0%, rgba(14, 165, 233, 0.5) 50%, rgba(15, 23, 42, 0.9) 100%);
   z-index: 1;
-  pointer-events: none;
-}
-
-.hero-section::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle at 30% 50%,
-    rgba(255, 255, 255, 0.1) 0%,
-    transparent 50%
-  );
-  animation: lightShift 8s ease-in-out infinite;
-  z-index: 1;
-  pointer-events: none;
-}
-
-@keyframes lightShift {
-  0%, 100% { transform: translateX(-10%) rotate(0deg); }
-  50% { transform: translateX(10%) rotate(5deg); }
 }
 
 .hero-section > * {
@@ -1198,148 +1184,19 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   z-index: 2;
 }
 
-/* ===== الشارة ===== */
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 
-    0 2px 8px rgba(0,0,0,0.1),
-    inset 0 1px 0 rgba(255,255,255,0.2);
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 0.85rem;
-  padding: 0.5rem 1.25rem;
-  border-radius: 50px;
-  margin-bottom: 1.25rem;
-  
-  animation: badgeSlide 0.8s 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  opacity: 0;
-  transform: translateY(-15px);
-}
-
-.hero-badge::before {
-  content: '✦';
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.7rem;
-  animation: sparkle 2s ease-in-out infinite;
-}
-
-@keyframes badgeSlide {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes sparkle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.2); }
-}
-
-/* ===== العنوان ===== */
-.hero-title {
-  color: #ffffff !important;
-  text-shadow: 
-    0 2px 4px rgba(0,0,0,0.1),
-    0 4px 20px rgba(0,0,0,0.15),
-    0 0 60px rgba(14, 165, 233, 0.2);
-  font-size: clamp(1.75rem, 5vw, 2.8rem);
-  font-weight: 800;
-  line-height: 1.2;
-  margin-bottom: 1rem;
-  letter-spacing: -0.02em;
-  
-  animation: titleReveal 1s 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  opacity: 0;
-  transform: translateY(20px);
- @keyframes titleReveal {
-
-  to { opacity: 1; transform: translateY(0); }
-}
-   
-/* ===== الوصف ===== */
-.hero-subtitle {
-  color: rgba(255, 255, 255, 0.92) !important;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.15);
-  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
-  line-height: 1.7;
-  max-width: 520px;
-  margin: 0 auto 2rem auto;
-  
-  animation: textFade 1s 0.7s ease forwards;
-  opacity: 0;
-}
-
-@keyframes textFade {
-  to { opacity: 1; }
-}
-/* ===== صندوق البحث ===== */
 .booking-engine-wrapper {
-  position: relative;
-  z-index: 10;
-  margin-top: -3rem !important;
-  margin-bottom: 3rem;
-  background: var(--surface);
-  border-radius: 16px;
-  box-shadow: 
-    0 -4px 20px rgba(0,0,0,0.03),
-    0 8px 30px rgba(0,0,0,0.08),
-    0 0 0 1px rgba(0,0,0,0.04) !important;
-  border: 1px solid rgba(0,0,0,0.05);
-  
-  animation: bookingFloat 1s 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  opacity: 0;
-  transform: translateY(30px);
+    position: relative;
+    z-index: 10;
+    margin-top: -3.5rem !important; 
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12) !important; 
 }
 
-@keyframes bookingFloat {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 768px) {
+@media (prefers-color-scheme: dark) {
   .hero-section {
-    min-height: auto;
-    padding: 3rem 1.5rem !important;
+    border-color: transparent !important;
   }
-  
-  .hero-title {
-    font-size: clamp(1.5rem, 6vw, 2rem);
-  }
-  
-  .hero-subtitle {
-    font-size: 0.95rem;
-    padding: 0 0.5rem;
-  }
-  
-  .hero-badge {
-    font-size: 0.75rem;
-    padding: 0.4rem 1rem;
-  }
-  
   .booking-engine-wrapper {
-    margin-top: -2rem !important;
+    background: var(--surface);
+    border: 1px solid var(--border);
   }
-}
-
-/* ===== تقليل الحركة (Accessibility) ===== */
-@media (prefers-reduced-motion: reduce) {
-  .hero-section,
-  .hero-badge,
-  .hero-title,
-  .hero-subtitle,
-  .booking-engine-wrapper,
-  .hero-section::after {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-}
-
-  /* تأثير الدخول */
-  animation: titleReveal 1s 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  opacity: 0;
-  transform: translateY(20px);
 }
