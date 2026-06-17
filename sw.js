@@ -1,16 +1,12 @@
 const CACHE_NAME = 'relizane-medical-v1';
-// الملفات الأساسية التي نريد حفظها ليعمل التطبيق أوفلاين (الهيكل فقط)
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './style.css',
-  './script.js',
   './404.html',
-  './favicon.png',
-  'https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap'
+  './favicon.png'
 ];
 
-// 1. تثبيت Service Worker وحفظ الملفات
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -21,7 +17,6 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// 2. تفعيل وتنظيف النسخ القديمة
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -38,37 +33,28 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 3. اعتراض الطلبات (Fetch)
 self.addEventListener('fetch', (event) => {
-  // تجاوز طلبات Supabase API و Google Auth لضمان جلب البيانات الحية دائماً
+  // تجاوز طلبات Supabase و Google
   if (event.request.url.includes('supabase.co') || event.request.url.includes('google.com')) {
     return;
   }
 
-  // استراتيجية: Stale-While-Revalidate للملفات الثابتة
- event.respondWith(
-  caches.match(event.request).then((cachedResponse) => {
-    const fetchPromise = fetch(event.request).then((networkResponse) => {
-      // التحقق من أن الاستجابة صالحة
-      if (networkResponse && networkResponse.status === 200) {
-        // 🟢 الحل: نقوم بعمل نسخة (Clone) قبل استخدام الاستجابة في الكاش
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-      }
-      return networkResponse;
-    });
-
-    // نرجع الاستجابة المخزنة إذا وجدت، وإلا نرجع وعود الشبكة
-    return cachedResponse || fetchPromise;
-  }).catch(() => {
-    // في حال فشل كل شيء، نعرض صفحة 404
-    if (event.request.mode === 'navigate') {
-      return caches.match('./404.html');
-    }
-  })
-);
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        // التحقق من الاستجابة وأنها من نفس الدومين (basic) لمنع أخطاء الـ clone
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        if (event.request.mode === 'navigate') {
+          return caches.match('./404.html');
+        }
+      });
 
       return cachedResponse || fetchPromise;
     })
