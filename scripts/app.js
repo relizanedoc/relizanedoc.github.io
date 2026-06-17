@@ -143,8 +143,13 @@ window.setLang = function(lang) {
     renderDoctors(state.allDoctors);
   }
 
-  if (state.globalDashboardData && state.globalDashboardDoctorId) {
+ if (state.globalDashboardData && state.globalDashboardDoctorId) {
     renderDashboardUI(state.globalDashboardData, state.globalDashboardDoctorId);
+  }
+  if (currentReviewsDoctorId) {
+      fetchReviewStats(currentReviewsDoctorId);
+      currentReviewPage = 0; // إعادة عداد الصفحات للصفر ليجلب الصفحة الأولى باللغة الجديدة
+      fetchReviewsPage(currentReviewsDoctorId, 0);
   }
 
   setTimeout(() => {
