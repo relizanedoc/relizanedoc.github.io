@@ -1155,13 +1155,12 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 
 .hero-section {
   position: relative;
-  /* ضع مسار صورتك هنا بدلاً من الـ HTML */
-  background-image: url('images/hero-bg.jpg') !important; 
+  /* مسار الصورة هنا */
+  background-image: url('images/hero-bg.png') !important; 
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
   border-radius: 20px;
-  /* زيادة الـ padding السفلي لترك مساحة لصندوق البحث المرتفع */
   padding: 4rem 1.5rem 6.5rem 1.5rem !important;
   border: none !important;
   overflow: hidden;
@@ -1169,17 +1168,14 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   margin-bottom: 0 !important;
 }
 
-/* الطبقة الداكنة (Gradient Overlay) لضمان وضوح النصوص البيضاء */
 .hero-section::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  /* تدرج لوني يجمع بين اللون الكحلي والأزرق الخاص بالمنصة مع شفافية */
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(14, 165, 233, 0.65) 100%);
   z-index: 1;
 }
 
-/* رفع النصوص والشارة فوق الطبقة الداكنة */
 .hero-section > * {
   position: relative;
   z-index: 2;
