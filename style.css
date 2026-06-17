@@ -1033,10 +1033,12 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 /* ضمان ظهور القائمة المنسدلة بالكامل فوق العناصر الأخرى */
 .modern-search-bar .ts-dropdown {
     z-index: 99999 !important;
-    width: max-content !important;
+    width: 100% !important; 
     min-width: 100% !important;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
     border-radius: 12px !important;
+    left: 0 !important;
+    right: 0 !important;
 }
 
 /* تنسيق خيارات القائمة المنسدلة لتبدو أنيقة */
