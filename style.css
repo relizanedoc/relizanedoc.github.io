@@ -1021,3 +1021,26 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
         padding: 1rem;
     }
 }
+/* =========================================================
+   تحسينات قائمة TomSelect (المساحة والظهور)
+   ========================================================= */
+/* إعطاء مساحة مريحة للكتابة اليدوية داخل الحقل */
+.modern-search-bar .ts-control > input {
+    font-size: 1rem !important;
+    min-width: 130px !important; 
+}
+
+/* ضمان ظهور القائمة المنسدلة بالكامل فوق العناصر الأخرى */
+.modern-search-bar .ts-dropdown {
+    z-index: 99999 !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+    border-radius: 12px !important;
+}
+
+/* تنسيق خيارات القائمة المنسدلة لتبدو أنيقة */
+.modern-search-bar .ts-dropdown .option {
+    padding: 10px 15px !important;
+    font-size: 0.95rem !important;
+}
