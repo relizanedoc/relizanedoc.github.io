@@ -1105,29 +1105,8 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
     color: #94a3b8 !important;
     font-weight: 600 !important;
 }
-/* =========================================================
-   إصلاح وعرض القوائم المنسدلة (TomSelect) بشكل آمن
-   ========================================================= */
-
-/* 1. إجبار القائمة المنسدلة على عرض مريح يمنع الانكماش تماماً */
-.modern-search-bar .ts-dropdown {
-    min-width: 250px !important; /* يضمن عدم انكماش القائمة أبداً */
-    width: max-content !important; /* يتمدد ليناسب أطول كلمة في القائمة */
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
-    border-radius: 12px !important;
-}
-
-/* 2. منع تكسر الكلمات فوق بعضها داخل القائمة */
-.modern-search-bar .ts-dropdown .option {
-    white-space: nowrap !important;
-    padding: 10px 15px !important;
-    font-size: 0.95rem !important;
-}
-
-/* 3. تلوين مؤشر الكتابة وإعطائه مساحة آمنة دون كسر المكتبة */
-.modern-search-bar .ts-control > input {
-    color: var(--primary-dark) !important;
-    font-size: 1.05rem !important;
-    font-weight: 700 !important;
-    caret-color: var(--primary) !important;
+/* إصلاح اختلاط النصوص العربية والإنجليزية في لوحة التحكم */
+#dashboardSubtitle {
+    unicode-bidi: plaintext; /* يوجه المتصفح لقراءة اللغة بشكل ذكي */
+    text-align: start;
 }
