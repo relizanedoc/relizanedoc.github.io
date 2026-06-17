@@ -1115,6 +1115,40 @@
       });
     }
   </script>
+    <script>
+  function switchBookingTab(tabType) {
+    const tabInPerson = document.getElementById('tabInPerson');
+    const tabTelehealth = document.getElementById('tabTelehealth');
+    const cityField = document.getElementById('citySearchField');
+    const nameField = document.getElementById('nameSearchField');
+    const div1 = document.getElementById('divider1');
+    const div2 = document.getElementById('divider2');
+
+    if (tabType === 'inPerson') {
+      // تفعيل زر حضوري
+      tabInPerson.classList.add('active');
+      tabInPerson.classList.remove('inactive');
+      tabTelehealth.classList.add('inactive');
+      tabTelehealth.classList.remove('active');
+      // إظهار كل الحقول
+      cityField.style.display = 'flex';
+      nameField.style.display = 'flex';
+      div1.style.display = 'block';
+      div2.style.display = 'block';
+    } else {
+      // تفعيل زر استشارة عن بعد
+      tabTelehealth.classList.add('active');
+      tabTelehealth.classList.remove('inactive');
+      tabInPerson.classList.add('inactive');
+      tabInPerson.classList.remove('active');
+      // إخفاء البلدية والاسم (يتبقى الاختصاص فقط)
+      cityField.style.display = 'none';
+      nameField.style.display = 'none';
+      div1.style.display = 'none';
+      div2.style.display = 'none';
+    }
+  }
+</script>
 </body>
 
 </html> 
