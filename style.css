@@ -170,13 +170,6 @@ input, select, textarea { width: 100%; padding: 0.75rem 1rem; border: 1px solid 
 .doctor-meta { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; }
 .doctor-meta div { display: flex; align-items: center; margin-bottom: 0.25rem; gap: 0.3rem; }
 .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: var(--primary-light); color: var(--primary-dark); }
-.filters { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
-[dir="rtl"] .filters { flex-direction: column; }
-@media (min-width: 768px) { 
-  .filters { flex-direction: row; } 
-  .filters > * { flex: 1; }
-  [dir="rtl"] .filters { flex-direction: row-reverse; } 
-}
 
 /* === القوائم المنسدلة الذكية (Tom Select & Suggestions) === */
 .suggestions-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 0.35rem; box-shadow: var(--shadow-lg); z-index: 100; max-height: 280px; overflow-y: auto; }
@@ -415,9 +408,9 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 @media (min-width: 768px) { 
   .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } 
   
-  /* تأكيد اصطفاف الأقسام الثلاثة كالمسطرة من اليمين واليسار */
+ /* تأكيد اصطفاف الأقسام الثلاثة كالمسطرة من اليمين واليسار */
   #view-home > .hero-section,
-  #view-home > .filters,
+  #view-home > .modern-search-bar,
   #view-home > #doctorsList {
      width: 100% !important;
      max-width: 100% !important;
@@ -842,4 +835,118 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   background: #ef4444;
   color: white;
   transform: scale(1.05);
+}
+/* =========================================================
+   تصميم شريط البحث الحديث (Booking Style)
+   ========================================================= */
+.modern-search-bar {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    padding: 0.5rem;
+    margin: 0 auto 2.5rem auto;
+    max-width: 1000px;
+    border: 1px solid #e2e8f0;
+}
+
+.search-field {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 1.25rem;
+    flex: 1;
+}
+
+.search-field label {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.input-wrapper input {
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    padding: 0;
+}
+
+.input-wrapper input::placeholder {
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.search-divider {
+    width: 1px;
+    height: 40px;
+    background: #e2e8f0;
+    margin: 0 0.5rem;
+}
+
+/* زر البحث الأزرق ليتماشى مع هوية الموقع */
+.search-action-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    height: 100%;
+}
+
+.search-action-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+/* تعديلات TomSelect لدمجها بدون حواف داخل الشريط */
+.modern-search-bar .ts-control {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* التجاوب مع شاشات الهواتف (تحويله إلى شكل عمودي) */
+@media (max-width: 768px) {
+    .modern-search-bar {
+        flex-direction: column;
+        border-radius: 16px;
+        padding: 1rem;
+        gap: 0.5rem;
+    }
+    
+    .search-divider {
+        width: 100%;
+        height: 1px;
+        margin: 0.5rem 0;
+        background: #e2e8f0;
+    }
+    
+    .search-action-btn {
+        width: 100%;
+        justify-content: center;
+        margin-top: 1rem;
+        padding: 1rem;
+    }
 }
