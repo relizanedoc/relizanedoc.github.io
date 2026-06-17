@@ -1155,16 +1155,14 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
 
 .hero-section {
   position: relative;
-  background-image: url('images/hero-bg.png') !important; 
-  background-size: cover !important;
-  /* التعديل هنا: جعلناها top لكي لا يُقطع رأس الطبيب من الأعلى */
-  background-position: center top !important; 
-  /* تغيير المحاذاة للمنتصف تماماً */
-  background-position: center center !important; 
-  background-repeat: no-repeat !important;
+  /* دمج الصورة مع تدرج لوني */
+  background: 
+    linear-gradient(to right, rgba(255,255,255,0) 0%, var(--surface) 100%), /* تدرج لتنعيم الحافة اليمنى */
+    url('images/hero-bg.jpg') no-repeat left center; /* الصورة على اليسار */
+    url('hero-bg.png') no-repeat left center; /* الصورة على اليسار */
+  background-color: #f0f4f8; /* لون خلفية مشابه للصورة (اختر لوناً دقيقاً من يمين الصورة) */
+  background-size: contain !important; /* إظهار الصورة بالكامل دون قص */
   border-radius: 20px;
-  padding: 4.5rem 1.5rem 8.5rem 1.5rem !important;
-  /* تقليل المساحة السفلية (padding-bottom) لمنع دفع الصورة للأعلى بقوة */
   padding: 4rem 1.5rem 5rem 1.5rem !important; 
   border: none !important;
   overflow: hidden;
@@ -1172,14 +1170,9 @@ th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; colo
   margin-bottom: 0 !important;
 }
 
-/* الطبقة الداكنة (Gradient Overlay) */
+/* إزالة الطبقة الداكنة السابقة إذا استخدمت هذا الحل */
 .hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  /* التعديل هنا: التدرج يبدأ شبه شفاف من اليسار (0%) ليظهر الوجه، ويصبح داكناً في اليمين (100%) للنصوص */
-  background: linear-gradient(to right, rgba(15, 23, 42, 0.1) 0%, rgba(14, 165, 233, 0.6) 40%, rgba(15, 23, 42, 0.9) 100%);
-  z-index: 1;
+  display: none;
 }
 
 .hero-section > * {
