@@ -728,3 +728,48 @@ window.addServiceCategory = function(category = '', items = '') {
 };
 
 window.showToast = showToast; // لضمان وصولها من الـ HTML
+// ==========================================
+// نظام تحريك الصور (السلايدر التسويقي)
+// ==========================================
+
+let slideIndex = 0;
+let slideTimer;
+
+function showSlides(n) {
+  let slides = document.getElementsByClassName("pitch-slide");
+  let dots = document.getElementsByClassName("dot");
+
+  if (slides.length === 0) return;
+
+  if (n !== undefined) {
+    slideIndex = n;
+    clearInterval(slideTimer); 
+    slideTimer = setInterval(() => showSlides(), 4000); 
+  } else {
+    slideIndex++; 
+  }
+
+  if (slideIndex > slides.length) { slideIndex = 1; }
+  if (slideIndex < 1) { slideIndex = slides.length; }
+
+  for (let i = 0; i < slides.length; i++) {
+    slides[i].classList.remove("active");
+  }
+  for (let i = 0; i < dots.length; i++) {
+    dots[i].classList.remove("active");
+  }
+
+  slides[slideIndex - 1].classList.add("active");
+  dots[slideIndex - 1].classList.add("active");
+}
+
+// جعل الدالة متاحة عالمياً (مهم جداً لأنك تستخدم Modules)
+window.currentSlide = function(n) {
+  showSlides(n);
+};
+
+// تشغيل السلايدر بمجرد تحميل الصفحة
+document.addEventListener("DOMContentLoaded", function() {
+  showSlides(1); 
+  slideTimer = setInterval(() => showSlides(), 4000); 
+});
