@@ -184,42 +184,170 @@ window.setLang = function(lang) {
 // ==========================================
 // 2. جلب الأطباء والبحث (Directory)
 // ==========================================
-window.loadDoctors = async function() {
+const DOCS_PER_PAGE = 12; // عدد الأطباء في كل دفعة
+let currentDocPage = 0;
+let isFetchingDocs = false;
+let filterOptionsLoaded = false;
+let globalSpecs = []; // تخزين الاختصاصات
+let globalMuns = [];  // تخزين البلديات
+
+window.loadDoctors = async function(reset = true) {
+  if (isFetchingDocs) return;
+  isFetchingDocs = true;
+
   const container = document.getElementById('doctorsList');
-  let skeletonHtml = '';
-  for(let i=0; i<6; i++) {
-    skeletonHtml += `<div class="skeleton-card"><div class="s-header"><div class="s-avatar"></div><div style="flex:1;"><div class="s-line s-w-75" style="height: 16px;"></div><div class="s-line s-w-50"></div></div></div><div class="s-line s-w-100"></div><div class="s-line s-w-100"></div><div class="s-line s-w-100" style="height: 40px; margin-top: 1.5rem;"></div></div>`;
+  let loadMoreBtn = document.getElementById('loadMoreDocsBtn');
+
+  // 1. إنشاء زر "عرض المزيد" ديناميكياً إذا لم يكن موجوداً
+  if (!loadMoreBtn) {
+    loadMoreBtn = document.createElement('button');
+    loadMoreBtn.id = 'loadMoreDocsBtn';
+    loadMoreBtn.className = 'btn btn-secondary hidden';
+    loadMoreBtn.style = 'margin: 2rem auto; display: block; padding: 0.75rem 2.5rem; font-weight: bold; border-radius: 50px;';
+    loadMoreBtn.onclick = () => window.loadDoctors(false);
+    container.parentNode.insertBefore(loadMoreBtn, container.nextSibling);
   }
-  container.innerHTML = skeletonHtml;
+
+  if (reset) {
+    currentDocPage = 0;
+    let skeletonHtml = '';
+    for(let i=0; i<6; i++) skeletonHtml += `<div class="skeleton-card"><div class="s-header"><div class="s-avatar"></div><div style="flex:1;"><div class="s-line s-w-75" style="height: 16px;"></div><div class="s-line s-w-50"></div></div></div><div class="s-line s-w-100"></div><div class="s-line s-w-100"></div><div class="s-line s-w-100" style="height: 40px; margin-top: 1.5rem;"></div></div>`;
+    container.innerHTML = skeletonHtml;
+    loadMoreBtn.classList.add('hidden');
+  } else {
+    currentDocPage++;
+    setLoading(loadMoreBtn, true, state.currentLang === 'en' ? 'Loading...' : 'جاري التحميل...');
+  }
 
   try {
-    const { data, error } = await supabaseClient.from('doctors').select('*').order('created_at', { ascending: false });
+    // 2. جلب الفلاتر مرة واحدة فقط لتخفيف الضغط
+    if (!filterOptionsLoaded) await window.fetchAndPopulateFilters();
+
+    const searchQ = (document.getElementById('searchInput')?.value || '').trim();
+    const specQ = document.getElementById('specialtyFilter')?.value || '';
+    const munQ = document.getElementById('municipalityFilter')?.value || '';
+
+    // 3. بناء الاستعلام المعماري (Server-side Filtering)
+    let query = supabaseClient.from('doctors').select('*', { count: 'exact' });
+
+    if (specQ) query = query.eq('specialty', specQ);
+    if (munQ) query = query.eq('municipality', munQ);
+    if (searchQ) {
+      // بحث متقدم في جميع أعمدة الأسماء والموقع
+      query = query.or(`first_name.ilike.%${searchQ}%,last_name.ilike.%${searchQ}%,first_name_en.ilike.%${searchQ}%,last_name_en.ilike.%${searchQ}%,exact_location.ilike.%${searchQ}%`);
+    }
+
+    // 4. تطبيق الترقيم (Pagination)
+    const start = currentDocPage * DOCS_PER_PAGE;
+    const end = start + DOCS_PER_PAGE - 1;
+    query = query.order('created_at', { ascending: false }).range(start, end);
+
+    const { data, error, count } = await query;
     if (error) throw new Error(error.message);
-    state.allDoctors = data || [];
-    window.handleSEOAndRender();
+
+    // 5. التحديث والرسم
+    if (reset) {
+        state.allDoctors = data || [];
+    } else {
+        // إضافة الأطباء الجدد للقائمة الموجودة
+        state.allDoctors = [...state.allDoctors, ...(data || [])];
+    }
+
+    if (reset && state.allDoctors.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔍</div><div>${t('noDoctorsFound')}</div></div>`;
+    } else {
+        window.handleSEOAndRender(reset); 
+    }
+
+    // إظهار/إخفاء زر المزيد بناءً على العدد الكلي في السيرفر
+    if (count > (currentDocPage + 1) * DOCS_PER_PAGE) {
+        loadMoreBtn.classList.remove('hidden');
+        setLoading(loadMoreBtn, false, state.currentLang === 'ar' ? 'عرض المزيد ↓' : 'Load More ↓');
+    } else {
+        loadMoreBtn.classList.add('hidden');
+    }
+
   } catch (err) {
     console.error('Failed to load doctors:', err);
-    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>' + t('loadingError') + '</div></div>';
+    if (reset) container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>' + t('loadingError') + '</div></div>';
     showToast(t('toastLoadError'), 'error');
+  } finally {
+    isFetchingDocs = false;
   }
 };
 
-window.handleSEOAndRender = function() {
+window.fetchAndPopulateFilters = async function() {
+    try {
+        // جلب سريع وخفيف جداً للأعمدة المطلوبة فقط لجمع الفلاتر
+        const { data, error } = await supabaseClient.from('doctors').select('specialty, municipality');
+        if (error) throw error;
+        
+        globalSpecs = [...new Set(data.map(d => d.specialty).filter(Boolean))].sort();
+        globalMuns = [...new Set(data.map(d => d.municipality).filter(Boolean))].sort();
+        window.populateFilters();
+        filterOptionsLoaded = true;
+    } catch (e) {
+        console.error("Error fetching filters:", e);
+    }
+};
+
+window.populateFilters = function() {
+  const specSel = document.getElementById('specialtyFilter');
+  const munSel = document.getElementById('municipalityFilter');
+  if(!specSel || !munSel) return;
+  
+  const prevSpec = specSel.value;
+  const prevMun = munSel.value;
+  
+  specSel.innerHTML = '<option value="">' + t('allSpecialties') + '</option>';
+  munSel.innerHTML = '<option value="">' + t('allMunicipalities') + '</option>';
+  
+  globalSpecs.forEach(s => { const opt = document.createElement('option'); opt.value = s; opt.textContent = t(s); specSel.appendChild(opt); });
+  globalMuns.forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.textContent = t(m); munSel.appendChild(opt); });
+  
+  if (prevSpec && globalSpecs.includes(prevSpec)) specSel.value = prevSpec;
+  if (prevMun && globalMuns.includes(prevMun)) munSel.value = prevMun;
+  
+  if (window.tsSpecialtyFilter) { 
+    window.tsSpecialtyFilter.clear(true); 
+    window.tsSpecialtyFilter.clearOptions(); 
+    Array.from(specSel.options).forEach(opt => window.tsSpecialtyFilter.addOption({value: opt.value, text: opt.text})); 
+    window.tsSpecialtyFilter.setValue(prevSpec || ""); 
+  }
+  if (window.tsMunicipalityFilter) { 
+    window.tsMunicipalityFilter.clear(true); 
+    window.tsMunicipalityFilter.clearOptions(); 
+    Array.from(munSel.options).forEach(opt => window.tsMunicipalityFilter.addOption({value: opt.value, text: opt.text})); 
+    window.tsMunicipalityFilter.setValue(prevMun || ""); 
+  }
+};
+
+// نمط (Debounce) لحماية السيرفر من الطلبات المتكررة السريعة
+let searchTimeout;
+window.filterDoctors = function() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    const suggestionsDropdown = document.getElementById('searchSuggestions');
+    if (suggestionsDropdown) suggestionsDropdown.classList.add('hidden'); // لم نعد بحاجة للاقتراحات المحلية
+    window.loadDoctors(true); // جلب البيانات المفلترة الحقيقية من السيرفر
+  }, 500); 
+};
+
+window.handleSEOAndRender = function(reset = true) {
   const urlParams = new URLSearchParams(window.location.search);
   let targetDocId = urlParams.get('doc');
   
-  if (targetDocId) {
+  if (targetDocId && reset) {
       targetDocId = targetDocId.trim().toLowerCase(); 
       const targetDoc = state.allDoctors.find(d => String(d.id).trim().toLowerCase() === targetDocId);
       
       if (targetDoc) {
           updateSEOMetaTags(targetDoc);
           renderDoctors([targetDoc]);
-          window.populateFilters();
-const rawName = state.currentLang === 'en' && targetDoc.first_name_en && targetDoc.last_name_en 
-    ? `${targetDoc.first_name_en} ${targetDoc.last_name_en}` 
-    : `${targetDoc.first_name} ${targetDoc.last_name}`;
-const doctorName = (state.currentLang === 'ar' ? 'د. ' : 'Dr. ') + rawName;
+          const rawName = state.currentLang === 'en' && targetDoc.first_name_en && targetDoc.last_name_en 
+              ? `${targetDoc.first_name_en} ${targetDoc.last_name_en}` 
+              : `${targetDoc.first_name} ${targetDoc.last_name}`;
+          const doctorName = (state.currentLang === 'ar' ? 'د. ' : 'Dr. ') + rawName;
           setTimeout(() => {
               try { openDoctorProfileModal(targetDoc, doctorName); } 
               catch(e) { console.error("Error opening modal:", e); }
@@ -242,94 +370,10 @@ const doctorName = (state.currentLang === 'ar' ? 'د. ' : 'Dr. ') + rawName;
       }
   }
   renderDoctors(state.allDoctors);
-  window.populateFilters();
 };
 
-window.populateFilters = function() {
-  const specs = [...new Set(state.allDoctors.map(d => d.specialty).filter(Boolean))].sort();
-  const muns = [...new Set(state.allDoctors.map(d => d.municipality).filter(Boolean))].sort();
-  const specSel = document.getElementById('specialtyFilter');
-  const munSel = document.getElementById('municipalityFilter');
-  const prevSpec = specSel.value;
-  const prevMun = munSel.value;
-  
-  specSel.innerHTML = '<option value="">' + t('allSpecialties') + '</option>';
-  munSel.innerHTML = '<option value="">' + t('allMunicipalities') + '</option>';
-  
-  specs.forEach(s => { const opt = document.createElement('option'); opt.value = s; opt.textContent = t(s); specSel.appendChild(opt); });
-  muns.forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.textContent = t(m); munSel.appendChild(opt); });
-  
-  if (prevSpec && specs.includes(prevSpec)) specSel.value = prevSpec;
-  if (prevMun && muns.includes(prevMun)) munSel.value = prevMun;
-  if (window.tsSpecialtyFilter) { 
-    window.tsSpecialtyFilter.clear(true);  
-    window.tsSpecialtyFilter.clearOptions(); 
-    Array.from(specSel.options).forEach(opt => window.tsSpecialtyFilter.addOption({value: opt.value, text: opt.text})); 
-    window.tsSpecialtyFilter.setValue(prevSpec || ""); // إضافة || ""
-  }
-if (window.tsMunicipalityFilter) { 
-    window.tsMunicipalityFilter.clear(true); 
-    window.tsMunicipalityFilter.clearOptions(); 
-    Array.from(munSel.options).forEach(opt => window.tsMunicipalityFilter.addOption({value: opt.value, text: opt.text})); 
-    window.tsMunicipalityFilter.setValue(prevMun || ""); 
-  }  
-  window.filterDoctors();
-};
-
-window.filterDoctors = function() {
-  const searchInput = document.getElementById('searchInput');
-  const search = searchInput.value.toLowerCase().trim();
-  const spec = document.getElementById('specialtyFilter').value;
-  const mun = document.getElementById('municipalityFilter').value;
-  const suggestionsDropdown = document.getElementById('searchSuggestions');
-  
-  const filtered = state.allDoctors.filter(doc => {
-      const text = `${doc.first_name||''} ${doc.last_name||''} ${doc.specialty||''} ${doc.municipality||''} ${doc.exact_location||''}`.toLowerCase();
-      return (!search || text.includes(search)) && (!spec || doc.specialty === spec) && (!mun || doc.municipality === mun);
-  });
-  
-  renderDoctors(filtered);
-  
-  if (!suggestionsDropdown) return;
-  if (search.length < 2) { suggestionsDropdown.classList.add('hidden'); return; }
-  
-  const suggestionsHtml = filtered.slice(0, 5).map(doc => {
-      const avatarText = (doc.first_name?.[0] || '') + (doc.last_name?.[0] || '');
-const rawName = state.currentLang === 'en' && doc.first_name_en && doc.last_name_en 
-    ? `${doc.first_name_en} ${doc.last_name_en}` 
-    : `${doc.first_name} ${doc.last_name}`;
-const doctorName = escapeHtml(rawName);
-      return `
-      <div class="suggestion-item" onclick="window.selectSuggestion('${doc.id}')">
-          <div class="sugg-avatar">${avatarText}</div>
-          <div style="flex: 1; min-width: 0;">
-              <div style="font-weight: bold; font-size: 0.95rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                  ${state.currentLang === 'ar' ? 'د.' : 'Dr.'} ${doctorName}
-              </div>
-              <div style="font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                  ${escapeHtml(t(doc.specialty))} - ${escapeHtml(t(doc.municipality))}
-              </div>
-          </div>
-      </div>`;
-  }).join('');
-  
-  if (suggestionsHtml) { 
-      suggestionsDropdown.innerHTML = suggestionsHtml; 
-      suggestionsDropdown.classList.remove('hidden'); 
-  } else { 
-      suggestionsDropdown.innerHTML = `<div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">${t('noDoctorsFound')}</div>`; 
-      suggestionsDropdown.classList.remove('hidden'); 
-  }
-};
-
-window.selectSuggestion = function(doctorId) {
-  const doc = state.allDoctors.find(d => d.id === doctorId);
-  if (doc) {
-      document.getElementById('searchInput').value = doc.first_name + ' ' + doc.last_name;
-      document.getElementById('searchSuggestions').classList.add('hidden');
-      renderDoctors([doc]);
-  }
-};
+// إبقاء الدالة فارغة لتجنب أخطاء المتصفح إذا كانت مربوطة بأحداث قديمة
+window.selectSuggestion = function(doctorId) {};
 
 // ==========================================
 // 3. نظام التقييمات (Pagination & Stats)
