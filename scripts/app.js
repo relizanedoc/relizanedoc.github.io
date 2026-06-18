@@ -724,20 +724,46 @@ window.loadUserBookings = async function() {
 window.handleDashboardLogin = async function(e) {
   if (e) e.preventDefault();
   if (isAccountLocked()) return;
+  
   const btn = document.getElementById('dashboardLoginBtn');
   setLoading(btn, true);
+  
   const phone = document.getElementById('loginPhone').value.trim();
   const password = document.getElementById('loginDoctorPassword').value.trim();
-  if (!phone || !password) { setLoading(btn, false); showToast('يرجى ملء جميع الحقول', 'error'); return; }
+  
+  if (!phone || !password) { 
+    setLoading(btn, false); 
+    showToast('يرجى ملء جميع الحقول', 'error'); 
+    return; 
+  }
 
   try {
-    const { data: responseData, error: rpcError } = await supabaseClient.rpc('login_doctor_secure', { p_phone: phone, p_raw_password: password });
-    if (rpcError) throw new Error('خطأ في الاتصال بقاعدة البيانات');
-    if (!responseData || !responseData.success) throw new Error(responseData?.error || 'بيانات الدخول غير صحيحة');
+    // 1. التقاط رمز التحقق الخاص بـ Cloudflare من نموذج تسجيل الدخول
+    const turnstileResponse = document.querySelector('#loginSection [name="cf-turnstile-response"]');
+    const turnstileToken = turnstileResponse ? turnstileResponse.value : null;
 
+    if (!turnstileToken) {
+      throw new Error("يرجى إكمال التحقق الأمني (الكابتشا).");
+    }
+
+    // 2. إرسال الطلب إلى الدالة السحابية للتحقق المزدوج (كابتشا + كلمة مرور)
+    const { data: functionResponse, error: functionError } = await supabaseClient.functions.invoke('verify-doctor-login', {
+      body: { 
+        turnstileToken: turnstileToken, 
+        phone: phone, 
+        password: password 
+      }
+    });
+
+    if (functionError) throw new Error("خطأ في الاتصال بالخادم الداخلي.");
+    if (functionResponse && functionResponse.error) throw new Error(functionResponse.error);
+
+    const responseData = functionResponse.doctorData;
+
+    // 3. جلب تفاصيل الطبيب بعد نجاح التحقق
     const { data: fullDoctorData } = await supabaseClient.from('doctors').select('*').eq('id', responseData.doctor.id).single();
     const doctor = fullDoctorData ? { ...fullDoctorData, session_token: responseData.doctor.session_token } : responseData.doctor;        
-    const { data: appointments, error: apptError } = await supabaseClient.rpc('get_doctor_appointments_secure', { p_doctor_id: doctor.id, p_session_token: doctor.session_token });
+    const { data: appointments } = await supabaseClient.rpc('get_doctor_appointments_secure', { p_doctor_id: doctor.id, p_session_token: doctor.session_token });
 
     resetLoginAttempts();
     localStorage.setItem('doctorSession', JSON.stringify({ doctorId: doctor.id, phone: doctor.phone, sessionToken: doctor.session_token }));
@@ -745,17 +771,22 @@ window.handleDashboardLogin = async function(e) {
     const dashboardData = {
       doctorName: `${doctor.first_name} ${doctor.last_name}`,
       workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : (doctor.working_days || '{}'),
-      bookingEnabled: doctor.booking_enabled, appointments: appointments || [], doctorDetails: doctor
+      bookingEnabled: doctor.booking_enabled, 
+      appointments: appointments || [], 
+      doctorDetails: doctor
     };
     
     document.getElementById('loginSection').classList.add('hidden');
     document.getElementById('dashboardSection').classList.remove('hidden');
     renderDashboardUI(dashboardData, doctor.id);
     showToast('تم تسجيل الدخول بنجاح', 'success');
+
   } catch (err) {
     recordFailedAttempt();
     showToast(t('toastLoginError') + (err.message || 'تحقق من البيانات المدخلة'), 'error');
-  } finally { setLoading(btn, false); }
+  } finally { 
+    setLoading(btn, false); 
+  }
 };
 
 window.logoutDashboard = async function() {
