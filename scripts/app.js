@@ -408,7 +408,7 @@ window.openFullReviewsPage = async function(doctorId) {
 
 async function fetchReviewStats(doctorId) {
   try {
-      const { data: stats, error } = await supabaseClient.from('reviews').select('rating').eq('doctor_id', doctorId);
+const { data: stats, error } = await supabaseClient.from('reviews').select('rating').eq('doctor_id', doctorId).neq('status', 'deleted');
       if (error) throw error;
       const totalReviews = stats.length;
       document.getElementById('fullTotalReviews').textContent = totalReviews;
@@ -443,7 +443,7 @@ async function fetchReviewsPage(doctorId, pageIndex) {
   const end = start + (REVIEWS_PER_PAGE - 1);
 
   try {
-      const { data: reviews, error } = await supabaseClient.from('reviews').select('*').eq('doctor_id', doctorId).order('created_at', { ascending: false }).range(start, end);
+const { data: reviews, error } = await supabaseClient.from('reviews').select('*').eq('doctor_id', doctorId).neq('status', 'deleted').order('created_at', { ascending: false }).range(start, end);
       if (error) throw error;
       if (pageIndex === 0) container.innerHTML = '';
       if (!reviews || reviews.length === 0) {
