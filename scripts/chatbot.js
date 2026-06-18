@@ -4,6 +4,7 @@
 import { state } from './state.js';
 import { t, escapeHtml } from './utils.js';
 import { openDoctorProfileModal } from './ui.js';
+import { supabaseClient } from './api.js';
 
 // ==========================================
 // 1. دوال مساعدة (لحل مشاكل النطاق ومعالجة النصوص)
@@ -80,134 +81,64 @@ function getEmergencyResponse() {
 // ==========================================
 // 3. معالجة رسائل المستخدم
 // ==========================================
-function processUserMessage(rawMsg) {
+async function processUserMessage(rawMsg) {
     const cleanMsg = normalizeText(rawMsg);
     
-    // معالجة الأوامر العامة
     if (cleanMsg.includes('حجز موعد') || cleanMsg.includes('احجز موعد') || cleanMsg === 'حجز') {
         return state.currentLang === 'ar' 
-            ? `لحجز موعد، يمكنك:<br><br>
-               1️⃣ <strong>البحث عن طبيب</strong> أولاً (اكتب التخصص أو الاسم)<br>
-               2️⃣ ثم اضغط على زر "عرض التفاصيل والحجز"<br><br>
-               💡 <strong>مثال:</strong> اكتب "طبيب عيون في غليزان"`
-            : `To book an appointment:<br><br>
-               1️⃣ <strong>Search for a doctor</strong> first (type specialty or name)<br>
-               2️⃣ Then click "View Details & Book"<br><br>
-               💡 <strong>Example:</strong> Type "eye doctor in Relizane"`;
+            ? `لحجز موعد، يمكنك:<br><br>1️⃣ <strong>البحث عن طبيب</strong> أولاً (اكتب التخصص أو الاسم)<br>2️⃣ ثم اضغط على زر "عرض التفاصيل والحجز"`
+            : `To book an appointment:<br><br>1️⃣ <strong>Search for a doctor</strong> first<br>2️⃣ Then click "View Details & Book"`;
     }
     
-    // التحقق من الحالة الطارئة
-    if (detectEmergency(rawMsg)) {
-        return getEmergencyResponse();
-    }
+    if (detectEmergency(rawMsg)) return getEmergencyResponse();
 
-    // التعديل: الاعتماد على الدليل الشامل
-    if (!state.globalDirectory || state.globalDirectory.length === 0) return t('chatLoadingDB');
-    
-    const availableSpecialties = [...new Set(state.globalDirectory.map(d => d.specialty).filter(Boolean))];
-    const availableMunicipalities = [...new Set(state.globalDirectory.map(d => d.municipality).filter(Boolean))];
-    let detectedSpecialty = null, detectedMunicipality = null, detectedName = null;
-
-    for (const spec of availableSpecialties) { 
-        if (cleanMsg.includes(normalizeText(t(spec)))) { 
-            detectedSpecialty = spec; 
-            break; 
-        } 
-    }
-    for (const mun of availableMunicipalities) { 
-        if (cleanMsg.includes(normalizeText(t(mun)))) { 
-            detectedMunicipality = mun; 
-            break; 
-        } 
-    }
-    detectedName = state.globalDirectory.find(doc => { 
-        const fullName = normalizeText((doc.first_name || "") + " " + (doc.last_name || "")); 
-        return cleanMsg.split(' ').some(w => w.length >= 3 && fullName.includes(w)); 
-    });
-
-    let matchedDoctors = [];
-    let responsePrefix = '';
-    
-    // التعديل: الفلترة من الدليل الشامل
-    if (detectedSpecialty && detectedMunicipality) {
-        matchedDoctors = state.globalDirectory.filter(doc => doc.specialty === detectedSpecialty && doc.municipality === detectedMunicipality);
-        responsePrefix = state.currentLang === 'ar' 
-            ? `وجدت لك ${matchedDoctors.length} طبيباً متخصصاً في <strong>${t(detectedSpecialty)}</strong> في <strong>${t(detectedMunicipality)}</strong>. إليك أبرز النتائج:` 
-            : `Found ${matchedDoctors.length} <strong>${t(detectedSpecialty)}</strong> doctors in <strong>${t(detectedMunicipality)}</strong>. Here are the top results:`;
-    } else if (detectedSpecialty) {
-        matchedDoctors = state.globalDirectory.filter(doc => doc.specialty === detectedSpecialty);
-        responsePrefix = state.currentLang === 'ar' 
-            ? `إليك قائمة بأفضل الأطباء المتخصصين في <strong>${t(detectedSpecialty)}</strong>:` 
-            : `Here is a list of top <strong>${t(detectedSpecialty)}</strong> specialists:`;
-    } else if (detectedMunicipality) {
-        matchedDoctors = state.globalDirectory.filter(doc => doc.municipality === detectedMunicipality);
-        responsePrefix = state.currentLang === 'ar' 
-            ? `إليك جميع الأطباء المتوفرين في بلدية <strong>${t(detectedMunicipality)}</strong>:` 
-            : `Here are all available doctors in <strong>${t(detectedMunicipality)}</strong>:`;
-    } else if (detectedName) {
-        matchedDoctors = state.globalDirectory.filter(doc => { 
-            const fullName = normalizeText((doc.first_name || "") + " " + (doc.last_name || "")); 
-            return cleanMsg.split(' ').some(w => w.length >= 3 && fullName.includes(w)); 
-        });
-        responsePrefix = state.currentLang === 'ar' 
-            ? `وجدت نتائج مطابقة لاسم "<strong>${detectedName.first_name} ${detectedName.last_name}</strong>":` 
-            : `Found results matching "<strong>${detectedName.first_name} ${detectedName.last_name}</strong>":`;
-    } else {
-        matchedDoctors = state.globalDirectory.filter(doc => { 
-            const text = normalizeText(`${doc.first_name||''} ${doc.last_name||''} ${doc.specialty||''} ${doc.municipality||''} ${doc.exact_location||''}`); 
-            return cleanMsg.split(' ').some(w => w.length >= 3 && text.includes(w)); 
-        });
-        if (matchedDoctors.length > 0) {
-            responsePrefix = state.currentLang === 'ar' 
-                ? `إليك أفضل النتائج المطابقة لبحثك:` 
-                : `Here are the best results matching your search:`;
-        }
-    }
-
-    if (matchedDoctors.length === 0) {
-        return state.currentLang === 'ar' 
-            ? `عذراً، لم أتمكن من العثور على أطباء يطابقون بحثك "<strong>${rawMsg}</strong>".<br><br>💡 <strong>جرب البحث بـ:</strong><br>• اسم الطبيب (مثل: د. أمين)<br>• التخصص (مثل: طبيب عيون، أسنان)<br>• البلدية (مثل: غليزان، وادي رهيو)<br>• أو مزيج (مثل: طبيب أطفال في مازونة)` 
-            : `Sorry, I couldn't find any doctors matching "<strong>${rawMsg}</strong>".<br><br>💡 <strong>Try searching by:</strong><br>• Doctor's name (e.g. Dr. Amine)<br>• Specialty (e.g. eye doctor, dentist)<br>• Municipality (e.g. Relizane, Oued Rhiou)<br>• Or a combination (e.g. pediatrician in Mazouna)`;
-    }
-
-    let response = responsePrefix;
-    const remaining = matchedDoctors.length - Math.min(3, matchedDoctors.length);
-    if (remaining > 0) {
-        response += state.currentLang === 'ar' 
-            ? `<br><span style="color: var(--text-secondary); font-size: 0.85rem;">📋 و ${remaining} نتيجة أخرى متاحة في الدليل الرئيسي</span>` 
-            : `<br><span style="color: var(--text-secondary); font-size: 0.85rem;"> And ${remaining} more results available</span>`;
-    }
-    
-    // ✅ استخدام الدالة المساعدة window.triggerDoctorProfile لتجنب أخطاء النطاق
-    response += matchedDoctors.slice(0, 3).map(doc => {
-        const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
-        const cleanName = `${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}`;
+    try {
+        // الاستعلام المباشر من محرك البحث داخل قاعدة البيانات السحابية
+        const { data: matchedDoctors, error } = await supabaseClient.rpc('search_doctors_smart', { query_text: cleanMsg });
         
-        return `<div class="bot-card-result" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 12px; background: var(--surface);">
-            <div style="font-weight: bold; color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 8px;">${cleanName}</div>
-            <div style="color: var(--text); font-size: 0.9rem; margin-bottom: 4px;"><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.specialty))}</div>
-            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;"><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.municipality))}</div>
-            <button onclick="window.triggerDoctorProfile('${doc.id}', '${cleanName}')" style="margin-top: 12px; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; width: 100%;">${t('chatBookDetailsBtn')}</button>
-        </div>`;
-    }).join('');
-    
-    return response;
-}
+        if (error) throw error;
 
+        if (!matchedDoctors || matchedDoctors.length === 0) {
+            return state.currentLang === 'ar' 
+                ? `عذراً، لم أتمكن من العثور على أطباء يطابقون بحثك "<strong>${escapeHtml(rawMsg)}</strong>".<br><br>💡 <strong>جرب البحث بـ:</strong><br>• اسم الطبيب<br>• التخصص (مثل: طبيب عيون)<br>• البلدية` 
+                : `Sorry, I couldn't find any doctors matching "<strong>${escapeHtml(rawMsg)}</strong>".`;
+        }
+
+        let response = state.currentLang === 'ar' ? `إليك أفضل النتائج المطابقة لبحثك:` : `Here are the best results:`;
+        
+        response += matchedDoctors.map(doc => {
+            const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
+            const cleanName = `${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}`;
+            
+            return `<div class="bot-card-result" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 12px; background: var(--surface);">
+                <div style="font-weight: bold; color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 8px;">${cleanName}</div>
+                <div style="color: var(--text); font-size: 0.9rem; margin-bottom: 4px;"><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.specialty))}</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;"><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.municipality))}</div>
+                <button onclick="window.triggerDoctorProfile('${doc.id}', '${cleanName}')" style="margin-top: 12px; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; width: 100%;">${t('chatBookDetailsBtn')}</button>
+            </div>`;
+        }).join('');
+        
+        return response;
+
+    } catch (err) {
+        console.error("Chatbot Search Error:", err);
+        return state.currentLang === 'ar' ? 'عذراً، حدث خطأ في الاتصال بالخادم. حاول مجدداً.' : 'Sorry, a server error occurred. Try again.';
+    }
+}
 // ==========================================
 // 4. دالة الإرسال (مصدرة)
 // ==========================================
-export function handleSend() {
+export async function handleSend() {
     const chatInputText = document.getElementById('chatInputText');
     const chatMessages = document.getElementById('chatMessages');
     
     const text = chatInputText.value.trim();
     if (!text) return;
     
-    // إخفاء الاقتراحات
     const suggestionsDiv = document.getElementById('chatSuggestions');
     if (suggestionsDiv) suggestionsDiv.style.display = 'none';
     
+    // 1. طباعة رسالة المستخدم فوراُ
     const userMsg = document.createElement('div'); 
     userMsg.className = `chat-msg user-msg`; 
     userMsg.innerHTML = escapeHtml(text); 
@@ -215,6 +146,7 @@ export function handleSend() {
     chatInputText.value = '';
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
+    // 2. إظهار مؤشر حركة الكتابة
     const typingId = "typing-" + Date.now();
     const botTyping = document.createElement('div'); 
     botTyping.className = `chat-msg bot-msg`; 
@@ -222,18 +154,19 @@ export function handleSend() {
     chatMessages.appendChild(botTyping); 
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    setTimeout(() => {
-        const typingIndicator = document.getElementById(typingId);
-        if (typingIndicator) typingIndicator.parentElement.remove();
-        const botResponseHtml = processUserMessage(text);
-        const botRes = document.createElement('div'); 
-        botRes.className = `chat-msg bot-msg`; 
-        botRes.innerHTML = botResponseHtml; 
-        chatMessages.appendChild(botRes); 
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 800);
-}
+    // 3. الانتظار الفعلي لاستجابة خادم السيرفر السحابي
+    const botResponseHtml = await processUserMessage(text);
 
+    // 4. مسح مؤشر حركة الكتابة وطباعة الكروت الناتجة
+    const typingIndicator = document.getElementById(typingId);
+    if (typingIndicator) typingIndicator.parentElement.remove();
+    
+    const botRes = document.createElement('div'); 
+    botRes.className = `chat-msg bot-msg`; 
+    botRes.innerHTML = botResponseHtml; 
+    chatMessages.appendChild(botRes); 
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 // تصدير الدالة على window لاستخدامها في onclick
 window.handleSend = handleSend;
 
