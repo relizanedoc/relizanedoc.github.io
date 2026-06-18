@@ -10,5 +10,4 @@ const { createClient } = window.supabase;
 
 // تصدير العميل ليتم استخدامه في باقي الملفات
 export const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// تصدير العميل ليتم استخدامه في باقي الملفات
-export const RECAPTCHA_SITE_KEY = '6Ld2mAEtAAAAADCb15UwZclk7Yubl-Yh6lyFSlLT';
+
