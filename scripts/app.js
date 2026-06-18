@@ -166,15 +166,17 @@ window.setLang = function(lang) {
   setTimeout(() => {
     if (window.tsAddSpecialty && addSpecSel) {
       const val = window.tsAddSpecialty.getValue();
+      window.tsAddSpecialty.clear(true); // السطر الجديد
       window.tsAddSpecialty.clearOptions();
       Array.from(addSpecSel.options).forEach(opt => window.tsAddSpecialty.addOption({value: opt.value, text: opt.text}));
-      if(val) window.tsAddSpecialty.setValue(val);
+      window.tsAddSpecialty.setValue(val || ""); // إزالة if(val) وتعديل هذا السطر
     }
-    if (window.tsAddMunicipality && addMunSel) {
+ if (window.tsAddMunicipality && addMunSel) {
       const val = window.tsAddMunicipality.getValue();
+      window.tsAddMunicipality.clear(true);
       window.tsAddMunicipality.clearOptions();
       Array.from(addMunSel.options).forEach(opt => window.tsAddMunicipality.addOption({value: opt.value, text: opt.text}));
-      if(val) window.tsAddMunicipality.setValue(val);
+      window.tsAddMunicipality.setValue(val || "");
     }
   }, 50);
 };
@@ -259,10 +261,18 @@ window.populateFilters = function() {
   
   if (prevSpec && specs.includes(prevSpec)) specSel.value = prevSpec;
   if (prevMun && muns.includes(prevMun)) munSel.value = prevMun;
-  
-  if (window.tsSpecialtyFilter) { window.tsSpecialtyFilter.clearOptions(); Array.from(specSel.options).forEach(opt => window.tsSpecialtyFilter.addOption({value: opt.value, text: opt.text})); window.tsSpecialtyFilter.setValue(prevSpec); }
-  if (window.tsMunicipalityFilter) { window.tsMunicipalityFilter.clearOptions(); Array.from(munSel.options).forEach(opt => window.tsMunicipalityFilter.addOption({value: opt.value, text: opt.text})); window.tsMunicipalityFilter.setValue(prevMun); }
-  
+  if (window.tsSpecialtyFilter) { 
+    window.tsSpecialtyFilter.clear(true);  
+    window.tsSpecialtyFilter.clearOptions(); 
+    Array.from(specSel.options).forEach(opt => window.tsSpecialtyFilter.addOption({value: opt.value, text: opt.text})); 
+    window.tsSpecialtyFilter.setValue(prevSpec || ""); // إضافة || ""
+  }
+if (window.tsMunicipalityFilter) { 
+    window.tsMunicipalityFilter.clear(true); 
+    window.tsMunicipalityFilter.clearOptions(); 
+    Array.from(munSel.options).forEach(opt => window.tsMunicipalityFilter.addOption({value: opt.value, text: opt.text})); 
+    window.tsMunicipalityFilter.setValue(prevMun || ""); 
+  }  
   window.filterDoctors();
 };
 
