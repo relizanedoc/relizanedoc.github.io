@@ -296,58 +296,34 @@ window.fetchGlobalDirectory = async function() {
 window.populateFilters = function() {
   const specSel = document.getElementById('specialtyFilter');
   const munSel = document.getElementById('municipalityFilter');
-  const addSpecSel = document.querySelector('select[name="Specialty"]');
-  const addMunSel = document.querySelector('select[name="Municipality"]');
 
-  const prevSpec = specSel ? specSel.value : '';
-  const prevMun = munSel ? munSel.value : '';
+  if (!specSel || !munSel) return;
 
-  // تفريغ عناصر HTML الأصلية وإضافة الخيار الافتراضي
-  if (specSel) specSel.innerHTML = '<option value="">' + t('allSpecialties') + '</option>';
-  if (munSel) munSel.innerHTML = '<option value="">' + t('allMunicipalities') + '</option>';
-  if (addSpecSel) addSpecSel.innerHTML = '<option value="">' + t('selectSpec') + '</option>';
-  if (addMunSel) addMunSel.innerHTML = '<option value="">' + t('selectMun') + '</option>';
-
-  // حقن التخصصات في الـ HTML
-  globalSpecs.forEach(s => {
-      const text = t(s);
-      if(specSel) specSel.insertAdjacentHTML('beforeend', `<option value="${s}">${text}</option>`);
-      if(addSpecSel) addSpecSel.insertAdjacentHTML('beforeend', `<option value="${s}">${text}</option>`);
-  });
-
-  // حقن البلديات في الـ HTML
-  globalMuns.forEach(m => {
-      const text = t(m);
-      if(munSel) munSel.insertAdjacentHTML('beforeend', `<option value="${m}">${text}</option>`);
-      if(addMunSel) addMunSel.insertAdjacentHTML('beforeend', `<option value="${m}">${text}</option>`);
-  });
-
-  // المزامنة النهائية والموثوقة مع TomSelect
-  if (window.tsSpecialtyFilter && specSel) {
+  // 1. تحديث قائمة التخصصات (Search Specialty)
+  if (window.tsSpecialtyFilter) {
+    const prevSpec = window.tsSpecialtyFilter.getValue();
     window.tsSpecialtyFilter.clear(true);
     window.tsSpecialtyFilter.clearOptions();
-    Array.from(specSel.options).forEach(opt => window.tsSpecialtyFilter.addOption({value: opt.value, text: opt.text}));
+    window.tsSpecialtyFilter.addOption({value: "", text: t('allSpecialties')});
+    globalSpecs.forEach(s => window.tsSpecialtyFilter.addOption({value: s, text: t(s)}));
     window.tsSpecialtyFilter.setValue(prevSpec || "");
+  } else {
+    // في حالة التحميل الأولي قبل عمل TomSelect
+    specSel.innerHTML = '<option value="">' + t('allSpecialties') + '</option>';
+    globalSpecs.forEach(s => specSel.insertAdjacentHTML('beforeend', `<option value="${s}">${t(s)}</option>`));
   }
-  if (window.tsMunicipalityFilter && munSel) {
+
+  // 2. تحديث قائمة البلديات (Search Municipality)
+  if (window.tsMunicipalityFilter) {
+    const prevMun = window.tsMunicipalityFilter.getValue();
     window.tsMunicipalityFilter.clear(true);
     window.tsMunicipalityFilter.clearOptions();
-    Array.from(munSel.options).forEach(opt => window.tsMunicipalityFilter.addOption({value: opt.value, text: opt.text}));
+    window.tsMunicipalityFilter.addOption({value: "", text: t('allMunicipalities')});
+    globalMuns.forEach(m => window.tsMunicipalityFilter.addOption({value: m, text: t(m)}));
     window.tsMunicipalityFilter.setValue(prevMun || "");
-  }
-  if (window.tsAddSpecialty && addSpecSel) {
-    const val = window.tsAddSpecialty.getValue();
-    window.tsAddSpecialty.clear(true);
-    window.tsAddSpecialty.clearOptions();
-    Array.from(addSpecSel.options).forEach(opt => window.tsAddSpecialty.addOption({value: opt.value, text: opt.text}));
-    window.tsAddSpecialty.setValue(val || "");
-  }
-  if (window.tsAddMunicipality && addMunSel) {
-    const val = window.tsAddMunicipality.getValue();
-    window.tsAddMunicipality.clear(true);
-    window.tsAddMunicipality.clearOptions();
-    Array.from(addMunSel.options).forEach(opt => window.tsAddMunicipality.addOption({value: opt.value, text: opt.text}));
-    window.tsAddMunicipality.setValue(val || "");
+  } else {
+    munSel.innerHTML = '<option value="">' + t('allMunicipalities') + '</option>';
+    globalMuns.forEach(m => munSel.insertAdjacentHTML('beforeend', `<option value="${m}">${t(m)}</option>`));
   }
 };
 
