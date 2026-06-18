@@ -581,9 +581,6 @@ window.submitBooking = async function() {
   const data = Object.fromEntries(new FormData(form));
 
   try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    const finalEmail = data.PatientEmail ? data.PatientEmail.trim() : (user ? user.email : null);
-    
     // 1. التقاط رمز Turnstile المخفي الذي ولده Cloudflare
     const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]');
     const turnstileToken = turnstileResponse ? turnstileResponse.value : null;
@@ -592,10 +589,11 @@ window.submitBooking = async function() {
       throw new Error("يرجى إكمال التحقق الأمني (الكابتشا).");
     }
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    // 2. جلب بيانات المستخدم وتجهيز البيانات
+    const { data: authData } = await supabaseClient.auth.getUser();
+    const user = authData ? authData.user : null;
     const finalEmail = data.PatientEmail ? data.PatientEmail.trim() : (user ? user.email : null);
     
-    // 2. تجهيز بيانات الحجز
     const bookingPayload = {
       doctor_id: data.DoctorID, 
       patient_name: data.PatientName.trim(), 
@@ -618,7 +616,7 @@ window.submitBooking = async function() {
     if (functionError) throw new Error("خطأ في الاتصال بالخادم الداخلي.");
     if (functionResponse && functionResponse.error) throw new Error(functionResponse.error);
     
-    // الحصول على بيانات الحجز بعد نجاح الإدخال
+    // 4. الحصول على بيانات الحجز بعد نجاح الإدخال
     const booking = functionResponse.booking;
 
     form.reset();
@@ -663,7 +661,7 @@ window.submitBooking = async function() {
     `;
     document.getElementById('successDialog').classList.remove('hidden');
   } catch (err) {
-    showToast(t('toastBookingError') + err.message, 'error');
+    showToast(err.message, 'error');
   } finally { setLoading(btn, false); }
 };
 
