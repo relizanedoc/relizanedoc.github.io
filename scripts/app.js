@@ -584,14 +584,42 @@ window.submitBooking = async function() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     const finalEmail = data.PatientEmail ? data.PatientEmail.trim() : (user ? user.email : null);
     
-    const { data: booking, error } = await supabaseClient.from('appointments').insert([{
-      doctor_id: data.DoctorID, patient_name: data.PatientName.trim(), patient_phone: data.PatientPhone.trim(),
-      appointment_date: data.AppointmentDate, appointment_time: data.AppointmentTime, status: 'pending',
-      user_id: user ? user.id : null, user_email: finalEmail
-    }]).select().single();
+    // 1. التقاط رمز Turnstile المخفي الذي ولده Cloudflare
+    const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]');
+    const turnstileToken = turnstileResponse ? turnstileResponse.value : null;
 
-    if (error) throw new Error(error.message);
-    if (!booking) throw new Error("تم الحجز بنجاح، لكن يرجى تعديل صلاحيات RLS في Supabase.");
+    if (!turnstileToken) {
+      throw new Error("يرجى إكمال التحقق الأمني (الكابتشا).");
+    }
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    const finalEmail = data.PatientEmail ? data.PatientEmail.trim() : (user ? user.email : null);
+    
+    // 2. تجهيز بيانات الحجز
+    const bookingPayload = {
+      doctor_id: data.DoctorID, 
+      patient_name: data.PatientName.trim(), 
+      patient_phone: data.PatientPhone.trim(),
+      appointment_date: data.AppointmentDate, 
+      appointment_time: data.AppointmentTime, 
+      status: 'pending',
+      user_id: user ? user.id : null, 
+      user_email: finalEmail
+    };
+
+    // 3. إرسال الطلب إلى Edge Function الآمنة
+    const { data: functionResponse, error: functionError } = await supabaseClient.functions.invoke('verify-booking', {
+      body: { 
+        turnstileToken: turnstileToken, 
+        bookingData: bookingPayload 
+      }
+    });
+
+    if (functionError) throw new Error("خطأ في الاتصال بالخادم الداخلي.");
+    if (functionResponse && functionResponse.error) throw new Error(functionResponse.error);
+    
+    // الحصول على بيانات الحجز بعد نجاح الإدخال
+    const booking = functionResponse.booking;
 
     form.reset();
     document.getElementById('timeSlotsContainer').innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;">${t('selectDateFirst')}</div>`;
