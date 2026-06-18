@@ -1111,8 +1111,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('authToggleText').onclick = window.toggleAuthMode;
   document.getElementById('backToHomeBtn').onclick = () => window.router('home');
   document.getElementById('backToDirBtn').onclick = () => window.router('home');
-
-  const tsSettings = { create: false, sortField: { field: "text", direction: "asc" }, render: { no_results: function(data, escape) { return '<div class="no-results">' + (state.currentLang === 'ar' ? 'لا توجد نتائج' : 'No results found') + '</div>'; } } };
+const tsSettings = { dropdownParent: 'body', create: false, sortField: { field: "text", direction: "asc" }, render: { no_results: function(data, escape) { return '<div class="no-results">' + (state.currentLang === 'ar' ? 'لا توجد نتائج' : 'No results found') + '</div>'; } } };
   window.tsSpecialtyFilter = new TomSelect("#specialtyFilter", tsSettings);
   window.tsMunicipalityFilter = new TomSelect("#municipalityFilter", tsSettings);
   window.tsAddSpecialty = new TomSelect('select[name="Specialty"]', tsSettings);
