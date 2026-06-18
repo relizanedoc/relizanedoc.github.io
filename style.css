@@ -1643,6 +1643,13 @@ th {
   font-size: 1.1rem !important;
   -webkit-font-smoothing: antialiased;
 }
+.modern-search-bar .ts-control .item {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100%;
+  display: inline-block;
+}
 
 /* --- أسهم القوائم المنسدلة --- */
 .modern-search-bar .ts-wrapper.single .ts-control::after {
