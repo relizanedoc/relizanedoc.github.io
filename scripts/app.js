@@ -1148,7 +1148,8 @@ const trackForm = document.getElementById('trackBookingForm');
   if (hamburgerBtn && navLinks) hamburgerBtn.addEventListener('click', () => navLinks.classList.toggle('show'));
   document.querySelectorAll('.nav-btn').forEach(btn => { btn.addEventListener('click', () => { if (window.innerWidth <= 768) navLinks.classList.remove('show'); }); });
   document.querySelectorAll('.nav-btn[data-nav]').forEach(btn => { btn.onclick = () => window.router(btn.getAttribute('data-nav')); });
-
+document.getElementById('btn-en').onclick = () => window.setLang('en');
+document.getElementById('btn-ar').onclick = () => window.setLang('ar');
   const addDoctorForm = document.getElementById('addDoctorForm'); if (addDoctorForm) addDoctorForm.onsubmit = window.handleAddDoctor;
   const bookingBtn = document.getElementById('bookingBtn'); if (bookingBtn) bookingBtn.onclick = window.confirmBooking;
   const confirmDialogOkBtn = document.getElementById('confirmDialogOkBtn'); if (confirmDialogOkBtn) confirmDialogOkBtn.onclick = window.submitBooking;
