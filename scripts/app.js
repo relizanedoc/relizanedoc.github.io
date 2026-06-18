@@ -97,7 +97,13 @@ window.router = async function(viewName, pushHistory = true) {
   if (pushHistory) history.pushState({ view: viewName }, '', '#' + viewName);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  if (viewName === 'home') window.loadDoctors();
+  if (viewName === 'home') {
+      const searchInput = document.getElementById('searchInput');
+      // إجبار المتصفح على تفريغ حقل البحث من أي ملء تلقائي خاطئ
+      if (searchInput) searchInput.value = ''; 
+      
+      window.loadDoctors(true); // جلب جميع الأطباء
+  }
   if (viewName === 'user-dashboard') window.loadUserBookings();
 
   const pill = document.getElementById('userPill');
