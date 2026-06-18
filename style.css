@@ -1187,13 +1187,13 @@ th {
    تصميم البانر الاحترافي (Hero)
    ========================================================= */
 .hero-section {
-  background: url('images/hero-bg.png') no-repeat left center;
+  background: url('images/hero-bg.png') no-repeat left 15%; 
   background-size: cover;
-  border-radius: 20px 20px 0 0; /* زوايا علوية منحنية، وسفلية حادة للالتصاق */
-  padding: 4rem 1.5rem 3.5rem 1.5rem; /* تقليل المساحة السفلية */
+  border-radius: 20px 20px 0 0; 
+  padding: 5.5rem 1.5rem 3.5rem 1.5rem; 
   border: none;
   overflow: hidden;
-  box-shadow: none; /* إزالة الظل ليصبح للقالب بأكمله ظل واحد */
+  box-shadow: none; 
   margin-bottom: 0;
   position: relative;
 }
