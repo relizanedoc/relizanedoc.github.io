@@ -1158,6 +1158,34 @@ document.getElementById('btn-ar').onclick = () => window.setLang('ar');
   const dashboardLogoutBtn = document.getElementById('dashboardLogoutBtn'); if (dashboardLogoutBtn) dashboardLogoutBtn.onclick = window.logoutDashboard;
   const bookingToggleSwitch = document.getElementById('bookingToggleSwitch'); if (bookingToggleSwitch) bookingToggleSwitch.onchange = window.handleToggleBooking;
   const logoutBtn = document.getElementById('logoutBtn'); if (logoutBtn) logoutBtn.onclick = window.logoutUser;
+// --- أزرار صفحة تسجيل دخول الأعضاء ---
+  
+  // 1. زر العودة للدليل (يعيدك للصفحة الرئيسية)
+  const backToHomeBtn = document.getElementById('backToHomeBtn');
+  if (backToHomeBtn) {
+      backToHomeBtn.onclick = () => window.router('home');
+  }
+
+  // 2. زر تبديل حالة الفورم (لديك حساب بالفعل؟ / إنشاء حساب جديد)
+  const authToggleText = document.getElementById('authToggleText');
+  if (authToggleText) {
+      authToggleText.onclick = window.toggleAuthMode; // دالة موجودة في auth.js
+  }
+
+  // 3. زر الدخول باستخدام جوجل
+  const googleSignInBtn = document.getElementById('googleSignInBtn');
+  if (googleSignInBtn) {
+      googleSignInBtn.onclick = window.handleGoogleSignIn; // دالة موجودة في auth.js
+  }
+
+  // 4. إرسال فورم تسجيل الدخول/إنشاء الحساب (الزر الأساسي الأزرق)
+  const authSubmitBtn = document.getElementById('authSubmitBtn');
+  if (authSubmitBtn) {
+      authSubmitBtn.onclick = (e) => {
+          e.preventDefault(); 
+          window.handleEmailAuth(); // دالة موجودة في auth.js
+      };
+  }
   const searchInput = document.getElementById('searchInput'); if (searchInput) searchInput.oninput = window.filterDoctors;
   const specialtyFilter = document.getElementById('specialtyFilter'); if (specialtyFilter) specialtyFilter.onchange = window.filterDoctors;
   const municipalityFilter = document.getElementById('municipalityFilter'); if (municipalityFilter) municipalityFilter.onchange = window.filterDoctors;
