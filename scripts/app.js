@@ -950,13 +950,33 @@ window.handleAddDoctor = async function(e) {
   if (!data.Specialty || !data.Municipality) { showToast(state.currentLang === 'ar' ? 'الرجاء اختيار الاختصاص والبلدية.' : 'Please select specialty and municipality.', 'error'); setLoading(btn, false); return; }
   
   try {
+    // 1. التقاط رمز التحقق الخاص بـ Cloudflare
+    // نحدد النموذج بدقة (#view-add-doctor) حتى لا يتلخبط مع الرمز الموجود في نموذج الحجز
+    const turnstileResponse = document.querySelector('#view-add-doctor [name="cf-turnstile-response"]');
+    const turnstileToken = turnstileResponse ? turnstileResponse.value : null;
+
+    if (!turnstileToken) {
+      throw new Error("يرجى إكمال التحقق الأمني (الكابتشا).");
+    }
+
     const defaultPassword = data.Phone.replace(/\s/g, '');
-    const { data: responseData, error } = await supabaseClient.rpc('register_doctor_secure', {
+    
+    // 2. تجميع بيانات الطبيب
+    const payload = {
       p_first_name: data.FirstName.trim(), p_last_name: data.LastName.trim(), p_phone: defaultPassword,
       p_exact_location: data.ExactLocation.trim(), p_specialty: data.Specialty.trim(), p_municipality: data.Municipality.trim(),
       p_extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '', p_raw_password: defaultPassword
+    };
+
+    // 3. إرسال الطلب عبر الدالة السحابية الآمنة
+    const { data: functionResponse, error: functionError } = await supabaseClient.functions.invoke('verify-add-doctor', {
+      body: { turnstileToken: turnstileToken, doctorData: payload }
     });
-    if (error) throw error;
+
+    if (functionError) throw new Error("خطأ في الاتصال بالخادم الداخلي.");
+    if (functionResponse && functionResponse.error) throw new Error(functionResponse.error);
+    
+    const responseData = functionResponse.data;
     if (!responseData || !responseData.id) throw new Error(responseData?.error || 'فشل في جلب معرف الطبيب الجديد');
     
     showToast(t('toastRegisterSuccess') + responseData.id, 'success');
@@ -965,7 +985,9 @@ window.handleAddDoctor = async function(e) {
     e.target.reset();
     await window.loadDoctors();
     setTimeout(() => window.router('home'), 1500);
-  } catch (err) { showToast(t('toastRegisterError') + err.message, 'error'); } 
+  } catch (err) { 
+    showToast((state.currentLang === 'ar' ? 'خطأ: ' : 'Error: ') + err.message, 'error'); 
+  } 
   finally { setLoading(btn, false); }
 };
 
