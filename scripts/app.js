@@ -1251,8 +1251,7 @@ const logoHomeBtn = document.getElementById('logoHomeBtn');
           document.getElementById('ratingValue').value = currentReviewRating;
       });
   });
-
-  // --- إعداد فورم التقييمات ---
+// --- إعداد فورم التقييمات ---
   document.addEventListener('submit', async function(e) {
     if (e.target && e.target.id === 'reviewForm') {
       e.preventDefault();
@@ -1268,10 +1267,55 @@ const logoHomeBtn = document.getElementById('logoHomeBtn');
       try {
         const user = await getCurrentUser();
         if (!user) { showToast(state.currentLang === 'ar' ? 'يجب تسجيل الدخول أولاً' : 'Please login first', 'error'); setLoading(btn, false); return; }
-        const { error } = await supabaseClient.from('reviews').insert([{ doctor_id: doctorId, user_id: user.UserID, patient_name: user.Name || user.Email.split('@')[0], rating: parseInt(rating), comment: comment.trim(), status: 'pending' }]).select().single();
-        if (error) {
-          if (error.code === '23505') showToast(state.currentLang === 'ar' ? 'لقد قمت بتقييم هذا الطبيب مسبقاً!' : 'You have already reviewed this doctor!', 'error');
-          else throw error;
+        
+        // 1. البحث عن تقييم سابق لنفس الطبيب والمستخدم
+        const { data: existingReview, error: checkError } = await supabaseClient
+          .from('reviews')
+          .select('id, status')
+          .eq('doctor_id', doctorId)
+          .eq('user_id', user.UserID)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        let operationError = null;
+
+        if (existingReview) {
+          // 2. إذا كان التقييم موجوداً ولكنه "محذوف"، نقوم بتحديثه (إعادة إحيائه)
+          if (existingReview.status === 'deleted') {
+            const { error: updateError } = await supabaseClient
+              .from('reviews')
+              .update({ 
+                rating: parseInt(rating), 
+                comment: comment.trim(), 
+                status: 'pending',
+                patient_name: user.Name || user.Email.split('@')[0]
+              })
+              .eq('id', existingReview.id);
+            operationError = updateError;
+          } else {
+            // 3. إذا كان موجوداً وغير محذوف، ننشئ خطأ وهمي لنشغل رسالة "قيّمت مسبقاً"
+            operationError = { code: '23505' };
+          }
+        } else {
+          // 4. إذا لم يكن هناك أي تقييم سابق، نقوم بالإدراج بشكل طبيعي
+          const { error: insertError } = await supabaseClient
+            .from('reviews')
+            .insert([{ 
+              doctor_id: doctorId, 
+              user_id: user.UserID, 
+              patient_name: user.Name || user.Email.split('@')[0], 
+              rating: parseInt(rating), 
+              comment: comment.trim(), 
+              status: 'pending' 
+            }]);
+          operationError = insertError;
+        }
+
+        // --- معالجة النتيجة النهائية ---
+        if (operationError) {
+          if (operationError.code === '23505') showToast(state.currentLang === 'ar' ? 'لقد قمت بتقييم هذا الطبيب مسبقاً!' : 'You have already reviewed this doctor!', 'error');
+          else throw operationError;
         } else {
           showToast(state.currentLang === 'ar' ? 'تم إرسال تقييمك بنجاح. سيتم نشره بعد المراجعة.' : 'Review submitted successfully.', 'success');
           e.target.reset();
@@ -1280,6 +1324,7 @@ const logoHomeBtn = document.getElementById('logoHomeBtn');
           document.querySelectorAll('#starRatingInput .star').forEach(s => s.style.color = 'var(--border)');
           window.openFullReviewsPage(doctorId);
         }
+
       } catch (err) { showToast(state.currentLang === 'ar' ? 'خطأ: ' + err.message : 'Error: ' + err.message, 'error'); } 
       finally { setLoading(btn, false, state.currentLang === 'ar' ? 'نشر التقييم' : 'Submit Review'); }
     }
