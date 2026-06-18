@@ -1187,15 +1187,13 @@ th {
    تصميم البانر الاحترافي (Hero)
    ========================================================= */
 .hero-section {
-  background-image: url('images/hero-bg.png');
-  background-position: center center;
+  background: url('images/hero-bg.jpg') no-repeat left center;
   background-size: cover;
-  background-repeat: no-repeat;
-  border-radius: 20px;
-  padding: 4rem 1.5rem 8rem 1.5rem;
+  border-radius: 20px 20px 0 0; /* زوايا علوية منحنية، وسفلية حادة للالتصاق */
+  padding: 4rem 1.5rem 3.5rem 1.5rem; /* تقليل المساحة السفلية */
   border: none;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: none; /* إزالة الظل ليصبح للقالب بأكمله ظل واحد */
   margin-bottom: 0;
   position: relative;
 }
@@ -1203,12 +1201,15 @@ th {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  /* تدرج لوني يبدأ شفافاً من اليسار ويصبح داكناً يميناً خلف النص */
+  /* تدرج لوني يبدأ شفافاً من الأطراف ويتمركز في الوسط */
   background: linear-gradient(to right, 
-    rgba(15, 23, 42, 0) 0%,       /* شفاف تماماً على اليسار (وجه الطبيب) */
-    rgba(15, 23, 42, 0) 30%,      /* يبقى شفافاً حتى ثلث الشاشة */
-    rgba(14, 165, 233, 0.65) 65%, /* ظهور تدريجي للون الأزرق الأساسي خلف النص */
-    rgba(15, 23, 42, 0.95) 100%   /* داكن جداً على اليمين لضمان وضوح العناصر اليمنى */
+    rgba(15, 23, 42, 0) 0%,        /* شفاف كلياً على اليسار (منطقة الطبيب) */
+    rgba(15, 23, 42, 0) 15%,       /* يبقى شفافاً لضمان وضوح ملامح الطبيب */
+    rgba(14, 165, 233, 0.85) 35%,  /* يبدأ التظليل الأزرق بالظهور */
+    rgba(15, 23, 42, 0.95) 50%,    /* ذروة الظلام في المنتصف خلف النص مباشرة */
+    rgba(14, 165, 233, 0.85) 65%,  /* يبدأ التظليل بالتلاشي */
+    rgba(15, 23, 42, 0) 85%,       /* شفاف كلياً على اليمين (منطقة العلم) */
+    rgba(15, 23, 42, 0) 100%
   );
   z-index: 1;
 }
@@ -1241,14 +1242,6 @@ th {
   }
   .hero-section h1 { font-size: 1.15rem; }
   .hero-section > div:first-child { padding: 0.75rem 1rem !important; }
-}
-
-/* تداخل شريط الحجز */
-.booking-engine-wrapper {
-  position: relative;
-  z-index: 10;
-  margin-top: -3.5rem;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
 }
 
 /* =========================================================
@@ -1527,12 +1520,15 @@ th {
    شريط الحجز الاحترافي (Booking Engine)
    ========================================================= */
 .booking-engine-wrapper {
+  position: relative;
+  z-index: 10;
   background: var(--surface);
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  margin: 0 auto 3rem auto;
+  margin: 0 auto 3rem auto; /* إزالة التداخل السلبي (margin-top) */
+  border-radius: 0 0 20px 20px; /* زوايا علوية حادة، وسفلية منحنية */
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12); /* ظل موحد يجمع القالبين معاً */
   width: 100%;
   border: 1px solid var(--border);
+  border-top: none; /* إزالة الخط الفاصل بين الصورة ومربع البحث */
 }
 
 /* --- التبويبات --- */
@@ -1540,7 +1536,7 @@ th {
   display: flex;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 16px 16px 0 0;
+  border-radius: 0; 
   overflow: hidden;
 }
 .booking-tab {
