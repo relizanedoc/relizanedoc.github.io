@@ -929,14 +929,24 @@ window.saveClinicProfile = async function() {
     let finalImageUrls = [...window.dashboardCurrentImages]; 
     const fileInput = document.getElementById('dash_clinic_images');
     
-    if (fileInput && fileInput.files.length > 0) {
+  if (fileInput && fileInput.files.length > 0) {
       const filesToUpload = Array.from(fileInput.files).slice(0, 3);
-      const base64Images = await Promise.all(filesToUpload.map(async file => {
-        return { name: file.name, base64: await new Promise(resolve => { const reader = new FileReader(); reader.onloadend = () => resolve(reader.result.split(',')[1]); reader.readAsDataURL(file); }) };
-      }));
-      const { data, error } = await supabaseClient.functions.invoke('upload-github-images', { body: { doctorId: session.doctorId, images: base64Images } });
-      if (error) throw new Error("فشل رفع الصور: " + error.message);
-      if (data && data.urls) finalImageUrls = [...finalImageUrls, ...data.urls];
+      
+      for (const file of filesToUpload) {
+        // إنشاء اسم فريد للصورة لتجنب تكرار الأسماء
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${session.doctorId}-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `clinics/${fileName}`;
+
+        // الرفع المباشر إلى Supabase Storage
+        const { error: uploadError } = await supabaseClient.storage.from('clinic-images').upload(filePath, file);
+        
+        if (uploadError) throw new Error("فشل رفع الصورة: " + uploadError.message);
+
+        // الحصول على الرابط العام (Public URL)
+        const { data: publicUrlData } = supabaseClient.storage.from('clinic-images').getPublicUrl(filePath);
+        finalImageUrls.push(publicUrlData.publicUrl);
+      }
     }
 // 🔴 قراءة الأسماء من الحقول
 const firstNameAr = document.getElementById('dash_first_name_ar').value.trim();
