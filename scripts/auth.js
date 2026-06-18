@@ -203,12 +203,23 @@ window.submitPasswordReset = async function() {
     showToast(state.currentLang === 'ar' ? 'يرجى إدخال بريد إلكتروني صحيح' : 'Please enter a valid email', 'error');
     return;
   }
+
+  // 1. التقاط رمز التحقق (الكابتشا) من نافذة استعادة كلمة المرور حصراً
+  const turnstileResponse = document.querySelector('#forgotPasswordModal [name="cf-turnstile-response"]');
+  const captchaToken = turnstileResponse ? turnstileResponse.value : null;
+
+  if (!captchaToken) {
+    showToast(state.currentLang === 'ar' ? 'يرجى إكمال التحقق الأمني (الكابتشا).' : 'Please complete the security check.', 'error');
+    return;
+  }
+
   const btn = document.getElementById('sendResetLinkBtn');
   setLoading(btn, true, state.currentLang === 'ar' ? 'جاري الإرسال...' : 'Sending...');
 
   try {
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + window.location.pathname,
+      captchaToken: captchaToken // 2. تمرير البصمة الأمنية هنا
     });
     if (error) throw error;
     showToast(state.currentLang === 'ar' ? 'تم إرسال رابط الاستعادة إلى بريدك بنجاح' : 'Reset link sent successfully', 'success');
@@ -216,6 +227,7 @@ window.submitPasswordReset = async function() {
   } catch (err) {
     let msg = err.message;
     if (msg.includes('not found')) msg = state.currentLang === 'ar' ? 'هذا البريد غير مسجل لدينا' : 'Email not found';
+    else if (msg.includes('captcha')) msg = state.currentLang === 'ar' ? 'فشل التحقق الأمني، حاول مجدداً.' : 'Security check failed.';
     showToast((state.currentLang === 'ar' ? 'خطأ: ' : 'Error: ') + msg, 'error');
   } finally {
     setLoading(btn, false, state.currentLang === 'ar' ? 'إرسال الرابط' : 'Send Link');
