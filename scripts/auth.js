@@ -102,21 +102,42 @@ window.handleEmailAuth = async function() {
   setLoading(btn, true);
 
   try {
+    // 1. التقاط رمز Turnstile المخفي في النموذج
+    const turnstileResponse = document.querySelector('#emailAuthForm [name="cf-turnstile-response"]');
+    const captchaToken = turnstileResponse ? turnstileResponse.value : null;
+
+    // التأكد من أن المستخدم أكمل الكابتشا قبل الإرسال
+    if (!captchaToken) {
+      throw new Error("يرجى إكمال التحقق الأمني (الكابتشا).");
+    }
+
     if (state.isSignUp) {
       if (!name) { 
         showToast(t('fullName') + ' required', 'error'); 
         setLoading(btn, false); 
         return; 
       }
+      
+      // 2. إرفاق الكابتشا في عملية إنشاء حساب جديد
       const { data, error } = await supabaseClient.auth.signUp({ 
-        email: email, password: password,
-        options: { data: { name: name, display_name: name }, emailRedirectTo: window.location.origin }
+        email: email, 
+        password: password,
+        options: { 
+          captchaToken: captchaToken, // البصمة الأمنية
+          data: { name: name, display_name: name }, 
+          emailRedirectTo: window.location.origin 
+        }
       });
       if (error) throw error;
       resetLoginAttempts();
 
       if (data.user) {
-        const { error: loginError } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+        // إرفاق الكابتشا أيضاً في محاولة تسجيل الدخول التلقائي بعد التسجيل
+        const { error: loginError } = await supabaseClient.auth.signInWithPassword({ 
+          email: email, 
+          password: password,
+          options: { captchaToken: captchaToken } // البصمة الأمنية
+        });
         if (loginError && loginError.message.includes('Email not confirmed')) {
           showToast('تم إنشاء الحساب! يمكنك تسجيل الدخول الآن.', 'success');
         } else {
@@ -125,7 +146,12 @@ window.handleEmailAuth = async function() {
         }
       }
     } else {
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+      // 3. إرفاق الكابتشا في عملية تسجيل الدخول العادية
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+        email: email, 
+        password: password,
+        options: { captchaToken: captchaToken } // البصمة الأمنية
+      });
       if (error) throw error;
       resetLoginAttempts();
       showToast(t('toastAuthSuccess') + (data.user.user_metadata?.name || email), 'success');
@@ -139,6 +165,8 @@ window.handleEmailAuth = async function() {
     else if (msg.includes('not found') || msg.includes('Invalid login')) msg = t('userNotFound');
     else if (msg.includes('wrong-password') || msg.includes('Invalid login credentials')) msg = t('wrongPassword');
     else if (msg.includes('already in use') || msg.includes('already registered')) msg = t('emailInUse');
+    // إضافة رسالة خطأ للكابتشا
+    else if (msg.includes('captcha')) msg = state.currentLang === 'ar' ? 'فشل التحقق الأمني، حاول مجدداً.' : 'Security check failed, try again.';
     showToast(t('toastAuthError') + msg, 'error');
   } finally { 
     setLoading(btn, false); 
