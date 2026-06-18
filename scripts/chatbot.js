@@ -12,7 +12,8 @@ import { openDoctorProfileModal } from './ui.js';
 // ✅ ربط الدالة بالنطاق العام (window) لتتمكن أزرار الـ HTML من الوصول إليها بدون أخطاء
 window.triggerDoctorProfile = function(doctorId, doctorName) {
     document.getElementById('medicalChatbot').classList.add('hidden');
-    const doctor = state.allDoctors.find(d => d.id === doctorId);
+    // التعديل: البحث في الدليل الشامل بدلاً من المعروض فقط
+    const doctor = state.globalDirectory.find(d => d.id === doctorId);
     if (doctor) {
         openDoctorProfileModal(doctor, doctorName);
     }
@@ -100,11 +101,11 @@ function processUserMessage(rawMsg) {
         return getEmergencyResponse();
     }
 
-    // البحث عن الأطباء
-    if (!state.allDoctors || state.allDoctors.length === 0) return t('chatLoadingDB');
+    // التعديل: الاعتماد على الدليل الشامل
+    if (!state.globalDirectory || state.globalDirectory.length === 0) return t('chatLoadingDB');
     
-    const availableSpecialties = [...new Set(state.allDoctors.map(d => d.specialty).filter(Boolean))];
-    const availableMunicipalities = [...new Set(state.allDoctors.map(d => d.municipality).filter(Boolean))];
+    const availableSpecialties = [...new Set(state.globalDirectory.map(d => d.specialty).filter(Boolean))];
+    const availableMunicipalities = [...new Set(state.globalDirectory.map(d => d.municipality).filter(Boolean))];
     let detectedSpecialty = null, detectedMunicipality = null, detectedName = null;
 
     for (const spec of availableSpecialties) { 
@@ -119,7 +120,7 @@ function processUserMessage(rawMsg) {
             break; 
         } 
     }
-    detectedName = state.allDoctors.find(doc => { 
+    detectedName = state.globalDirectory.find(doc => { 
         const fullName = normalizeText((doc.first_name || "") + " " + (doc.last_name || "")); 
         return cleanMsg.split(' ').some(w => w.length >= 3 && fullName.includes(w)); 
     });
@@ -127,23 +128,24 @@ function processUserMessage(rawMsg) {
     let matchedDoctors = [];
     let responsePrefix = '';
     
+    // التعديل: الفلترة من الدليل الشامل
     if (detectedSpecialty && detectedMunicipality) {
-        matchedDoctors = state.allDoctors.filter(doc => doc.specialty === detectedSpecialty && doc.municipality === detectedMunicipality);
+        matchedDoctors = state.globalDirectory.filter(doc => doc.specialty === detectedSpecialty && doc.municipality === detectedMunicipality);
         responsePrefix = state.currentLang === 'ar' 
             ? `وجدت لك ${matchedDoctors.length} طبيباً متخصصاً في <strong>${t(detectedSpecialty)}</strong> في <strong>${t(detectedMunicipality)}</strong>. إليك أبرز النتائج:` 
             : `Found ${matchedDoctors.length} <strong>${t(detectedSpecialty)}</strong> doctors in <strong>${t(detectedMunicipality)}</strong>. Here are the top results:`;
     } else if (detectedSpecialty) {
-        matchedDoctors = state.allDoctors.filter(doc => doc.specialty === detectedSpecialty);
+        matchedDoctors = state.globalDirectory.filter(doc => doc.specialty === detectedSpecialty);
         responsePrefix = state.currentLang === 'ar' 
             ? `إليك قائمة بأفضل الأطباء المتخصصين في <strong>${t(detectedSpecialty)}</strong>:` 
             : `Here is a list of top <strong>${t(detectedSpecialty)}</strong> specialists:`;
     } else if (detectedMunicipality) {
-        matchedDoctors = state.allDoctors.filter(doc => doc.municipality === detectedMunicipality);
+        matchedDoctors = state.globalDirectory.filter(doc => doc.municipality === detectedMunicipality);
         responsePrefix = state.currentLang === 'ar' 
             ? `إليك جميع الأطباء المتوفرين في بلدية <strong>${t(detectedMunicipality)}</strong>:` 
             : `Here are all available doctors in <strong>${t(detectedMunicipality)}</strong>:`;
     } else if (detectedName) {
-        matchedDoctors = state.allDoctors.filter(doc => { 
+        matchedDoctors = state.globalDirectory.filter(doc => { 
             const fullName = normalizeText((doc.first_name || "") + " " + (doc.last_name || "")); 
             return cleanMsg.split(' ').some(w => w.length >= 3 && fullName.includes(w)); 
         });
@@ -151,7 +153,7 @@ function processUserMessage(rawMsg) {
             ? `وجدت نتائج مطابقة لاسم "<strong>${detectedName.first_name} ${detectedName.last_name}</strong>":` 
             : `Found results matching "<strong>${detectedName.first_name} ${detectedName.last_name}</strong>":`;
     } else {
-        matchedDoctors = state.allDoctors.filter(doc => { 
+        matchedDoctors = state.globalDirectory.filter(doc => { 
             const text = normalizeText(`${doc.first_name||''} ${doc.last_name||''} ${doc.specialty||''} ${doc.municipality||''} ${doc.exact_location||''}`); 
             return cleanMsg.split(' ').some(w => w.length >= 3 && text.includes(w)); 
         });
@@ -328,8 +330,11 @@ function showChatSuggestions(text) {
     const suggestions = [];
     const lowerText = text.toLowerCase();
 
+    // التعديل: جلب الاقتراحات من الدليل الشامل
+    if (!state.globalDirectory) return;
+
     // اقتراحات الأطباء
-    state.allDoctors.forEach(doc => {
+    state.globalDirectory.forEach(doc => {
         const fullName = `${doc.first_name} ${doc.last_name}`.toLowerCase();
         if (fullName.includes(lowerText)) {
             suggestions.push({
@@ -342,7 +347,7 @@ function showChatSuggestions(text) {
     });
 
     // اقتراحات التخصصات
-    const specialties = [...new Set(state.allDoctors.map(d => d.specialty))];
+    const specialties = [...new Set(state.globalDirectory.map(d => d.specialty))];
     specialties.forEach(spec => {
         if (spec.toLowerCase().includes(lowerText)) {
             suggestions.push({
@@ -355,7 +360,7 @@ function showChatSuggestions(text) {
     });
 
     // اقتراحات البلديات
-    const municipalities = [...new Set(state.allDoctors.map(d => d.municipality))];
+    const municipalities = [...new Set(state.globalDirectory.map(d => d.municipality))];
     municipalities.forEach(mun => {
         if (mun.toLowerCase().includes(lowerText)) {
             suggestions.push({
