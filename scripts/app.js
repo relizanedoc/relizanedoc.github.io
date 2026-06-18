@@ -909,6 +909,8 @@ window.saveWorkingHours = async function() {
   } catch(err) { showToast('خطأ: ' + err.message, 'error'); } 
   finally { setLoading(btn, false, 'حفظ الأوقات'); }
 };
+
+window.saveClinicProfile = async function() {
 async function saveClinicProfile() {
   const sessionStr = localStorage.getItem('doctorSession');
   if (!sessionStr) return;
@@ -1100,6 +1102,33 @@ window.createDoctorGitHubPageAsync = function(doctorData, doctorId) {
 // ==========================================
 // 5. تهيئة التطبيق عند التحميل (Initialization)
 // ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+  const dateInput = document.getElementById('apptDateInput');
+  if (dateInput) {
+      const currentDate = new Date();
+      const timezoneOffset = currentDate.getTimezoneOffset() * 60000;
+      dateInput.min = new Date(currentDate.getTime() - timezoneOffset).toISOString().split('T')[0];
+  }
+
+  const hash = window.location.hash.replace('#', '');
+  const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(hash) ? hash : 'home';
+  window.setLang(localStorage.getItem('appLanguage') || 'ar');
+
+  document.getElementById('logoHomeBtn').onclick = () => window.router('home');
+  document.getElementById('btn-en').onclick = () => window.setLang('en');
+  document.getElementById('btn-ar').onclick = () => window.setLang('ar');
+  document.getElementById('googleSignInBtn').onclick = window.handleGoogleSignIn;
+  document.getElementById('authSubmitBtn').onclick = window.handleEmailAuth;
+  document.getElementById('authToggleText').onclick = window.toggleAuthMode;
+  document.getElementById('backToHomeBtn').onclick = () => window.router('home');
+  document.getElementById('backToDirBtn').onclick = () => window.router('home');
+const tsSettings = { dropdownParent: 'body', create: false, sortField: { field: "text", direction: "asc" }, render: { no_results: function(data, escape) { return '<div class="no-results">' + (state.currentLang === 'ar' ? 'لا توجد نتائج' : 'No results found') + '</div>'; } } };
+  window.tsSpecialtyFilter = new TomSelect("#specialtyFilter", tsSettings);
+  window.tsMunicipalityFilter = new TomSelect("#municipalityFilter", tsSettings);
+  window.tsAddSpecialty = new TomSelect('select[name="Specialty"]', tsSettings);
+  window.tsAddMunicipality = new TomSelect('select[name="Municipality"]', tsSettings);
+
+  const trackForm = document.getElementById('trackBookingForm');
 const trackForm = document.getElementById('trackBookingForm');
   if (trackForm) {
     trackForm.addEventListener('submit', async (e) => {
