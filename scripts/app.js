@@ -1165,7 +1165,10 @@ document.getElementById('btn-ar').onclick = () => window.setLang('ar');
   window.onscroll = () => { const btn = document.getElementById('backToTop'); if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) btn.classList.remove('hidden'); else btn.classList.add('hidden'); };
   document.getElementById('backToTop').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   window.onpopstate = (e) => { const view = (e.state && e.state.view) ? e.state.view : 'home'; window.router(view, false); };
-
+const logoHomeBtn = document.getElementById('logoHomeBtn');
+  if (logoHomeBtn) {
+    logoHomeBtn.addEventListener('click', () => window.router('home'));
+  }
   // تسجيل الدخول التلقائي للطبيب
   const savedSession = localStorage.getItem('doctorSession');
   if (savedSession) {
