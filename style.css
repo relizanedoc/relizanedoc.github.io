@@ -1203,7 +1203,13 @@ th {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(to right, rgba(15, 23, 42, 0.1) 0%, rgba(14, 165, 233, 0.5) 50%, rgba(15, 23, 42, 0.9) 100%);
+  /* تدرج لوني يبدأ شفافاً من اليسار ويصبح داكناً يميناً خلف النص */
+  background: linear-gradient(to right, 
+    rgba(15, 23, 42, 0) 0%,       /* شفاف تماماً على اليسار (وجه الطبيب) */
+    rgba(15, 23, 42, 0) 30%,      /* يبقى شفافاً حتى ثلث الشاشة */
+    rgba(14, 165, 233, 0.65) 65%, /* ظهور تدريجي للون الأزرق الأساسي خلف النص */
+    rgba(15, 23, 42, 0.95) 100%   /* داكن جداً على اليمين لضمان وضوح العناصر اليمنى */
+  );
   z-index: 1;
 }
 .hero-section > * { position: relative; z-index: 2; }
