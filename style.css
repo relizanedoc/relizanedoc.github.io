@@ -1770,3 +1770,23 @@ th {
   body { background: white; color: black; }
   .card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
 }
+/* =========================================================
+   إصلاح مشكلة قص الموعد الأخير في لوحات التحكم
+   ========================================================= */
+
+/* 1. زيادة الحد الأقصى لارتفاع الأكورديون لمنع القص عند وجود مواعيد كثيرة */
+.accordion-content.open { 
+  max-height: 15000px !important; /* تم الرفع من 4000 إلى 15000 بكسل لاستيعاب القوائم الطويلة */
+}
+
+/* 2. إضافة مساحة تنفس داخلية أسفل حاويات المواعيد (للطبيب والمريض) */
+#appointmentsTable,
+#userBookingsContainer {
+  padding-bottom: 1.5rem !important;
+}
+
+/* 3. إعطاء هامش إجباري للبطاقة الأخيرة لتدفع حواف الحاوية وتظهر بالكامل */
+#appointmentsTable > div:last-child,
+#userBookingsContainer > div:last-child {
+  margin-bottom: 1.5rem !important;
+}
