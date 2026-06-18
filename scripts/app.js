@@ -16,7 +16,7 @@ let currentReviewsDoctorId = null;
 let isAuthInitialized = false;
 supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log('🔄 حدث المصادقة:', event);
-    
+
     // 🔴 التقاط حدث استعادة كلمة المرور
     if (event === 'PASSWORD_RECOVERY') {
         console.log('✅ تم التقاط حدث استعادة كلمة المرور');
@@ -24,12 +24,12 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
             window.handleChangePassword();
         }, 500);
     }
-    
+
     if (['INITIAL_SESSION', 'SIGNED_IN', 'USER_UPDATED', 'TOKEN_REFRESHED'].includes(event)) {
         if (session) {
             console.log('✅ جلسة نشطة:', session.user);
             updateUserUI(session.user);
-            
+
             // 🟢 التعديل لحل مشكلة التحديث (Refresh Bug):
             if (event === 'SIGNED_IN') {
                 const hash = window.location.hash;
@@ -46,7 +46,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         console.log('❌ تم تسجيل الخروج');
         updateUserUI(null);
     }
-    
+
     if (!isAuthInitialized) {
         const hash = window.location.hash;
         if (!hash.includes('access_token') && !hash.includes('error=')) {
@@ -159,7 +159,7 @@ window.setLang = function(lang) {
           ? `${window.activeProfileDoctor.first_name_en} ${window.activeProfileDoctor.last_name_en}` 
           : `${window.activeProfileDoctor.first_name} ${window.activeProfileDoctor.last_name}`;
       const translatedDocName = (state.currentLang === 'ar' ? 'د. ' : 'Dr. ') + rawName;
-      
+
       openDoctorProfileModal(window.activeProfileDoctor, translatedDocName);
   }
 
@@ -280,13 +280,13 @@ window.fetchGlobalDirectory = async function() {
         // جلب نسخة خفيفة جداً (أقل من 50 كيلوبايت لـ 1000 طبيب) لخدمة الشات بوت والفلاتر
         const { data, error } = await supabaseClient.from('doctors').select('id, first_name, last_name, first_name_en, last_name_en, specialty, municipality, exact_location');
         if (error) throw error;
-        
+
         // 💡 هذا المتغير الجديد هو الذي سيستخدمه الشات بوت للبحث في كل الأطباء
         state.globalDirectory = data || []; 
-        
+
         globalSpecs = [...new Set(data.map(d => d.specialty).filter(Boolean))].sort();
         globalMuns = [...new Set(data.map(d => d.municipality).filter(Boolean))].sort();
-        
+
         window.populateFilters();
         filterOptionsLoaded = true;
     } catch (e) {
@@ -341,11 +341,11 @@ window.filterDoctors = function() {
 window.handleSEOAndRender = function(reset = true) {
   const urlParams = new URLSearchParams(window.location.search);
   let targetDocId = urlParams.get('doc');
-  
+
   if (targetDocId && reset) {
       targetDocId = targetDocId.trim().toLowerCase(); 
       const targetDoc = state.allDoctors.find(d => String(d.id).trim().toLowerCase() === targetDocId);
-      
+
       if (targetDoc) {
           updateSEOMetaTags(targetDoc);
           renderDoctors([targetDoc]);
@@ -387,9 +387,9 @@ window.openFullReviewsPage = async function(doctorId) {
   currentReviewsDoctorId = doctorId;
   currentReviewPage = 0;
   document.getElementById('reviewDoctorId').value = doctorId; 
-  
+
   window.router('doctor-reviews');
-  
+
   const user = await getCurrentUser();
   if (user) {
       document.getElementById('addReviewSectionFull').classList.remove('hidden');
@@ -424,7 +424,7 @@ const { data: stats, error } = await supabaseClient.from('reviews').select('rati
       const fullStars = Math.floor(avg);
       const emptyStars = 5 - fullStars;
       document.getElementById('fullStarDisplay').innerHTML = '★'.repeat(fullStars) + '<span style="color:#e2e8f0;">' + '★'.repeat(emptyStars) + '</span>';
-      
+
       const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
       stats.forEach(r => ratingCounts[r.rating]++);
       let barsHtml = '';
@@ -457,7 +457,7 @@ const { data: reviews, error } = await supabaseClient.from('reviews').select('*'
           const pendingBadge = isPending ? `<span style="font-size: 0.7rem; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; margin-inline-start: 8px;">قيد المراجعة</span>` : '';
           const dateStr = new Date(r.created_at).toLocaleDateString(state.currentLang === 'ar' ? 'ar-DZ' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
           const avatarChar = (r.patient_name ? r.patient_name.charAt(0) : 'U').toUpperCase();
-          
+
           return `
           <div class="review-card" id="review-${r.id}" style="${isPending ? 'opacity: 0.8;' : ''}">
               <div class="review-card-header">
@@ -517,7 +517,7 @@ window.deleteReview = async function(reviewId, doctorId) {
 window.openBooking = function(doctorId) {
   state.currentDoctor = state.allDoctors.find(d => d.id === doctorId);
   if (!state.currentDoctor) { showToast(state.currentLang === 'ar' ? 'الطبيب غير موجود' : 'Doctor not found', 'error'); return; }
-  
+
   document.getElementById('bookingDoctorId').value = doctorId;
   const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
 const rawName = state.currentLang === 'en' && state.currentDoctor.first_name_en && state.currentDoctor.last_name_en 
@@ -525,7 +525,7 @@ const rawName = state.currentLang === 'en' && state.currentDoctor.first_name_en 
     : `${state.currentDoctor.first_name} ${state.currentDoctor.last_name}`;
 const doctorName = `${docPrefix} ${escapeHtml(rawName)}`;  
   let infoHtml = `<div class="doctor-header"><div class="avatar">${(state.currentDoctor.first_name?.[0]||'')+(state.currentDoctor.last_name?.[0]||'')}</div><div><div class="font-bold text-lg">${doctorName}</div><div class="text-sm text-gray">${escapeHtml(t(state.currentDoctor.specialty))} • ${escapeHtml(t(state.currentDoctor.municipality))}</div></div></div>`;
-  
+
   let scheduleHtml = '';
   let wd = {};
   if (state.currentDoctor.working_days) {
@@ -541,7 +541,7 @@ const doctorName = `${docPrefix} ${escapeHtml(rawName)}`;
       if(activeDaysHtml !== '') scheduleHtml = `<div style="margin-top: 1.25rem; padding: 1rem; background: var(--bg); border-radius: var(--radius); border: 1px solid var(--border);"><div style="display:flex; align-items:center; gap:0.5rem; margin-bottom: 0.75rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><h4 style="font-size: 0.95rem; font-weight: bold; color: var(--text); margin:0;">${t('scheduleTitle')}</h4></div>${activeDaysHtml}</div>`;
     } catch(e) {}
   }
-  
+
   if (scheduleHtml === '') {
     const st = state.currentDoctor.working_days ? '08:00' : '08:00';
     const et = state.currentDoctor.working_days ? '16:00' : '16:00';
@@ -560,17 +560,17 @@ const doctorName = `${docPrefix} ${escapeHtml(rawName)}`;
     timeInputHidden.required = true;
     document.querySelector('#bookingForm .grid').appendChild(timeInputHidden);
   }
-  
+
   dateInput.value = '';
   if (timeContainer) timeContainer.innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;">${t('selectDateFirst')}</div>`;
   timeInputHidden.value = '';
-  
+
   dateInput.onchange = function() { window.handleDateSelection(this.value, wd); };
-  
+
   const currentDate = new Date();
   const timezoneOffset = currentDate.getTimezoneOffset() * 60000;
   dateInput.min = new Date(currentDate.getTime() - timezoneOffset).toISOString().split('T')[0];
-  
+
   window.router('booking');
 };
 
@@ -652,7 +652,7 @@ window.submitBooking = async function() {
     const { data: authData } = await supabaseClient.auth.getUser();
     const user = authData ? authData.user : null;
     const finalEmail = data.PatientEmail ? data.PatientEmail.trim() : (user ? user.email : null);
-    
+
     const bookingPayload = {
       doctor_id: data.DoctorID, 
       patient_name: data.PatientName.trim(), 
@@ -674,13 +674,13 @@ window.submitBooking = async function() {
 
     if (functionError) throw new Error("خطأ في الاتصال بالخادم الداخلي.");
     if (functionResponse && functionResponse.error) throw new Error(functionResponse.error);
-    
+
     // 4. الحصول على بيانات الحجز بعد نجاح الإدخال
     const booking = functionResponse.booking;
 
     form.reset();
     document.getElementById('timeSlotsContainer').innerHTML = `<div class="text-sm text-gray" style="grid-column: 1 / -1;">${t('selectDateFirst')}</div>`;
-    
+
     const bId = booking.id;
     const shortId = bId.substring(0, 8).toUpperCase();
     const targetDoctorData = state.allDoctors.find(d => d.id === data.DoctorID);
@@ -755,7 +755,7 @@ window.loadUserBookings = async function() {
         : `${b.doctors.first_name} ${b.doctors.last_name}`) 
     : 'طبيب';
       const shortId = b.id.substring(0, 8).toUpperCase();
-      
+
       html += `
         <div class="card-hover" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);">
           <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: ${statusIndicator};"></div>
@@ -783,13 +783,13 @@ window.loadUserBookings = async function() {
 window.handleDashboardLogin = async function(e) {
   if (e) e.preventDefault();
   if (isAccountLocked()) return;
-  
+
   const btn = document.getElementById('dashboardLoginBtn');
   setLoading(btn, true);
-  
+
   const phone = document.getElementById('loginPhone').value.trim();
   const password = document.getElementById('loginDoctorPassword').value.trim();
-  
+
   if (!phone || !password) { 
     setLoading(btn, false); 
     showToast('يرجى ملء جميع الحقول', 'error'); 
@@ -826,7 +826,7 @@ window.handleDashboardLogin = async function(e) {
 
     resetLoginAttempts();
     localStorage.setItem('doctorSession', JSON.stringify({ doctorId: doctor.id, phone: doctor.phone, sessionToken: doctor.session_token }));
-    
+
     const dashboardData = {
       doctorName: `${doctor.first_name} ${doctor.last_name}`,
       workingDays: typeof doctor.working_days === 'object' ? JSON.stringify(doctor.working_days) : (doctor.working_days || '{}'),
@@ -834,7 +834,7 @@ window.handleDashboardLogin = async function(e) {
       appointments: appointments || [], 
       doctorDetails: doctor
     };
-    
+
     document.getElementById('loginSection').classList.add('hidden');
     document.getElementById('dashboardSection').classList.remove('hidden');
     renderDashboardUI(dashboardData, doctor.id);
@@ -909,8 +909,9 @@ window.saveWorkingHours = async function() {
   } catch(err) { showToast('خطأ: ' + err.message, 'error'); } 
   finally { setLoading(btn, false, 'حفظ الأوقات'); }
 };
+
 window.saveClinicProfile = async function() {
-const sessionStr = localStorage.getItem('doctorSession');
+  const sessionStr = localStorage.getItem('doctorSession');
   if (!sessionStr) return;
   const session = JSON.parse(sessionStr);
   const btn = document.getElementById('saveProfileBtn');
@@ -927,9 +928,16 @@ const sessionStr = localStorage.getItem('doctorSession');
     const certificatesText = document.getElementById('dash_certificates') ? document.getElementById('dash_certificates').value.trim() : '';
     let finalImageUrls = [...window.dashboardCurrentImages]; 
     const fileInput = document.getElementById('dash_clinic_images');
-    
+
+    if (fileInput && fileInput.files.length > 0) {
   if (fileInput && fileInput.files.length > 0) {
       const filesToUpload = Array.from(fileInput.files).slice(0, 3);
+      const base64Images = await Promise.all(filesToUpload.map(async file => {
+        return { name: file.name, base64: await new Promise(resolve => { const reader = new FileReader(); reader.onloadend = () => resolve(reader.result.split(',')[1]); reader.readAsDataURL(file); }) };
+      }));
+      const { data, error } = await supabaseClient.functions.invoke('upload-github-images', { body: { doctorId: session.doctorId, images: base64Images } });
+      if (error) throw new Error("فشل رفع الصور: " + error.message);
+      if (data && data.urls) finalImageUrls = [...finalImageUrls, ...data.urls];
       
       for (const file of filesToUpload) {
         // إنشاء اسم فريد للصورة لتجنب تكرار الأسماء
@@ -1041,13 +1049,13 @@ window.handleAddDoctor = async function(e) {
   e.preventDefault();
   const user = await getCurrentUser();
   if (!user) { showToast(t('loginRequired'), 'error'); window.router('login'); return; }
-  
+
   const btn = document.getElementById('addDoctorBtn');
   setLoading(btn, true);
   const data = Object.fromEntries(new FormData(e.target));
-  
+
   if (!data.Specialty || !data.Municipality) { showToast(state.currentLang === 'ar' ? 'الرجاء اختيار الاختصاص والبلدية.' : 'Please select specialty and municipality.', 'error'); setLoading(btn, false); return; }
-  
+
   try {
     // 1. التقاط رمز التحقق الخاص بـ Cloudflare
     // نحدد النموذج بدقة (#view-add-doctor) حتى لا يتلخبط مع الرمز الموجود في نموذج الحجز
@@ -1059,7 +1067,7 @@ window.handleAddDoctor = async function(e) {
     }
 
     const defaultPassword = data.Phone.replace(/\s/g, '');
-    
+
     // 2. تجميع بيانات الطبيب
     const payload = {
       p_first_name: data.FirstName.trim(), p_last_name: data.LastName.trim(), p_phone: defaultPassword,
@@ -1074,13 +1082,13 @@ window.handleAddDoctor = async function(e) {
 
     if (functionError) throw new Error("خطأ في الاتصال بالخادم الداخلي.");
     if (functionResponse && functionResponse.error) throw new Error(functionResponse.error);
-    
+
     const responseData = functionResponse.data;
     if (!responseData || !responseData.id) throw new Error(responseData?.error || 'فشل في جلب معرف الطبيب الجديد');
-    
+
     showToast(t('toastRegisterSuccess') + responseData.id, 'success');
     window.createDoctorGitHubPageAsync({ first_name: data.FirstName.trim(), last_name: data.LastName.trim(), phone: defaultPassword, exact_location: data.ExactLocation.trim(), specialty: data.Specialty.trim(), municipality: data.Municipality.trim(), extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '' }, responseData.id);
-    
+
     e.target.reset();
     await window.loadDoctors();
     setTimeout(() => window.router('home'), 1500);
@@ -1100,7 +1108,33 @@ window.createDoctorGitHubPageAsync = function(doctorData, doctorId) {
 // ==========================================
 // 5. تهيئة التطبيق عند التحميل (Initialization)
 // ==========================================
-const trackForm = document.getElementById('trackBookingForm');
+document.addEventListener('DOMContentLoaded', () => {
+  const dateInput = document.getElementById('apptDateInput');
+  if (dateInput) {
+      const currentDate = new Date();
+      const timezoneOffset = currentDate.getTimezoneOffset() * 60000;
+      dateInput.min = new Date(currentDate.getTime() - timezoneOffset).toISOString().split('T')[0];
+  }
+
+  const hash = window.location.hash.replace('#', '');
+  const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard'].includes(hash) ? hash : 'home';
+  window.setLang(localStorage.getItem('appLanguage') || 'ar');
+
+  document.getElementById('logoHomeBtn').onclick = () => window.router('home');
+  document.getElementById('btn-en').onclick = () => window.setLang('en');
+  document.getElementById('btn-ar').onclick = () => window.setLang('ar');
+  document.getElementById('googleSignInBtn').onclick = window.handleGoogleSignIn;
+  document.getElementById('authSubmitBtn').onclick = window.handleEmailAuth;
+  document.getElementById('authToggleText').onclick = window.toggleAuthMode;
+  document.getElementById('backToHomeBtn').onclick = () => window.router('home');
+  document.getElementById('backToDirBtn').onclick = () => window.router('home');
+const tsSettings = { dropdownParent: 'body', create: false, sortField: { field: "text", direction: "asc" }, render: { no_results: function(data, escape) { return '<div class="no-results">' + (state.currentLang === 'ar' ? 'لا توجد نتائج' : 'No results found') + '</div>'; } } };
+  window.tsSpecialtyFilter = new TomSelect("#specialtyFilter", tsSettings);
+  window.tsMunicipalityFilter = new TomSelect("#municipalityFilter", tsSettings);
+  window.tsAddSpecialty = new TomSelect('select[name="Specialty"]', tsSettings);
+  window.tsAddMunicipality = new TomSelect('select[name="Municipality"]', tsSettings);
+
+  const trackForm = document.getElementById('trackBookingForm');
   if (trackForm) {
     trackForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1134,10 +1168,6 @@ const trackForm = document.getElementById('trackBookingForm');
       } catch (err) { showToast(state.currentLang === 'ar' ? 'خطأ في الاتصال بقاعدة البيانات' : 'Connection Error', 'error'); } 
       finally { setLoading(btn, false, state.currentLang === 'ar' ? 'بحث عن الحجز' : 'Search Booking'); }
     });
-  }
-  const saveProfileBtn = document.getElementById('saveProfileBtn');
-  if (saveProfileBtn) {
-    saveProfileBtn.addEventListener('click', saveClinicProfile);
   }
 
   document.querySelectorAll('input[type="tel"]').forEach(input => {
@@ -1175,7 +1205,7 @@ const trackForm = document.getElementById('trackBookingForm');
       if (loginPhone) loginPhone.value = session.phone || '';
       const btn = document.getElementById('dashboardLoginBtn');
       if (btn) setLoading(btn, true);
-      
+
       (async () => {
         try {
           const { data: doctor, error } = await supabaseClient.from('doctors').select('*').eq('id', session.doctorId).eq('session_token', session.sessionToken).maybeSingle();
