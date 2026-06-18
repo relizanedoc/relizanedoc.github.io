@@ -909,8 +909,8 @@ window.saveWorkingHours = async function() {
   } catch(err) { showToast('خطأ: ' + err.message, 'error'); } 
   finally { setLoading(btn, false, 'حفظ الأوقات'); }
 };
-async function saveClinicProfile() {
-  const sessionStr = localStorage.getItem('doctorSession');
+window.saveClinicProfile = async function() {
+const sessionStr = localStorage.getItem('doctorSession');
   if (!sessionStr) return;
   const session = JSON.parse(sessionStr);
   const btn = document.getElementById('saveProfileBtn');
