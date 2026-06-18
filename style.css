@@ -478,6 +478,7 @@ input, select, textarea {
   border-radius: var(--radius);
   border-color: var(--border);
   box-shadow: var(--shadow-lg);
+  z-index: 999990 !important; /* 🌟 السطر الجديد والضروري لحل المشكلة */
 }
 .ts-dropdown .active {
   background-color: var(--primary-light) !important;
