@@ -1252,5 +1252,3 @@ const trackForm = document.getElementById('trackBookingForm');
   // 🤖 تهيئة الشات بوت من الملف المنفصل
   // ==========================================
   initChatbot(); // 🆕 استدعاء دالة تهيئة الشات بوت
-
-});
