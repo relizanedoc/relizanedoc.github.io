@@ -221,8 +221,7 @@ window.loadDoctors = async function(reset = true) {
 
   try {
     // 2. جلب الفلاتر مرة واحدة فقط لتخفيف الضغط
-    if (!filterOptionsLoaded) await window.fetchAndPopulateFilters();
-
+if (!filterOptionsLoaded) await window.fetchGlobalDirectory();
     const searchQ = (document.getElementById('searchInput')?.value || '').trim();
     const specQ = document.getElementById('specialtyFilter')?.value || '';
     const munQ = document.getElementById('municipalityFilter')?.value || '';
@@ -276,49 +275,79 @@ window.loadDoctors = async function(reset = true) {
   }
 };
 
-window.fetchAndPopulateFilters = async function() {
+window.fetchGlobalDirectory = async function() {
     try {
-        // جلب سريع وخفيف جداً للأعمدة المطلوبة فقط لجمع الفلاتر
-        const { data, error } = await supabaseClient.from('doctors').select('specialty, municipality');
+        // جلب نسخة خفيفة جداً (أقل من 50 كيلوبايت لـ 1000 طبيب) لخدمة الشات بوت والفلاتر
+        const { data, error } = await supabaseClient.from('doctors').select('id, first_name, last_name, first_name_en, last_name_en, specialty, municipality, exact_location');
         if (error) throw error;
+        
+        // 💡 هذا المتغير الجديد هو الذي سيستخدمه الشات بوت للبحث في كل الأطباء
+        state.globalDirectory = data || []; 
         
         globalSpecs = [...new Set(data.map(d => d.specialty).filter(Boolean))].sort();
         globalMuns = [...new Set(data.map(d => d.municipality).filter(Boolean))].sort();
+        
         window.populateFilters();
         filterOptionsLoaded = true;
     } catch (e) {
-        console.error("Error fetching filters:", e);
+        console.error("Error fetching global directory:", e);
     }
 };
-
 window.populateFilters = function() {
   const specSel = document.getElementById('specialtyFilter');
   const munSel = document.getElementById('municipalityFilter');
-  if(!specSel || !munSel) return;
-  
-  const prevSpec = specSel.value;
-  const prevMun = munSel.value;
-  
-  specSel.innerHTML = '<option value="">' + t('allSpecialties') + '</option>';
-  munSel.innerHTML = '<option value="">' + t('allMunicipalities') + '</option>';
-  
-  globalSpecs.forEach(s => { const opt = document.createElement('option'); opt.value = s; opt.textContent = t(s); specSel.appendChild(opt); });
-  globalMuns.forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.textContent = t(m); munSel.appendChild(opt); });
-  
-  if (prevSpec && globalSpecs.includes(prevSpec)) specSel.value = prevSpec;
-  if (prevMun && globalMuns.includes(prevMun)) munSel.value = prevMun;
-  
-  if (window.tsSpecialtyFilter) { 
-    window.tsSpecialtyFilter.clear(true); 
-    window.tsSpecialtyFilter.clearOptions(); 
-    Array.from(specSel.options).forEach(opt => window.tsSpecialtyFilter.addOption({value: opt.value, text: opt.text})); 
-    window.tsSpecialtyFilter.setValue(prevSpec || ""); 
+  const addSpecSel = document.querySelector('select[name="Specialty"]');
+  const addMunSel = document.querySelector('select[name="Municipality"]');
+
+  const prevSpec = specSel ? specSel.value : '';
+  const prevMun = munSel ? munSel.value : '';
+
+  // تفريغ عناصر HTML الأصلية وإضافة الخيار الافتراضي
+  if (specSel) specSel.innerHTML = '<option value="">' + t('allSpecialties') + '</option>';
+  if (munSel) munSel.innerHTML = '<option value="">' + t('allMunicipalities') + '</option>';
+  if (addSpecSel) addSpecSel.innerHTML = '<option value="">' + t('selectSpec') + '</option>';
+  if (addMunSel) addMunSel.innerHTML = '<option value="">' + t('selectMun') + '</option>';
+
+  // حقن التخصصات في الـ HTML
+  globalSpecs.forEach(s => {
+      const text = t(s);
+      if(specSel) specSel.insertAdjacentHTML('beforeend', `<option value="${s}">${text}</option>`);
+      if(addSpecSel) addSpecSel.insertAdjacentHTML('beforeend', `<option value="${s}">${text}</option>`);
+  });
+
+  // حقن البلديات في الـ HTML
+  globalMuns.forEach(m => {
+      const text = t(m);
+      if(munSel) munSel.insertAdjacentHTML('beforeend', `<option value="${m}">${text}</option>`);
+      if(addMunSel) addMunSel.insertAdjacentHTML('beforeend', `<option value="${m}">${text}</option>`);
+  });
+
+  // المزامنة النهائية والموثوقة مع TomSelect
+  if (window.tsSpecialtyFilter && specSel) {
+    window.tsSpecialtyFilter.clear(true);
+    window.tsSpecialtyFilter.clearOptions();
+    Array.from(specSel.options).forEach(opt => window.tsSpecialtyFilter.addOption({value: opt.value, text: opt.text}));
+    window.tsSpecialtyFilter.setValue(prevSpec || "");
   }
-  if (window.tsMunicipalityFilter) { 
-    window.tsMunicipalityFilter.clear(true); 
-    window.tsMunicipalityFilter.clearOptions(); 
-    Array.from(munSel.options).forEach(opt => window.tsMunicipalityFilter.addOption({value: opt.value, text: opt.text})); 
-    window.tsMunicipalityFilter.setValue(prevMun || ""); 
+  if (window.tsMunicipalityFilter && munSel) {
+    window.tsMunicipalityFilter.clear(true);
+    window.tsMunicipalityFilter.clearOptions();
+    Array.from(munSel.options).forEach(opt => window.tsMunicipalityFilter.addOption({value: opt.value, text: opt.text}));
+    window.tsMunicipalityFilter.setValue(prevMun || "");
+  }
+  if (window.tsAddSpecialty && addSpecSel) {
+    const val = window.tsAddSpecialty.getValue();
+    window.tsAddSpecialty.clear(true);
+    window.tsAddSpecialty.clearOptions();
+    Array.from(addSpecSel.options).forEach(opt => window.tsAddSpecialty.addOption({value: opt.value, text: opt.text}));
+    window.tsAddSpecialty.setValue(val || "");
+  }
+  if (window.tsAddMunicipality && addMunSel) {
+    const val = window.tsAddMunicipality.getValue();
+    window.tsAddMunicipality.clear(true);
+    window.tsAddMunicipality.clearOptions();
+    Array.from(addMunSel.options).forEach(opt => window.tsAddMunicipality.addOption({value: opt.value, text: opt.text}));
+    window.tsAddMunicipality.setValue(val || "");
   }
 };
 
