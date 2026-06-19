@@ -304,7 +304,7 @@ window.activeProfileDoctor = doc;
         <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1.5rem; color: #0f172a;">
             ${state.currentLang === 'ar' ? 'صور العيادة' : 'Clinic Gallery'}
         </h4>
-        <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: 250px;">
+        <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: 400px;">
             <div id="clinicSlider_${doc.id}" dir="ltr" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; width: 100%; height: 100%; scrollbar-width: none; -ms-overflow-style: none;">
                 ${doc.clinic_images.map((url, index) => `
                     <img src="${url}" style="flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: center;" onerror="this.style.display='none'" alt="Clinic Image ${index + 1}">
