@@ -1185,12 +1185,81 @@ th {
 #view-home > h2[data-i18n='findDoctor'] { text-align: center !important; }
 
 /* =========================================================
-   تصميم البانر الاحترافي (Hero)
+   تصميم البانر الاحترافي (Hero) - Mobile First
    ========================================================= */
 .hero-section {
-  background: url('images/hero-bg.png') no-repeat left 15%; 
-  background-size: cover;
-  border-radius: 20px 20px 0 0; 
+  /* الافتراضي للهواتف: خلفية متدرجة بدون صورة لزيادة الأداء ووضوح النص */
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 12px; 
+  padding: 2.5rem 1rem 5rem 1rem; 
+  border: none;
+  overflow: hidden;
+  box-shadow: none; 
+  margin-bottom: 0;
+  position: relative;
+  text-align: center; /* توسيط النص على الموبايل */
+}
+
+/* التدرج اللوني الذي طلبته (يبقى موجوداً ولكنه يندمج مع الخلفية المظلمة على الهاتف) */
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to right, 
+    rgba(15, 23, 42, 0) 0%, 
+    rgba(14, 165, 233, 0.4) 35%, 
+    rgba(15, 23, 42, 0.6) 50%, 
+    rgba(15, 23, 42, 0) 100%
+  );
+  z-index: 1;
+}
+
+.hero-section > * { position: relative; z-index: 2; }
+.hero-section h1, .hero-section p { color: #ffffff; opacity: 0.95; }
+.hero-section > div:first-child {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+  padding: 0.5rem 1rem; /* تصغير حجم الشارة على الموبايل */
+  display: inline-block;
+}
+
+.hero-section h1 { font-size: 1.4rem; line-height: 1.4; margin-top: 1rem; }
+.hero-section p { font-size: 0.95rem; margin-top: 0.5rem; }
+
+/* --- تفعيل الصورة للشاشات المتوسطة والكبيرة (Tablets & Desktops) --- */
+@media (min-width: 768px) {
+  .hero-section {
+    /* هنا نستدعي الصورة للشاشات الكبيرة */
+    background: url('images/hero-bg.jpg') no-repeat left center; 
+    background-size: cover;
+    border-radius: 20px 20px 0 0; 
+    padding: 5.5rem 2rem 3.5rem 2rem; 
+    text-align: right; /* إعادة المحاذاة لليمين (أو حسب الـ dir) */
+  }
+  
+  [dir="ltr"] .hero-section { text-align: left; }
+  
+  .hero-section::before {
+    /* التدرج اللوني المعقد الخاص بك يظهر فقط على الشاشات الكبيرة لتظليل الصورة */
+    background: linear-gradient(to right, 
+      rgba(15, 23, 42, 0) 0%, 
+      rgba(15, 23, 42, 0) 15%, 
+      rgba(14, 165, 233, 0.85) 35%, 
+      rgba(15, 23, 42, 0.95) 50%, 
+      rgba(14, 165, 233, 0.85) 65%, 
+      rgba(15, 23, 42, 0) 85%, 
+      rgba(15, 23, 42, 0) 100%
+    );
+  }
+
+  .hero-section h1 { font-size: 2.2rem; }
+  .hero-section p { font-size: 1.1rem; max-width: 60%; margin: 0; }
+  .hero-section > div:first-child { padding: 0.75rem 1.5rem; }
+}
   padding: 5.5rem 1.5rem 3.5rem 1.5rem; 
   border: none;
   overflow: hidden;
