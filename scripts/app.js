@@ -615,10 +615,10 @@ window.handleDateSelection = async function(selectedDateStr, workingDays) {
       return;
     }
     displayTimeSlots(container, finalAvailableSlots, timeInput);
-  } catch (err) {
-    showToast(state.currentLang === 'ar' ? 'خطأ في جلب الأوقات: ' + err.message : 'Error fetching available times', 'error');
-    container.innerHTML = `<div class="text-sm text-danger">خطأ: ${err.message}</div>`;
-  }
+ } catch (err) {
+    showToast(state.currentLang === 'ar' ? 'خطأ في جلب الأوقات: ' + escapeHtml(err.message) : 'Error fetching available times', 'error');
+    container.innerHTML = `<div class="text-sm text-danger">خطأ: ${escapeHtml(err.message)}</div>`;
+}
 };
 
 window.confirmBooking = function() {
@@ -770,8 +770,8 @@ window.loadUserBookings = async function() {
                 <span style="font-family: monospace; font-size: 0.85rem; color: var(--primary); background: var(--bg); padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid var(--border); font-weight: bold;">${shortId}</span>
                 <span class="badge" style="${statusStyle}">${displayStatus}</span>
               </div>
-              <h4 style="font-size: 1.15rem; font-weight: bold; color: var(--text); margin-bottom: 0.25rem;">${state.currentLang === 'ar' ? 'د.' : 'Dr.'} ${doctorName}</h4>
-              <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">${t('patientLabel')}<span style="color: var(--text); font-weight: 500;">${b.patient_name}</span></p>
+<h4 style="font-size: 1.15rem; font-weight: bold; color: var(--text); margin-bottom: 0.25rem;">${state.currentLang === 'ar' ? 'د.' : 'Dr.'} ${escapeHtml(doctorName)}</h4>
+<p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">${t('patientLabel')}<span style="color: var(--text); font-weight: 500;">${escapeHtml(b.patient_name)}</span></p>
               <div style="display: flex; align-items: center; gap: 1.5rem; font-size: 0.9rem; border-top: 1px dashed var(--border); padding-top: 0.75rem;">
                 <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span dir="ltr" style="font-weight: 600;">${b.appointment_date}</span></div>
                 <div style="display: flex; align-items: center; gap: 0.4rem; color: var(--text-secondary);"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span dir="ltr" style="font-weight: 600;">${b.appointment_time}</span></div>
