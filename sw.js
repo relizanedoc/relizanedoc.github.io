@@ -39,8 +39,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. تجاوز طلبات Supabase و Google لمنع الكاش من التدخل في قواعد البيانات والمصادقة
-  if (event.request.url.includes('supabase.co') || event.request.url.includes('google.com')) {
+ // 2. تجاوز طلبات Supabase و Google و Cloudflare لمنع الكاش من التدخل وكسر الحماية
+  if (event.request.url.includes('supabase.co') || 
+      event.request.url.includes('google.com') || 
+      event.request.url.includes('cloudflare.com')) {
     return;
   }
 
