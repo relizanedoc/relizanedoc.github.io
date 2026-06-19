@@ -299,15 +299,17 @@ window.activeProfileDoctor = doc;
       </div>
   </div>
 
-   ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
+  ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
     <div style="margin-top: 1.5rem; background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03);">
         <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1.5rem; color: #0f172a;">
             ${state.currentLang === 'ar' ? 'صور العيادة' : 'Clinic Gallery'}
         </h4>
-        <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: 400px;">
+        <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); background: #f1f5f9; border: 1px solid #e2e8f0; max-height: 420px;">
             <div id="clinicSlider_${doc.id}" dir="ltr" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; width: 100%; height: 100%; scrollbar-width: none; -ms-overflow-style: none;">
                 ${doc.clinic_images.map((url, index) => `
-                    <img src="${url}" style="flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: center;" onerror="this.style.display='none'" alt="Clinic Image ${index + 1}">
+                    <div style="flex: 0 0 100%; width: 100%; min-height: 250px; max-height: 420px; display: flex; align-items: center; justify-content: center; scroll-snap-align: center; background: #f1f5f9; padding: 1rem; box-sizing: border-box;">
+                        <img src="${url}" style="max-width: 100%; max-height: 380px; width: auto; height: auto; object-fit: contain; display: block; image-rendering: -webkit-optimize-contrast;" onerror="this.parentElement.style.display='none'" alt="Clinic Image ${index + 1}" loading="lazy" decoding="async">
+                    </div>
                 `).join('')}
             </div>
             ${doc.clinic_images.length > 1 ? `
