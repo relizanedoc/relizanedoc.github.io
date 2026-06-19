@@ -996,7 +996,9 @@ th {
     transform-origin: bottom center;
   }
   [dir="rtl"] .chatbot-container { left: 0; right: 0; }
-  .chatbot-toggle-btn { bottom: 1rem; font-size: 0.85rem; padding: 0.625rem 1rem; }
+.chatbot-toggle-btn { bottom: 1rem; padding: 0; width: 45px; height: 45px; border-radius: 50%; justify-content: center; }
+.chatbot-toggle-btn span { display: none; }
+.chatbot-toggle-btn svg { margin: 0; }
 }
 
 .chatbot-header {
@@ -1238,10 +1240,6 @@ th {
     background-size: cover;
     border-radius: 20px 20px 0 0; 
     padding: 5.5rem 2rem 3.5rem 2rem; 
-    text-align: right; /* إعادة المحاذاة لليمين (أو حسب الـ dir) */
-  }
-  
-  [dir="ltr"] .hero-section { text-align: left; }
   
   .hero-section::before {
     /* التدرج اللوني المعقد الخاص بك يظهر فقط على الشاشات الكبيرة لتظليل الصورة */
@@ -1794,8 +1792,8 @@ th {
   .booking-tab { justify-content: flex-start; padding: 1rem 1.5rem; gap: 8px; }
   .tab-text { text-align: left; }
   [dir="rtl"] .tab-text { text-align: right; }
-  .modern-search-bar { flex-direction: column; padding: 1rem; gap: 0.75rem; margin: 1rem; border-radius: 12px; }
-  .search-divider { width: 100%; height: 1px; margin: 0; }
+.modern-search-bar { flex-direction: column; padding: 1rem; gap: 0.75rem; margin: 1rem 0; border-radius: 12px; border-left: none; border-right: none; }
+   .search-divider { width: 100%; height: 1px; margin: 0; }
   .search-action-btn {
     width: 100%;
     justify-content: center;
