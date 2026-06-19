@@ -34,7 +34,12 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // تجاوز طلبات Supabase و Google
+  // 1. حاجز الحماية الأساسي: تجاهل أي طلب لا يبدأ بـ http/https لمنع أخطاء إضافات المتصفح (chrome-extension)
+  if (!event.request.url.startsWith('http')) {
+    return;
+  }
+
+  // 2. تجاوز طلبات Supabase و Google لمنع الكاش من التدخل في قواعد البيانات والمصادقة
   if (event.request.url.includes('supabase.co') || event.request.url.includes('google.com')) {
     return;
   }
