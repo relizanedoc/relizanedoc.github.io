@@ -1163,31 +1163,34 @@ th {
   .doctor-header { gap: 0.625rem; }
   .avatar { width: 48px; height: 48px; font-size: 1rem; }
 
-  /* تحسين العناوين */
+/* تحسين العناوين */
   .text-xl { font-size: 1.125rem; }
   h1 { font-size: 1.5rem; }
   h2 { font-size: 1.25rem; }
   h3 { font-size: 1.125rem; }
-   /* تحسين حاويات معلومات الطبيب من أفقي إلى عمودي في الهواتف */
-  #fullProfileContent > div > div {
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
-  }
-  
-  /* إبعاد الأيقونة عن النص بعد التحويل العمودي */
-  #fullProfileContent > div > div > div:last-child {
-    margin: 0 auto 0.75rem auto !important;
-    order: -1; /* رفع الأيقونة لتكون فوق النص */
-  }
 
   /* المنع المطلق لكسر رقم الهاتف والأوقات إلى سطرين */
   #fullProfileContent *[dir="ltr"] {
     white-space: nowrap !important;
     display: inline-block;
   }
-}
 
+  /* إجبار العناوين والأيقونات في ملف الطبيب على البقاء في سطر واحد ومنع انكسار النص */
+  .dp-info-row > div:first-child {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    white-space: nowrap !important; 
+  }
+
+  /* تصغير الخط قليلاً جداً على الهواتف لضمان اتساع السطر الواحد للنص والأيقونة معاً */
+  #fullProfileContent h3, 
+  #fullProfileContent h4 {
+    font-size: 1rem !important;
+  }
+}
 /* =========================================================
    إصلاحات الشبكة (Grid)
    ========================================================= */
