@@ -930,13 +930,31 @@ async function saveClinicProfile() {
     });
 
     const certificatesText = document.getElementById('dash_certificates') ? document.getElementById('dash_certificates').value.trim() : '';
-    let finalImageUrls = [...window.dashboardCurrentImages]; 
+let finalImageUrls = [...window.dashboardCurrentImages]; 
     const fileInput = document.getElementById('dash_clinic_images');
 
-  if (fileInput && fileInput.files.length > 0) {
-      const filesToUpload = Array.from(fileInput.files).slice(0, 3);
+    if (fileInput && fileInput.files.length > 0) {
+        // حساب الأماكن المتبقية للوصول إلى 4 صور كحد أقصى
+        const maxImages = 4;
+        const remainingSlots = maxImages - finalImageUrls.length;
 
-      for (const file of filesToUpload) {
+        // إذا كان الطبيب يمتلك 4 صور بالفعل وحاول رفع المزيد
+        if (remainingSlots <= 0) {
+            showToast('لقد وصلت للحد الأقصى (4 صور). يرجى حذف بعض الصور القديمة أولاً.', 'error');
+            setLoading(btn, false, 'حفظ التغييرات');
+            if (fileInput) fileInput.value = ''; // تفريغ الحقل
+            return; // إيقاف عملية الحفظ
+        }
+
+        // أخذ الصور الجديدة على قدر الأماكن المتبقية فقط
+        const filesToUpload = Array.from(fileInput.files).slice(0, remainingSlots);
+
+        // تنبيه المستخدم إذا قام بتحديد صور أكثر من المسموح
+        if (fileInput.files.length > remainingSlots) {
+            showToast(`تم اختيار أول ${remainingSlots} صور فقط لعدم تجاوز الحد الأقصى (4 صور).`, 'warning');
+        }
+
+        for (const file of filesToUpload) {
         // إنشاء اسم فريد للصورة لتجنب تكرار الأسماء
         const fileExt = file.name.split('.').pop();
         const fileName = `${session.doctorId}-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
