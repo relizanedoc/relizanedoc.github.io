@@ -1,51 +1,27 @@
 /* ==========================================================================
-   دليل غيليزان الطبي — CSS محسّن ومنظّم
+   دليل غيليزان الطبي - ملف الأنماط الرئيسي (متجاوب بالكامل)
    ========================================================================== */
 
-/* ─── 1. المتغيرات ─── */
+/* === المتغيرات والألوان الأساسية === */
 :root {
-  /* الألوان الأساسية */
   --primary: #0ea5e9;
   --primary-dark: #0284c7;
   --primary-light: #e0f2fe;
-  
-  /* ألوان الواجهة */
   --bg: #f8fafc;
   --surface: #ffffff;
   --text: #0f172a;
   --text-secondary: #64748b;
   --border: #e2e8f0;
-  
-  /* حالة */
   --success: #10b981;
   --danger: #ef4444;
   --warning: #f59e0b;
-  
-  /* أبعاد */
   --radius: 14px;
-  --radius-sm: 10px;
-  --radius-lg: 20px;
-  
-  /* ظلال */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-primary: 0 0 12px rgba(14, 165, 233, 0.5);
-  
-  /* حركات */
-  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-bounce: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-smooth: cubic-bezier(0.25, 0.8, 0.25, 1);
-  
-  /* طبقات */
-  --z-nav: 50;
-  --z-modal: 200;
-  --z-toast: 300;
-  --z-chat: 400;
-  --z-dropdown: 500;
 }
 
-/* ─── 2. الوضع المظلم (Dark Mode) ─── */
+/* === الوضع المظلم (Dark Mode) === */
 @media (prefers-color-scheme: dark) {
   :root {
     --primary: #0ea5e9;
@@ -56,60 +32,42 @@
     --text: #f8fafc;
     --text-secondary: #94a3b8;
     --border: #334155;
-    
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
     --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
   }
-  
-  /* تعيينات داكنة موحدة */
-  tr:hover td,
-  .booking-tab.active,
-  .search-field:focus-within { background: var(--bg); }
-  
-  .btn-google,
-  .booking-engine-wrapper,
-  .modern-search-bar,
-  .slider-dots { background: var(--surface); }
+  tr:hover td { background: var(--bg); }
+  .btn-google { background: var(--surface); color: var(--text); }
   .btn-google:hover { background: var(--bg); }
-  
   .toast { background: var(--text); color: var(--bg); }
-  
+  /* إصلاح ألوان ثابتة في الوضع المظلم */
   .review-content-text { color: #94a3b8; border-color: var(--border); }
   .pitch-card:hover { background: var(--surface); }
   .pitch-slider-container { background: var(--surface); border-color: var(--border); }
+  .slider-dots { background: var(--surface); }
   .slider-dots .dot { background-color: var(--border); }
+  .booking-engine-wrapper { background: var(--surface); border-color: var(--border); }
+  .hero-section::before { background: linear-gradient(to right, rgba(15, 23, 42, 0.3) 0%, rgba(14, 165, 233, 0.4) 50%, rgba(15, 23, 42, 0.95) 100%); }
+  .booking-tab.active { background: var(--bg); }
   .booking-tab.inactive:hover { background: rgba(255,255,255,0.03); }
+  .search-field:focus-within { background: var(--bg); }
+  .rating-badge { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); }
   .delete-review-btn { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); }
   .delete-review-btn:hover { background: var(--danger); color: white; }
-  .rating-badge { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); }
-  .modern-search-bar { border-color: var(--border); }
+  .modern-search-bar { border-color: var(--border); background: var(--surface); }
   .search-divider { background: var(--border); }
-  .tab-subtitle,
-  .input-wrapper input::placeholder,
-  .booking-tab.inactive .tab-title,
-  .booking-tab.inactive .tab-icon,
-  .modern-search-bar .ts-wrapper.single .ts-control::after { color: var(--text-secondary); }
-  
-  .hero-section::before {
-    background: linear-gradient(to right, rgba(15, 23, 42, 0.3) 0%, rgba(14, 165, 233, 0.4) 50%, rgba(15, 23, 42, 0.95) 100%);
-  }
+  .input-wrapper input::placeholder { color: var(--text-secondary); }
+  .tab-subtitle { color: var(--text-secondary); }
+  .booking-tab.inactive .tab-title { color: var(--text-secondary); }
+  .booking-tab.inactive .tab-icon { color: var(--text-secondary); }
+  .modern-search-bar .ts-wrapper.single .ts-control::after { border-color: var(--text-secondary) transparent transparent transparent; }
 }
 
-/* ─── 3. الإعادة الافتراضية ─── */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-}
-
+/* === الإعدادات العامة === */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body {
-  font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
@@ -117,18 +75,17 @@ body {
   flex-direction: column;
   min-height: 100vh;
   overflow-x: hidden;
+  /* تحسين حجم الخط على الشاشات الصغيرة */
   font-size: 16px;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── شريط التمرير ─── */
+/* === شريط التمرير المخصص === */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); border-radius: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-/* ─── 4. فئات مساعدة ─── */
+/* === الفئات المساعدة === */
 .hidden { display: none !important; }
 .text-center { text-align: center; }
 .text-sm { font-size: 0.875rem; }
@@ -143,32 +100,28 @@ body {
 .mt-4 { margin-top: 1rem; }
 .p-4 { padding: 1rem; }
 
-/* ─── 5. الحاويات ─── */
-.container {
-  max-width: 1350px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-  width: 100%;
-}
-
+/* === الحاويات المركزية === */
 nav {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   padding: 0.75rem 0;
   position: sticky;
   top: 0;
-  z-index: var(--z-nav);
+  z-index: 50;
   box-shadow: var(--shadow-sm);
+  width: 100%;
 }
-
 .nav-inner {
+  max-width: 1350px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
+  width: 100%;
 }
-
 .app-container {
   max-width: 1350px;
   margin: 0 auto;
@@ -176,7 +129,6 @@ nav {
   flex: 1;
   width: 100%;
 }
-
 footer {
   background: var(--surface);
   border-top: 1px solid var(--border);
@@ -186,34 +138,29 @@ footer {
   color: var(--text-secondary);
   font-size: 0.875rem;
 }
-
-.footer-inner {
+footer .footer-inner {
   max-width: 1000px;
   margin: 0 auto;
 }
 
-/* ─── 6. نظام الشبكة ─── */
-.grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: minmax(0, 1fr);
-}
-
+/* === الشبكة (Grid) - نظام متجاوب === */
+.grid { display: grid; gap: 1rem; }
+/* بشكل افتراضي: عمود واحد (للهواتف) */
+.grid-1, .grid-2, .grid-3, .grid-4 { grid-template-columns: minmax(0, 1fr); }
+/* الأجهزة اللوحية: عمودين */
 @media (min-width: 640px) {
-  .grid-sm-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-
+/* الشاشات المتوسطة: 3 أعمدة */
 @media (min-width: 768px) {
-  .grid-md-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .grid-md-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid-3, .grid-4 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-
+/* الشاشات الكبيرة: 4 أعمدة */
 @media (min-width: 1024px) {
-  .grid-lg-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .grid-lg-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
-/* ─── 7. التنقل ─── */
+/* === عناصر الشريط العلوي === */
 .logo {
   font-size: 1.25rem;
   font-weight: 700;
@@ -224,14 +171,12 @@ footer {
   white-space: nowrap;
   flex-shrink: 0;
 }
-
 .right-nav-controls {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin-inline-start: auto;
 }
-
 .lang-switch {
   display: flex;
   gap: 0.25rem;
@@ -241,31 +186,26 @@ footer {
   border: 1px solid var(--border);
   flex-shrink: 0;
 }
-
 .lang-btn {
   background: transparent;
   border: none;
   padding: 0.5rem 0.875rem;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-secondary);
-  transition: all 0.2s var(--ease-default);
-  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.lang-btn:hover { color: var(--primary); }
 .lang-btn:active { transform: scale(0.95); }
+.lang-btn:hover { color: var(--primary); }
 .lang-btn.active { background: var(--primary); color: white; }
-
 .nav-links {
   display: flex;
   gap: 0.25rem;
   flex-wrap: wrap;
   align-items: center;
 }
-
 .nav-btn {
   background: transparent;
   border: none;
@@ -275,13 +215,10 @@ footer {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--text-secondary);
-  transition: all 0.2s var(--ease-default);
-  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s;
 }
-
 .nav-btn:hover { background: var(--bg); color: var(--primary); }
 .nav-btn.active { background: var(--primary-light); color: var(--primary-dark); font-weight: 600; }
-
 .user-pill {
   display: flex;
   align-items: center;
@@ -294,7 +231,6 @@ footer {
   font-weight: 600;
   flex-shrink: 0;
 }
-
 .hamburger-btn {
   display: none;
   background: var(--surface);
@@ -302,68 +238,65 @@ footer {
   color: var(--text);
   cursor: pointer;
   padding: 0.4rem 0.5rem;
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   transition: all 0.2s ease;
   box-shadow: var(--shadow-sm);
   flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
 }
-
 .hamburger-btn:hover,
 .hamburger-btn:active {
   background: var(--primary-light);
   border-color: var(--primary);
   color: var(--primary-dark);
+  transform: scale(0.95);
 }
 
-/* ─── قائمة الموبايل ─── */
+/* === قائمة الموبايل === */
 @media (max-width: 768px) {
   .hamburger-btn { display: flex; align-items: center; justify-content: center; }
-  .nav-inner { padding: 0 1rem; gap: 0.5rem; }
+  .lang-switch { flex-shrink: 0; }
   .logo { font-size: 1.05rem; flex: 1; min-width: 0; }
   .logo svg { width: 20px; height: 20px; flex-shrink: 0; }
-  
+  .nav-inner { padding: 0 1rem; gap: 0.5rem; }
   .nav-links {
+    display: flex;
     flex-direction: column;
     width: 100%;
+    background: var(--surface);
     order: 3;
     max-height: 0;
     opacity: 0;
     overflow: hidden;
+    padding: 0;
+    margin-top: 0;
     border-top: 1px solid transparent;
     transition: max-height 0.35s ease, opacity 0.3s ease, padding 0.3s ease, margin-top 0.3s ease, border-color 0.3s ease;
     gap: 0;
   }
-  
   .nav-links.show {
     max-height: 500px;
     opacity: 1;
     padding: 0.5rem 0;
     margin-top: 0.75rem;
-    border-top-color: var(--border);
+    border-top: 1px solid var(--border);
   }
-  
   .nav-btn {
     width: 100%;
-    text-align: start;
+    text-align: right;
     padding: 0.75rem 1.25rem;
     border-radius: 0;
     border-bottom: 1px solid var(--border);
     font-size: 1rem;
   }
-  
   .nav-btn:last-of-type { border-bottom: none; }
   .nav-btn.active {
     background: transparent;
     color: var(--primary);
     font-weight: 700;
-    border-inline-end: 3px solid var(--primary);
+    border-right: 3px solid var(--primary);
   }
-  
-  /* RTL support */
-  [dir="ltr"] .nav-btn { padding-left: 1.25rem; }
-  [dir="rtl"] .nav-btn { padding-right: 1.25rem; }
-  
+  [dir="ltr"] .nav-btn { text-align: left; }
+  [dir="ltr"] .nav-btn.active { border-right: none; border-left: 3px solid var(--primary); }
   .user-pill {
     justify-content: space-between;
     border-radius: 0;
@@ -373,7 +306,7 @@ footer {
   }
 }
 
-/* ─── 8. البطاقات ─── */
+/* === البطاقات والتأثيرات === */
 .card {
   background: var(--surface);
   border-radius: var(--radius);
@@ -382,28 +315,22 @@ footer {
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
 }
-
-.card-hover {
-  transition: all 0.3s var(--ease-smooth);
-  will-change: transform, box-shadow;
-}
-
+.card-hover { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
 .card-hover:hover {
   box-shadow: 0 14px 28px rgba(0,0,0,0.05), 0 10px 10px rgba(0,0,0,0.02);
   transform: translateY(-6px);
   border-color: var(--primary);
   z-index: 10;
 }
-
 @media (max-width: 640px) {
   .card { padding: 1.25rem; }
   .card-hover:hover { transform: translateY(-4px); }
 }
 
-/* ─── 9. النماذج والأزرار ─── */
+/* === النماذج والأزرار === */
 .form-group { margin-bottom: 1.25rem; }
-
 label {
   display: block;
   font-size: 0.875rem;
@@ -411,33 +338,21 @@ label {
   margin-bottom: 0.375rem;
   color: var(--text);
 }
-
 input, select, textarea {
   width: 100%;
   padding: 0.75rem 1rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 1rem;
-  font-family: inherit;
+  font-family: 'Tajawal', sans-serif;
   background: var(--surface);
   color: var(--text);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  -webkit-appearance: none;
-  appearance: none;
 }
-
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
-}
-
-/* منع التكبير في Safari */
+/* منع التكبير التلقائي في Safari على iOS */
 @media (max-width: 768px) {
   input, select, textarea { font-size: 16px; }
 }
-
-/* الأزرار */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -446,55 +361,39 @@ input:focus, select:focus, textarea:focus {
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius);
   border: none;
-  font-family: inherit;
+  font-family: 'Tajawal', sans-serif;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s var(--ease-default);
+  transition: all 0.2s;
   white-space: nowrap;
+  /* منع الاختيار على الموبايل */
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  min-height: 44px;
 }
-
 .btn-primary { background: var(--primary); color: white; }
-.btn-primary:hover { background: var(--primary-dark); box-shadow: var(--shadow-primary); }
-
+.btn-primary:hover { background: var(--primary-dark); box-shadow: 0 0 12px rgba(14, 165, 233, 0.5); }
 .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
 .btn-secondary:hover { background: var(--border); }
-
 .btn-success { background: var(--success); color: white; }
 .btn-success:hover { filter: brightness(0.95); }
-
 .btn-block { width: 100%; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-google { background: #ffffff; color: #444; border: 1.5px solid var(--border); }
+.btn-google:hover { background: #f8f9fa; }
 
-.btn-google {
-  background: var(--surface);
-  color: var(--text);
-  border: 1.5px solid var(--border);
-}
-.btn-google:hover { background: var(--bg); }
-
+/* تحسين أحجام الأزرار على الموبايل */
 @media (max-width: 640px) {
   .btn { padding: 0.875rem 1.25rem; font-size: 1rem; min-height: 48px; }
   .btn-sm { padding: 0.625rem 1rem; font-size: 0.875rem; min-height: 40px; }
 }
 
-/* ─── 10. بطاقات الأطباء ─── */
+/* === بطاقات الأطباء والبحث === */
 .doctor-card { display: flex; flex-direction: column; gap: 0.75rem; height: 100%; }
-
-.doctor-header {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  flex-direction: row-reverse;
-}
-
-[dir="ltr"] .doctor-header { flex-direction: row; }
-
+.doctor-header { display: flex; align-items: center; gap: 0.875rem; }
+[dir="rtl"] .doctor-header { flex-direction: row-reverse; }
 .avatar {
   width: 52px;
   height: 52px;
@@ -509,20 +408,8 @@ input:focus, select:focus, textarea:focus {
   flex-shrink: 0;
   box-shadow: var(--shadow);
 }
-
-.doctor-meta {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
-.doctor-meta div {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.25rem;
-  gap: 0.3rem;
-}
-
+.doctor-meta { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; }
+.doctor-meta div { display: flex; align-items: center; margin-bottom: 0.25rem; gap: 0.3rem; }
 .badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
@@ -533,7 +420,7 @@ input:focus, select:focus, textarea:focus {
   color: var(--primary-dark);
 }
 
-/* ─── 11. القوائم المنسدلة ─── */
+/* === القوائم المنسدلة الذكية === */
 .suggestions-dropdown {
   position: absolute;
   top: 100%;
@@ -544,11 +431,10 @@ input:focus, select:focus, textarea:focus {
   border-radius: var(--radius);
   margin-top: 0.35rem;
   box-shadow: var(--shadow-lg);
-  z-index: var(--z-dropdown);
+  z-index: 100;
   max-height: 280px;
   overflow-y: auto;
 }
-
 .suggestion-item {
   padding: 0.75rem 1rem;
   cursor: pointer;
@@ -558,10 +444,8 @@ input:focus, select:focus, textarea:focus {
   gap: 0.75rem;
   transition: background 0.2s;
 }
-
 .suggestion-item:last-child { border-bottom: none; }
 .suggestion-item:hover { background: var(--bg); }
-
 .sugg-avatar {
   width: 36px;
   height: 36px;
@@ -575,42 +459,36 @@ input:focus, select:focus, textarea:focus {
   font-weight: bold;
   flex-shrink: 0;
 }
-
-/* TomSelect */
 .ts-control {
   border: 1px solid var(--border) !important;
   border-radius: var(--radius) !important;
-  padding-block: 0.75rem !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
   font-family: inherit;
   background: var(--surface) !important;
   color: var(--text) !important;
   font-size: 1rem !important;
   box-shadow: none !important;
 }
-
 .ts-control.focus {
   border-color: var(--primary) !important;
   box-shadow: 0 0 8px rgba(14, 165, 233, 0.35) !important;
 }
-
 .ts-dropdown {
   border-radius: var(--radius);
   border-color: var(--border);
   box-shadow: var(--shadow-lg);
-  z-index: var(--z-dropdown) !important;
+  z-index: 999990 !important; /* 🌟 السطر الجديد والضروري لحل المشكلة */
 }
-
 .ts-dropdown .active {
   background-color: var(--primary-light) !important;
   color: var(--primary-dark) !important;
 }
-
-/* RTL/LTR لـ TomSelect */
 [dir="ltr"] .ts-control { padding-right: 2.5rem !important; padding-left: 1rem !important; }
 [dir="rtl"] .ts-control { padding-left: 2.5rem !important; padding-right: 1rem !important; text-align: right; }
 [dir="rtl"] .ts-wrapper.single .ts-control::after { right: auto; left: 15px; }
 
-/* ─── 12. تأثير Skeleton ─── */
+/* === تأثير التحميل الوهمي (Skeleton) === */
 .skeleton-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -620,32 +498,25 @@ input:focus, select:focus, textarea:focus {
   overflow: hidden;
   height: 100%;
 }
-
 .skeleton-card::after {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4) 20%, rgba(255,255,255,0.6) 60%, transparent);
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0, rgba(255,255,255,0.4) 20%, rgba(255,255,255,0.6) 60%, rgba(255,255,255,0));
   animation: shimmer 1.5s infinite;
 }
-
 .s-header { display: flex; gap: 0.875rem; margin-bottom: 1rem; }
 .s-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
 .s-line { height: 12px; background: var(--border); border-radius: 4px; margin-bottom: 8px; }
 .s-w-50 { width: 50%; }
 .s-w-75 { width: 75%; }
 .s-w-100 { width: 100%; margin-top: 1rem; }
+[dir="rtl"] .skeleton-card::after { animation: shimmer-rtl 1.5s infinite; }
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+@keyframes shimmer-rtl { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
-[dir="rtl"] .skeleton-card::after {
-  transform: translateX(100%);
-  animation: shimmer-rtl 1.5s infinite;
-}
-
-@keyframes shimmer { to { transform: translateX(100%); } }
-@keyframes shimmer-rtl { to { transform: translateX(-100%); } }
-
-/* ─── 13. النوافذ المنبثقة ─── */
+/* === النوافذ المنبثقة والتنبيهات === */
 .dialog-overlay {
   position: fixed;
   inset: 0;
@@ -653,11 +524,11 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-modal);
+  z-index: 200;
   padding: 1rem;
+  /* السماح بالتمرير عندما يكون المحتوى طويلاً */
   overflow-y: auto;
 }
-
 .dialog-box {
   background: var(--surface);
   border-radius: var(--radius);
@@ -666,33 +537,23 @@ input:focus, select:focus, textarea:focus {
   max-width: 420px;
   width: 100%;
   text-align: center;
+  transform: scale(0.95);
+  opacity: 0;
+  animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* الحد الأقصى للارتفاع على الموبايل */
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
-  animation: modalPop 0.3s var(--ease-bounce) forwards;
 }
-
-@keyframes modalPop {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
+@keyframes modalPop { to { transform: scale(1); opacity: 1; } }
 .dialog-box h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.75rem; }
 .dialog-box p { color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9375rem; }
-
-.dialog-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* Toast */
+.dialog-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
 #toastContainer {
   position: fixed;
   bottom: 2.5rem;
   left: 50%;
   transform: translateX(-50%);
-  z-index: var(--z-toast);
+  z-index: 99999;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -702,7 +563,6 @@ input:focus, select:focus, textarea:focus {
   max-width: 400px;
   padding: 0 1rem;
 }
-
 .toast {
   background: var(--text);
   color: white;
@@ -711,21 +571,20 @@ input:focus, select:focus, textarea:focus {
   box-shadow: var(--shadow-lg);
   font-size: 0.9375rem;
   font-weight: 500;
-  animation: slideUp 0.35s var(--ease-bounce);
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: auto;
   max-width: 90%;
   line-height: 1.4;
   text-align: center;
+  /* تحسين على الموبايل */
   word-break: break-word;
 }
-
 .toast.success { background: var(--success); }
 .toast.error { background: var(--danger); }
+@keyframes slideUp { from { transform: translateY(120%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes fadeOutDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(120%); } }
 
-@keyframes slideUp { from { transform: translateY(120%); opacity: 0; } }
-@keyframes fadeOutDown { to { opacity: 0; transform: translateY(120%); } }
-
-/* ─── 14. ملف الطبيب ─── */
+/* === واجهة ملف الطبيب والتذكرة === */
 .doctor-profile-modal {
   max-width: 600px;
   width: 95%;
@@ -735,7 +594,6 @@ input:focus, select:focus, textarea:focus {
   padding: 0;
   overflow: hidden;
 }
-
 .dp-header {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
@@ -745,11 +603,10 @@ input:focus, select:focus, textarea:focus {
   gap: 1rem;
   position: relative;
 }
-
 .dp-close {
   position: absolute;
   top: 1rem;
-  inset-inline-end: 1rem;
+  right: 1rem;
   background: rgba(255,255,255,0.2);
   border: none;
   color: white;
@@ -762,16 +619,9 @@ input:focus, select:focus, textarea:focus {
   justify-content: center;
   transition: background 0.2s;
 }
-
 .dp-close:hover { background: rgba(255,255,255,0.3); }
-
-.dp-body {
-  padding: 1.5rem;
-  overflow-y: auto;
-  flex: 1;
-  background: var(--bg);
-}
-
+[dir="rtl"] .dp-close { right: auto; left: 1rem; }
+.dp-body { padding: 1.5rem; overflow-y: auto; flex: 1; background: var(--bg); }
 .dp-info-row {
   display: flex;
   align-items: flex-start;
@@ -780,25 +630,11 @@ input:focus, select:focus, textarea:focus {
   padding-bottom: 1rem;
   border-bottom: 1px dashed var(--border);
 }
-
 .dp-info-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.dp-info-icon { color: var(--primary); background: var(--primary-light); padding: 0.5rem; border-radius: 8px; display: flex; flex-shrink: 0; }
+.dp-footer { padding: 1rem 1.5rem; background: var(--surface); border-top: 1px solid var(--border); }
 
-.dp-info-icon {
-  color: var(--primary);
-  background: var(--primary-light);
-  padding: 0.5rem;
-  border-radius: 8px;
-  display: flex;
-  flex-shrink: 0;
-}
-
-.dp-footer {
-  padding: 1rem 1.5rem;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-}
-
-/* ─── 15. التذكرة الإلكترونية ─── */
+/* تذكرة الحجز الإلكترونية */
 .e-ticket {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
@@ -812,18 +648,15 @@ input:focus, select:focus, textarea:focus {
   overflow: hidden;
   width: 100%;
 }
-
 .e-ticket-top { margin-bottom: 1rem; }
-.e-ticket-top h3 { margin: 0 0 0.5rem; font-size: 1.1rem; font-weight: bold; }
+.e-ticket-top h3 { margin: 0 0 0.5rem 0; font-size: 1.1rem; font-weight: bold; }
 .e-ticket-top .doctor-name { font-size: 0.85rem; opacity: 0.95; margin-bottom: 1rem; font-weight: 500; }
-
 .e-ticket-divider {
   height: 0;
   border-top: 2px dashed rgba(255,255,255,0.3);
   margin: 1rem 0;
   position: relative;
 }
-
 .e-ticket-divider::before,
 .e-ticket-divider::after {
   content: '';
@@ -833,11 +666,10 @@ input:focus, select:focus, textarea:focus {
   height: 24px;
   background: var(--bg);
   border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.3);
 }
-
-.e-ticket-divider::before { inset-inline-end: -1.5rem; }
-.e-ticket-divider::after { inset-inline-start: -1.5rem; }
-
+.e-ticket-divider::before { right: -1.5rem; transform: translateX(50%); }
+.e-ticket-divider::after { left: -1.5rem; transform: translateX(-50%); }
 .e-ticket-bottom {
   background: rgba(255,255,255,0.15);
   backdrop-filter: blur(10px);
@@ -845,7 +677,6 @@ input:focus, select:focus, textarea:focus {
   padding: 1rem;
   margin-bottom: 1rem;
 }
-
 .e-ticket-info {
   display: flex;
   justify-content: space-between;
@@ -855,79 +686,50 @@ input:focus, select:focus, textarea:focus {
   border-bottom: 1px solid rgba(255,255,255,0.2);
   gap: 0.5rem;
 }
-
 .e-ticket-info:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
-
 .e-ticket-label { font-size: 0.8rem; opacity: 0.9; flex-shrink: 0; }
 .e-ticket-value { font-size: 0.85rem; font-weight: 600; word-break: break-word; }
-
-.e-ticket-value.booking-id {
-  font-family: 'Courier New', monospace;
-  font-weight: bold;
-  letter-spacing: 1.5px;
-  font-size: 0.9rem;
-}
-
-.e-ticket-qr {
-  background: white;
-  padding: 0.75rem;
-  border-radius: 6px;
-  display: inline-block;
-  margin-top: 1rem;
-}
-
+.e-ticket-value.booking-id { font-family: 'Courier New', monospace; font-weight: bold; letter-spacing: 1.5px; font-size: 0.9rem; }
+.e-ticket-qr { background: white; padding: 0.75rem; border-radius: 6px; display: inline-block; margin-top: 1rem; }
 .e-ticket-qr img { width: 80px; height: 80px; display: block; }
-
+.e-ticket-footer { margin-top: 1rem; font-size: 0.75rem; opacity: 0.9; }
 @media (max-width: 480px) {
   .e-ticket { padding: 1.25rem 1rem; }
-  .e-ticket-divider::before { inset-inline-end: -1rem; }
-  .e-ticket-divider::after { inset-inline-start: -1rem; }
+  .e-ticket-divider::before { right: -1rem; }
+  .e-ticket-divider::after { left: -1rem; }
 }
 
-/* ─── 16. التقييمات ─── */
+/* === التقييمات والأكورديون والفترات الزمنية === */
 .star-rating { display: inline-flex; align-items: center; direction: ltr; gap: 2px; }
-
 .star {
   cursor: pointer;
   font-size: 1.8rem;
   color: var(--border);
-  transition: all 0.2s var(--ease-default);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   line-height: 1;
+  display: inline-block;
+  /* تحسين لمسة الموبايل */
   min-width: 36px;
   min-height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  -webkit-tap-highlight-color: transparent;
 }
-
 .star:hover,
-.star.selected { transform: scale(1.15); color: var(--warning); }
-
-.star-display { color: var(--warning); font-size: 1rem; letter-spacing: 1px; }
-
+.star.selected { transform: scale(1.15); }
+.star.selected { color: #f59e0b; }
+.star-display { color: #f59e0b; font-size: 1rem; letter-spacing: 1px; }
 .review-item {
   padding: 1rem;
   border-bottom: 1px dashed var(--border);
-  text-align: start;
+  text-align: right;
 }
-
-[dir="rtl"] .review-item { text-align: right; }
+[dir="ltr"] .review-item { text-align: left; }
 .review-item:last-child { border-bottom: none; }
-
-.review-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
+.review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem; }
 .review-author { font-weight: bold; color: var(--text); font-size: 0.95rem; }
 .review-date { font-size: 0.75rem; color: var(--text-secondary); }
 .review-text { font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem; }
-
 .rating-badge {
   display: inline-flex;
   align-items: center;
@@ -943,10 +745,8 @@ input:focus, select:focus, textarea:focus {
   transition: transform 0.2s;
   flex-shrink: 0;
 }
-
 .rating-badge:hover { transform: scale(1.05); }
 
-/* ─── 17. الفترات الزمنية ─── */
 .time-slot-btn {
   padding: 0.6rem 0.5rem;
   border: 1.5px solid var(--border);
@@ -957,19 +757,18 @@ input:focus, select:focus, textarea:focus {
   text-align: center;
   font-size: 0.9rem;
   font-weight: 700;
-  transition: all 0.2s var(--ease-default);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* تحسين لمسة الموبايل */
   min-height: 44px;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
-
 .time-slot-btn:hover {
   border-color: var(--primary);
   color: var(--primary);
   transform: translateY(-2px);
   box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.1);
 }
-
 .time-slot-btn.selected {
   background: var(--primary);
   color: white;
@@ -977,19 +776,17 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
   transform: scale(1.05);
 }
-
+/* شبكة الفترات الزمنية */
 .time-slots-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
   gap: 0.5rem;
 }
-
 @media (max-width: 480px) {
   .time-slots-grid { grid-template-columns: repeat(2, 1fr); }
   .star { font-size: 1.5rem; min-width: 32px; min-height: 32px; }
 }
 
-/* ─── 18. الأكورديون ─── */
 .accordion-header {
   display: flex;
   justify-content: space-between;
@@ -998,80 +795,49 @@ input:focus, select:focus, textarea:focus {
   padding: 0.5rem 0;
   transition: color 0.2s ease;
 }
-
 .accordion-header:hover { color: var(--primary); }
-
 .accordion-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.8s var(--ease-smooth), opacity 0.4s ease, padding 0.4s ease;
+  transition: max-height 0.8s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease, padding 0.4s ease;
   opacity: 0;
 }
-
-.accordion-content.open { 
-  max-height: 15000px; /* كافٍ لأي محتوى */
-  opacity: 1; 
-  padding-bottom: 2rem; 
-}
-
-.accordion-icon {
-  transition: transform 0.3s ease;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
+.accordion-content.open { max-height: 4000px; opacity: 1; padding-bottom: 2rem; }
+.accordion-icon { transition: transform 0.3s ease; color: var(--text-secondary); flex-shrink: 0; }
 .accordion-header.open .accordion-icon { transform: rotate(180deg); color: var(--primary); }
 
-/* ─── 19. التبديل (Toggle) ─── */
-.toggle-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: var(--text);
-  flex-wrap: wrap;
-}
-
+/* === التبديل والجداول والأشياء الإضافية === */
+.toggle-container { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.875rem; color: var(--text); flex-wrap: wrap; }
 .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }
-
 .slider {
   position: absolute;
   cursor: pointer;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background-color: var(--danger);
-  transition: 0.4s;
+  transition: .4s;
   border-radius: 24px;
 }
-
-.slider::before {
-  content: "";
+.slider:before {
   position: absolute;
+  content: "";
   height: 18px;
   width: 18px;
-  inset-inline-start: 3px;
+  left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: 0.4s;
+  transition: .4s;
   border-radius: 50%;
   box-shadow: var(--shadow-sm);
 }
-
 input:checked + .slider { background-color: var(--success); }
-input:checked + .slider::before { transform: translateX(20px); }
+input:checked + .slider:before { transform: translateX(20px); }
+[dir="rtl"] .slider:before { left: auto; right: 3px; }
+[dir="rtl"] input:checked + .slider:before { transform: translateX(-20px); }
 
-[dir="rtl"] input:checked + .slider::before { transform: translateX(-20px); }
-
-/* ─── 20. الجداول ─── */
+/* الجداول */
 table { width: 100%; border-collapse: collapse; }
-
-th, td {
-  padding: 0.875rem 1rem;
-  text-align: start;
-  border-bottom: 1px solid var(--border);
-}
-
+th, td { padding: 0.875rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
 th {
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -1081,25 +847,18 @@ th {
   background: var(--bg);
   white-space: nowrap;
 }
-
-[dir="rtl"] th, [dir="rtl"] td { text-align: right; }
-
 .table-container {
   overflow-x: auto;
   border-radius: var(--radius);
-  -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch; /* تمرير سلس على iOS */
 }
-
+/* تحسين عرض الجداول على الموبايل */
 @media (max-width: 640px) {
   th, td { padding: 0.75rem 0.625rem; font-size: 0.875rem; }
 }
-
-/* ─── 21. حالات فارغة ومصادقة ─── */
 .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-secondary); grid-column: 1 / -1; }
 .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
-
 .login-box { max-width: 420px; margin: 2rem auto; width: 100%; padding: 0 1rem; }
-
 .auth-divider {
   display: flex;
   align-items: center;
@@ -1108,10 +867,8 @@ th {
   color: var(--text-secondary);
   font-size: 0.875rem;
 }
-
 .auth-divider::before,
 .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
 .auth-toggle {
   text-align: center;
   margin-top: 1rem;
@@ -1120,9 +877,7 @@ th {
   font-weight: 600;
   font-size: 0.9375rem;
 }
-
 .auth-toggle:hover { text-decoration: underline; }
-
 .spinner {
   width: 18px;
   height: 18px;
@@ -1132,18 +887,16 @@ th {
   animation: spin 0.8s linear infinite;
   flex-shrink: 0;
 }
-
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .footer-links { margin-top: 0.5rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
 .footer-links a { color: var(--primary); text-decoration: none; font-weight: 500; }
 .footer-links a:hover { text-decoration: underline; }
 
-/* ─── 22. زر العودة للأعلى ─── */
+/* زر العودة للأعلى */
 #backToTop {
   position: fixed;
   bottom: 1.5rem;
-  inset-inline-end: 1.5rem;
   z-index: 900;
   background: var(--primary);
   color: white;
@@ -1157,16 +910,21 @@ th {
   box-shadow: var(--shadow-lg);
   cursor: pointer;
   transition: opacity 0.3s, transform 0.2s, background 0.2s;
+  /* دعم RTL */
+  inset-inline-end: 1.5rem;
+  left: auto;
+  right: 1.5rem;
 }
-
 #backToTop:hover { background: var(--primary-dark); transform: translateY(-3px); }
 #backToTop.hidden { opacity: 0; pointer-events: none; transform: translateY(10px); }
+[dir="rtl"] #backToTop { left: 1.5rem; right: auto; }
 
-/* ─── 23. الدردشة الآلية ─── */
+/* ==========================================================================
+   نظام الدردشة الآلية (Chatbot) - متجاوب بالكامل
+   ========================================================================== */
 .chatbot-toggle-btn {
   position: fixed;
   bottom: 1.5rem;
-  inset-inline-start: 1.5rem;
   z-index: 900;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
@@ -1178,65 +936,69 @@ th {
   gap: 0.5rem;
   box-shadow: var(--shadow-lg);
   cursor: pointer;
-  font-family: inherit;
+  font-family: 'Tajawal', sans-serif;
   font-weight: 700;
   font-size: 0.95rem;
-  transition: all 0.3s var(--ease-smooth);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  /* دعم RTL */
+  inset-inline-start: 1.5rem;
+  left: 1.5rem;
+  right: auto;
 }
-
 .chatbot-toggle-btn:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 20px rgba(14, 165, 233, 0.4);
   filter: brightness(1.1);
 }
+[dir="rtl"] .chatbot-toggle-btn { right: 1.5rem; left: auto; }
 
 .chatbot-container {
   position: fixed;
   bottom: 5rem;
-  inset-inline-start: 1rem;
-  z-index: var(--z-chat);
+  z-index: 1000;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform-origin: bottom left;
+  /* تحسين الحجم */
   width: 380px;
   max-width: calc(100vw - 2rem);
   height: 500px;
   max-height: calc(100vh - 7rem);
-  transform-origin: bottom left;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  /* دعم RTL */
+  inset-inline-start: 1rem;
+  left: 1rem;
+  right: auto;
 }
-
-[dir="rtl"] .chatbot-container { transform-origin: bottom right; }
-
 .chatbot-container.hidden { opacity: 0; transform: scale(0.9); pointer-events: none; }
+[dir="rtl"] .chatbot-container {
+  transform-origin: bottom right;
+  right: 1rem;
+  left: auto;
+}
 
 /* شريط الدردشة على الموبايل */
 @media (max-width: 480px) {
   .chatbot-container {
     width: 100%;
     max-width: 100%;
-    inset: auto 0 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     border-radius: var(--radius) var(--radius) 0 0;
     height: 85vh;
     max-height: 85vh;
     transform-origin: bottom center;
   }
-  
-  .chatbot-toggle-btn {
-    bottom: 1rem;
-    padding: 0;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    justify-content: center;
-  }
-  
-  .chatbot-toggle-btn span { display: none; }
-  .chatbot-toggle-btn svg { margin: 0; }
+  [dir="rtl"] .chatbot-container { left: 0; right: 0; }
+.chatbot-toggle-btn { bottom: 1rem; padding: 0; width: 45px; height: 45px; border-radius: 50%; justify-content: center; }
+.chatbot-toggle-btn span { display: none; }
+.chatbot-toggle-btn svg { margin: 0; }
 }
 
 .chatbot-header {
@@ -1245,38 +1007,14 @@ th {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
-
-.chatbot-header h3 {
-  color: white;
-  font-weight: 700;
-  font-size: 1.1rem;
-  margin: 0;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-}
-
-.chatbot-header span {
-  color: rgba(255,255,255,0.95);
-  font-size: 0.75rem;
-  font-weight: 500;
-  display: block;
-  margin-top: 2px;
-}
-
-.chatbot-header button {
-  color: white;
-  transition: transform 0.2s;
-  padding: 0.25rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
+.chatbot-header h3 { color: white !important; font-weight: 700; font-size: 1.1rem; margin: 0; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); }
+.chatbot-header span { color: rgba(255, 255, 255, 0.95) !important; font-size: 0.75rem; font-weight: 500; display: block; margin-top: 2px; }
+.chatbot-header button { color: white !important; transition: transform 0.2s; padding: 0.25rem; background: transparent; border: none; cursor: pointer; }
 .chatbot-header button:hover { transform: rotate(90deg); }
-
 .chatbot-messages {
   flex: 1;
   padding: 1rem;
@@ -1287,33 +1025,26 @@ th {
   background: var(--bg);
   min-height: 0;
 }
-
-.chat-msg {
-  max-width: 85%;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius);
-  font-size: 0.9rem;
-  line-height: 1.5;
-  word-wrap: break-word;
-}
-
+.chatbot-messages::-webkit-scrollbar { width: 6px; }
+.chatbot-messages::-webkit-scrollbar-track { background: var(--bg); }
+.chatbot-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.chatbot-messages::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+.chat-msg { max-width: 85%; padding: 0.75rem 1rem; border-radius: var(--radius); font-size: 0.9rem; line-height: 1.5; word-wrap: break-word; }
 .bot-msg {
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
   align-self: flex-start;
-  border-start-end-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border-top-right-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
-
 .user-msg {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   align-self: flex-end;
-  border-start-start-radius: 4px;
+  border-top-left-radius: 4px;
   box-shadow: 0 2px 5px rgba(14, 165, 233, 0.2);
 }
-
 .bot-card-result {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1321,43 +1052,23 @@ th {
   border-radius: 10px;
   margin-top: 0.75rem;
   font-size: 0.85rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.2s;
 }
-
-.bot-card-result:hover {
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  transform: translateY(-1px);
-}
-
+.bot-card-result:hover { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); transform: translateY(-1px); }
 .bot-card-result strong { color: var(--primary-dark); font-weight: 700; }
-
 .bot-card-result button {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+  color: white !important;
   border: none;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.2s;
+  padding: 0.6rem 1rem !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s !important;
   box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
 }
-
-.bot-card-result button:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(14, 165, 233, 0.3);
-}
-
-.chatbot-input {
-  display: flex;
-  padding: 0.75rem;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
+.bot-card-result button:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(14, 165, 233, 0.3); }
+.chatbot-input { display: flex; padding: 0.75rem; background: var(--surface); border-top: 1px solid var(--border); gap: 0.5rem; flex-shrink: 0; }
 .chatbot-input input {
   flex: 1;
   border: 1px solid var(--border);
@@ -1369,13 +1080,8 @@ th {
   transition: all 0.2s;
   min-width: 0;
 }
-
-.chatbot-input input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
-}
-
+.chatbot-input input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
+.chatbot-input input::placeholder { color: var(--text-secondary); }
 .chatbot-input button {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
@@ -1391,57 +1097,31 @@ th {
   flex-shrink: 0;
   box-shadow: 0 2px 5px rgba(14, 165, 233, 0.3);
 }
-
-.chatbot-input button:hover {
-  filter: brightness(1.1);
-  transform: scale(1.05);
-}
-
+.chatbot-input button:hover { filter: brightness(1.1); transform: scale(1.05); box-shadow: 0 4px 8px rgba(14, 165, 233, 0.4); }
 .typing-indicator { display: flex; gap: 4px; padding: 0.5rem 1rem; align-items: center; }
-
-.typing-dot {
-  width: 6px;
-  height: 6px;
-  background: var(--primary);
-  border-radius: 50%;
-  animation: typing 1.4s infinite ease-in-out both;
-}
-
+.typing-dot { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; }
 .typing-dot:nth-child(1) { animation-delay: -0.32s; }
 .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-
 @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+#vcard-qrcode { width: 130px !important; height: 130px !important; display: block; margin: 0 auto; }
 
-#vcard-qrcode { width: 130px; height: 130px; display: block; margin: 0 auto; }
-
-/* ─── 24. تحسينات الموبايل ─── */
+/* =========================================================
+   تحسينات الموبايل العامة
+   ========================================================= */
 @media (max-width: 768px) {
-  .app-container { padding: 1.25rem 1rem; }
-  footer { padding: 1.25rem 0.75rem; font-size: 0.8rem; }
-  .dialog-box { padding: 1.5rem 1.25rem; }
-  .dp-header, .dp-body { padding: 1.25rem; }
-  .dp-footer { padding: 0.875rem 1.25rem; }
-  
-  .doctor-header { gap: 0.625rem; }
-  .avatar { width: 48px; height: 48px; font-size: 1rem; }
-  
-  .text-xl { font-size: 1.125rem; }
-  h1 { font-size: 1.5rem; }
-  h2 { font-size: 1.25rem; }
-  h3 { font-size: 1.125rem; }
-  
-  /* user pill على الموبايل */
   .user-pill:not(.hidden) {
+    display: flex !important;
     flex-direction: row !important;
     justify-content: space-between !important;
+    align-items: center !important;
     width: 100% !important;
     padding: 0.75rem 1.25rem !important;
     border-radius: 0 !important;
   }
-  
   .user-pill #logoutBtn {
     width: auto !important;
     padding: 0.35rem 0.8rem !important;
+    margin: 0 !important;
     font-size: 0.8rem !important;
     text-align: center !important;
     background: var(--surface) !important;
@@ -1449,7 +1129,6 @@ th {
     border: 1px solid var(--border) !important;
     border-radius: 6px !important;
   }
-  
   .user-pill #userNameDisplay {
     font-weight: 800 !important;
     font-size: 1rem !important;
@@ -1458,38 +1137,98 @@ th {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
-  /* منع انكسار النصوص في ملف الطبيب */
+  .nav-links .nav-btn {
+    border-bottom: 1px solid var(--border) !important;
+    width: calc(100% - 2rem) !important;
+    margin: 0 auto !important;
+    padding: 1rem 0.5rem !important;
+    border-radius: 0 !important;
+  }
+  .nav-links .nav-btn:last-of-type { border-bottom: none !important; }
+  .nav-links .nav-btn.active {
+    background: transparent !important;
+    color: var(--primary) !important;
+    font-weight: 800 !important;
+  }
+
+  /* تحسين الحاوية على الموبايل */
+  .app-container { padding: 1.25rem 1rem; }
+  footer { padding: 1.25rem 0.75rem; font-size: 0.8rem; }
+  .dialog-box { padding: 1.5rem 1.25rem; }
+  .dp-header { padding: 1.25rem; }
+  .dp-body { padding: 1.25rem; }
+  .dp-footer { padding: 0.875rem 1.25rem; }
+
+  /* تحسين البطاقات */
+  .doctor-header { gap: 0.625rem; }
+  .avatar { width: 48px; height: 48px; font-size: 1rem; }
+
+/* تحسين العناوين */
+  .text-xl { font-size: 1.125rem; }
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.125rem; }
+
+  /* المنع المطلق لكسر رقم الهاتف والأوقات إلى سطرين */
+  #fullProfileContent *[dir="ltr"] {
+    white-space: nowrap !important;
+    display: inline-block;
+  }
+
+  /* إجبار العناوين والأيقونات في ملف الطبيب على البقاء في سطر واحد ومنع انكسار النص */
   .dp-info-row > div:first-child {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
-    white-space: nowrap !important;
+    white-space: nowrap !important; 
   }
-  
-  #fullProfileContent h3,
+
+  /* تصغير الخط قليلاً ومنع الانكسار نهائياً للعناوين في الهاتف */
+  #fullProfileContent h3, 
   #fullProfileContent h4 {
-    font-size: 0.9rem !important;
-    white-space: nowrap !important;
+    font-size: 0.9rem !important; /* تصغير طفيف إضافي لتتسع الجمل الطويلة */
+    white-space: nowrap !important; /* هذا السطر هو الذي يمنع النص من الانقسام لسطرين نهائياً */
   }
 }
+/* =========================================================
+   إصلاحات الشبكة (Grid)
+   ========================================================= */
+@media (min-width: 768px) {
+  #view-home > .hero-section,
+  #view-home > .modern-search-bar,
+  #view-home > #doctorsList {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+#view-home > h2[data-i18n='findDoctor'] { text-align: center !important; }
 
-/* ─── 25. البانر (Hero) ─── */
+/* =========================================================
+   تصميم البانر الاحترافي (Hero) - Mobile First
+   ========================================================= */
 .hero-section {
+  /* الافتراضي للهواتف: خلفية متدرجة بدون صورة لزيادة الأداء ووضوح النص */
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  border-radius: 12px;
-  padding: 2.5rem 1rem 5rem;
+  border-radius: 12px; 
+  padding: 2.5rem 1rem 5rem 1rem; 
+  border: none;
   overflow: hidden;
+  box-shadow: none; 
+  margin-bottom: 0;
   position: relative;
-  text-align: center;
+  text-align: center; /* توسيط النص على الموبايل */
 }
 
+/* التدرج اللوني (يندمج مع الخلفية المظلمة على الهاتف) */
 .hero-section::before {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: linear-gradient(to right, 
     rgba(15, 23, 42, 0) 0%, 
     rgba(14, 165, 233, 0.4) 35%, 
@@ -1501,29 +1240,31 @@ th {
 
 .hero-section > * { position: relative; z-index: 2; }
 .hero-section h1, .hero-section p { color: #ffffff; opacity: 0.95; }
-
 .hero-section > div:first-child {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.4);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   color: #ffffff;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1rem; /* تصغير حجم الشارة على الموبايل */
   display: inline-block;
 }
 
 .hero-section h1 { font-size: 1.4rem; line-height: 1.4; margin-top: 1rem; }
 .hero-section p { font-size: 0.95rem; margin-top: 0.5rem; }
 
+/* --- تفعيل الصورة للشاشات المتوسطة والكبيرة (Tablets & Desktops) --- */
 @media (min-width: 768px) {
   .hero-section {
-    background: url('images/hero-bg.jpg') no-repeat left center;
+    /* هنا نستدعي الصورة للشاشات الكبيرة */
+    background: url('images/hero-bg.jpg') no-repeat left center; 
     background-size: cover;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    padding: 5.5rem 2rem 3.5rem;
-    text-align: start;
-  }
+    border-radius: 20px 20px 0 0; 
+    padding: 5.5rem 2rem 3.5rem 2rem; 
   
   .hero-section::before {
+    /* التدرج اللوني المعقد يظهر فقط على الشاشات الكبيرة لتظليل الصورة */
     background: linear-gradient(to right, 
       rgba(15, 23, 42, 0) 0%, 
       rgba(15, 23, 42, 0) 15%, 
@@ -1534,13 +1275,15 @@ th {
       rgba(15, 23, 42, 0) 100%
     );
   }
-  
+
   .hero-section h1 { font-size: 2.2rem; }
-  .hero-section p { font-size: 1.1rem; max-width: 60%; }
+  .hero-section p { font-size: 1.1rem; max-width: 60%; margin: 0; }
   .hero-section > div:first-child { padding: 0.75rem 1.5rem; }
 }
 
-/* ─── 26. لوحة التحكم ─── */
+/* =========================================================
+   تنسيقات لوحة تحكم العضو
+   ========================================================= */
 .dashboard-actions-grid {
   border-top: 1px solid var(--border);
   padding-top: 1.5rem;
@@ -1549,11 +1292,9 @@ th {
   gap: 1rem;
   width: 100%;
 }
-
 @media (max-width: 480px) {
   .dashboard-actions-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
 }
-
 .dashboard-action-card {
   display: flex;
   flex-direction: column;
@@ -1570,62 +1311,57 @@ th {
   font-size: 0.9rem;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s var(--ease-default);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow-sm);
   text-align: center;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
-
 .dashboard-action-card:hover {
   transform: translateY(-4px);
   border-color: var(--primary);
   color: var(--primary-dark);
   box-shadow: 0 8px 15px rgba(0,0,0,0.05);
 }
-
 .dashboard-action-card.primary-card {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   border: none;
 }
-
 .dashboard-action-card.primary-card:hover {
   color: white;
   box-shadow: 0 8px 15px rgba(14, 165, 233, 0.3);
 }
-
 .dashboard-action-card.secondary-card { background: var(--bg); }
 
-/* ─── 27. حركات التسويق ─── */
+/* حركات قسم التسويق */
 @keyframes fadeInUpBounce {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
-
 .pitch-animate {
   opacity: 0;
-  animation: fadeInUpBounce 0.6s var(--ease-smooth) forwards;
+  animation: fadeInUpBounce 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
-
 .pitch-delay-1 { animation-delay: 0.1s; }
 .pitch-delay-2 { animation-delay: 0.25s; }
 .pitch-delay-3 { animation-delay: 0.4s; }
 .pitch-delay-4 { animation-delay: 0.55s; }
-
 .pitch-card {
   transition: all 0.3s ease;
   padding: 0.5rem;
   border-radius: 12px;
+  background: transparent;
 }
-
 .pitch-card:hover {
   background: var(--surface);
   transform: translateY(-5px);
   box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
-/* ─── 28. السلايدر ─── */
+/* =========================================================
+   تنسيقات السلايدر التسويقي
+   ========================================================= */
 .pitch-slider-container {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1634,29 +1370,25 @@ th {
   margin-bottom: 2rem;
   box-shadow: 0 10px 25px rgba(0,0,0,0.05);
   position: relative;
+  transition: box-shadow 0.3s ease;
 }
-
 .pitch-slider-container:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.08); }
-
 .pitch-slide {
   display: none;
-  animation: fadeSlide 0.6s var(--ease-smooth);
+  animation: fadeSlide 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-
 .pitch-slide.active { display: block; }
-
 @keyframes fadeSlide {
   from { opacity: 0; transform: translateX(20px); }
   to { opacity: 1; transform: translateX(0); }
 }
-
 .pitch-v-thumb {
   width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
+  background: transparent;
   border-radius: 12px 12px 0 0;
 }
-
 .pitch-v-thumb img {
   width: 100%;
   height: 100%;
@@ -1664,12 +1396,9 @@ th {
   object-position: top;
   display: block;
 }
-
 .pitch-v-content { padding: 1.5rem; text-align: start; }
 .pitch-v-icon-box { margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; }
-
-.slider-dots { text-align: center; padding: 0 0 1.5rem; background: var(--surface); }
-
+.slider-dots { text-align: center; padding: 0 0 1.5rem 0; background: var(--surface); }
 .slider-dots .dot {
   cursor: pointer;
   height: 8px;
@@ -1680,11 +1409,12 @@ th {
   display: inline-block;
   transition: all 0.3s ease;
 }
-
 .slider-dots .dot:hover,
 .slider-dots .dot.active { background-color: var(--primary); width: 24px; border-radius: 10px; }
 
-/* ─── 29. صفحة المصادقة ─── */
+/* =========================================================
+   تخطيط صفحة تسجيل الدخول
+   ========================================================= */
 .auth-split-layout {
   display: grid;
   grid-template-columns: 1fr;
@@ -1695,19 +1425,19 @@ th {
   width: 100%;
   padding: 0 1rem;
 }
-
 @media (min-width: 900px) {
   .auth-split-layout { grid-template-columns: 420px 1fr; gap: 3rem; margin-top: 3rem; }
 }
 
-/* ─── 30. صفحة التقييمات ─── */
+/* =========================================================
+   صفحة التقييمات (Reviews Page)
+   ========================================================= */
 .reviews-page-layout {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
   align-items: start;
 }
-
 @media (min-width: 900px) {
   .reviews-page-layout { grid-template-columns: 350px 1fr; }
 }
@@ -1720,8 +1450,12 @@ th {
   border: 1px solid var(--border);
 }
 
-.average-rating { font-size: 3.5rem; font-weight: 900; color: var(--text); line-height: 1; }
-
+.average-rating {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1;
+}
 @media (max-width: 640px) {
   .average-rating { font-size: 2.75rem; }
   .rating-summary-box { padding: 1.25rem; }
@@ -1736,7 +1470,6 @@ th {
   color: var(--text-secondary);
   font-weight: 600;
 }
-
 .rating-bar-track {
   flex: 1;
   height: 8px;
@@ -1745,10 +1478,9 @@ th {
   overflow: hidden;
   border: 1px solid var(--border);
 }
-
 .rating-bar-fill {
   height: 100%;
-  background: var(--warning);
+  background: #f59e0b;
   border-radius: 10px;
   transition: width 0.5s ease-out;
 }
@@ -1759,20 +1491,18 @@ th {
   border-radius: 16px;
   padding: 1.5rem;
   box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-  transition: all 0.3s var(--ease-smooth);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   margin-bottom: 1rem;
 }
-
 .review-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 24px rgba(0,0,0,0.06);
   border-color: var(--primary-light);
 }
-
 @media (max-width: 640px) {
   .review-card { padding: 1.25rem; }
-  .review-avatar { width: 44px; height: 44px; font-size: 1.1rem; }
   .review-user-info { gap: 10px; }
+  .review-avatar { width: 44px; height: 44px; font-size: 1.1rem; }
 }
 
 .review-card-header {
@@ -1782,7 +1512,6 @@ th {
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-
 .review-user-info { display: flex; align-items: center; gap: 15px; }
 
 .review-avatar {
@@ -1822,29 +1551,31 @@ th {
   transition: all 0.2s;
   flex-shrink: 0;
 }
-
 .delete-review-btn:hover { background: var(--danger); color: white; transform: scale(1.05); }
 
-/* ─── 31. محرك الحجز ─── */
+/* =========================================================
+   شريط الحجز الاحترافي (Booking Engine)
+   ========================================================= */
 .booking-engine-wrapper {
   position: relative;
   z-index: 10;
   background: var(--surface);
-  margin: 0 auto 3rem;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  margin: 0 auto 3rem auto; /* إزالة التداخل السلبي (margin-top) */
+  border-radius: 0 0 20px 20px; /* زوايا علوية حادة، وسفلية منحنية */
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12); /* ظل موحد يجمع القالبين معاً */
   width: 100%;
   border: 1px solid var(--border);
-  border-top: none;
+  border-top: none; /* إزالة الخط الفاصل بين الصورة ومربع البحث */
 }
 
+/* --- التبويبات --- */
 .booking-tabs {
   display: flex;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
+  border-radius: 0; 
   overflow: hidden;
 }
-
 .booking-tab {
   flex: 1;
   display: flex;
@@ -1856,26 +1587,18 @@ th {
   transition: background 0.2s;
   min-height: 56px;
 }
-
-.booking-tab.active {
-  border-bottom: 3px solid var(--primary);
-  background: var(--bg);
-}
-
+.booking-tab.active { border-bottom: 3px solid var(--primary); background: var(--bg); }
 .booking-tab.inactive { opacity: 0.6; }
 .booking-tab.inactive:hover { opacity: 1; background: var(--bg); }
-
 .tab-icon { color: var(--primary-dark); }
 .booking-tab.inactive .tab-icon { color: var(--text-secondary); }
-
-.tab-text { display: flex; flex-direction: column; text-align: start; }
-[dir="rtl"] .tab-text { text-align: end; }
-
+.tab-text { display: flex; flex-direction: column; text-align: right; }
+[dir="ltr"] .tab-text { text-align: left; }
 .tab-title { font-size: 1.1rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 2px; }
 .booking-tab.inactive .tab-title { color: var(--text); }
 .tab-subtitle { font-size: 0.8rem; color: var(--text-secondary); font-weight: 500; }
 
-/* حقول البحث */
+/* --- حقول البحث --- */
 .modern-search-bar {
   display: flex;
   align-items: stretch;
@@ -1885,29 +1608,28 @@ th {
   border-radius: 12px;
   overflow: hidden;
 }
-
 .search-field {
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 0.75rem 1.25rem;
   flex: 1;
+  border: none;
+  border-radius: 0;
+  margin: 0;
   background: transparent;
   transition: background 0.2s;
   min-width: 0;
 }
-
-.search-field:focus-within { background: var(--bg); }
-
+.search-field:focus-within { background: var(--bg); box-shadow: none; }
 .search-divider {
+  display: block;
   width: 1px;
   background: var(--border);
   margin: 15px 0;
   flex-shrink: 0;
 }
-
 .input-wrapper { display: flex; align-items: center; gap: 0.75rem; }
-
 .input-wrapper input {
   border: none;
   outline: none;
@@ -1916,12 +1638,13 @@ th {
   color: var(--text);
   background: transparent;
   padding: 0;
+  box-shadow: none;
   width: 100%;
   min-width: 0;
 }
-
 .input-wrapper input::placeholder { color: var(--text-secondary); font-weight: 500; }
 
+/* زر البحث */
 .search-action-btn {
   background: #e11d48;
   color: white;
@@ -1937,13 +1660,11 @@ th {
   transition: all 0.2s;
   white-space: nowrap;
 }
-
 .search-action-btn:hover { background: #be123c; }
-
 [dir="rtl"] .search-action-btn { border-radius: 12px 0 0 12px; }
 [dir="ltr"] .search-action-btn { border-radius: 0 12px 12px 0; }
 
-/* TomSelect داخل محرك البحث */
+/* إصلاحات TomSelect */
 .modern-search-bar .ts-control {
   border: none !important;
   background: transparent !important;
@@ -1951,7 +1672,6 @@ th {
   font-weight: 600;
   font-size: 1.05rem !important;
 }
-
 .modern-search-bar .ts-control,
 .modern-search-bar .ts-control input,
 .modern-search-bar .ts-control .item {
@@ -1960,64 +1680,64 @@ th {
   font-size: 1.1rem !important;
   -webkit-font-smoothing: antialiased;
 }
-
 .modern-search-bar .ts-control .item {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
   max-width: 100%;
   display: inline-block;
 }
 
+/* --- أسهم القوائم المنسدلة --- */
 .modern-search-bar .ts-wrapper.single .ts-control::after {
   content: "";
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  border-width: 6px 5px 0;
+  border-width: 6px 5px 0 5px;
   border-style: solid;
-  border-color: var(--text-secondary) transparent transparent;
+  border-color: var(--text-secondary) transparent transparent transparent;
   display: block;
   pointer-events: none;
   transition: transform 0.2s ease;
 }
-
 .modern-search-bar .ts-wrapper.single.focus .ts-control::after {
   transform: translateY(-50%) rotate(180deg);
 }
-
 [dir="rtl"] .modern-search-bar .ts-wrapper.single .ts-control::after { left: 0; right: auto; }
 [dir="rtl"] .modern-search-bar .ts-wrapper.single .ts-control { padding-left: 20px; }
 [dir="ltr"] .modern-search-bar .ts-wrapper.single .ts-control::after { right: 0; left: auto; }
 [dir="ltr"] .modern-search-bar .ts-wrapper.single .ts-control { padding-right: 20px; }
 
+/* مساحة الكتابة في TomSelect */
 .modern-search-bar .ts-control > input { font-size: 1rem !important; min-width: 130px !important; }
 
+/* تطابق القوائم مع الحقول */
 .modern-search-bar .ts-dropdown {
   min-width: 100% !important;
   width: 100% !important;
   box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
   border-radius: 12px !important;
   left: 0 !important;
+  right: auto !important;
   border-color: var(--border);
 }
-
 [dir="rtl"] .modern-search-bar .ts-dropdown { right: 0 !important; left: auto !important; }
-
 .modern-search-bar .ts-dropdown .option {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
   padding: 10px 15px !important;
   font-size: 0.95rem !important;
 }
 
+/* حقل اسم الطبيب */
 .modern-search-bar input#searchInput {
   color: var(--primary-dark) !important;
   font-weight: 800 !important;
   font-size: 1.1rem !important;
+  -webkit-font-smoothing: antialiased;
 }
-
 .search-field label {
   color: var(--text-secondary) !important;
   font-weight: 800 !important;
@@ -2025,55 +1745,35 @@ th {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-
 .modern-search-bar .input-wrapper svg {
   color: var(--primary) !important;
   stroke-width: 2.5px !important;
   flex-shrink: 0;
 }
-
 .modern-search-bar input#searchInput::placeholder {
   color: var(--text-secondary) !important;
   font-weight: 600 !important;
 }
 
-/* تجاوب محرك الحجز */
+/* التجاوب مع الهواتف والأجهزة اللوحية */
 @media (max-width: 900px) {
   .booking-tabs { flex-direction: column; }
-  
-  .booking-tab {
-    justify-content: flex-start;
-    padding: 1rem 1.5rem;
-    gap: 8px;
-  }
-  
-  .tab-text { text-align: start; }
-  [dir="rtl"] .tab-text { text-align: end; }
-  
-  .modern-search-bar {
-    flex-direction: column;
-    padding: 1rem;
-    gap: 0.75rem;
-    margin: 1rem 0;
-    border-radius: 12px;
-    border-left: none;
-    border-right: none;
-  }
-  
-  .search-divider { width: 100%; height: 1px; margin: 0; }
-  
+  .booking-tab { justify-content: flex-start; padding: 1rem 1.5rem; gap: 8px; }
+  .tab-text { text-align: left; }
+  [dir="rtl"] .tab-text { text-align: right; }
+.modern-search-bar { flex-direction: column; padding: 1rem; gap: 0.75rem; margin: 1rem 0; border-radius: 12px; border-left: none; border-right: none; }
+   .search-divider { width: 100%; height: 1px; margin: 0; }
   .search-action-btn {
     width: 100%;
     justify-content: center;
     margin-top: 0.5rem;
+    margin-inline-start: 0;
     padding: 1rem;
     border-radius: 10px !important;
   }
-  
   .search-field { padding: 0.75rem 0.5rem; }
   .search-field:focus-within { background: transparent; }
 }
-
 @media (max-width: 480px) {
   .booking-tab { padding: 0.875rem 1rem; }
   .tab-title { font-size: 1rem; }
@@ -2081,64 +1781,58 @@ th {
   .modern-search-bar { margin: 0.75rem; padding: 0.75rem; }
 }
 
-/* ─── 32. إصلاحات الشبكة ─── */
-@media (min-width: 768px) {
-  #view-home > .hero-section,
-  #view-home > .modern-search-bar,
-  #view-home > #doctorsList {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
+/* =========================================================
+   إصلاحات عامة وتحسينات النهائية
+   ========================================================= */
+#dashboardSubtitle {
+  unicode-bidi: plaintext;
+  text-align: start;
 }
 
-#view-home > h2[data-i18n='findDoctor'] { text-align: center; }
-
-/* ─── 33. تحسين الوضع المظلم الإضافي ─── */
 @media (prefers-color-scheme: dark) {
-  .booking-engine-wrapper,
+  .booking-engine-wrapper { background: var(--surface); border: 1px solid var(--border); }
+  .hero-section { border-color: transparent; }
   .modern-search-bar { background: var(--surface); }
   .search-divider { background: var(--border); }
-  .hero-section { border-color: transparent; }
 }
 
-/* ─── 34. تحسينات الأجهزة اللمسية ─── */
+/* تحسينات إضافية للمس */
 @media (hover: none) and (pointer: coarse) {
   .card-hover:hover { transform: none; }
   .card-hover:active { transform: scale(0.98); }
-  
   .time-slot-btn:hover { transform: none; border-color: var(--border); color: var(--text-secondary); }
   .time-slot-btn.selected:hover { transform: scale(1.05); }
-  .time-slot-btn:active { transform: scale(0.95); }
-  
   .star:hover { transform: none; }
   .star:active { transform: scale(1.2); }
-  
   .dashboard-action-card:hover { transform: none; }
   .dashboard-action-card:active { transform: scale(0.97); }
-  
   .btn:hover { transform: none; }
   .btn:active { transform: scale(0.97); }
-  
-  .chatbot-toggle-btn:hover { transform: none; }
 }
 
-/* ─── 35. طباعة ─── */
+/* تحسين طباعة الصفحات */
 @media print {
   nav, footer, .chatbot-toggle-btn, .chatbot-container, #backToTop { display: none !important; }
   body { background: white; color: black; }
   .card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
 }
+/* =========================================================
+   إصلاح مشكلة قص الموعد الأخير في لوحات التحكم
+   ========================================================= */
 
-/* ─── 36. إصلاحات المواعيد ─── */
+/* 1. زيادة الحد الأقصى لارتفاع الأكورديون لمنع القص عند وجود مواعيد كثيرة */
+.accordion-content.open { 
+  max-height: 15000px !important; /* تم الرفع من 4000 إلى 15000 بكسل لاستيعاب القوائم الطويلة */
+}
+
+/* 2. إضافة مساحة تنفس داخلية أسفل حاويات المواعيد (للطبيب والمريض) */
 #appointmentsTable,
-#userBookingsContainer { padding-bottom: 1.5rem; }
+#userBookingsContainer {
+  padding-bottom: 1.5rem !important;
+}
 
+/* 3. إعطاء هامش إجباري للبطاقة الأخيرة لتدفع حواف الحاوية وتظهر بالكامل */
 #appointmentsTable > div:last-child,
-#userBookingsContainer > div:last-child { margin-bottom: 1.5rem; }
-
-#dashboardSubtitle {
-  unicode-bidi: plaintext;
-  text-align: start;
+#userBookingsContainer > div:last-child {
+  margin-bottom: 1.5rem !important;
 }
