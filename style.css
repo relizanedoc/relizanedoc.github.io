@@ -1168,6 +1168,24 @@ th {
   h1 { font-size: 1.5rem; }
   h2 { font-size: 1.25rem; }
   h3 { font-size: 1.125rem; }
+   /* تحسين حاويات معلومات الطبيب من أفقي إلى عمودي في الهواتف */
+  #fullProfileContent > div > div {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  
+  /* إبعاد الأيقونة عن النص بعد التحويل العمودي */
+  #fullProfileContent > div > div > div:last-child {
+    margin: 0 auto 0.75rem auto !important;
+    order: -1; /* رفع الأيقونة لتكون فوق النص */
+  }
+
+  /* المنع المطلق لكسر رقم الهاتف والأوقات إلى سطرين */
+  #fullProfileContent *[dir="ltr"] {
+    white-space: nowrap !important;
+    display: inline-block;
+  }
 }
 
 /* =========================================================
