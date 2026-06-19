@@ -1262,10 +1262,6 @@ th {
     background-size: cover;
     border-radius: 20px 20px 0 0; 
     padding: 5.5rem 2rem 3.5rem 2rem; 
-    text-align: right; /* إعادة المحاذاة لليمين (أو حسب الـ dir) */
-  }
-  
-  [dir="ltr"] .hero-section { text-align: left; }
   
   .hero-section::before {
     /* التدرج اللوني المعقد يظهر فقط على الشاشات الكبيرة لتظليل الصورة */
