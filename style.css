@@ -1262,7 +1262,7 @@ th {
     background-size: cover;
     border-radius: 20px 20px 0 0; 
     padding: 5.5rem 2rem 3.5rem 2rem; 
-  
+  }
   .hero-section::before {
     /* التدرج اللوني المعقد يظهر فقط على الشاشات الكبيرة لتظليل الصورة */
     background: linear-gradient(to right, 
