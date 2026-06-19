@@ -1224,7 +1224,7 @@ th {
   text-align: center; /* توسيط النص على الموبايل */
 }
 
-/* التدرج اللوني الذي طلبته (يبقى موجوداً ولكنه يندمج مع الخلفية المظلمة على الهاتف) */
+/* التدرج اللوني (يندمج مع الخلفية المظلمة على الهاتف) */
 .hero-section::before {
   content: '';
   position: absolute;
@@ -1262,9 +1262,13 @@ th {
     background-size: cover;
     border-radius: 20px 20px 0 0; 
     padding: 5.5rem 2rem 3.5rem 2rem; 
+    text-align: right; /* إعادة المحاذاة لليمين (أو حسب الـ dir) */
+  }
+  
+  [dir="ltr"] .hero-section { text-align: left; }
   
   .hero-section::before {
-    /* التدرج اللوني المعقد الخاص بك يظهر فقط على الشاشات الكبيرة لتظليل الصورة */
+    /* التدرج اللوني المعقد يظهر فقط على الشاشات الكبيرة لتظليل الصورة */
     background: linear-gradient(to right, 
       rgba(15, 23, 42, 0) 0%, 
       rgba(15, 23, 42, 0) 15%, 
@@ -1279,59 +1283,6 @@ th {
   .hero-section h1 { font-size: 2.2rem; }
   .hero-section p { font-size: 1.1rem; max-width: 60%; margin: 0; }
   .hero-section > div:first-child { padding: 0.75rem 1.5rem; }
-}
-  padding: 5.5rem 1.5rem 3.5rem 1.5rem; 
-  border: none;
-  overflow: hidden;
-  box-shadow: none; 
-  margin-bottom: 0;
-  position: relative;
-}
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  /* تدرج لوني يبدأ شفافاً من الأطراف ويتمركز في الوسط */
-  background: linear-gradient(to right, 
-    rgba(15, 23, 42, 0) 0%,        /* شفاف كلياً على اليسار (منطقة الطبيب) */
-    rgba(15, 23, 42, 0) 15%,       /* يبقى شفافاً لضمان وضوح ملامح الطبيب */
-    rgba(14, 165, 233, 0.85) 35%,  /* يبدأ التظليل الأزرق بالظهور */
-    rgba(15, 23, 42, 0.95) 50%,    /* ذروة الظلام في المنتصف خلف النص مباشرة */
-    rgba(14, 165, 233, 0.85) 65%,  /* يبدأ التظليل بالتلاشي */
-    rgba(15, 23, 42, 0) 85%,       /* شفاف كلياً على اليمين (منطقة العلم) */
-    rgba(15, 23, 42, 0) 100%
-  );
-  z-index: 1;
-}
-.hero-section > * { position: relative; z-index: 2; }
-.hero-section h1,
-.hero-section p { color: #ffffff; opacity: 0.95; }
-.hero-section > div:first-child {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  color: #ffffff;
-}
-
-/* تجاوب Hero */
-@media (max-width: 768px) {
-  .hero-section {
-    padding: 2.5rem 1rem 6rem 1rem !important;
-    border-radius: 16px;
-    background-position: center right;
-  }
-  .hero-section h1 { font-size: 1.35rem; line-height: 1.4; }
-  .hero-section p { font-size: 0.9rem; }
-}
-@media (max-width: 480px) {
-  .hero-section {
-    padding: 2rem 1rem 5rem 1rem !important;
-    border-radius: 12px;
-  }
-  .hero-section h1 { font-size: 1.15rem; }
-  .hero-section > div:first-child { padding: 0.75rem 1rem !important; }
 }
 
 /* =========================================================
