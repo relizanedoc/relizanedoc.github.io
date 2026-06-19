@@ -8,10 +8,29 @@ export function t(key) {
     return (i18n[state.currentLang] && i18n[state.currentLang][key]) ? i18n[state.currentLang][key] : (i18n['en'][key] || key); 
 }
 
-// دالة تنظيف النصوص من الثغرات (XSS)
-export function escapeHtml(str) { 
+// دالة التنظيف المركزية باستخدام DOMPurify (المطورة)
+export function sanitizeInput(str, allowBasicHtml = false) { 
     if (!str) return ''; 
-    return DOMPurify.sanitize(str); 
+    
+    // إذا أردنا السماح بتنسيقات بسيطة (مثل وصف العيادة الذي يحتاج لأسطر جديدة وقوائم)
+    if (allowBasicHtml) {
+        return window.DOMPurify.sanitize(str, {
+            ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'br', 'ul', 'li', 'p'],
+            ALLOWED_ATTR: [] // نمنع أي خصائص مثل onclick أو style أو class لمنع الحقن
+        });
+    }
+
+    // الوضع الافتراضي الصارم: تحويل النص إلى نص خام تماماً (ممتاز للتقييمات وأسماء المرضى)
+    return window.DOMPurify.sanitize(str, {
+        ALLOWED_TAGS: [], 
+        ALLOWED_ATTR: []
+    });
+}
+
+// دالة التوافقية (Backward Compatibility)
+// نترك هذه الدالة كما هي لكي لا تتعطل الملفات الأخرى التي تستدعيها، لكننا نمررها عبر الحماية الصارمة
+export function escapeHtml(str) { 
+    return sanitizeInput(str, false); 
 }
 
 // دالة تنسيق أرقام الهواتف الجزائرية
@@ -48,6 +67,7 @@ export function setLoading(btn, isLoading, originalText = null) {
         btn.innerHTML = originalText || btn.dataset.originalHtml || (state.currentLang === 'ar' ? 'إرسال' : 'Submit');
     }
 }
+
 // دالة مساعدة لاختيار اسم الطبيب حسب لغة الموقع
 export function getLocalizedName(doc, currentLang) {
     // إذا كانت لغة الموقع إنجليزية، والطبيب لديه اسم إنجليزي في قاعدة البيانات
