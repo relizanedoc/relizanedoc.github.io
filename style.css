@@ -1243,35 +1243,38 @@ th {
 /* --- تفعيل الصورة للشاشات المتوسطة والكبيرة (Tablets & Desktops) --- */
 @media (min-width: 768px) {
   .hero-section {
-    display: block !important; /* هذا السطر يعيد إظهار القسم في الشاشات الكبيرة */
-    /* هنا نستدعي الصورة للشاشات الكبيرة */
+    display: block !important; 
     background: url('images/hero-bg.jpg') no-repeat left center; 
     background-size: cover;
     border-radius: 20px 20px 0 0; 
     padding: 5.5rem 2rem 3.5rem 2rem; 
+    text-align: center; /* ضمان تمركز كل شيء داخل هذا القسم */
   }
 
-.hero-section h1 { 
+  .hero-section h1 { 
     font-size: 2.2rem; 
-    color: #ffffff; /* تأكيد اللون الأبيض للنص */
-    background: rgba(15, 23, 42, 0.65); /* خلفية زجاجية داكنة وأنيقة */
-    padding: 0.5rem 1.5rem; /* مساحة تنفس داخل الصندوق */
-    border-radius: 12px; /* زوايا دائرية ناعمة */
-    display: inline-block; /* إجبار الصندوق على أخذ حجم الكلمات فقط وليس عرض الشاشة بالكامل */
-    backdrop-filter: blur(5px); /* تأثير التمويه الزجاجي لمعالم المستشفى خلف النص مباشرة */
-    -webkit-backdrop-filter: blur(5px); /* دعم متصفحات سفاري */
-    margin-bottom: 0.5rem; /* مسافة بسيطة بين العنوان الرئيسي والفرعي */
+    color: #ffffff; 
+    background: rgba(15, 23, 42, 0.65); 
+    padding: 0.5rem 1.5rem; 
+    border-radius: 12px; 
+    /* استخدام 'table' بدلاً من 'inline-block' يحل مشكلتين: 
+       1. يأخذ حجم النص فقط.
+       2. يجبر العنصر التالي على النزول لسطر جديد. */
+    display: table; 
+    margin: 0 auto 0.75rem auto; /* توسيط أفقي وإضافة مسافة من الأسفل */
+    backdrop-filter: blur(5px); 
+    -webkit-backdrop-filter: blur(5px); 
   }
   
   .hero-section p { 
     font-size: 1.1rem; 
     max-width: 60%; 
-    margin: 0 auto; /* إبقاء النص في المنتصف */
     color: #ffffff;
-    background: rgba(15, 23, 42, 0.65); /* خلفية زجاجية مطابقة */
+    background: rgba(15, 23, 42, 0.65); 
     padding: 0.5rem 1.5rem;
     border-radius: 10px;
-    display: inline-block; /* إجبار الصندوق على أخذ حجم الكلمات فقط */
+    display: table; /* نفس الخاصية لمنع التمدد وإجبار سطر جديد */
+    margin: 0 auto; /* توسيط أفقي */
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
     line-height: 1.8;
@@ -1279,9 +1282,11 @@ th {
   
   .hero-section > div:first-child { 
     padding: 0.75rem 1.5rem; 
+    /* تأكد من أن الشارة العلوية (المنصة الطبية الأولى) تتبع نفس النسق */
+    display: table;
+    margin: 0 auto 1rem auto;
   }
 }
-
 /* =========================================================
    تنسيقات لوحة تحكم العضو
    ========================================================= */
