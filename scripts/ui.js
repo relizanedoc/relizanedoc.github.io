@@ -706,35 +706,6 @@ window.handleQrError = function(img) {
   }
 };
 
-window.moveClinicSlide = function(sliderId, direction) {
-  const slider = document.getElementById(sliderId);
-  if (!slider) return;
-  const scrollAmount = slider.clientWidth * direction;
-  slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-};
-
-window.initClinicSlider = function(sliderId, docId, imagesCount) {
-  const slider = document.getElementById(sliderId);
-  if (!slider || imagesCount <= 1) return;
-
-  let currentIndex = 0;
-  const dots = document.querySelectorAll(`.slide-dot-${docId}`);
-
-  slider.addEventListener('scroll', () => {
-      const newIndex = Math.round(slider.scrollLeft / slider.clientWidth);
-      if (newIndex !== currentIndex && newIndex < imagesCount && newIndex >= 0) {
-          currentIndex = newIndex;
-          dots.forEach((dot, i) => { dot.style.background = i === currentIndex ? 'white' : 'rgba(255,255,255,0.4)'; });
-      }
-  });
-
-  setInterval(() => {
-      if (slider.matches(':hover')) return; 
-      if (currentIndex >= imagesCount - 1) slider.scrollTo({ left: 0, behavior: 'smooth' });
-      else slider.scrollBy({ left: slider.clientWidth, behavior: 'smooth' });
-  }, 3000);
-};
-
 window.renderClinicImageThumbnails = function() {
   let container = document.getElementById('currentClinicImagesContainer');
   if (!container) {
