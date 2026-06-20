@@ -1356,60 +1356,10 @@ const logoHomeBtn = document.getElementById('logoHomeBtn');
 // 🔍 دوال معرض صور العيادة (Clinic Gallery + Lightbox)
 // ==========================================
 
-// متغير لتخزين intervals حتى لا تتضارب
-window._clinicSliderIntervals = {};
-
-/**
- * التنقل بين صور السلايدر (الأسهم ← →)
+/* * ملاحظة: تم حذف دوال moveClinicSlide و initClinicSlider 
+ * لأن الحركة المستمرة وإيقافها عند اللمس تمت معالجتها بالكامل عبر CSS Animations 
+ * في ملف ui.js مما يعطي أداءً أسرع وأكثر انسيابية.
  */
-window.moveClinicSlide = function(sliderId, direction) {
-    const slider = document.getElementById(sliderId);
-    if (!slider) return;
-    const firstSlide = slider.querySelector('div');
-    if (!firstSlide) return;
-    const gap = 8;
-    const slideWidth = firstSlide.offsetWidth + gap;
-    slider.scrollBy({ left: direction * slideWidth, behavior: 'smooth' });
-};
-
-/**
- * ✅ تهيئة الـ Autoplay (الحركة التلقائية)
- */
-window.initClinicSlider = function(sliderId, docId) {
-    // تنظيف أي interval قديم لهذا الطبيب
-    if (window._clinicSliderIntervals[docId]) {
-        clearInterval(window._clinicSliderIntervals[docId]);
-    }
-    
-    const slider = document.getElementById(sliderId);
-    if (!slider) return;
-    
-    let isHovered = false;
-    
-    // إيقاف الحركة عند وضع الماوس فوق الصور
-    slider.addEventListener('mouseenter', () => { isHovered = true; });
-    slider.addEventListener('mouseleave', () => { isHovered = false; });
-    slider.addEventListener('touchstart', () => { isHovered = true; }, { passive: true });
-    slider.addEventListener('touchend', () => { isHovered = false; }, { passive: true });
-    
-    // تشغيل الحركة كل 3 ثواني
-    window._clinicSliderIntervals[docId] = setInterval(() => {
-        if (isHovered) return; // لا تتحرك إذا كان المستخدم يتفاعل
-        
-        const firstSlide = slider.querySelector('div');
-        if (!firstSlide) return;
-        const gap = 8;
-        const slideWidth = firstSlide.offsetWidth + gap;
-        const maxScroll = slider.scrollWidth - slider.clientWidth;
-        
-        // إذا وصلنا للنهاية، نعود للبداية (Loop)
-        if (slider.scrollLeft + slideWidth >= maxScroll - 5) {
-            slider.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-            slider.scrollBy({ left: slideWidth, behavior: 'smooth' });
-        }
-    }, 3000);
-};
 
 /**
  * فتح الـ Lightbox (تكبير الصورة)
@@ -1421,10 +1371,10 @@ window.openClinicLightbox = function(imageUrl, index, docId) {
     
     img.src = imageUrl;
     lb.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden'; // منع تمرير الصفحة
     
-    window._lightboxImages = window._lightboxImages || {};
-    window._lightboxImages[docId] = { urls: [], current: index };
+    // السر الجميل هنا: عند فتح هذه النافذة، الماوس لم يعد فوق السلايدر (لأن النافذة غطته)
+    // وبالتالي CSS سيلغي وضع التوقف (paused) والسلايدر سيعود للحركة تلقائياً في الخلفية!
 };
 
 /**
@@ -1434,10 +1384,10 @@ window.closeClinicLightbox = function(docId) {
     const lb = document.getElementById('clinicLightbox_' + docId);
     if (!lb) return;
     lb.style.display = 'none';
-    document.body.style.overflow = '';
+    document.body.style.overflow = ''; // إعادة تفعيل تمرير الصفحة
 };
 
-// إغلاق الـ Lightbox بزر Escape
+// إغلاق الـ Lightbox بزر Escape من الكيبورد
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         document.querySelectorAll('[id^="clinicLightbox_"]').forEach(lb => {
