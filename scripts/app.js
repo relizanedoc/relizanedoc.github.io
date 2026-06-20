@@ -1352,3 +1352,32 @@ const logoHomeBtn = document.getElementById('logoHomeBtn');
   // 🤖 تهيئة الشات بوت من الملف المنفصل
   // ==========================================
   initChatbot(); // 🆕 استدعاء دالة تهيئة الشات بوت
+window.openClinicLightbox = function(url, index, docId) {
+    const lb = document.getElementById('clinicLightbox_' + docId);
+    const img = document.getElementById('clinicLightboxImg_' + docId);
+    if (!lb || !img) return;
+    img.src = url;
+    lb.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // حفظ قائمة الصور للتنقل داخل الـ Lightbox
+    window._lightboxImages = window._lightboxImages || {};
+    window._lightboxImages[docId] = { urls: [], current: index };
+};
+
+window.closeClinicLightbox = function(docId) {
+    const lb = document.getElementById('clinicLightbox_' + docId);
+    if (!lb) return;
+    lb.style.display = 'none';
+    document.body.style.overflow = '';
+};
+
+// إغلاق Lightbox بزر Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('[id^="clinicLightbox_"]').forEach(lb => {
+            if (lb.style.display === 'flex') lb.style.display = 'none';
+        });
+        document.body.style.overflow = '';
+    }
+});
