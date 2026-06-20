@@ -1244,42 +1244,44 @@ th {
 @media (min-width: 768px) {
   .hero-section {
     display: block !important; 
-    background: url('images/hero-bg.jpg') no-repeat left center; 
-    background-size: cover;
-    border-radius: 20px 20px 0 0; 
-    padding: 5.5rem 2rem 3.5rem 2rem; 
-    text-align: center;
+    background: url('images/hero-bg.jpg') no-repeat left center !important; 
+    background-size: cover !important;
+    border-radius: 20px 20px 0 0 !important; 
+    padding: 5.5rem 2rem 3.5rem 2rem !important; 
+    text-align: center !important;
   }
 
   /* الشارة العلوية (المنصة الطبية الأولى) */
   .hero-section > div:first-child { 
-    display: inline-block;
-    background: var(--primary-light); /* خلفية زرقاء فاتحة جداً */
-    color: var(--primary-dark); /* نص أزرق داكن */
-    border: 1px solid var(--primary);
-    padding: 0.5rem 1.5rem; 
-    border-radius: 50px; 
-    margin-bottom: 1rem;
-    font-weight: 700;
+    display: inline-block !important;
+    background: var(--primary-light) !important; /* أزرق فاتح */
+    color: var(--primary-dark) !important; /* أزرق غامق */
+    border: 1px solid var(--primary) !important;
+    padding: 0.5rem 1.5rem !important; 
+    border-radius: 50px !important; 
+    margin-bottom: 1rem !important;
+    font-weight: 700 !important;
   }
 
-  /* العنوان الرئيسي */
+  /* العنوان الرئيسي - لون داكن */
   .hero-section h1 { 
-    font-size: 2.2rem; 
-    color: var(--text); /* لون داكن جداً يبرز بوضوح فوق الصورة الساطعة */
-    margin-bottom: 0.5rem; 
-    text-shadow: none; /* تخلصنا من الظلال نهائياً */
+    font-size: 2.2rem !important; 
+    color: var(--text) !important; /* لون داكن جداً (Slate) */
+    margin-bottom: 0.5rem !important; 
+    background: transparent !important; 
+    text-shadow: none !important; /* بدون أي ظل */
   }
   
-  /* النص الفرعي */
+  /* النص الفرعي - رمادي داكن */
   .hero-section p { 
-    font-size: 1.1rem; 
-    max-width: 60%; 
-    margin: 0 auto; 
-    color: var(--text-secondary); /* لون رمادي مزرق مريح للقراءة */
-    line-height: 1.8;
-    font-weight: 600; /* زيادة سماكة الخط قليلاً لضمان وضوحه */
-    text-shadow: none;
+    font-size: 1.1rem !important; 
+    max-width: 60% !important; 
+    margin: 0 auto !important; 
+    color: var(--text-secondary) !important; /* رمادي مزرق */
+    line-height: 1.8 !important;
+    font-weight: 700 !important;
+    background: transparent !important; 
+    text-shadow: none !important; /* بدون أي ظل */
   }
 }
 /* =========================================================
