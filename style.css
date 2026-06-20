@@ -1254,34 +1254,43 @@ th {
   /* الشارة العلوية (المنصة الطبية الأولى) */
   .hero-section > div:first-child { 
     display: inline-block !important;
-    background: var(--primary-light) !important; /* أزرق فاتح */
-    color: var(--primary-dark) !important; /* أزرق غامق */
-    border: 1px solid var(--primary) !important;
+    background: var(--primary) !important; /* لون أزرق ساطع */
+    color: #ffffff !important; /* نص أبيض */
+    border: none !important;
     padding: 0.5rem 1.5rem !important; 
     border-radius: 50px !important; 
     margin-bottom: 1rem !important;
     font-weight: 700 !important;
+    box-shadow: 0 4px 10px rgba(14, 165, 233, 0.4) !important;
   }
 
-  /* العنوان الرئيسي - لون داكن */
+  /* العنوان الرئيسي */
   .hero-section h1 { 
     font-size: 2.2rem !important; 
-    color: var(--text) !important; /* لون داكن جداً (Slate) */
+    color: #ffffff !important; /* عودة اللون الأبيض الناصع */
     margin-bottom: 0.5rem !important; 
     background: transparent !important; 
-    text-shadow: none !important; /* بدون أي ظل */
+    /* ظل متعدد الطبقات: تحديد حاد + هالة متوسطة + توهج داكن واسع */
+    text-shadow: 
+      0px 2px 4px rgba(0, 0, 0, 1), 
+      0px 6px 15px rgba(0, 0, 0, 0.8), 
+      0px 0px 40px rgba(0, 0, 0, 0.8) !important; 
   }
   
-  /* النص الفرعي - رمادي داكن */
+  /* النص الفرعي */
   .hero-section p { 
     font-size: 1.1rem !important; 
     max-width: 60% !important; 
     margin: 0 auto !important; 
-    color: var(--text-secondary) !important; /* رمادي مزرق */
+    color: #ffffff !important; /* عودة اللون الأبيض الناصع */
     line-height: 1.8 !important;
     font-weight: 700 !important;
     background: transparent !important; 
-    text-shadow: none !important; /* بدون أي ظل */
+    /* نفس الظل المتعدد الطبقات لضمان الوضوح */
+    text-shadow: 
+      0px 2px 4px rgba(0, 0, 0, 1), 
+      0px 6px 15px rgba(0, 0, 0, 0.8), 
+      0px 0px 40px rgba(0, 0, 0, 0.8) !important; 
   }
 }
 /* =========================================================
