@@ -1171,6 +1171,19 @@ const trackForm = document.getElementById('trackBookingForm');
   const navLinks = document.getElementById('navLinks');
   if (hamburgerBtn && navLinks) hamburgerBtn.addEventListener('click', () => navLinks.classList.toggle('show'));
   document.querySelectorAll('.nav-btn').forEach(btn => { btn.addEventListener('click', () => { if (window.innerWidth <= 768) navLinks.classList.remove('show'); }); });
+// إغلاق القائمة المنسدلة عند النقر خارجها في شاشات الهاتف
+document.addEventListener('click', (event) => {
+  const hamburgerBtn = document.getElementById('hamburgerBtn');
+  const navLinks = document.getElementById('navLinks');
+  
+  // التحقق مما إذا كانت القائمة مفتوحة والشاشة بحجم الهاتف
+  if (navLinks && navLinks.classList.contains('show') && window.innerWidth <= 768) {
+    // إذا كان مكان النقر ليس داخل القائمة نفسها، وليس على زر الهامبرغر
+    if (!navLinks.contains(event.target) && !hamburgerBtn.contains(event.target)) {
+      navLinks.classList.remove('show');
+    }
+  }
+});
   document.querySelectorAll('.nav-btn[data-nav]').forEach(btn => { btn.onclick = () => window.router(btn.getAttribute('data-nav')); });
 document.getElementById('btn-en').onclick = () => window.setLang('en');
 document.getElementById('btn-ar').onclick = () => window.setLang('ar');
