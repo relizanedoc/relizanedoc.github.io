@@ -1248,43 +1248,38 @@ th {
     background-size: cover;
     border-radius: 20px 20px 0 0; 
     padding: 5.5rem 2rem 3.5rem 2rem; 
-    text-align: center; /* ضمان تمركز كل شيء داخل هذا القسم */
+    text-align: center;
   }
 
+  /* الشارة العلوية (المنصة الطبية الأولى) */
+  .hero-section > div:first-child { 
+    display: inline-block;
+    background: var(--primary-light); /* خلفية زرقاء فاتحة جداً */
+    color: var(--primary-dark); /* نص أزرق داكن */
+    border: 1px solid var(--primary);
+    padding: 0.5rem 1.5rem; 
+    border-radius: 50px; 
+    margin-bottom: 1rem;
+    font-weight: 700;
+  }
+
+  /* العنوان الرئيسي */
   .hero-section h1 { 
     font-size: 2.2rem; 
-    color: #ffffff; 
-    background: rgba(15, 23, 42, 0.65); 
-    padding: 0.5rem 1.5rem; 
-    border-radius: 12px; 
-    /* استخدام 'table' بدلاً من 'inline-block' يحل مشكلتين: 
-       1. يأخذ حجم النص فقط.
-       2. يجبر العنصر التالي على النزول لسطر جديد. */
-    display: table; 
-    margin: 0 auto 0.75rem auto; /* توسيط أفقي وإضافة مسافة من الأسفل */
-    backdrop-filter: blur(5px); 
-    -webkit-backdrop-filter: blur(5px); 
+    color: var(--text); /* لون داكن جداً يبرز بوضوح فوق الصورة الساطعة */
+    margin-bottom: 0.5rem; 
+    text-shadow: none; /* تخلصنا من الظلال نهائياً */
   }
   
+  /* النص الفرعي */
   .hero-section p { 
     font-size: 1.1rem; 
     max-width: 60%; 
-    color: #ffffff;
-    background: rgba(15, 23, 42, 0.65); 
-    padding: 0.5rem 1.5rem;
-    border-radius: 10px;
-    display: table; /* نفس الخاصية لمنع التمدد وإجبار سطر جديد */
-    margin: 0 auto; /* توسيط أفقي */
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    margin: 0 auto; 
+    color: var(--text-secondary); /* لون رمادي مزرق مريح للقراءة */
     line-height: 1.8;
-  }
-  
-  .hero-section > div:first-child { 
-    padding: 0.75rem 1.5rem; 
-    /* تأكد من أن الشارة العلوية (المنصة الطبية الأولى) تتبع نفس النسق */
-    display: table;
-    margin: 0 auto 1rem auto;
+    font-weight: 600; /* زيادة سماكة الخط قليلاً لضمان وضوحه */
+    text-shadow: none;
   }
 }
 /* =========================================================
