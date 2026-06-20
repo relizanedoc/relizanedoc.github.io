@@ -1212,6 +1212,7 @@ th {
    تصميم البانر الاحترافي (Hero) - Mobile First
    ========================================================= */
 .hero-section {
+   display: none !important; /* هذا السطر يخفي القسم بالكامل في الشاشات الصغيرة */
   /* الافتراضي للهواتف: خلفية متدرجة بدون صورة لزيادة الأداء ووضوح النص */
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   border-radius: 12px; 
@@ -1257,6 +1258,7 @@ th {
 /* --- تفعيل الصورة للشاشات المتوسطة والكبيرة (Tablets & Desktops) --- */
 @media (min-width: 768px) {
   .hero-section {
+display: block !important; /* هذا السطر يعيد إظهار القسم في الشاشات الكبيرة */
     /* هنا نستدعي الصورة للشاشات الكبيرة */
     background: url('images/hero-bg.jpg') no-repeat left center; 
     background-size: cover;
