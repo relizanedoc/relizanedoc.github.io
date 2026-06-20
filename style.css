@@ -1874,3 +1874,41 @@ th {
         left: auto;
     }
 }
+/* إجبار أزرار الحجز على البقاء بشكل أفقي في شاشات الهواتف */
+@media (max-width: 900px) {
+    .booking-tabs { 
+        flex-direction: row !important; /* إلغاء التكدس العمودي */
+    }
+    
+    .booking-tab { 
+        flex: 1; /* قسمة المساحة بالتساوي 50% لكل زر */
+        justify-content: center !important; 
+        padding: 0.75rem 0.25rem !important; /* تقليل الحواف الجانبية لتوفير مساحة للنص */
+        gap: 6px !important;
+    }
+
+    .tab-text { 
+        text-align: center !important; 
+    }
+    
+    [dir="rtl"] .tab-text { 
+        text-align: center !important; 
+    }
+}
+
+/* 💡 تحسين ضروري للشاشات الصغيرة جداً (الهواتف الذكية) */
+@media (max-width: 480px) {
+    .booking-tab {
+        flex-direction: column !important; /* جعل الأيقونة فوق النص لترتيب المساحة بذكاء */
+        gap: 4px !important;
+    }
+    
+    .tab-title { 
+        font-size: 0.9rem !important; /* تصغير العنوان قليلاً */
+        white-space: nowrap; /* منع انكسار الكلمة */
+    }
+    
+    .tab-subtitle { 
+        display: none !important; /* إخفاء النص الفرعي لتجنب التشوه والزحام البصري */
+    }
+}
