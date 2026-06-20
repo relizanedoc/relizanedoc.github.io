@@ -82,14 +82,26 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://relizane.org/?doc=425a173f-496d-4046-a3bb-b715029c8f0f</loc>
-    <lastmod>2026-06-11</lastmod>
+    <loc>https://relizane.org/?doc=66690d29-d042-408b-88e4-5a0b20a58728</loc>
+    <lastmod>2026-06-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://relizane.org/?doc=338404a7-e417-4cf4-923c-775fa62da9ac</loc>
     <lastmod>2026-06-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://relizane.org/?doc=425a173f-496d-4046-a3bb-b715029c8f0f</loc>
+    <lastmod>2026-06-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://relizane.org/?doc=6ddd4543-b9c1-4c7a-b1a9-bba2636ca0fb</loc>
+    <lastmod>2026-06-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
