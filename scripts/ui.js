@@ -351,12 +351,11 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
     object-fit: cover;
     pointer-events: none;
 }
-
 @media (max-width: 768px) {
-    .clinic-marquee-item { width: 280px; height: 200px; }
-}
-@media (max-width: 480px) {
-    .clinic-marquee-item { width: 280px; height: 200px; }
+    .clinic-marquee-item { 
+        width: 280px; 
+        height: 200px; 
+    }
 }
 </style>
 
