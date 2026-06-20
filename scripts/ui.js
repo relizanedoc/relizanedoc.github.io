@@ -363,31 +363,22 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
 }
 </style>
 
-<div style="margin-top: 1.5rem; background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); max-width: 800px; margin-left: auto; margin-right: auto;">
-    <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1rem; color: #0f172a;">
-        ${state.currentLang === 'ar' ? 'صور العيادة' : 'Clinic Gallery'}
-    </h4>
-    
-    <div class="clinic-marquee-wrapper" dir="ltr">
-        <div class="clinic-marquee-track">
-            ${doc.clinic_images.map((url, index) => `
-                <div class="clinic-marquee-item" onclick="window.openClinicLightbox('${url}', ${index}, '${doc.id}')">
-                    <img src="${url}" onerror="this.parentElement.style.display='none'" alt="Clinic Image ${index + 1}" loading="lazy" decoding="async">
-                </div>
-            `).join('')}
-            
-            ${doc.clinic_images.map((url, index) => `
-                <div class="clinic-marquee-item" onclick="window.openClinicLightbox('${url}', ${index}, '${doc.id}')">
-                    <img src="${url}" onerror="this.parentElement.style.display='none'" alt="Clinic Image Copy" loading="lazy" decoding="async">
-                </div>
-            `).join('')}
-        </div>
-    </div>
-</div>
-
 <div id="clinicLightbox_${doc.id}" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;" onclick="window.closeClinicLightbox('${doc.id}')">
-    <button onclick="event.stopPropagation(); window.closeClinicLightbox('${doc.id}')" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; color: white; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">×</button>
-    <img id="clinicLightboxImg_${doc.id}" src="" style="max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 12px; box-shadow: 0 25px 80px rgba(0,0,0,0.6); cursor: default;" onclick="event.stopPropagation()">
+    <button onclick="event.stopPropagation(); window.closeClinicLightbox('${doc.id}')" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; color: white; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: background 0.3s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">×</button>
+    
+    ${doc.clinic_images.length > 1 ? `
+    <button onclick="event.stopPropagation(); window.navigateLightbox(-1, '${doc.id}')" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; backdrop-filter: blur(4px); transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    ` : ''}
+
+    <img id="clinicLightboxImg_${doc.id}" src="" style="max-width: 85vw; max-height: 85vh; object-fit: contain; border-radius: 12px; box-shadow: 0 25px 80px rgba(0,0,0,0.6); cursor: default; transition: opacity 0.2s ease-in-out;" onclick="event.stopPropagation()">
+    
+    ${doc.clinic_images.length > 1 ? `
+    <button onclick="event.stopPropagation(); window.navigateLightbox(1, '${doc.id}')" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; backdrop-filter: blur(4px); transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </button>
+    ` : ''}
 </div>
 ` : ''}
     ${servicesHtml}
