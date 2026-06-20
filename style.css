@@ -1851,3 +1851,26 @@ th {
 #userBookingsContainer > div:last-child {
   margin-bottom: 1.5rem !important;
 }
+@media (min-width: 900px) {
+    .booking-tabs .booking-tab:first-child {
+        position: relative;
+    }
+
+    .booking-tabs .booking-tab:first-child::after {
+        content: "";
+        position: absolute;
+        top: 25%;
+        height: 50%;
+        width: 1px;
+        background-color: var(--border);
+        /* يدعم العربية افتراضياً (الخط على اليسار) */
+        left: 0; 
+        right: auto;
+    }
+
+    /* عندما يتغير الموقع للإنجليزية (الخط يصبح على اليمين) */
+    [dir="ltr"] .booking-tabs .booking-tab:first-child::after {
+        right: 0;
+        left: auto;
+    }
+}
