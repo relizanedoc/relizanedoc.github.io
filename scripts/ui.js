@@ -333,8 +333,8 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
 }
 
 .clinic-marquee-item {
-    width: 250px;
-    height: 180px;
+    width: 280px;
+    height: 220px;
     border-radius: 12px;
     overflow: hidden;
     cursor: zoom-in;
@@ -353,10 +353,10 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
 }
 
 @media (max-width: 768px) {
-    .clinic-marquee-item { width: 200px; height: 160px; }
+    .clinic-marquee-item { width: 280px; height: 200px; }
 }
 @media (max-width: 480px) {
-    .clinic-marquee-item { width: 260px; height: 180px; }
+    .clinic-marquee-item { width: 280px; height: 200px; }
 }
 </style>
 
