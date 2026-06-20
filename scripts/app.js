@@ -1352,11 +1352,33 @@ const logoHomeBtn = document.getElementById('logoHomeBtn');
   // 🤖 تهيئة الشات بوت من الملف المنفصل
   // ==========================================
   initChatbot(); // 🆕 استدعاء دالة تهيئة الشات بوت
-window.openClinicLightbox = function(url, index, docId) {
+// ==========================================
+// 🔍 دوال معرض صور العيادة (Clinic Gallery + Lightbox)
+// ==========================================
+
+/**
+ * التنقل بين صور السلايدر (الأسهم ← →)
+ * ✅ تعديل: يحسب عرض الشريحة + الفجوة (gap)
+ */
+window.moveClinicSlide = function(sliderId, direction) {
+    const slider = document.getElementById(sliderId);
+    if (!slider) return;
+    const firstSlide = slider.querySelector('div');
+    if (!firstSlide) return;
+    const gap = 8; // نفس gap الموجود في CSS
+    const slideWidth = firstSlide.offsetWidth + gap;
+    slider.scrollBy({ left: direction * slideWidth, behavior: 'smooth' });
+};
+
+/**
+ * فتح الـ Lightbox (تكبير الصورة)
+ */
+window.openClinicLightbox = function(imageUrl, index, docId) {
     const lb = document.getElementById('clinicLightbox_' + docId);
     const img = document.getElementById('clinicLightboxImg_' + docId);
     if (!lb || !img) return;
-    img.src = url;
+    
+    img.src = imageUrl;
     lb.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     
@@ -1365,6 +1387,9 @@ window.openClinicLightbox = function(url, index, docId) {
     window._lightboxImages[docId] = { urls: [], current: index };
 };
 
+/**
+ * إغلاق الـ Lightbox
+ */
 window.closeClinicLightbox = function(docId) {
     const lb = document.getElementById('clinicLightbox_' + docId);
     if (!lb) return;
@@ -1372,7 +1397,7 @@ window.closeClinicLightbox = function(docId) {
     document.body.style.overflow = '';
 };
 
-// إغلاق Lightbox بزر Escape
+// إغلاق الـ Lightbox بزر Escape
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         document.querySelectorAll('[id^="clinicLightbox_"]').forEach(lb => {
