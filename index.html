@@ -795,7 +795,18 @@
           <div>
             <h2 class='text-xl font-bold' id='dashboardSubtitle' style='margin: 0; color: var(--primary-dark);'>&nbsp;</h2>
           </div>
-          <div class='card mb-4' style='padding: 1rem 1.5rem;'>
+          <div style='display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;'>
+            <div class='toggle-container'>
+              <span data-i18n='disableBooking' id='bookingStatusText'>إيقاف الحجوزات</span>
+              <label class='switch'>
+                <input id='bookingToggleSwitch' type='checkbox'>
+                <span class='slider'></span>
+              </label>
+            </div>
+            <button class='btn btn-secondary' id='dashboardLogoutBtn' style='padding: 0.4rem 1rem;'>Logout</button>
+          </div>
+        </div>
+<div class='card mb-4' style='padding: 1rem 1.5rem;'>
   <div class='accordion-header' onclick='document.getElementById("analyticsContent").classList.toggle("open"); this.classList.toggle("open");'>
     <div style='display:flex; align-items:center; gap:0.75rem;'>
       <div style='background: var(--warning); color: white; padding: 0.5rem; border-radius: 8px; display: flex;'>
@@ -821,18 +832,6 @@
     </div>
   </div>
 </div>
-          <div style='display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;'>
-            <div class='toggle-container'>
-              <span data-i18n='disableBooking' id='bookingStatusText'>إيقاف الحجوزات</span>
-              <label class='switch'>
-                <input id='bookingToggleSwitch' type='checkbox'>
-                <span class='slider'></span>
-              </label>
-            </div>
-            <button class='btn btn-secondary' id='dashboardLogoutBtn' style='padding: 0.4rem 1rem;'>Logout</button>
-          </div>
-        </div>
-
         <div class='card mb-4' style='padding: 1rem 1.5rem;'>
           <div class='accordion-header' id='workingHoursToggle' onclick='toggleWorkingHours()'>
             <div style='display:flex; align-items:center; gap:0.75rem;'>
