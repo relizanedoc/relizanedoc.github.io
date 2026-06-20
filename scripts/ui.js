@@ -300,44 +300,95 @@ window.activeProfileDoctor = doc;
   </div>
 ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
 <style>
-#clinicSlider_${doc.id} { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; width: 100%; height: 100%; scrollbar-width: none; -ms-overflow-style: none; gap: 8px; padding: 4px; box-sizing: border-box; }
-#clinicSlider_${doc.id}::-webkit-scrollbar { display: none; }
-#clinicSlider_${doc.id} > div { flex: 0 0 calc(33.333% - 6px); width: calc(33.333% - 6px); height: 180px; display: flex; align-items: center; justify-content: center; scroll-snap-align: start; background: white; border-radius: 12px; overflow: hidden; cursor: zoom-in; }
+/* إعدادات الحاوية للسلايدر المستمر */
+.clinic-marquee-wrapper {
+    overflow: hidden;
+    width: 100%;
+    position: relative;
+    padding: 10px 0;
+    background: #f1f5f9;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border: 1px solid #e2e8f0;
+}
+
+/* المسار الذي يتحرك بشكل مستمر */
+.clinic-marquee-track {
+    display: flex;
+    width: max-content;
+    gap: 15px;
+    /* الأنيميشن: يتحرك 30 ثانية بشكل خطي ومستمر */
+    animation: marqueeScroll 25s linear infinite; 
+}
+
+/* إيقاف الحركة عند وضع الماوس (للحاسوب) أو اللمس (للهاتف) */
+.clinic-marquee-wrapper:hover .clinic-marquee-track,
+.clinic-marquee-wrapper:active .clinic-marquee-track {
+    animation-play-state: paused;
+}
+
+/* حركة الأنيميشن: يتحرك لليسار بنسبة 50% (لأننا كررنا الصور مرتين) */
+@keyframes marqueeScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* تصميم الصورة الفردية */
+.clinic-marquee-item {
+    width: 250px;
+    height: 180px;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: zoom-in;
+    flex-shrink: 0;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clinic-marquee-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none; /* لمنع مشاكل السحب بالماوس */
+}
+
 @media (max-width: 768px) {
-    #clinicSlider_${doc.id} > div { flex: 0 0 calc(50% - 4px); width: calc(50% - 4px); height: 160px; }
+    .clinic-marquee-item { width: 200px; height: 160px; }
 }
 @media (max-width: 480px) {
-    #clinicSlider_${doc.id} > div { flex: 0 0 calc(100% - 0px); width: 100%; height: 220px; }
+    .clinic-marquee-item { width: 260px; height: 180px; }
 }
 </style>
+
 <div style="margin-top: 1.5rem; background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); max-width: 800px; margin-left: auto; margin-right: auto;">
     <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1rem; color: #0f172a;">
         ${state.currentLang === 'ar' ? 'صور العيادة' : 'Clinic Gallery'}
     </h4>
-    <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); background: #f1f5f9; border: 1px solid #e2e8f0;">
-        <div id="clinicSlider_${doc.id}" dir="ltr">
+    
+    <div class="clinic-marquee-wrapper" dir="ltr">
+        <div class="clinic-marquee-track">
             ${doc.clinic_images.map((url, index) => `
-                <div onclick="window.openClinicLightbox('${url}', ${index}, '${doc.id}')">
-                    <img src="${url}" style="width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none;" onerror="this.parentElement.style.display='none'" alt="Clinic Image ${index + 1}" loading="lazy" decoding="async">
+                <div class="clinic-marquee-item" onclick="window.openClinicLightbox('${url}', ${index}, '${doc.id}')">
+                    <img src="${url}" onerror="this.parentElement.style.display='none'" alt="Clinic Image ${index + 1}" loading="lazy" decoding="async">
+                </div>
+            `).join('')}
+            
+            ${doc.clinic_images.map((url, index) => `
+                <div class="clinic-marquee-item" onclick="window.openClinicLightbox('${url}', ${index}, '${doc.id}')">
+                    <img src="${url}" onerror="this.parentElement.style.display='none'" alt="Clinic Image Copy" loading="lazy" decoding="async">
                 </div>
             `).join('')}
         </div>
-
-        ${doc.clinic_images.length > 1 ? `
-            <button onclick="event.stopPropagation(); window.moveClinicSlide('clinicSlider_${doc.id}', -1)" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); background: rgba(255,255,255,0.9); backdrop-filter: blur(4px); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 2;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-            <button onclick="event.stopPropagation(); window.moveClinicSlide('clinicSlider_${doc.id}', 1)" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: rgba(255,255,255,0.9); backdrop-filter: blur(4px); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 2;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
-        ` : ''}
     </div>
 </div>
-<script>setTimeout(() => { if(window.initClinicSlider) window.initClinicSlider('clinicSlider_${doc.id}', '${doc.id}'); }, 100);</script>
 
-<!-- Lightbox - يظهر الصورة كاملة بدون قص -->
 <div id="clinicLightbox_${doc.id}" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;" onclick="window.closeClinicLightbox('${doc.id}')">
-    <button onclick="event.stopPropagation(); window.closeClinicLightbox('${doc.id}')" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; color: white; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">&times;</button>
+    <button onclick="event.stopPropagation(); window.closeClinicLightbox('${doc.id}')" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; color: white; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">×</button>
     <img id="clinicLightboxImg_${doc.id}" src="" style="max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 12px; box-shadow: 0 25px 80px rgba(0,0,0,0.6); cursor: default;" onclick="event.stopPropagation()">
 </div>
 ` : ''}
-
     ${servicesHtml}
 
     ${doc.extra_info ? `
