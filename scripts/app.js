@@ -784,7 +784,56 @@ window.loadUserBookings = async function() {
     container.innerHTML = html;
   } catch(err) { container.innerHTML = `<div class="text-center p-4 text-danger">خطأ في الاتصال: تعذر جلب المواعيد.</div>`; }
 };
+let doctorChartInstance = null; // متغير لحفظ حالة المخطط
 
+window.renderDoctorAnalytics = function(appointments) {
+    if (!appointments || appointments.length === 0) return;
+
+    // 1. حساب الإحصائيات السريعة
+    const total = appointments.length;
+    const confirmed = appointments.filter(a => a.status === 'confirmed').length;
+    const pending = appointments.filter(a => a.status === 'pending').length;
+    const cancelled = appointments.filter(a => a.status === 'cancelled').length;
+
+    document.getElementById('statTotalAppointments').textContent = total;
+    document.getElementById('statConfirmedAppointments').textContent = confirmed;
+
+    // 2. تدمير المخطط القديم إذا كان موجوداً (لتجنب تداخل الرسوم عند إعادة تسجيل الدخول)
+    if (doctorChartInstance) {
+        doctorChartInstance.destroy();
+    }
+
+    // 3. رسم المخطط الدائري (Doughnut Chart)
+    const ctx = document.getElementById('appointmentsChart').getContext('2d');
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+    doctorChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['مؤكدة', 'قيد الانتظار', 'ملغاة'],
+            datasets: [{
+                data: [confirmed, pending, cancelled],
+                backgroundColor: [
+                    '#10b981', // success (green)
+                    '#f59e0b', // warning (orange)
+                    '#ef4444'  // danger (red)
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: isDark ? '#f8fafc' : '#0f172a', font: { family: 'Tajawal', size: 14 } }
+                }
+            }
+        }
+    });
+};
 window.handleDashboardLogin = async function(e) {
   if (e) e.preventDefault();
   if (isAccountLocked()) return;
