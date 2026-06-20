@@ -298,30 +298,39 @@ window.activeProfileDoctor = doc;
         </div>
       </div>
   </div>
-
 ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
-<div style="margin-top: 1.5rem; background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); max-width: 720px; margin-left: auto; margin-right: auto;">
-    <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1.5rem; color: #0f172a;">
+<style>
+#clinicSlider_${doc.id} { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; width: 100%; height: 100%; scrollbar-width: none; -ms-overflow-style: none; gap: 8px; padding: 4px; box-sizing: border-box; }
+#clinicSlider_${doc.id}::-webkit-scrollbar { display: none; }
+#clinicSlider_${doc.id} > div { flex: 0 0 calc(33.333% - 6px); width: calc(33.333% - 6px); height: 180px; display: flex; align-items: center; justify-content: center; scroll-snap-align: start; background: white; border-radius: 12px; overflow: hidden; cursor: zoom-in; }
+@media (max-width: 768px) {
+    #clinicSlider_${doc.id} > div { flex: 0 0 calc(50% - 4px); width: calc(50% - 4px); height: 160px; }
+}
+@media (max-width: 480px) {
+    #clinicSlider_${doc.id} > div { flex: 0 0 calc(100% - 0px); width: 100%; height: 220px; }
+}
+</style>
+<div style="margin-top: 1.5rem; background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); max-width: 800px; margin-left: auto; margin-right: auto;">
+    <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1rem; color: #0f172a;">
         ${state.currentLang === 'ar' ? 'صور العيادة' : 'Clinic Gallery'}
     </h4>
-    <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); background: #f1f5f9; border: 1px solid #e2e8f0; max-height: 340px;">
-        <div id="clinicSlider_${doc.id}" dir="ltr" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; width: 100%; height: 100%; scrollbar-width: none; -ms-overflow-style: none;">
+    <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); background: #f1f5f9; border: 1px solid #e2e8f0;">
+        <div id="clinicSlider_${doc.id}" dir="ltr">
             ${doc.clinic_images.map((url, index) => `
-                <div onclick="window.openClinicLightbox('${url}', ${index}, '${doc.id}')" style="flex: 0 0 100%; width: 100%; min-height: 200px; max-height: 340px; display: flex; align-items: center; justify-content: center; scroll-snap-align: center; background: #f1f5f9; padding: 0.5rem; box-sizing: border-box; cursor: zoom-in;">
-                    <img src="${url}" style="max-width: 100%; max-height: 320px; width: auto; height: auto; object-fit: contain; display: block; image-rendering: -webkit-optimize-contrast; pointer-events: none; border-radius: 12px;" onerror="this.parentElement.style.display='none'" alt="Clinic Image ${index + 1}" loading="lazy" decoding="async">
+                <div onclick="window.openClinicLightbox('${url}', ${index}, '${doc.id}')">
+                    <img src="${url}" style="width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none;" onerror="this.parentElement.style.display='none'" alt="Clinic Image ${index + 1}" loading="lazy" decoding="async">
                 </div>
             `).join('')}
         </div>
 
         ${doc.clinic_images.length > 1 ? `
-            <button onclick="event.stopPropagation(); window.moveClinicSlide('clinicSlider_${doc.id}', -1)" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 2;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-            <button onclick="event.stopPropagation(); window.moveClinicSlide('clinicSlider_${doc.id}', 1)" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(4px); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 2;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+            <button onclick="event.stopPropagation(); window.moveClinicSlide('clinicSlider_${doc.id}', -1)" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); background: rgba(255,255,255,0.9); backdrop-filter: blur(4px); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 2;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+            <button onclick="event.stopPropagation(); window.moveClinicSlide('clinicSlider_${doc.id}', 1)" style="position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: rgba(255,255,255,0.9); backdrop-filter: blur(4px); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 2;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
         ` : ''}
-        <style>#clinicSlider_${doc.id}::-webkit-scrollbar { display: none; }</style>
     </div>
 </div>
 
-<!-- نافذة التكبير (Lightbox) - تبقى على كامل الشاشة -->
+<!-- Lightbox - يظهر الصورة كاملة بدون قص -->
 <div id="clinicLightbox_${doc.id}" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;" onclick="window.closeClinicLightbox('${doc.id}')">
     <button onclick="event.stopPropagation(); window.closeClinicLightbox('${doc.id}')" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; color: white; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">&times;</button>
     <img id="clinicLightboxImg_${doc.id}" src="" style="max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 12px; box-shadow: 0 25px 80px rgba(0,0,0,0.6); cursor: default;" onclick="event.stopPropagation()">
