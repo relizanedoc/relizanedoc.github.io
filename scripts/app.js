@@ -1356,11 +1356,6 @@ const logoHomeBtn = document.getElementById('logoHomeBtn');
 // 🔍 دوال معرض صور العيادة (Clinic Gallery + Lightbox)
 // ==========================================
 
-/* * ملاحظة: تم حذف دوال moveClinicSlide و initClinicSlider 
- * لأن الحركة المستمرة وإيقافها عند اللمس تمت معالجتها بالكامل عبر CSS Animations 
- * في ملف ui.js مما يعطي أداءً أسرع وأكثر انسيابية.
- */
-
 /**
  * فتح الـ Lightbox (تكبير الصورة)
  */
@@ -1369,12 +1364,41 @@ window.openClinicLightbox = function(imageUrl, index, docId) {
     const img = document.getElementById('clinicLightboxImg_' + docId);
     if (!lb || !img) return;
     
+    // تخزين البيانات الحالية لسهولة التنقل
+    window._currentLightboxDocId = docId;
+    window._currentLightboxIndex = index;
+    
     img.src = imageUrl;
     lb.style.display = 'flex';
     document.body.style.overflow = 'hidden'; // منع تمرير الصفحة
+};
+
+/**
+ * التنقل بين الصور داخل الـ Lightbox
+ */
+window.navigateLightbox = function(direction, docId) {
+    const images = window._currentClinicImages || [];
+    if (images.length <= 1) return;
+
+    // حساب الفهرس الجديد (الصورة التالية أو السابقة)
+    let newIndex = window._currentLightboxIndex + direction;
     
-    // السر الجميل هنا: عند فتح هذه النافذة، الماوس لم يعد فوق السلايدر (لأن النافذة غطته)
-    // وبالتالي CSS سيلغي وضع التوقف (paused) والسلايدر سيعود للحركة تلقائياً في الخلفية!
+    // نظام الدوران (إذا تجاوزنا النهاية نعود للبداية والعكس)
+    if (newIndex >= images.length) newIndex = 0;
+    if (newIndex < 0) newIndex = images.length - 1;
+
+    const img = document.getElementById('clinicLightboxImg_' + docId);
+    if (img) {
+        // تأثير اختفاء سريع ثم تغيير الصورة لتجنب التقطيع البصري
+        img.style.opacity = '0.3';
+        setTimeout(() => {
+            img.src = images[newIndex];
+            img.style.opacity = '1';
+        }, 150);
+    }
+    
+    // تحديث الفهرس الحالي
+    window._currentLightboxIndex = newIndex;
 };
 
 /**
@@ -1385,14 +1409,60 @@ window.closeClinicLightbox = function(docId) {
     if (!lb) return;
     lb.style.display = 'none';
     document.body.style.overflow = ''; // إعادة تفعيل تمرير الصفحة
+    window._currentLightboxDocId = null; // تفريغ الذاكرة
 };
 
-// إغلاق الـ Lightbox بزر Escape من الكيبورد
+// ==========================================
+// دعم التنقل من لوحة المفاتيح (أسهم + Escape)
+// ==========================================
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        document.querySelectorAll('[id^="clinicLightbox_"]').forEach(lb => {
-            if (lb.style.display === 'flex') lb.style.display = 'none';
-        });
-        document.body.style.overflow = '';
+    const docId = window._currentLightboxDocId;
+    if (!docId) return;
+
+    const lb = document.getElementById('clinicLightbox_' + docId);
+    if (lb && lb.style.display === 'flex') {
+        if (e.key === 'Escape') {
+            window.closeClinicLightbox(docId);
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+            const direction = e.key === 'ArrowLeft' ? -1 : 1;
+            // عكس الاتجاه إذا كانت لغة الموقع عربية (RTL) ليكون منطقياً
+            const isRTL = document.documentElement.dir === 'rtl';
+            window.navigateLightbox(isRTL ? -direction : direction, docId);
+        }
     }
 });
+
+// ==========================================
+// دعم السحب والإفلات (Swipe) لمستخدمي الهواتف
+// ==========================================
+let touchStartX = 0;
+let touchEndX = 0;
+
+document.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+    const docId = window._currentLightboxDocId;
+    if (!docId) return;
+    
+    const lb = document.getElementById('clinicLightbox_' + docId);
+    if (lb && lb.style.display === 'flex') {
+        const threshold = 50; // المسافة المطلوبة لاعتبارها سحبة (Swipe)
+        const diff = touchEndX - touchStartX;
+        
+        if (Math.abs(diff) > threshold) {
+            const isRTL = document.documentElement.dir === 'rtl';
+            // سحب لليسار يعني الصورة التالية، سحب لليمين يعني السابقة
+            let direction = diff < 0 ? 1 : -1; 
+            if (isRTL) direction = -direction; // ضبط الاتجاه للغة العربية
+            
+            window.navigateLightbox(direction, docId);
+        }
+    }
+}
