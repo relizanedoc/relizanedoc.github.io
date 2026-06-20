@@ -318,7 +318,6 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
     display: flex;
     width: max-content;
     gap: 15px;
-    /* الأنيميشن: يتحرك 30 ثانية بشكل خطي ومستمر */
     animation: marqueeScroll 25s linear infinite; 
 }
 
@@ -328,13 +327,11 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
     animation-play-state: paused;
 }
 
-/* حركة الأنيميشن: يتحرك لليسار بنسبة 50% (لأننا كررنا الصور مرتين) */
 @keyframes marqueeScroll {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
 }
 
-/* تصميم الصورة الفردية */
 .clinic-marquee-item {
     width: 250px;
     height: 180px;
@@ -352,7 +349,7 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
     width: 100%;
     height: 100%;
     object-fit: cover;
-    pointer-events: none; /* لمنع مشاكل السحب بالماوس */
+    pointer-events: none;
 }
 
 @media (max-width: 768px) {
@@ -363,6 +360,29 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
 }
 </style>
 
+<!-- هذا هو كود السلايدر الذي كان مفقوداً -->
+<div style="margin-top: 1.5rem; background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); max-width: 800px; margin-left: auto; margin-right: auto;">
+    <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1rem; color: #0f172a;">
+        ${state.currentLang === 'ar' ? 'صور العيادة' : 'Clinic Gallery'}
+    </h4>
+    
+    <div class="clinic-marquee-wrapper" dir="ltr">
+        <div class="clinic-marquee-track">
+            ${doc.clinic_images.map((url, index) => `
+                <div class="clinic-marquee-item" onclick="window.openClinicLightbox('${url}', ${index}, '${doc.id}')">
+                    <img src="${url}" onerror="this.parentElement.style.display='none'" alt="Clinic Image ${index + 1}" loading="lazy" decoding="async">
+                </div>
+            `).join('')}
+            ${doc.clinic_images.map((url, index) => `
+                <div class="clinic-marquee-item" onclick="window.openClinicLightbox('${url}', ${index}, '${doc.id}')">
+                    <img src="${url}" onerror="this.parentElement.style.display='none'" alt="Clinic Image Copy" loading="lazy" decoding="async">
+                </div>
+            `).join('')}
+        </div>
+    </div>
+</div>
+
+<!-- كود نافذة التكبير -->
 <div id="clinicLightbox_${doc.id}" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;" onclick="window.closeClinicLightbox('${doc.id}')">
     <button onclick="event.stopPropagation(); window.closeClinicLightbox('${doc.id}')" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; color: white; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: background 0.3s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">×</button>
     
