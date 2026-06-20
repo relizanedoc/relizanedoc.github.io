@@ -1251,7 +1251,7 @@ th {
     padding: 5.5rem 2rem 3.5rem 2rem; 
   }
 
-  .hero-section h1 { 
+ .hero-section h1 { 
     font-size: 2.2rem; 
     /* إضافة الظل لعنوان البانر الرئيسي */
     text-shadow: 0px 4px 15px rgba(0, 0, 0, 0.8), 0px 2px 5px rgba(0, 0, 0, 0.9);
