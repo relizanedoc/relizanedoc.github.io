@@ -329,6 +329,7 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
         ` : ''}
     </div>
 </div>
+<script>setTimeout(() => { if(window.initClinicSlider) window.initClinicSlider('clinicSlider_${doc.id}', '${doc.id}'); }, 100);</script>
 
 <!-- Lightbox - يظهر الصورة كاملة بدون قص -->
 <div id="clinicLightbox_${doc.id}" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;" onclick="window.closeClinicLightbox('${doc.id}')">
