@@ -892,6 +892,7 @@ window.handleDashboardLogin = async function(e) {
     document.getElementById('loginSection').classList.add('hidden');
     document.getElementById('dashboardSection').classList.remove('hidden');
     renderDashboardUI(dashboardData, doctor.id);
+      window.renderDoctorAnalytics(dashboardData.appointments);
     showToast('تم تسجيل الدخول بنجاح', 'success');
 
   } catch (err) {
