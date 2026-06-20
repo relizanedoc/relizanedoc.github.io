@@ -361,7 +361,7 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
 </style>
 
 <!-- هذا هو كود السلايدر الذي كان مفقوداً -->
-<div style="margin-top: 1.5rem; background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); max-width: 800px; margin-left: auto; margin-right: auto;">
+<div style="margin-top: 1.5rem; background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); max-width: 90%px; margin-left: auto; margin-right: auto;">
     <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1rem; color: #0f172a;">
         ${state.currentLang === 'ar' ? 'صور العيادة' : 'Clinic Gallery'}
     </h4>
