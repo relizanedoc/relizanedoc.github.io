@@ -53,19 +53,36 @@
 
   <div id='toastContainer'></div>
 
-  <script>
-    // ==========================================
-    // 1. إعدادات الإدارة (يجب تعبئتها لتلائم مشروعك)
-    // ==========================================
-    const ADMIN_EMAIL = "sisi.sou27@gmail.com"; // ضع إيميلك هنا
-    const SUPABASE_URL = 'https://iirjtmobphgmkgwkwumc.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpcmp0bW9icGhnbWtnd2t3dW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA2NjYsImV4cCI6MjA5NjUxNjY2Nn0.Yfa0oEwp_id9tHpSb3h0jf__B4drqXsM-TVs4VTTmp4';
+  <div id="editDoctorModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 9999; padding: 1rem;">
+      <div class="card" style="width: 100%; max-width: 400px; background: var(--bg); padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+          <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: var(--primary-dark);">تعديل بيانات الطبيب</h3>
+          
+          <input type="hidden" id="editDocId">
+          
+          <div style="margin-bottom: 1rem;">
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; font-size: 0.9rem;">رقم الهاتف:</label>
+              <input type="text" id="editDocPhone" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px;" dir="ltr">
+          </div>
+          
+          <div style="margin-bottom: 1.5rem;">
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; font-size: 0.9rem;">كلمة المرور الجديدة:</label>
+              <input type="text" id="editDocPassword" placeholder="اتركها فارغة إذا لم ترد التغيير" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px;" dir="ltr">
+          </div>
+          
+          <div style="display: flex; gap: 0.75rem;">
+              <button class="btn btn-primary" onclick="window.saveDoctorData()" style="flex: 1;">حفظ التعديلات</button>
+              <button class="btn btn-secondary" onclick="document.getElementById('editDoctorModal').style.display='none'" style="flex: 1;">إلغاء</button>
+          </div>
+      </div>
+  </div>
 
-    // تهيئة الاتصال المستقل بقاعدة البيانات
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    // ==========================================
-    // 2. الدوال الرئيسية
-    // ==========================================
+  <script>
+    const ADMIN_EMAIL = "sisi.sou27@gmail.com"; 
+    const SUPABASE_URL = 'https://iirjtmobphgmkgwkwumc.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpcmp0bW9icGhnbWtnd2t3dW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA2NjYsImV4cCI6MjA5NjUxNjY2Nn0.Yfa0oEwp_id9tHpSb3h0jf__B4drqXsM-TVs4VTTmp4';
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     window.showAdminToast = function(message, type = 'success') {
         const container = document.getElementById('toastContainer');
         if (!container) return;
@@ -97,6 +114,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
     }
 
+    // -- دالة التقييمات --
     window.loadAdminDashboard = async function() {
         const container = document.getElementById('pendingReviewsContainer');
         try {
@@ -158,6 +176,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
     };
 
+    // -- دالة جلب الأطباء --
     window.loadAdminDoctors = async function() {
         const tbody = document.getElementById('adminDoctorsTbody');
         try {
@@ -175,14 +194,17 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             let html = '';
             doctors.forEach(doc => {
                 const name = `${doc.first_name} ${doc.last_name}`;
-                const phone = doc.phone || 'لا يوجد رقم';
+                const phone = doc.phone || '';
+                
                 html += `
                 <tr style="border-bottom: 1px solid var(--border);">
                     <td style="padding: 1rem;"><strong>د. ${name}</strong></td>
                     <td style="padding: 1rem; color: var(--text-secondary);">${doc.specialty || '-'}</td>
-                    <td style="padding: 1rem;" dir="ltr">${phone}</td>
+                    <td style="padding: 1rem;" dir="ltr">${phone || 'لا يوجد'}</td>
                     <td style="padding: 1rem;">
-                        <button class="btn btn-primary btn-sm" onclick="window.resetDoctorPassword('${doc.id}', '${phone}')" style="padding: 0.4rem 0.8rem;">جعل الهاتف كلمة مرور 🔑</button>
+                        <button class="btn btn-primary btn-sm" onclick="window.openEditModal('${doc.id}', '${phone}')" style="padding: 0.4rem 0.8rem; background: var(--primary-dark);">
+                            تعديل البيانات ✏️
+                        </button>
                     </td>
                 </tr>`;
             });
@@ -192,19 +214,48 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
     };
 
-    window.resetDoctorPassword = async function(doctorId, phone) {
-        if (!phone || phone === 'لا يوجد رقم') {
-            window.showAdminToast('لا يمكن التحديث لعدم وجود رقم هاتف.', 'error');
+    // 🌟 فتح نافذة التعديل
+    window.openEditModal = function(id, currentPhone) {
+        document.getElementById('editDocId').value = id;
+        document.getElementById('editDocPhone').value = currentPhone;
+        document.getElementById('editDocPassword').value = ''; 
+        document.getElementById('editDoctorModal').style.display = 'flex';
+    };
+
+    // 🌟 حفظ البيانات وإرسالها كما هي (أنت من يتولى التشفير)
+    window.saveDoctorData = async function() {
+        const id = document.getElementById('editDocId').value;
+        const newPhone = document.getElementById('editDocPhone').value.trim();
+        const rawPassword = document.getElementById('editDocPassword').value.trim();
+
+        if (newPhone === '') {
+            window.showAdminToast('رقم الهاتف مطلوب!', 'error');
             return;
         }
-        if (!confirm(`هل أنت متأكد من جعل كلمة المرور (${phone})؟`)) return;
+
+        // تجهيز البيانات
+        let updatePayload = { phone: newPhone };
+
+        // إضافة كلمة المرور كما هي إذا تم إدخالها
+        if (rawPassword !== '') {
+            // ⚠️ قم بتغيير 'password' إلى اسم العمود الصحيح في قاعدة بياناتك
+            updatePayload.password = rawPassword; 
+        }
+
         try {
-            // ⚠️ غير password إلى raw_password إذا كان هذا اسم العمود لديك
-            const { error } = await supabaseClient.from('doctors').update({ password: phone }).eq('id', doctorId);
+            const { error } = await supabaseClient
+                .from('doctors')
+                .update(updatePayload)
+                .eq('id', id);
+
             if (error) throw error;
-            window.showAdminToast('تم تعيين كلمة المرور بنجاح!', 'success');
+            
+            window.showAdminToast('تم تحديث بيانات الطبيب بنجاح!', 'success');
+            document.getElementById('editDoctorModal').style.display = 'none'; 
+            window.loadAdminDoctors(); // تحديث الجدول فوراً
+            
         } catch (err) {
-            window.showAdminToast('خطأ: ' + err.message, 'error');
+            window.showAdminToast('خطأ في التحديث: ' + err.message, 'error');
         }
     };
 
