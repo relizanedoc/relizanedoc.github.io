@@ -148,8 +148,9 @@ window.setLang = function(lang) {
     renderDoctors(state.allDoctors);
   }
 
- if (state.globalDashboardData && state.globalDashboardDoctorId) {
+if (state.globalDashboardData && state.globalDashboardDoctorId) {
     renderDashboardUI(state.globalDashboardData, state.globalDashboardDoctorId);
+    window.renderDoctorAnalytics(state.globalDashboardData.appointments);
   }
   if (currentReviewsDoctorId) {
       fetchReviewStats(currentReviewsDoctorId);
