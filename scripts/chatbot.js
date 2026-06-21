@@ -205,17 +205,21 @@ window.handleSend = handleSend;
 function getSmartWelcome() {
     const hour = new Date().getHours();
     const lang = state.currentLang;
-    const user = JSON.parse(localStorage.getItem('medicalUser') || 'null');
+    
+    // الحل الذكي: قراءة اسم المستخدم مباشرة من الشريط العلوي المرئي
+    const userNameElement = document.getElementById('userNameDisplay');
+    const userName = userNameElement && userNameElement.textContent ? userNameElement.textContent.trim() : null;
     
     let greeting = '';
     if (hour < 12) greeting = lang === 'ar' ? 'صباح الخير' : 'Good morning';
     else if (hour < 18) greeting = lang === 'ar' ? 'مساء الخير' : 'Good afternoon';
     else greeting = lang === 'ar' ? 'مساء النور' : 'Good evening';
     
-    if (user) {
-        greeting += ` ${user.Name}! 👋`;
+    // إضافة الاسم إذا كان المستخدم متصلاً
+    if (userName && userName !== '') {
+        greeting += ` ${userName}! 👋`;
     } else {
-        greeting += '! ';
+        greeting += '! 👋';
     }
     
     const subtitle = lang === 'ar' 
