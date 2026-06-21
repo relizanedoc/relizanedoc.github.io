@@ -227,35 +227,40 @@
     };
 
     // 🌟 حفظ البيانات مع التشفير باستخدام BcryptJS
-   window.saveDoctorData = async function() {
-        const id = document.getElementById('editDocId').value;
-        const newPhone = document.getElementById('editDocPhone').value.trim();
-        const rawPassword = document.getElementById('editDocPassword').value.trim();
+ window.saveDoctorData = async function() {
+    // نستخدم window.bcrypt للبحث عنها بشكل مباشر
+    const bcryptLib = window.bcrypt || (typeof bcrypt !== 'undefined' ? bcrypt : null);
+    
+    if (!bcryptLib) {
+        window.showAdminToast('خطأ: لم يتم العثور على مكتبة التشفير. تأكد من تحميل الصفحة.', 'error');
+        // طباعة في الكونسول لمعرفة السبب
+        console.error("Bcrypt library not found in window object.");
+        return;
+    }
 
-        // 1. التحقق من تحميل مكتبة bcrypt
-        if (typeof bcrypt === 'undefined') {
-            window.showAdminToast('خطأ: مكتبة التشفير لم تُحمل بعد، يرجى تحديث الصفحة.', 'error');
+    const id = document.getElementById('editDocId').value;
+    const newPhone = document.getElementById('editDocPhone').value.trim();
+    const rawPassword = document.getElementById('editDocPassword').value.trim();
+
+    if (newPhone === '') {
+        window.showAdminToast('رقم الهاتف مطلوب!', 'error');
+        return;
+    }
+
+    let updatePayload = { phone: newPhone };
+
+    if (rawPassword !== '') {
+        try {
+            // استخدام المكتبة التي عثرنا عليها
+            const salt = bcryptLib.genSaltSync(10);
+            const hashedPassword = bcryptLib.hashSync(rawPassword, salt);
+            updatePayload.password = hashedPassword; 
+        } catch (err) {
+            console.error("Hashing Error:", err);
+            window.showAdminToast('فشل في عملية التشفير', 'error');
             return;
         }
-
-        if (newPhone === '') {
-            window.showAdminToast('رقم الهاتف مطلوب!', 'error');
-            return;
-        }
-
-        let updatePayload = { phone: newPhone };
-
-        if (rawPassword !== '') {
-            try {
-                // استخدام دالة التشفير بشكل آمن
-                const saltRounds = 10;
-                const hashedPassword = bcrypt.hashSync(rawPassword, saltRounds);
-                updatePayload.password = hashedPassword; 
-            } catch (err) {
-                console.error("Hashing Error details:", err);
-                window.showAdminToast('فشل في عملية التشفير: ' + err.message, 'error');
-                return;
-            }
+    }
         }
 
         try {
