@@ -6,7 +6,9 @@
   <title>لوحة الإدارة العليا - Relizane Medical</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body style="background: var(--bg); padding: 2rem 1rem;">
 
@@ -28,10 +30,7 @@
 
     <div id="adminReviewsSec">
         <div id="pendingReviewsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
-            <div class="text-center text-gray p-4">
-                <div class="spinner" style="margin: 0 auto 10px auto; border-top-color: var(--primary);"></div>
-                جاري تحميل البيانات...
-            </div>
+            <div class="text-center text-gray p-4">جاري تحميل البيانات...</div>
         </div>
     </div>
 
@@ -54,48 +53,51 @@
 
   <div id='toastContainer'></div>
 
-  <script type="module">
-    import { supabaseClient } from './scripts/api.js'; 
+  <script>
+    // ==========================================
+    // 1. إعدادات الإدارة (يجب تعبئتها لتلائم مشروعك)
+    // ==========================================
+    const ADMIN_EMAIL = "sisi.sou27@gmail.com"; // ضع إيميلك هنا
+    const SUPABASE_URL = 'https://iirjtmobphgmkgwkwumc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlpcmp0bW9icGhnbWtnd2t3dW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA2NjYsImV4cCI6MjA5NjUxNjY2Nn0.Yfa0oEwp_id9tHpSb3h0jf__B4drqXsM-TVs4VTTmp4';
 
-    // دالة الإشعارات الاحترافية
+    // تهيئة الاتصال المستقل بقاعدة البيانات
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ==========================================
+    // 2. الدوال الرئيسية
+    // ==========================================
     window.showAdminToast = function(message, type = 'success') {
         const container = document.getElementById('toastContainer');
         if (!container) return;
-        
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         toast.textContent = message;
-        
         container.appendChild(toast);
-        
         setTimeout(() => {
             toast.style.animation = 'fadeOutDown 0.3s forwards';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     };
 
-    // 1. نظام الحماية الصارم (Security Check)
     async function checkSecurity() {
-        const { data: authData } = await supabaseClient.auth.getUser();
-        const user = authData.user;
-        
-        // ⚠️ ضع إيميل الإدارة الخاص بك هنا بدلاً من your_email@gmail.com ⚠️
-        const adminEmail = "sisi.sou27@@gmail.com"; 
-
-        if (!user || user.email !== adminEmail) {
-            window.showAdminToast("عذراً، غير مصرح لك بدخول هذه الصفحة.", "error");
-            setTimeout(() => {
-                window.location.replace("index.html");
-            }, 1500);
-        } else {
-            // إظهار اللوحة وجلب كل البيانات فوراً
-            document.getElementById('adminMainContainer').style.display = 'block';
-            window.loadAdminDashboard();
-            window.loadAdminDoctors();
+        try {
+            const { data: authData } = await supabaseClient.auth.getUser();
+            const user = authData.user;
+            
+            if (!user || user.email !== ADMIN_EMAIL) {
+                window.showAdminToast("عذراً، غير مصرح لك بدخول هذه الصفحة.", "error");
+                setTimeout(() => window.location.replace("index.html"), 1500);
+            } else {
+                document.getElementById('adminMainContainer').style.display = 'block';
+                window.loadAdminDashboard();
+                window.loadAdminDoctors();
+            }
+        } catch (error) {
+            window.showAdminToast("خطأ في التحقق من الدخول", "error");
         }
     }
 
-    // 2. دالة جلب التقييمات المعلقة
     window.loadAdminDashboard = async function() {
         const container = document.getElementById('pendingReviewsContainer');
         try {
@@ -106,7 +108,6 @@
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-
             if (!reviews || reviews.length === 0) {
                 container.innerHTML = `<div class="empty-state" style="padding: 2rem; text-align: center; border: 1px dashed var(--border); border-radius: 8px;">✅ لا توجد تقييمات معلقة للمراجعة.</div>`;
                 return;
@@ -140,15 +141,12 @@
         }
     };
 
-    // 3. دالة اتخاذ القرار في التقييم
     window.updateReviewStatus = async function(reviewId, newStatus) {
         if (!confirm('هل أنت متأكد من هذا الإجراء؟')) return;
         try {
             const { error } = await supabaseClient.from('reviews').update({ status: newStatus }).eq('id', reviewId);
             if (error) throw error;
-            
             window.showAdminToast('تم التنفيذ بنجاح', 'success');
-            
             const el = document.getElementById(`admin-review-${reviewId}`);
             if (el) {
                 el.style.opacity = '0';
@@ -161,11 +159,8 @@
         }
     };
 
-    // 4. دالة جلب قائمة الأطباء وعرضهم في الجدول
     window.loadAdminDoctors = async function() {
         const tbody = document.getElementById('adminDoctorsTbody');
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">جاري تحميل الأطباء...</td></tr>';
-        
         try {
             const { data: doctors, error } = await supabaseClient
                 .from('doctors')
@@ -173,9 +168,8 @@
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-
             if (!doctors || doctors.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">لا يوجد أطباء مسجلين حالياً.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">لا يوجد أطباء مسجلين.</td></tr>';
                 return;
             }
 
@@ -183,51 +177,39 @@
             doctors.forEach(doc => {
                 const name = `${doc.first_name} ${doc.last_name}`;
                 const phone = doc.phone || 'لا يوجد رقم';
-                
                 html += `
                 <tr style="border-bottom: 1px solid var(--border);">
                     <td style="padding: 1rem;"><strong>د. ${name}</strong></td>
                     <td style="padding: 1rem; color: var(--text-secondary);">${doc.specialty || '-'}</td>
                     <td style="padding: 1rem;" dir="ltr">${phone}</td>
                     <td style="padding: 1rem;">
-                        <button class="btn btn-primary btn-sm" onclick="window.resetDoctorPassword('${doc.id}', '${phone}')" style="padding: 0.4rem 0.8rem;">
-                            جعل الهاتف كلمة مرور 🔑
-                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="window.resetDoctorPassword('${doc.id}', '${phone}')" style="padding: 0.4rem 0.8rem;">جعل الهاتف كلمة مرور 🔑</button>
                     </td>
                 </tr>`;
             });
             tbody.innerHTML = html;
         } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-danger text-center p-4">خطأ في الجلب: ${err.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" class="text-danger text-center p-4">خطأ: ${err.message}</td></tr>`;
         }
     };
 
-    // 5. دالة تعيين رقم الهاتف ككلمة مرور
     window.resetDoctorPassword = async function(doctorId, phone) {
         if (!phone || phone === 'لا يوجد رقم') {
-            window.showAdminToast('عذراً، هذا الطبيب لا يملك رقم هاتف مسجل.', 'error');
+            window.showAdminToast('لا يمكن التحديث لعدم وجود رقم هاتف.', 'error');
             return;
         }
-
-        if (!confirm(`هل أنت متأكد أنك تريد جعل كلمة المرور لهذا الطبيب هي رقم هاتفه (${phone})؟`)) return;
-
+        if (!confirm(`هل أنت متأكد من جعل كلمة المرور (${phone})؟`)) return;
         try {
-            // قم بتغيير 'password' إلى 'raw_password' إذا كان هذا هو اسم العمود الذي تستخدمه في جدول الأطباء
-            const { error } = await supabaseClient
-                .from('doctors')
-                .update({ password: phone }) 
-                .eq('id', doctorId);
-
+            // ⚠️ غير password إلى raw_password إذا كان هذا اسم العمود لديك
+            const { error } = await supabaseClient.from('doctors').update({ password: phone }).eq('id', doctorId);
             if (error) throw error;
-            
-            window.showAdminToast('تم تعيين رقم الهاتف ككلمة مرور بنجاح!', 'success');
-            
+            window.showAdminToast('تم تعيين كلمة المرور بنجاح!', 'success');
         } catch (err) {
-            window.showAdminToast('حدث خطأ أثناء التحديث: ' + err.message, 'error');
+            window.showAdminToast('خطأ: ' + err.message, 'error');
         }
     };
 
-    // تشغيل نظام الحماية فوراً عند التحميل
+    // التشغيل
     checkSecurity();
   </script>
 </body>
