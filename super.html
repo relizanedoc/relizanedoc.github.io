@@ -6,8 +6,7 @@
   <title>لوحة الإدارة العليا - Relizane Medical</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=5">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body style="background: var(--bg); padding: 2rem 1rem;">
 
@@ -38,9 +37,14 @@
 
     <div id="adminDocsSec" class="hidden">
         <div class="table-container">
-            <table style="width: 100%;">
+            <table style="width: 100%; text-align: right; border-collapse: collapse;">
                 <thead>
-                    <tr><th>اسم الطبيب</th><th>التخصص</th><th>رقم الهاتف</th><th>إجراءات</th></tr>
+                    <tr style="border-bottom: 2px solid var(--border); background: var(--bg);">
+                        <th style="padding: 1rem;">اسم الطبيب</th>
+                        <th style="padding: 1rem;">التخصص</th>
+                        <th style="padding: 1rem;">رقم الهاتف</th>
+                        <th style="padding: 1rem;">إجراءات</th>
+                    </tr>
                 </thead>
                 <tbody id="adminDoctorsTbody"></tbody>
             </table>
@@ -54,7 +58,7 @@
     import { supabaseClient } from './scripts/api.js'; 
 
     // دالة الإشعارات الاحترافية
-    function showAdminToast(message, type = 'success') {
+    window.showAdminToast = function(message, type = 'success') {
         const container = document.getElementById('toastContainer');
         if (!container) return;
         
@@ -68,30 +72,31 @@
             toast.style.animation = 'fadeOutDown 0.3s forwards';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
-    }
+    };
 
     // 1. نظام الحماية الصارم (Security Check)
     async function checkSecurity() {
         const { data: authData } = await supabaseClient.auth.getUser();
         const user = authData.user;
         
-        // ⚠️ ضع إيميلك هنا ⚠️
-        const adminEmail = "sisi.sou27@gmail.com"; 
+        // ⚠️ ضع إيميل الإدارة الخاص بك هنا بدلاً من your_email@gmail.com ⚠️
+        const adminEmail = "sisi.sou27@@gmail.com"; 
 
         if (!user || user.email !== adminEmail) {
-            // إظهار إشعار الطرد ثم إعادة التوجيه بعد ثانية واحدة
-            showAdminToast("عذراً، غير مصرح لك بدخول هذه الصفحة.", "error");
+            window.showAdminToast("عذراً، غير مصرح لك بدخول هذه الصفحة.", "error");
             setTimeout(() => {
                 window.location.replace("index.html");
             }, 1500);
         } else {
+            // إظهار اللوحة وجلب كل البيانات فوراً
             document.getElementById('adminMainContainer').style.display = 'block';
-            loadAdminDashboard();
+            window.loadAdminDashboard();
+            window.loadAdminDoctors();
         }
     }
 
-    // 2. دالة جلب البيانات
-    async function loadAdminDashboard() {
+    // 2. دالة جلب التقييمات المعلقة
+    window.loadAdminDashboard = async function() {
         const container = document.getElementById('pendingReviewsContainer');
         try {
             const { data: reviews, error } = await supabaseClient
@@ -103,7 +108,7 @@
             if (error) throw error;
 
             if (!reviews || reviews.length === 0) {
-                container.innerHTML = `<div class="empty-state">✅ لا توجد تقييمات معلقة للمراجعة.</div>`;
+                container.innerHTML = `<div class="empty-state" style="padding: 2rem; text-align: center; border: 1px dashed var(--border); border-radius: 8px;">✅ لا توجد تقييمات معلقة للمراجعة.</div>`;
                 return;
             }
 
@@ -112,7 +117,7 @@
                 const doc = r.doctors;
                 const doctorName = doc ? `${doc.first_name} ${doc.last_name}` : 'طبيب محذوف';
                 html += `
-                <div class="review-card" id="admin-review-${r.id}" style="border-right: 4px solid var(--warning);">
+                <div class="review-card" id="admin-review-${r.id}" style="border-right: 4px solid var(--warning); padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
                         <div style="flex: 1;">
                             <div style="margin-bottom: 0.5rem; font-size: 0.9rem;">
@@ -120,7 +125,7 @@
                                 <span style="color: var(--text-secondary);">لطبيب:</span> <strong style="color: var(--primary-dark);">د. ${doctorName}</strong>
                             </div>
                             <div style="color: #f59e0b; font-size: 1.1rem; letter-spacing: 2px;">${'★'.repeat(r.rating)}<span style="color:#e2e8f0">${'★'.repeat(5 - r.rating)}</span></div>
-                            <p class="mt-2 text-sm" style="background: var(--bg); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border);">${r.comment}</p>
+                            <p class="mt-2 text-sm" style="background: white; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border);">${r.comment}</p>
                         </div>
                         <div style="display: flex; gap: 0.5rem; flex-direction: column;">
                             <button class="btn btn-success btn-sm" onclick="window.updateReviewStatus('${r.id}', 'published')">موافقة ونشر ✔️</button>
@@ -133,16 +138,16 @@
         } catch (err) {
             container.innerHTML = `<div class="text-danger p-4 text-center">خطأ: ${err.message}</div>`;
         }
-    }
+    };
 
-    // 3. دالة اتخاذ القرار
+    // 3. دالة اتخاذ القرار في التقييم
     window.updateReviewStatus = async function(reviewId, newStatus) {
         if (!confirm('هل أنت متأكد من هذا الإجراء؟')) return;
         try {
             const { error } = await supabaseClient.from('reviews').update({ status: newStatus }).eq('id', reviewId);
             if (error) throw error;
             
-            showAdminToast('تم التنفيذ بنجاح', 'success');
+            window.showAdminToast('تم التنفيذ بنجاح', 'success');
             
             const el = document.getElementById(`admin-review-${reviewId}`);
             if (el) {
@@ -152,11 +157,77 @@
                 setTimeout(() => el.remove(), 300);
             }
         } catch (err) {
-            showAdminToast('خطأ: ' + err.message, 'error');
+            window.showAdminToast('خطأ: ' + err.message, 'error');
         }
     };
 
-    // تشغيل نظام الحماية فوراً عند فتح الصفحة
+    // 4. دالة جلب قائمة الأطباء وعرضهم في الجدول
+    window.loadAdminDoctors = async function() {
+        const tbody = document.getElementById('adminDoctorsTbody');
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">جاري تحميل الأطباء...</td></tr>';
+        
+        try {
+            const { data: doctors, error } = await supabaseClient
+                .from('doctors')
+                .select('id, first_name, last_name, specialty, phone')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!doctors || doctors.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">لا يوجد أطباء مسجلين حالياً.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            doctors.forEach(doc => {
+                const name = `${doc.first_name} ${doc.last_name}`;
+                const phone = doc.phone || 'لا يوجد رقم';
+                
+                html += `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 1rem;"><strong>د. ${name}</strong></td>
+                    <td style="padding: 1rem; color: var(--text-secondary);">${doc.specialty || '-'}</td>
+                    <td style="padding: 1rem;" dir="ltr">${phone}</td>
+                    <td style="padding: 1rem;">
+                        <button class="btn btn-primary btn-sm" onclick="window.resetDoctorPassword('${doc.id}', '${phone}')" style="padding: 0.4rem 0.8rem;">
+                            جعل الهاتف كلمة مرور 🔑
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-danger text-center p-4">خطأ في الجلب: ${err.message}</td></tr>`;
+        }
+    };
+
+    // 5. دالة تعيين رقم الهاتف ككلمة مرور
+    window.resetDoctorPassword = async function(doctorId, phone) {
+        if (!phone || phone === 'لا يوجد رقم') {
+            window.showAdminToast('عذراً، هذا الطبيب لا يملك رقم هاتف مسجل.', 'error');
+            return;
+        }
+
+        if (!confirm(`هل أنت متأكد أنك تريد جعل كلمة المرور لهذا الطبيب هي رقم هاتفه (${phone})؟`)) return;
+
+        try {
+            // قم بتغيير 'password' إلى 'raw_password' إذا كان هذا هو اسم العمود الذي تستخدمه في جدول الأطباء
+            const { error } = await supabaseClient
+                .from('doctors')
+                .update({ password: phone }) 
+                .eq('id', doctorId);
+
+            if (error) throw error;
+            
+            window.showAdminToast('تم تعيين رقم الهاتف ككلمة مرور بنجاح!', 'success');
+            
+        } catch (err) {
+            window.showAdminToast('حدث خطأ أثناء التحديث: ' + err.message, 'error');
+        }
+    };
+
+    // تشغيل نظام الحماية فوراً عند التحميل
     checkSecurity();
   </script>
 </body>
