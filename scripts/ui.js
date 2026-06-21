@@ -570,26 +570,38 @@ document.getElementById('dashboardSubtitle').textContent = rawDashName ? (state.
     }
 
     // 2. الخط اللوني الجانبي للبطاقة
-    let statusIndicator = '#f59e0b';
+   let statusIndicator = '#f59e0b';
     if (statusTextDb === 'confirmed') statusIndicator = '#10b981';
     if (statusTextDb === 'completed') statusIndicator = '#3b82f6';
     if (statusTextDb === 'cancelled') statusIndicator = '#ef4444';
 
-    // 3. المنطق الجديد والصحيح للأزرار (هنا كان الخلل)
     let actionsHtml = '';
     
     if (statusTextDb === 'pending') {
-        // إذا كان قيد الانتظار: أظهر زر التأكيد والإلغاء
+        // الزر الأخضر يرسل الآن 'completed' مباشرة لتوفير الخطوات
         actionsHtml = `
-          <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #ecfdf5; border: 1px solid #10b981; color: #10b981; border-radius: 6px;" 
-            onclick="window.changeBookingStatus('${bookingId}', 'confirmed', '${userEmail}', '${escapeHtml(data.doctorName)}', '${apptDate}')">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><polyline points="20 6 9 17 4 12"></polyline></svg>${confirmTxt}
+          <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #eff6ff; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 6px;" 
+            onclick="window.changeBookingStatus('${bookingId}', 'completed', '${userEmail}', '${escapeHtml(data.doctorName)}', '${apptDate}')">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><polyline points="20 6 9 17 4 12"></polyline></svg>${state.currentLang === 'ar' ? 'تأكيد واكتمال' : 'Confirm & Complete'}
           </button>
           <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #fef2f2; border: 1px solid #ef4444; color: #ef4444; border-radius: 6px;" 
             onclick="window.changeBookingStatus('${bookingId}', 'cancelled', '${userEmail}', '${escapeHtml(data.doctorName)}', '${apptDate}')">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>${cancelTxt}
           </button>
         `;
+    } else if (statusTextDb === 'confirmed') {
+        // لحماية الحجوزات القديمة التي بقيت عالقة في حالة 'مؤكد'
+        actionsHtml = `
+          <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #eff6ff; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 6px;" 
+            onclick="window.changeBookingStatus('${bookingId}', 'completed', '', '${escapeHtml(data.doctorName)}', '${apptDate}')">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><polyline points="20 6 9 17 4 12"></polyline></svg>${state.currentLang === 'ar' ? 'تحويل إلى مكتمل' : 'Mark Completed'}
+          </button>
+        `;
+    } else {
+        // إذا كان 'completed' أو 'cancelled' نعرض شارة فقط
+        const finishedTxt = statusTextDb === 'completed' ? (state.currentLang === 'ar' ? 'تم الانتهاء' : 'Finished') : displayStatus;
+        actionsHtml = `<span class="badge" style="background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); padding: 0.4rem 0.8rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>${finishedTxt}</span>`;
+    }
     } else if (statusTextDb === 'confirmed') {
         // إذا قام الطبيب بالتأكيد: أظهر زراً حقيقياً قابلاً للضغط لتحويله إلى "مكتمل"
         actionsHtml = `
