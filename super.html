@@ -227,14 +227,18 @@
     };
 
     // 🌟 حفظ البيانات مع التشفير باستخدام BcryptJS
- window.saveDoctorData = async function() {
-    // نستخدم window.bcrypt للبحث عنها بشكل مباشر
-    const bcryptLib = window.bcrypt || (typeof bcrypt !== 'undefined' ? bcrypt : null);
+// 🌟 حفظ البيانات مع التشفير باستخدام BcryptJS
+window.saveDoctorData = async function() {
+    // ✅ التصحيح: استخدام dcodeIO.bcrypt بدلاً من window.bcrypt
+    const bcryptLib = window.dcodeIO?.bcrypt || window.bcrypt || (typeof bcrypt !== 'undefined' ? bcrypt : null);
     
     if (!bcryptLib) {
         window.showAdminToast('خطأ: لم يتم العثور على مكتبة التشفير. تأكد من تحميل الصفحة.', 'error');
-        // طباعة في الكونسول لمعرفة السبب
-        console.error("Bcrypt library not found in window object.");
+        console.error("Bcrypt library not found. Available globals:", {
+            dcodeIO: typeof dcodeIO,
+            bcrypt: typeof bcrypt,
+            windowBcrypt: typeof window.bcrypt
+        });
         return;
     }
 
@@ -251,7 +255,6 @@
 
     if (rawPassword !== '') {
         try {
-            // استخدام المكتبة التي عثرنا عليها
             const salt = bcryptLib.genSaltSync(10);
             const hashedPassword = bcryptLib.hashSync(rawPassword, salt);
             updatePayload.password = hashedPassword; 
@@ -261,25 +264,25 @@
             return;
         }
     }
-        }
+    
+    // ✅ تم حذف القوس الزائد هنا
+    
+    try {
+        const { error } = await supabaseClient
+            .from('doctors')
+            .update(updatePayload)
+            .eq('id', id);
 
-        try {
-            const { error } = await supabaseClient
-                .from('doctors')
-                .update(updatePayload)
-                .eq('id', id);
-
-            if (error) throw error;
-            
-            window.showAdminToast('تم تحديث بيانات الطبيب بنجاح!', 'success');
-            document.getElementById('editDoctorModal').style.display = 'none'; 
-            window.loadAdminDoctors();
-            
-        } catch (err) {
-            window.showAdminToast('خطأ في الاتصال بقاعدة البيانات: ' + err.message, 'error');
-        }
-    };
-
+        if (error) throw error;
+        
+        window.showAdminToast('تم تحديث بيانات الطبيب بنجاح!', 'success');
+        document.getElementById('editDoctorModal').style.display = 'none'; 
+        window.loadAdminDoctors();
+        
+    } catch (err) {
+        window.showAdminToast('خطأ في الاتصال بقاعدة البيانات: ' + err.message, 'error');
+    }
+};  // ✅ إغلاق الدالة بشكل صحيح
     checkSecurity();
   </script>
 </body>
