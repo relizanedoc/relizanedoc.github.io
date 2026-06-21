@@ -93,31 +93,37 @@ async function processUserMessage(rawMsg) {
     if (detectEmergency(rawMsg)) return getEmergencyResponse();
 
     try {
-        // التحقق من أن بيانات JSON تم تحميلها بنجاح
         if (!state.globalDirectory || state.globalDirectory.length === 0) {
             return state.currentLang === 'ar' 
                 ? 'عذراً، جاري تحميل بيانات الأطباء... حاول مجدداً بعد لحظات.' 
                 : 'Loading doctors data... please try again in a moment.';
         }
 
-        // تقسيم جملة البحث إلى كلمات لضمان دقة البحث
-        const searchTerms = cleanMsg.split(/\s+/).filter(t => t.length > 0);
+        // 🌟 قائمة الكلمات الزائدة (Stop Words) التي يجب على البوت تجاهلها 🌟
+        const stopWords = ['ابحث', 'عن', 'اريد', 'طبيب', 'طبيبة', 'د', 'دكتور', 'دكتورة', 'في', 'من', 'احجز', 'موعد', 'ولاية', 'بلدية'];
         
-        // خوارزمية البحث المحلي داخل ملف JSON (بدون استهلاك Supabase)
+        // استخراج الكلمات المفتاحية الحقيقية فقط
+        const searchTerms = cleanMsg.split(/\s+/).filter(t => t.length > 0 && !stopWords.includes(t));
+
+        // إذا كتب المستخدم كلمات زائدة فقط (مثل: "ابحث عن طبيب")
+        if (searchTerms.length === 0) {
+            return state.currentLang === 'ar' 
+                ? 'الرجاء كتابة اسم الطبيب أو التخصص الذي تبحث عنه.' 
+                : 'Please type the doctor name or specialty.';
+        }
+        
+        // خوارزمية البحث المحلي الذكية
         let matchedDoctors = state.globalDirectory.filter(doc => {
-            // تجميع كل بيانات الطبيب في نص واحد للبحث الشامل
             const searchString = normalizeText(`
                 ${doc.first_name || ''} ${doc.last_name || ''} 
                 ${doc.first_name_en || ''} ${doc.last_name_en || ''} 
                 ${doc.specialty || ''} ${doc.municipality || ''} 
-                ${doc.exact_location || ''}
             `);
             
-            // يجب أن تتطابق جميع كلمات البحث مع نص البيانات
+            // يجب أن تتطابق الكلمات المفتاحية فقط مع سجل الطبيب
             return searchTerms.every(term => searchString.includes(term));
         });
 
-        // تحديد عدد النتائج بـ 5 كحد أقصى لتجنب تجميد واجهة المحادثة
         matchedDoctors = matchedDoctors.slice(0, 5);
 
         if (!matchedDoctors || matchedDoctors.length === 0) {
@@ -131,7 +137,6 @@ async function processUserMessage(rawMsg) {
         response += matchedDoctors.map(doc => {
             const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
             const cleanName = `${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}`;
-            // حماية الكود من الأسماء التي تحتوي على فواصل عليا (Apostrophes)
             const safeNameForJs = cleanName.replace(/'/g, "\\'");
             
             return `<div class="bot-card-result" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 12px; background: var(--surface);">
