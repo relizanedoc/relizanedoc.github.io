@@ -599,9 +599,51 @@
     </div>
 
 
+<div class='view hidden' id='view-admin'>
+      <div class='card' style='max-width: 1000px; margin: 0 auto;'>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 class='text-xl font-bold' data-i18n="adminPanelTitle" style="color: var(--danger); margin: 0;">لوحة الإدارة العليا</h2>
+            <button class="btn btn-secondary btn-sm" onclick="window.router('home')" data-i18n="backToHome">العودة للرئيسية</button>
+        </div>
+        
+        <div class="booking-tabs mb-4">
+            <div class="booking-tab active" id="tabAdminReviews" onclick="document.getElementById('adminReviewsSec').classList.remove('hidden'); document.getElementById('adminDocsSec').classList.add('hidden'); this.classList.add('active'); document.getElementById('tabAdminDocs').classList.remove('active');">
+                <h3 class="tab-title" data-i18n="adminPendingReviews" style="margin: 0; font-size: 1rem;">التقييمات المعلقة</h3>
+            </div>
+            <div class="booking-tab" id="tabAdminDocs" onclick="document.getElementById('adminDocsSec').classList.remove('hidden'); document.getElementById('adminReviewsSec').classList.add('hidden'); this.classList.add('active'); document.getElementById('tabAdminReviews').classList.remove('active');">
+                <h3 class="tab-title" data-i18n="adminManageDoctors" style="margin: 0; font-size: 1rem;">إدارة الأطباء</h3>
+            </div>
+        </div>
 
+        <div id="adminReviewsSec">
+            <div id="pendingReviewsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="text-center text-gray p-4">
+                    <div class="spinner" style="margin: 0 auto 10px auto; border-top-color: var(--primary);"></div>
+                    <span data-i18n="loading">جاري التحميل...</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminDocsSec" class="hidden">
+            <div class="table-container">
+                <table id="adminDoctorsTable" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th data-i18n="doctorName">اسم الطبيب</th>
+                            <th data-i18n="specialty">التخصص</th>
+                            <th data-i18n="phone">رقم الهاتف</th>
+                            <th data-i18n="accountStatus">حالة الحساب</th>
+                            <th data-i18n="actions">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminDoctorsTbody"></tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+    </div>
     <div class='view hidden' id='view-track'>
-
+      
       <div class='card' style='max-width: 500px; margin: 0 auto;'>
 
         <h2 class='text-xl font-bold mb-6 text-center' data-i18n='trackBookingTitle'>تتبع حالة حجزي</h2>
