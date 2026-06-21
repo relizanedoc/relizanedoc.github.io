@@ -8,7 +8,7 @@ export function updateUserUI(user) {
   const pill = document.getElementById('userPill');
   const loginBtn = document.getElementById('navLoginBtn');
   const nameDisplay = document.getElementById('userNameDisplay');
-  
+
   if (!pill && !loginBtn) return;
 
   if (user) {
@@ -59,7 +59,7 @@ export function updateSEOMetaTags(doc) {
   if (!doc) return;
   const pageTitle = state.currentLang === 'ar' ? `د. ${doc.first_name} ${doc.last_name} | ${doc.specialty} في ${doc.municipality}` : `Dr. ${doc.first_name} ${doc.last_name} | ${doc.specialty} in ${doc.municipality}`;
   const pageDesc = state.currentLang === 'ar' ? `احجز موعدك مع د. ${doc.first_name} ${doc.last_name}، أخصائي ${doc.specialty} في ${doc.municipality}، ولاية غليزان. العنوان: ${doc.exact_location}` : `Book an appointment with Dr. ${doc.first_name} ${doc.last_name}, ${doc.specialty} in ${doc.municipality}, Relizane.`;
-  
+
   document.title = pageTitle;
   let metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) metaDesc.setAttribute('content', pageDesc);
@@ -351,7 +351,12 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
     object-fit: cover;
     pointer-events: none;
 }
+
 @media (max-width: 768px) {
+    .clinic-marquee-item { width: 280px; height: 200px; }
+}
+@media (max-width: 480px) {
+    .clinic-marquee-item { width: 280px; height: 200px; }
     .clinic-marquee-item { 
         width: 280px; 
         height: 200px; 
@@ -429,7 +434,7 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
       </button>
     </div>
   `;
-  
+
   window.router('doctor-profile');
   window.history.replaceState({ view: 'doctor-profile' }, document.title, `/doctors/${doc.id}.html`);
 
@@ -496,7 +501,7 @@ document.getElementById('dashboardSubtitle').textContent = rawDashName ? (state.
     const lNameAr = document.getElementById('dash_last_name_ar');
     const fNameEn = document.getElementById('dash_first_name_en');
     const lNameEn = document.getElementById('dash_last_name_en');
-    
+
     if(fNameAr) fNameAr.value = data.doctorDetails.first_name || '';
     if(lNameAr) lNameAr.value = data.doctorDetails.last_name || '';
     if(fNameEn) fNameEn.value = data.doctorDetails.first_name_en || '';
@@ -506,16 +511,16 @@ document.getElementById('dashboardSubtitle').textContent = rawDashName ? (state.
     document.getElementById('dash_whatsapp').value = data.doctorDetails.whatsapp_number || '';
     document.getElementById('dash_facebook').value = data.doctorDetails.facebook_link || '';
     document.getElementById('dash_map_link').value = data.doctorDetails.map_link || '';
-    
+
     const certInput = document.getElementById('dash_certificates');
     if (certInput) certInput.value = data.doctorDetails.certificates || '';
-    
+
     window.dashboardCurrentImages = data.doctorDetails.clinic_images || [];
     if (typeof window.renderClinicImageThumbnails === 'function') window.renderClinicImageThumbnails();
-    
+
     const srvContainer = document.getElementById('servicesContainer');
     if (srvContainer) srvContainer.innerHTML = '';
-    
+
     if (data.doctorDetails.services && Array.isArray(data.doctorDetails.services) && data.doctorDetails.services.length > 0) {
         data.doctorDetails.services.forEach(s => window.addServiceCategory(s.category, s.items.join('، ')));
     } else {
@@ -555,13 +560,9 @@ document.getElementById('dashboardSubtitle').textContent = rawDashName ? (state.
     let displayStatus = statusTextDb;
     let statusStyle = 'background: #f1f5f9; color: #64748b; border: 0.5px solid #cbd5e1;';
 
-    // 1. تحديث الألوان والنصوص للبطاقة العلوية
     if (statusTextDb === 'confirmed') {
       statusStyle = 'background: #ecfdf5; color: #10b981; border: 0.5px solid #a7f3d0;';
       displayStatus = state.currentLang === 'ar' ? 'مؤكد' : 'Confirmed';
-    } else if (statusTextDb === 'completed') {
-      statusStyle = 'background: #eff6ff; color: #3b82f6; border: 0.5px solid #bfdbfe;';
-      displayStatus = state.currentLang === 'ar' ? 'مكتمل' : 'Completed';
     } else if (statusTextDb === 'cancelled') {
       statusStyle = 'background: #fef2f2; color: #ef4444; border: 0.5px solid #fecaca;';
       displayStatus = state.currentLang === 'ar' ? 'ملغى' : 'Cancelled';
@@ -569,52 +570,21 @@ document.getElementById('dashboardSubtitle').textContent = rawDashName ? (state.
       displayStatus = state.currentLang === 'ar' ? 'قيد الانتظار' : 'Pending';
     }
 
-    // 2. الخط اللوني الجانبي للبطاقة
-   let statusIndicator = '#f59e0b';
+    let statusIndicator = '#f59e0b';
     if (statusTextDb === 'confirmed') statusIndicator = '#10b981';
-    if (statusTextDb === 'completed') statusIndicator = '#3b82f6';
     if (statusTextDb === 'cancelled') statusIndicator = '#ef4444';
 
-    let actionsHtml = '';
-    
-    if (statusTextDb === 'pending') {
-        // الزر الأخضر يرسل الآن 'completed' مباشرة لتوفير الخطوات
-        actionsHtml = `
-          <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #eff6ff; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 6px;" 
-            onclick="window.changeBookingStatus('${bookingId}', 'completed', '${userEmail}', '${escapeHtml(data.doctorName)}', '${apptDate}')">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><polyline points="20 6 9 17 4 12"></polyline></svg>${state.currentLang === 'ar' ? 'تأكيد واكتمال' : 'Confirm & Complete'}
-          </button>
-          <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #fef2f2; border: 1px solid #ef4444; color: #ef4444; border-radius: 6px;" 
-            onclick="window.changeBookingStatus('${bookingId}', 'cancelled', '${userEmail}', '${escapeHtml(data.doctorName)}', '${apptDate}')">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>${cancelTxt}
-          </button>
-        `;
-    } else if (statusTextDb === 'confirmed') {
-        // لحماية الحجوزات القديمة التي بقيت عالقة في حالة 'مؤكد'
-        actionsHtml = `
-          <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #eff6ff; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 6px;" 
-            onclick="window.changeBookingStatus('${bookingId}', 'completed', '', '${escapeHtml(data.doctorName)}', '${apptDate}')">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><polyline points="20 6 9 17 4 12"></polyline></svg>${state.currentLang === 'ar' ? 'تحويل إلى مكتمل' : 'Mark Completed'}
-          </button>
-        `;
-    } else {
-        // إذا كان 'completed' أو 'cancelled' نعرض شارة فقط
-        const finishedTxt = statusTextDb === 'completed' ? (state.currentLang === 'ar' ? 'تم الانتهاء' : 'Finished') : displayStatus;
-        actionsHtml = `<span class="badge" style="background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); padding: 0.4rem 0.8rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>${finishedTxt}</span>`;
-    }
-    } else if (statusTextDb === 'confirmed') {
-        // إذا قام الطبيب بالتأكيد: أظهر زراً حقيقياً قابلاً للضغط لتحويله إلى "مكتمل"
-        actionsHtml = `
-          <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #eff6ff; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 6px; cursor: pointer;" 
-            onclick="window.changeBookingStatus('${bookingId}', 'completed', '${userEmail}', '${escapeHtml(data.doctorName)}', '${apptDate}')">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>${completedTxt}
-          </button>
-        `;
-    } else if (statusTextDb === 'completed') {
-        // إذا تم الانتهاء منه فعلياً: أظهر شارة نصية ثابتة بدون أزرار
-        const finishedTxt = state.currentLang === 'ar' ? 'تم الانتهاء' : 'Finished';
-        actionsHtml = `<span class="badge" style="background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); padding: 0.4rem 0.8rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>${finishedTxt}</span>`;
-    }
+    const actionsHtml = (statusTextDb === 'pending') ? `
+      <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #ecfdf5; border: 1px solid #10b981; color: #10b981; border-radius: 6px;" 
+        onclick="window.changeBookingStatus('${bookingId}', 'confirmed', '${userEmail}', '${escapeHtml(data.doctorName)}', '${apptDate}')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><polyline points="20 6 9 17 4 12"></polyline></svg>${confirmTxt}
+      </button>
+      <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #fef2f2; border: 1px solid #ef4444; color: #ef4444; border-radius: 6px;" 
+        onclick="window.changeBookingStatus('${bookingId}', 'cancelled', '${userEmail}', '${escapeHtml(data.doctorName)}', '${apptDate}')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>${cancelTxt}
+      </button>
+    ` : `<span class="badge" style="background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); padding: 0.4rem 0.8rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>${completedTxt}</span>`;
+
     return `
     <div class="card-hover" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);">
       <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: ${statusIndicator};"></div>
