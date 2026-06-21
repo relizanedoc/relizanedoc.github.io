@@ -93,10 +93,32 @@ async function processUserMessage(rawMsg) {
     if (detectEmergency(rawMsg)) return getEmergencyResponse();
 
     try {
-        // الاستعلام المباشر من محرك البحث داخل قاعدة البيانات السحابية
-        const { data: matchedDoctors, error } = await supabaseClient.rpc('search_doctors_smart', { query_text: cleanMsg });
+        // التحقق من أن بيانات JSON تم تحميلها بنجاح
+        if (!state.globalDirectory || state.globalDirectory.length === 0) {
+            return state.currentLang === 'ar' 
+                ? 'عذراً، جاري تحميل بيانات الأطباء... حاول مجدداً بعد لحظات.' 
+                : 'Loading doctors data... please try again in a moment.';
+        }
+
+        // تقسيم جملة البحث إلى كلمات لضمان دقة البحث
+        const searchTerms = cleanMsg.split(/\s+/).filter(t => t.length > 0);
         
-        if (error) throw error;
+        // خوارزمية البحث المحلي داخل ملف JSON (بدون استهلاك Supabase)
+        let matchedDoctors = state.globalDirectory.filter(doc => {
+            // تجميع كل بيانات الطبيب في نص واحد للبحث الشامل
+            const searchString = normalizeText(`
+                ${doc.first_name || ''} ${doc.last_name || ''} 
+                ${doc.first_name_en || ''} ${doc.last_name_en || ''} 
+                ${doc.specialty || ''} ${doc.municipality || ''} 
+                ${doc.exact_location || ''}
+            `);
+            
+            // يجب أن تتطابق جميع كلمات البحث مع نص البيانات
+            return searchTerms.every(term => searchString.includes(term));
+        });
+
+        // تحديد عدد النتائج بـ 5 كحد أقصى لتجنب تجميد واجهة المحادثة
+        matchedDoctors = matchedDoctors.slice(0, 5);
 
         if (!matchedDoctors || matchedDoctors.length === 0) {
             return state.currentLang === 'ar' 
@@ -109,20 +131,22 @@ async function processUserMessage(rawMsg) {
         response += matchedDoctors.map(doc => {
             const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
             const cleanName = `${docPrefix} ${escapeHtml(doc.first_name)} ${escapeHtml(doc.last_name)}`;
+            // حماية الكود من الأسماء التي تحتوي على فواصل عليا (Apostrophes)
+            const safeNameForJs = cleanName.replace(/'/g, "\\'");
             
             return `<div class="bot-card-result" style="border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 12px; background: var(--surface);">
                 <div style="font-weight: bold; color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 8px;">${cleanName}</div>
-                <div style="color: var(--text); font-size: 0.9rem; margin-bottom: 4px;"><strong>${t('chatSpecLabel')}</strong> ${escapeHtml(t(doc.specialty))}</div>
-                <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;"><strong>${t('chatMunLabel')}</strong> ${escapeHtml(t(doc.municipality))}</div>
-                <button onclick="window.triggerDoctorProfile('${doc.id}', '${cleanName}')" style="margin-top: 12px; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; width: 100%;">${t('chatBookDetailsBtn')}</button>
+                <div style="color: var(--text); font-size: 0.9rem; margin-bottom: 4px;"><strong>${t('chatSpecLabel') || 'التخصص:'}</strong> ${escapeHtml(t(doc.specialty))}</div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 8px;"><strong>${t('chatMunLabel') || 'البلدية:'}</strong> ${escapeHtml(t(doc.municipality))}</div>
+                <button onclick="window.triggerDoctorProfile('${doc.id}', '${safeNameForJs}')" style="margin-top: 12px; background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: bold; width: 100%;">${t('chatBookDetailsBtn') || 'عرض التفاصيل والحجز'}</button>
             </div>`;
         }).join('');
         
         return response;
 
     } catch (err) {
-        console.error("Chatbot Search Error:", err);
-        return state.currentLang === 'ar' ? 'عذراً، حدث خطأ في الاتصال بالخادم. حاول مجدداً.' : 'Sorry, a server error occurred. Try again.';
+        console.error("Chatbot Local Search Error:", err);
+        return state.currentLang === 'ar' ? 'عذراً، حدث خطأ في معالجة البيانات. حاول مجدداً.' : 'Sorry, a processing error occurred. Try again.';
     }
 }
 // ==========================================
