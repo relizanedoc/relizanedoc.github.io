@@ -6,7 +6,7 @@
   <title>لوحة الإدارة العليا - Relizane Medical</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body style="background: var(--bg); padding: 2rem 1rem;">
@@ -29,7 +29,10 @@
 
     <div id="adminReviewsSec">
         <div id="pendingReviewsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
-            <div class="text-center text-gray p-4">جاري تحميل البيانات...</div>
+            <div class="text-center text-gray p-4">
+                <div class="spinner" style="margin: 0 auto 10px auto; border-top-color: var(--primary);"></div>
+                جاري تحميل البيانات...
+            </div>
         </div>
     </div>
 
@@ -45,9 +48,27 @@
     </div>
   </div>
 
+  <div id='toastContainer'></div>
+
   <script type="module">
-    // استدعاء اتصال قاعدة البيانات من ملفاتك الحالية
     import { supabaseClient } from './scripts/api.js'; 
+
+    // دالة الإشعارات الاحترافية
+    function showAdminToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'fadeOutDown 0.3s forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
 
     // 1. نظام الحماية الصارم (Security Check)
     async function checkSecurity() {
@@ -58,10 +79,12 @@
         const adminEmail = "sisi.sou27@gmail.com"; 
 
         if (!user || user.email !== adminEmail) {
-            alert("عذراً، غير مصرح لك بدخول هذه الصفحة. سيتم توجيهك للصفحة الرئيسية.");
-            window.location.replace("index.html");
+            // إظهار إشعار الطرد ثم إعادة التوجيه بعد ثانية واحدة
+            showAdminToast("عذراً، غير مصرح لك بدخول هذه الصفحة.", "error");
+            setTimeout(() => {
+                window.location.replace("index.html");
+            }, 1500);
         } else {
-            // إذا كان المستخدم هو الأدمن، نظهر اللوحة ونحمل البيانات
             document.getElementById('adminMainContainer').style.display = 'block';
             loadAdminDashboard();
         }
@@ -119,11 +142,17 @@
             const { error } = await supabaseClient.from('reviews').update({ status: newStatus }).eq('id', reviewId);
             if (error) throw error;
             
-            alert('تم التنفيذ بنجاح');
+            showAdminToast('تم التنفيذ بنجاح', 'success');
+            
             const el = document.getElementById(`admin-review-${reviewId}`);
-            if (el) el.remove();
+            if (el) {
+                el.style.opacity = '0';
+                el.style.transform = 'scale(0.95)';
+                el.style.transition = 'all 0.3s ease';
+                setTimeout(() => el.remove(), 300);
+            }
         } catch (err) {
-            alert('خطأ: ' + err.message);
+            showAdminToast('خطأ: ' + err.message, 'error');
         }
     };
 
