@@ -890,18 +890,39 @@ window.handleDashboardLogin = async function(e) {
     }
 
     // 2. إرسال الطلب إلى الدالة السحابية للتحقق المزدوج (كابتشا + كلمة مرور)
-    const { data: functionResponse, error: functionError } = await supabaseClient.functions.invoke('verify-doctor-login', {
-      body: { 
-        turnstileToken: turnstileToken, 
-        phone: phone, 
-        password: password 
-      }
-    });
+  const { data: functionResponse, error: functionError } = await supabaseClient.functions.invoke('verify-doctor-login', {
+  body: { 
+    turnstileToken: turnstileToken, 
+    phone: phone, 
+    password: password 
+  }
+});
 
-    if (functionError) throw new Error("خطأ في الاتصال بالخادم الداخلي.");
-    if (functionResponse && functionResponse.error) throw new Error(functionResponse.error);
+// ✅ التعديل المعماري: كشف الخطأ الفعلي بدلاً من طمسه
+if (functionError) {
+  console.error("🚨 الخلل الفعلي القادم من السيرفر:", functionError);
+  
+  // التحقق مما إذا كان الخطأ بسبب انقطاع الشبكة أو الـ Timeout
+  if (functionError instanceof TypeError || functionError.message === 'Failed to fetch') {
+      throw new Error("مشكلة في الاتصال بالإنترنت أو أن السيرفر يستغرق وقتاً طويلاً للاستجابة. يرجى المحاولة مرة أخرى.");
+  }
+  
+  // محاولة استخراج رسالة الخطأ الأصلية إن وجدت
+  const errorMessage = functionError.message || functionError.context || "حدث خطأ غير متوقع في الخادم.";
+  throw new Error(`تعذر الاتصال بالخادم: ${errorMessage}`);
+}
 
-    const responseData = functionResponse.doctorData;
+// التأكد من أن السيرفر لم يرجع خطأ منطقي (مثل: بيانات خاطئة)
+if (functionResponse && functionResponse.error) {
+    throw new Error(functionResponse.error);
+}
+
+// التأكد من وجود البيانات قبل استخراجها (حماية من الـ Null Pointers)
+if (!functionResponse || !functionResponse.doctorData) {
+    throw new Error("استجابة السيرفر غير مكتملة أو فارغة.");
+}
+
+const responseData = functionResponse.doctorData;
 
     // 3. جلب تفاصيل الطبيب بعد نجاح التحقق
     const { data: fullDoctorData } = await supabaseClient.from('doctors').select('*').eq('id', responseData.doctor.id).single();
