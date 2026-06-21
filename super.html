@@ -228,33 +228,34 @@
     };
 
     // 🌟 حفظ البيانات مع التشفير باستخدام BcryptJS
-    window.saveDoctorData = async function() {
+   window.saveDoctorData = async function() {
         const id = document.getElementById('editDocId').value;
         const newPhone = document.getElementById('editDocPhone').value.trim();
         const rawPassword = document.getElementById('editDocPassword').value.trim();
+
+        // 1. التحقق من تحميل مكتبة bcrypt
+        if (typeof bcrypt === 'undefined') {
+            window.showAdminToast('خطأ: مكتبة التشفير لم تُحمل بعد، يرجى تحديث الصفحة.', 'error');
+            return;
+        }
 
         if (newPhone === '') {
             window.showAdminToast('رقم الهاتف مطلوب!', 'error');
             return;
         }
 
-        // تجهيز البيانات
         let updatePayload = { phone: newPhone };
 
-        // إذا تم إدخال كلمة مرور جديدة، نقوم بتشفيرها
         if (rawPassword !== '') {
             try {
-                // توليد الـ Salt وتشفير الكلمة بشكل متزامن
-                const salt = bcrypt.genSaltSync(10);
-                const hashedPassword = bcrypt.hashSync(rawPassword, salt);
-                
-                // ⚠️ تأكد من أن اسم العمود في قاعدة بياناتك هو 'password' 
-                // أو قم بتغييره إلى 'password_hash' إذا كان هذا هو اسم العمود لديك
+                // استخدام دالة التشفير بشكل آمن
+                const saltRounds = 10;
+                const hashedPassword = bcrypt.hashSync(rawPassword, saltRounds);
                 updatePayload.password = hashedPassword; 
-            } catch (hashError) {
-                console.error("Hashing Error:", hashError);
-                window.showAdminToast('حدث خطأ أثناء تشفير كلمة المرور', 'error');
-                return; // إيقاف العملية إذا فشل التشفير
+            } catch (err) {
+                console.error("Hashing Error details:", err);
+                window.showAdminToast('فشل في عملية التشفير: ' + err.message, 'error');
+                return;
             }
         }
 
@@ -268,10 +269,10 @@
             
             window.showAdminToast('تم تحديث بيانات الطبيب بنجاح!', 'success');
             document.getElementById('editDoctorModal').style.display = 'none'; 
-            window.loadAdminDoctors(); // تحديث الجدول فوراً
+            window.loadAdminDoctors();
             
         } catch (err) {
-            window.showAdminToast('خطأ في التحديث: ' + err.message, 'error');
+            window.showAdminToast('خطأ في الاتصال بقاعدة البيانات: ' + err.message, 'error');
         }
     };
 
