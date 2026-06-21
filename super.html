@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة العليا - Relizane Medical</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=4">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="background: var(--bg); padding: 2rem 1rem;">
+
+  <div class='card' style='max-width: 1000px; margin: 0 auto; display: none;' id="adminMainContainer">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 class='text-xl font-bold' style="color: var(--danger); margin: 0;">لوحة الإدارة العليا</h2>
+        <a href="index.html" class="btn btn-secondary btn-sm" style="text-decoration: none;">العودة للموقع</a>
+    </div>
+    
+    <div class="booking-tabs mb-4">
+        <div class="booking-tab active" id="tabAdminReviews" onclick="document.getElementById('adminReviewsSec').classList.remove('hidden'); document.getElementById('adminDocsSec').classList.add('hidden'); this.classList.add('active'); document.getElementById('tabAdminDocs').classList.remove('active');">
+            <h3 class="tab-title" style="margin: 0; font-size: 1rem;">التقييمات المعلقة</h3>
+        </div>
+        <div class="booking-tab" id="tabAdminDocs" onclick="document.getElementById('adminDocsSec').classList.remove('hidden'); document.getElementById('adminReviewsSec').classList.add('hidden'); this.classList.add('active'); document.getElementById('tabAdminReviews').classList.remove('active');">
+            <h3 class="tab-title" style="margin: 0; font-size: 1rem;">إدارة الأطباء</h3>
+        </div>
+    </div>
+
+    <div id="adminReviewsSec">
+        <div id="pendingReviewsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="text-center text-gray p-4">جاري تحميل البيانات...</div>
+        </div>
+    </div>
+
+    <div id="adminDocsSec" class="hidden">
+        <div class="table-container">
+            <table style="width: 100%;">
+                <thead>
+                    <tr><th>اسم الطبيب</th><th>التخصص</th><th>رقم الهاتف</th><th>إجراءات</th></tr>
+                </thead>
+                <tbody id="adminDoctorsTbody"></tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // استدعاء اتصال قاعدة البيانات من ملفاتك الحالية
+    import { supabaseClient } from './scripts/api.js'; 
+
+    // 1. نظام الحماية الصارم (Security Check)
+    async function checkSecurity() {
+        const { data: authData } = await supabaseClient.auth.getUser();
+        const user = authData.user;
+        
+        // ⚠️ ضع إيميلك هنا ⚠️
+        const adminEmail = "sisi.sou27@gmail.com"; 
+
+        if (!user || user.email !== adminEmail) {
+            alert("عذراً، غير مصرح لك بدخول هذه الصفحة. سيتم توجيهك للصفحة الرئيسية.");
+            window.location.replace("index.html");
+        } else {
+            // إذا كان المستخدم هو الأدمن، نظهر اللوحة ونحمل البيانات
+            document.getElementById('adminMainContainer').style.display = 'block';
+            loadAdminDashboard();
+        }
+    }
+
+    // 2. دالة جلب البيانات
+    async function loadAdminDashboard() {
+        const container = document.getElementById('pendingReviewsContainer');
+        try {
+            const { data: reviews, error } = await supabaseClient
+                .from('reviews')
+                .select('id, rating, comment, patient_name, doctors(first_name, last_name, first_name_en, last_name_en)')
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!reviews || reviews.length === 0) {
+                container.innerHTML = `<div class="empty-state">✅ لا توجد تقييمات معلقة للمراجعة.</div>`;
+                return;
+            }
+
+            let html = '';
+            reviews.forEach(r => {
+                const doc = r.doctors;
+                const doctorName = doc ? `${doc.first_name} ${doc.last_name}` : 'طبيب محذوف';
+                html += `
+                <div class="review-card" id="admin-review-${r.id}" style="border-right: 4px solid var(--warning);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                        <div style="flex: 1;">
+                            <div style="margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                <span style="color: var(--text-secondary);">المريض:</span> <strong>${r.patient_name || 'مجهول'}</strong> <br>
+                                <span style="color: var(--text-secondary);">لطبيب:</span> <strong style="color: var(--primary-dark);">د. ${doctorName}</strong>
+                            </div>
+                            <div style="color: #f59e0b; font-size: 1.1rem; letter-spacing: 2px;">${'★'.repeat(r.rating)}<span style="color:#e2e8f0">${'★'.repeat(5 - r.rating)}</span></div>
+                            <p class="mt-2 text-sm" style="background: var(--bg); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border);">${r.comment}</p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-direction: column;">
+                            <button class="btn btn-success btn-sm" onclick="window.updateReviewStatus('${r.id}', 'published')">موافقة ونشر ✔️</button>
+                            <button class="btn btn-secondary btn-sm" style="color: var(--danger); border-color: var(--danger);" onclick="window.updateReviewStatus('${r.id}', 'deleted')">رفض وحذف ❌</button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        } catch (err) {
+            container.innerHTML = `<div class="text-danger p-4 text-center">خطأ: ${err.message}</div>`;
+        }
+    }
+
+    // 3. دالة اتخاذ القرار
+    window.updateReviewStatus = async function(reviewId, newStatus) {
+        if (!confirm('هل أنت متأكد من هذا الإجراء؟')) return;
+        try {
+            const { error } = await supabaseClient.from('reviews').update({ status: newStatus }).eq('id', reviewId);
+            if (error) throw error;
+            
+            alert('تم التنفيذ بنجاح');
+            const el = document.getElementById(`admin-review-${reviewId}`);
+            if (el) el.remove();
+        } catch (err) {
+            alert('خطأ: ' + err.message);
+        }
+    };
+
+    // تشغيل نظام الحماية فوراً عند فتح الصفحة
+    checkSecurity();
+  </script>
+</body>
+</html>
