@@ -1147,12 +1147,10 @@ if (!firstNameAr || !lastNameAr) {
 };
 
 window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doctorName, appointmentDate) {
-  // 1. تحديد رسالة التأكيد المناسبة بناءً على الحالة
   let confirmMsg = '';
-  if (newStatus === 'confirmed') {
-      confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من تأكيد هذا الموعد؟' : 'Are you sure you want to confirm this appointment?';
-  } else if (newStatus === 'completed') {
-      confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من إنهاء/إكمال هذا الموعد؟' : 'Are you sure you want to mark this as completed?';
+  // الرسالة تظهر حسب الإجراء
+  if (newStatus === 'completed') {
+      confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من تأكيد وإكمال هذا الموعد؟' : 'Are you sure you want to confirm and complete this appointment?';
   } else {
       confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من إلغاء هذا الموعد؟' : 'Are you sure you want to cancel this appointment?';
   }
@@ -1164,7 +1162,6 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
     if (!sessionStr) throw new Error('يرجى تسجيل الدخول مجدداً');
     const session = JSON.parse(sessionStr);
 
-    // 2. تحديث الحالة في قاعدة البيانات
     const { error } = await supabaseClient.rpc('update_booking_status_secure', { 
         p_booking_id: bookingId, 
         p_new_status: newStatus, 
@@ -1173,7 +1170,8 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
     });
     if (error) throw error;
 
-    if (newStatus === 'confirmed' && userEmail && userEmail.trim() !== '' && userEmail !== 'null' && userEmail !== 'undefined') {
+    // 🔥 التعديل هنا: إرسال الإيميل مباشرة عند تحول الموعد إلى 'completed'
+    if (newStatus === 'completed' && userEmail && userEmail.trim() !== '' && userEmail !== 'null' && userEmail !== 'undefined') {
       supabaseClient.functions.invoke('send-booking-email', { body: { userEmail, doctorName, appointmentDate } })
       .then(({ error: funcError }) => {
         if (funcError) showToast('حدث خطأ أثناء إرسال إيميل التأكيد.', 'error');
@@ -1183,7 +1181,6 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
 
     showToast(state.currentLang === 'ar' ? 'تم تحديث حالة الحجز بنجاح' : 'Booking status updated successfully', 'success');
     
-    // 3. جلب المواعيد المحدثة وإعادة رسم الواجهة والإحصائيات فوراً
     const { data: updatedAppointments, error: fetchError } = await supabaseClient.rpc('get_doctor_appointments_secure', { 
         p_doctor_id: session.doctorId, 
         p_session_token: session.sessionToken 
@@ -1194,7 +1191,6 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
       state.globalDashboardData.appointments = updatedAppointments || [];
       renderDashboardUI(state.globalDashboardData, state.globalDashboardDoctorId);
       
-      // 🔥 هذا السطر هو السر لتحديث المخطط الدائري (النسبة) فوراً!
       if(typeof window.renderDoctorAnalytics === 'function') {
           window.renderDoctorAnalytics(updatedAppointments);
       }
