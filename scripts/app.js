@@ -794,18 +794,18 @@ let doctorChartInstance = null; // متغير لحفظ حالة المخطط
 
 window.renderDoctorAnalytics = function(appointments) {
     const canvas = document.getElementById('appointmentsChart');
-    if (!canvas) return; // حماية الكود: إيقاف التنفيذ إذا لم تكن الصفحة تحتوي على مساحة الرسم
+    if (!canvas) return; // حماية الكود
 
-    // التأكد من أن المصفوفة موجودة، وإلا نجعلها فارغة لتصفير العدادات بدلاً من إيقاف السكربت
     const validAppointments = appointments || [];
 
     // 1. حساب الإحصائيات الشاملة
     const total = validAppointments.length;
     const confirmed = validAppointments.filter(a => a.status === 'confirmed').length;
     const pending = validAppointments.filter(a => a.status === 'pending').length;
-    const cancelled = validAppointments.filter(a => a.status === 'cancelled').length;
+    // تم تغيير الفلتر ليحسب 'completed' بدلاً من 'cancelled'
+    const completed = validAppointments.filter(a => a.status === 'completed').length; 
 
-    // 2. تحديث المربعات الأربعة (مع التحقق الآمن من وجود العنصر في الـ DOM)
+    // 2. تحديث المربعات الأربعة
     const totalEl = document.getElementById('statTotalAppointments');
     if (totalEl) totalEl.textContent = total;
 
@@ -815,35 +815,36 @@ window.renderDoctorAnalytics = function(appointments) {
     const pendingEl = document.getElementById('statPendingAppointments');
     if (pendingEl) pendingEl.textContent = pending;
 
-    const cancelledEl = document.getElementById('statCancelledAppointments');
-    if (cancelledEl) cancelledEl.textContent = cancelled;
+    // تحديث مربع المكتملة الجديد
+    const completedEl = document.getElementById('statCompletedAppointments');
+    if (completedEl) completedEl.textContent = completed;
 
-    // 3. تدمير المخطط القديم إذا كان موجوداً (لتجنب تداخل الرسوم وتسرب الذاكرة)
+    // 3. تدمير المخطط القديم لمنع تداخل الرسوم
     if (doctorChartInstance) {
         doctorChartInstance.destroy();
     }
 
     // 4. رسم المخطط الدائري (Doughnut Chart)
-  const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d');
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
-    // 🌟 التعديل هنا: جلب الترجمة للنصوص أسفل المخطط 🌟
+    // استخدام دالة الترجمة مع توفير نص بديل (Fallback) لتجنب الأخطاء
     const translatedLabels = [
-        t('confirmedAppointments'), 
-        t('pendingAppointments'), 
-        t('cancelledAppointments')
+        t('confirmedAppointments') || 'مؤكدة', 
+        t('pendingAppointments') || 'قيد الانتظار', 
+        t('completedAppointments') || 'مكتملة' 
     ];
 
     doctorChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: translatedLabels, // استخدام المصفوفة المترجمة هنا
+            labels: translatedLabels,
             datasets: [{
-                data: [confirmed, pending, cancelled],
+                data: [confirmed, pending, completed], // تمرير بيانات المكتملة
                 backgroundColor: [
-                    '#10b981', // أخضر للمؤكدة
-                    '#f59e0b', // برتقالي للانتظار
-                    '#ef4444'  // أحمر للملغاة
+                    '#10b981', // أخضر: مؤكدة
+                    '#f59e0b', // برتقالي: قيد الانتظار
+                    '#3b82f6'  // أزرق: مكتملة (بدلاً من الأحمر)
                 ],
                 borderWidth: 0,
                 hoverOffset: 4
