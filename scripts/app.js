@@ -86,6 +86,19 @@ window.router = async function(viewName, pushHistory = true) {
     }
   }
 
+  // 🌟 بداية كود الحماية الجديد للوحة الإدارة 🌟
+  if (viewName === 'admin') {
+    const user = await getCurrentUser();
+    // ⚠️ استبدل هذا الإيميل ببريدك الإلكتروني الشخصي الذي ستدير به الموقع
+    const adminEmail = "sisi.sou27@gmail.com"; 
+
+    if (!user || user.Email !== adminEmail) {
+      showToast(state.currentLang === 'ar' ? 'عذراً، هذه الصفحة مخصصة للإدارة فقط.' : 'Access denied. Admins only.', 'error');
+      return window.router('home', false); // طرد المستخدم فوراً للصفحة الرئيسية
+    }
+  }
+  // 🌟 نهاية كود الحماية 🌟
+
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
   const target = document.getElementById('view-' + viewName);
   if (target) target.classList.remove('hidden');
