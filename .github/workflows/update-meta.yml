@@ -1,0 +1,36 @@
+name: Update Doctors Meta File
+
+on:
+  schedule:
+    # يعمل تلقائياً كل يوم الساعة 2:00 صباحاً بتوقيت جرينتش
+    - cron: '0 2 * * *'
+  workflow_dispatch: # زر يدوي لتشغيل السكريبت متى شئت من لوحة التحكم
+
+jobs:
+  generate-and-commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # إعطاء صلاحية للبوت لكتابة الملف الجديد في المستودع
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20' # استخدام إصدار حديث يدعم fetch
+
+    - name: Generate JSON Meta File
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      run: node scripts/generate-meta.js
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add doctors-meta.json
+        # الكود التالي يمنع الخطأ إذا لم تكن هناك تغييرات جديدة في البيانات
+        git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-update doctors-meta.json" && git push)
