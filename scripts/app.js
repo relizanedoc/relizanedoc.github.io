@@ -787,24 +787,38 @@ window.loadUserBookings = async function() {
 let doctorChartInstance = null; // متغير لحفظ حالة المخطط
 
 window.renderDoctorAnalytics = function(appointments) {
-    if (!appointments || appointments.length === 0) return;
+    const canvas = document.getElementById('appointmentsChart');
+    if (!canvas) return; // حماية الكود: إيقاف التنفيذ إذا لم تكن الصفحة تحتوي على مساحة الرسم
 
-    // 1. حساب الإحصائيات السريعة
-    const total = appointments.length;
-    const confirmed = appointments.filter(a => a.status === 'confirmed').length;
-    const pending = appointments.filter(a => a.status === 'pending').length;
-    const cancelled = appointments.filter(a => a.status === 'cancelled').length;
+    // التأكد من أن المصفوفة موجودة، وإلا نجعلها فارغة لتصفير العدادات بدلاً من إيقاف السكربت
+    const validAppointments = appointments || [];
 
-    document.getElementById('statTotalAppointments').textContent = total;
-    document.getElementById('statConfirmedAppointments').textContent = confirmed;
+    // 1. حساب الإحصائيات الشاملة
+    const total = validAppointments.length;
+    const confirmed = validAppointments.filter(a => a.status === 'confirmed').length;
+    const pending = validAppointments.filter(a => a.status === 'pending').length;
+    const cancelled = validAppointments.filter(a => a.status === 'cancelled').length;
 
-    // 2. تدمير المخطط القديم إذا كان موجوداً (لتجنب تداخل الرسوم عند إعادة تسجيل الدخول)
+    // 2. تحديث المربعات الأربعة (مع التحقق الآمن من وجود العنصر في الـ DOM)
+    const totalEl = document.getElementById('statTotalAppointments');
+    if (totalEl) totalEl.textContent = total;
+
+    const confirmedEl = document.getElementById('statConfirmedAppointments');
+    if (confirmedEl) confirmedEl.textContent = confirmed;
+
+    const pendingEl = document.getElementById('statPendingAppointments');
+    if (pendingEl) pendingEl.textContent = pending;
+
+    const cancelledEl = document.getElementById('statCancelledAppointments');
+    if (cancelledEl) cancelledEl.textContent = cancelled;
+
+    // 3. تدمير المخطط القديم إذا كان موجوداً (لتجنب تداخل الرسوم وتسرب الذاكرة)
     if (doctorChartInstance) {
         doctorChartInstance.destroy();
     }
 
-    // 3. رسم المخطط الدائري (Doughnut Chart)
-    const ctx = document.getElementById('appointmentsChart').getContext('2d');
+    // 4. رسم المخطط الدائري (Doughnut Chart)
+    const ctx = canvas.getContext('2d');
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
     doctorChartInstance = new Chart(ctx, {
@@ -814,9 +828,9 @@ window.renderDoctorAnalytics = function(appointments) {
             datasets: [{
                 data: [confirmed, pending, cancelled],
                 backgroundColor: [
-                    '#10b981', // success (green)
-                    '#f59e0b', // warning (orange)
-                    '#ef4444'  // danger (red)
+                    '#10b981', // أخضر للمؤكدة
+                    '#f59e0b', // برتقالي للانتظار
+                    '#ef4444'  // أحمر للملغاة
                 ],
                 borderWidth: 0,
                 hoverOffset: 4
@@ -828,7 +842,10 @@ window.renderDoctorAnalytics = function(appointments) {
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: { color: isDark ? '#f8fafc' : '#0f172a', font: { family: 'Tajawal', size: 14 } }
+                    labels: { 
+                        color: isDark ? '#f8fafc' : '#0f172a', 
+                        font: { family: 'Tajawal', size: 14 } 
+                    }
                 }
             }
         }
