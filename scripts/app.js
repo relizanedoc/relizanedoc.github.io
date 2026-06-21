@@ -50,7 +50,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         const hash = window.location.hash;
         if (!hash.includes('access_token') && !hash.includes('error=')) {
             const cleanHash = hash.replace('#', '');
-            const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard', 'doctor-profile'].includes(cleanHash) ? cleanHash : 'home';
+const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard', 'doctor-profile', 'admin'].includes(cleanHash) ? cleanHash : 'home';
             window.router(startView, false); // هذا السطر هو الذي يبقيك في صفحتك الحالية
         }
         isAuthInitialized = true;
