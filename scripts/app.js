@@ -299,20 +299,44 @@ if (!filterOptionsLoaded) await window.fetchGlobalDirectory();
 
 window.fetchGlobalDirectory = async function() {
     try {
-        // جلب نسخة خفيفة جداً (أقل من 50 كيلوبايت لـ 1000 طبيب) لخدمة الشات بوت والفلاتر
-        const { data, error } = await supabaseClient.from('doctors').select('id, first_name, last_name, first_name_en, last_name_en, specialty, municipality, exact_location');
-        if (error) throw error;
+        // حيلة برمجية: نستخدم تاريخ اليوم كمتغير في الرابط
+        // هذا يجبر المتصفح على حفظ الملف مؤقتاً (Cache) طوال اليوم لتقليل الاستهلاك
+        // ويجبره على جلب نسخة جديدة فقط عندما يتغير اليوم
+        const today = new Date().toISOString().slice(0, 10);
+        
+        // جلب الملف الثابت والمجاني من GitHub Pages
+        const response = await fetch(`./doctors-meta.json?v=${today}`);
+        
+        if (!response.ok) {
+            throw new Error('لم يتم العثور على ملف meta');
+        }
 
-        // 💡 هذا المتغير الجديد هو الذي سيستخدمه الشات بوت للبحث في كل الأطباء
-        state.globalDirectory = data || []; 
+        const data = await response.json();
 
+        state.globalDirectory = data || [];
         globalSpecs = [...new Set(data.map(d => d.specialty).filter(Boolean))].sort();
         globalMuns = [...new Set(data.map(d => d.municipality).filter(Boolean))].sort();
 
         window.populateFilters();
         filterOptionsLoaded = true;
+        
     } catch (e) {
-        console.error("Error fetching global directory:", e);
+        console.warn("⚠️ فشل جلب ملف meta من GitHub، التحويل الاحتياطي (Fallback) إلى Supabase...", e);
+        
+        // الخطة البديلة (Fallback): إذا تم حذف الملف بالخطأ أو فشل تحديثه، الموقع لن يتعطل!
+        try {
+            const { data, error } = await supabaseClient.from('doctors').select('id, first_name, last_name, first_name_en, last_name_en, specialty, municipality, exact_location');
+            if (error) throw error;
+            
+            state.globalDirectory = data || [];
+            globalSpecs = [...new Set(data.map(d => d.specialty).filter(Boolean))].sort();
+            globalMuns = [...new Set(data.map(d => d.municipality).filter(Boolean))].sort();
+
+            window.populateFilters();
+            filterOptionsLoaded = true;
+        } catch (fallbackError) {
+            console.error("❌ فشل الخطة البديلة أيضاً:", fallbackError);
+        }
     }
 };
 window.populateFilters = function() {
