@@ -1081,105 +1081,163 @@ async function saveClinicProfile() {
     });
 
     const certificatesText = document.getElementById('dash_certificates') ? document.getElementById('dash_certificates').value.trim() : '';
-let finalImageUrls = [...window.dashboardCurrentImages]; 
+    
+    // استخدام مصفوفة فارغة كقيمة افتراضية إذا لم تكن موجودة
+    let finalImageUrls = window.dashboardCurrentImages ? [...window.dashboardCurrentImages] : []; 
     const fileInput = document.getElementById('dash_clinic_images');
 
     if (fileInput && fileInput.files.length > 0) {
-        // حساب الأماكن المتبقية للوصول إلى 4 صور كحد أقصى
         const maxImages = 4;
         const remainingSlots = maxImages - finalImageUrls.length;
 
-        // إذا كان الطبيب يمتلك 4 صور بالفعل وحاول رفع المزيد
         if (remainingSlots <= 0) {
             showToast('لقد وصلت للحد الأقصى (4 صور). يرجى حذف بعض الصور القديمة أولاً.', 'error');
             setLoading(btn, false, 'حفظ التغييرات');
-            if (fileInput) fileInput.value = ''; // تفريغ الحقل
-            return; // إيقاف عملية الحفظ
+            if (fileInput) fileInput.value = ''; 
+            return; 
         }
 
-        // أخذ الصور الجديدة على قدر الأماكن المتبقية فقط
         const filesToUpload = Array.from(fileInput.files).slice(0, remainingSlots);
 
-        // تنبيه المستخدم إذا قام بتحديد صور أكثر من المسموح
         if (fileInput.files.length > remainingSlots) {
             showToast(`تم اختيار أول ${remainingSlots} صور فقط لعدم تجاوز الحد الأقصى (4 صور).`, 'warning');
         }
 
-        for (const file of filesToUpload) {
-        // إنشاء اسم فريد للصورة لتجنب تكرار الأسماء
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${session.doctorId}-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `clinics/${fileName}`;
+        // 🌟 خوارزمية ضغط الصور المحلية (بدون مكتبات خارجية) 🌟
+        const compressImage = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const MAX_WIDTH = 1200;
+                        const MAX_HEIGHT = 1200;
+                        let width = img.width;
+                        let height = img.height;
 
-        // الرفع المباشر إلى Supabase Storage
-        const { error: uploadError } = await supabaseClient.storage.from('clinic-images').upload(filePath, file);
+                        // الحفاظ على أبعاد الصورة (Aspect Ratio) وتقليصها
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height = Math.round(height * MAX_WIDTH / width);
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width = Math.round(width * MAX_HEIGHT / height);
+                                height = MAX_HEIGHT;
+                            }
+                        }
 
-        if (uploadError) throw new Error("فشل رفع الصورة: " + uploadError.message);
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
 
-        // الحصول على الرابط العام (Public URL)
-        const { data: publicUrlData } = supabaseClient.storage.from('clinic-images').getPublicUrl(filePath);
-        finalImageUrls.push(publicUrlData.publicUrl);
-      }
+                        // تحويل الصورة إلى WebP بجودة 80%
+                        canvas.toBlob((blob) => {
+                            const newFile = new File([blob], `${Date.now()}.webp`, {
+                                type: 'image/webp',
+                                lastModified: Date.now()
+                            });
+                            resolve(newFile);
+                        }, 'image/webp', 0.8);
+                    };
+                    img.onerror = (error) => reject(error);
+                };
+                reader.onerror = (error) => reject(error);
+            });
+        };
+
+        // رفع الصور بعد الضغط
+        for (const originalFile of filesToUpload) {
+            try {
+                // 1. تمرير الصورة لخوارزمية الضغط
+                const compressedFile = await compressImage(originalFile);
+
+                // 2. إنشاء اسم فريد بصيغة WebP
+                const fileName = `${session.doctorId}-${Date.now()}-${Math.random().toString(36).substring(2)}.webp`;
+                const filePath = `clinics/${fileName}`;
+
+                // 3. رفع الصورة المضغوطة جداً إلى Supabase
+                const { error: uploadError } = await supabaseClient.storage.from('clinic-images').upload(filePath, compressedFile);
+
+                if (uploadError) throw new Error("فشل رفع الصورة: " + uploadError.message);
+
+                const { data: publicUrlData } = supabaseClient.storage.from('clinic-images').getPublicUrl(filePath);
+                finalImageUrls.push(publicUrlData.publicUrl);
+            } catch (imgError) {
+                console.error("Image Processing Error:", imgError);
+                showToast("حدث خطأ أثناء معالجة إحدى الصور.", "error");
+            }
+        }
     }
-// 🔴 قراءة الأسماء من الحقول
-const firstNameAr = document.getElementById('dash_first_name_ar').value.trim();
-const lastNameAr = document.getElementById('dash_last_name_ar').value.trim();
-const firstNameEn = document.getElementById('dash_first_name_en') ? document.getElementById('dash_first_name_en').value.trim() : '';
-const lastNameEn = document.getElementById('dash_last_name_en') ? document.getElementById('dash_last_name_en').value.trim() : '';
 
-// التحقق من أن الاسم العربي ليس فارغاً (لأنه إجباري)
-if (!firstNameAr || !lastNameAr) {
-    showToast(state.currentLang === 'ar' ? 'الاسم واللقب بالعربية إجباريان' : 'Arabic First and Last names are required', 'error');
-    setLoading(btn, false);
-    return;
-}
+    const firstNameAr = document.getElementById('dash_first_name_ar').value.trim();
+    const lastNameAr = document.getElementById('dash_last_name_ar').value.trim();
+    const firstNameEn = document.getElementById('dash_first_name_en') ? document.getElementById('dash_first_name_en').value.trim() : '';
+    const lastNameEn = document.getElementById('dash_last_name_en') ? document.getElementById('dash_last_name_en').value.trim() : '';
+
+    if (!firstNameAr || !lastNameAr) {
+        showToast(state.currentLang === 'ar' ? 'الاسم واللقب بالعربية إجباريان' : 'Arabic First and Last names are required', 'error');
+        setLoading(btn, false);
+        return;
+    }
+    
     const contactEmail = document.getElementById('dash_contact_email').value.trim();
     const whatsapp = document.getElementById('dash_whatsapp').value.trim();
     const facebook = document.getElementById('dash_facebook').value.trim();
     const mapLink = document.getElementById('dash_map_link').value.trim();
 
-   // إرسال البيانات المحدثة إلى Supabase (13 متغيراً بالتمام)
-        const { error: dbError } = await supabaseClient.rpc('update_clinic_profile_secure', {
-            p_doctor_id: session.doctorId,
-            p_session_token: session.sessionToken,
-            p_first_name: firstNameAr,
-            p_last_name: lastNameAr,
-            p_first_name_en: firstNameEn,
-            p_last_name_en: lastNameEn,
-            p_contact_email: contactEmail,
-            p_whatsapp_number: whatsapp,
-            p_facebook_link: facebook,
-            p_map_link: mapLink,
-            p_services: formattedServices,
-            p_certificates: certificatesText,
-            p_clinic_images: finalImageUrls
-        });
+    const { error: dbError } = await supabaseClient.rpc('update_clinic_profile_secure', {
+        p_doctor_id: session.doctorId,
+        p_session_token: session.sessionToken,
+        p_first_name: firstNameAr,
+        p_last_name: lastNameAr,
+        p_first_name_en: firstNameEn,
+        p_last_name_en: lastNameEn,
+        p_contact_email: contactEmail,
+        p_whatsapp_number: whatsapp,
+        p_facebook_link: facebook,
+        p_map_link: mapLink,
+        p_services: formattedServices,
+        p_certificates: certificatesText,
+        p_clinic_images: finalImageUrls
+    });
 
-        if (dbError) throw dbError;
+    if (dbError) throw dbError;
 
-        // تحديث المصفوفة المحلية
-        const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
-        if (docIndex > -1) {
-            state.allDoctors[docIndex] = { 
-                ...state.allDoctors[docIndex], 
-                first_name: firstNameAr,
-                last_name: lastNameAr,
-                first_name_en: firstNameEn,
-                last_name_en: lastNameEn,
-                contact_email: contactEmail, 
-                whatsapp_number: whatsapp, 
-                facebook_link: facebook, 
-                map_link: mapLink, 
-                services: formattedServices, 
-                certificates: certificatesText, 
-                clinic_images: finalImageUrls 
-            };
+    const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
+    if (docIndex > -1) {
+        state.allDoctors[docIndex] = { 
+            ...state.allDoctors[docIndex], 
+            first_name: firstNameAr,
+            last_name: lastNameAr,
+            first_name_en: firstNameEn,
+            last_name_en: lastNameEn,
+            contact_email: contactEmail, 
+            whatsapp_number: whatsapp, 
+            facebook_link: facebook, 
+            map_link: mapLink, 
+            services: formattedServices, 
+            certificates: certificatesText, 
+            clinic_images: finalImageUrls 
+        };
+        // تحديث صفحة الطبيب في GitHub للمساعدة في الـ SEO
+        if (typeof window.createDoctorGitHubPageAsync === 'function') {
             window.createDoctorGitHubPageAsync(state.allDoctors[docIndex], session.doctorId);
         }
+    }
+    
     setTimeout(() => location.reload(), 1000);
   } catch (err) { showToast('خطأ: ' + err.message, 'error'); } 
-  finally { setLoading(btn, false, 'حفظ التغييرات'); if (document.getElementById('dash_clinic_images')) document.getElementById('dash_clinic_images').value = ''; }
-};
+  finally { 
+      setLoading(btn, false, 'حفظ التغييرات'); 
+      if (document.getElementById('dash_clinic_images')) document.getElementById('dash_clinic_images').value = ''; 
+  }
+}
 
 window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doctorName, appointmentDate) {
   let confirmMsg = '';
