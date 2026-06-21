@@ -299,12 +299,11 @@ if (!filterOptionsLoaded) await window.fetchGlobalDirectory();
 
 window.fetchGlobalDirectory = async function() {
     try {
-        // حيلة برمجية: نستخدم تاريخ اليوم كمتغير في الرابط
-        // هذا يجبر المتصفح على حفظ الملف مؤقتاً (Cache) طوال اليوم لتقليل الاستهلاك
-        // ويجبره على جلب نسخة جديدة فقط عندما يتغير اليوم
+        // حيلة برمجية: نستخدم تاريخ اليوم لضمان جلب أحدث نسخة من الملف مرة واحدة يومياً
+        // مما يقلل استهلاك باقة الإنترنت للمستخدم ويسرع الموقع
         const today = new Date().toISOString().slice(0, 10);
         
-        // جلب الملف الثابت والمجاني من GitHub Pages
+        // جلب الملف الثابت من مسار المشروع
         const response = await fetch(`./doctors-meta.json?v=${today}`);
         
         if (!response.ok) {
@@ -313,6 +312,7 @@ window.fetchGlobalDirectory = async function() {
 
         const data = await response.json();
 
+        // تغذية متغيرات النظام بالبيانات المجانية
         state.globalDirectory = data || [];
         globalSpecs = [...new Set(data.map(d => d.specialty).filter(Boolean))].sort();
         globalMuns = [...new Set(data.map(d => d.municipality).filter(Boolean))].sort();
@@ -321,9 +321,9 @@ window.fetchGlobalDirectory = async function() {
         filterOptionsLoaded = true;
         
     } catch (e) {
-        console.warn("⚠️ فشل جلب ملف meta من GitHub، التحويل الاحتياطي (Fallback) إلى Supabase...", e);
+        console.warn("⚠️ فشل جلب ملف meta، تفعيل الخطة البديلة عبر Supabase...", e);
         
-        // الخطة البديلة (Fallback): إذا تم حذف الملف بالخطأ أو فشل تحديثه، الموقع لن يتعطل!
+        // الخطة البديلة (Fallback): الاتصال بقاعدة البيانات في حال فشل الملف
         try {
             const { data, error } = await supabaseClient.from('doctors').select('id, first_name, last_name, first_name_en, last_name_en, specialty, municipality, exact_location');
             if (error) throw error;
