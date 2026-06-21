@@ -56,9 +56,20 @@ const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track
         isAuthInitialized = true;
     }
 });
-// ✅ التحقق من الجلسة الحالية عند تحميل الصفحة
+// ✅ التحقق من الجلسة الحالية واللغة عند تحميل الصفحة
 window.addEventListener('load', async () => {
-    console.log('🔍 التحقق من الجلسة الحالية...');
+    console.log('🔍 التحقق من الجلسة الحالية واللغة...');
+
+    // 🟢 الكود الجديد: استرجاع اللغة المحفوظة أو تعيين العربية كافتراضي
+    const savedLang = localStorage.getItem('appLanguage') || 'ar';
+    
+    // تأخير بسيط جداً لضمان تحميل عناصر DOM قبل تغيير اللغة
+    setTimeout(() => {
+        if(typeof window.setLang === 'function') {
+            window.setLang(savedLang);
+        }
+    }, 10);
+
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         console.log('✅ جلسة موجودة، تحديث الواجهة');
