@@ -98,19 +98,32 @@
 
     async function checkSecurity() {
         try {
-            const { data: authData } = await supabaseClient.auth.getUser();
-            const user = authData.user;
+            // المحاولة الأولى: التحقق الآمن عبر الاتصال المباشر بالخادم
+            const { data: authData, error: authError } = await supabaseClient.auth.getUser();
             
+            let user = authData?.user;
+
+            // إذا أرجع الخادم خطأً داخلياً بسبب الشبكة أو التزامن، نلجأ للجلسة المحلية كخيار احتياطي
+            if (authError || !user) {
+                const { data: sessionData } = await supabaseClient.auth.getSession();
+                user = sessionData?.session?.user;
+            }
+            
+            // التحقق من وجود المستخدم ومطابقة بريد الإدارة
             if (!user || user.email !== ADMIN_EMAIL) {
                 window.showAdminToast("عذراً، غير مصرح لك بدخول هذه الصفحة.", "error");
                 setTimeout(() => window.location.replace("index.html"), 1500);
             } else {
+                // إظهار اللوحة وجلب البيانات في حال النجاح
                 document.getElementById('adminMainContainer').style.display = 'block';
                 window.loadAdminDashboard();
                 window.loadAdminDoctors();
             }
         } catch (error) {
-            window.showAdminToast("خطأ في التحقق من الدخول", "error");
+            // في حال حدوث انهيار كامل، يتم عرض الخطأ الفعلي في الكونسول ومحاولة إعادة التحقق بعد ثانية
+            console.error("Auth Error:", error);
+            window.showAdminToast("خطأ في الاتصال.. جاري إعادة المحاولة تلقائياً", "error");
+            setTimeout(checkSecurity, 1500);
         }
     }
 
