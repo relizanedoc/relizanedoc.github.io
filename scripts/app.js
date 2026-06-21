@@ -818,13 +818,20 @@ window.renderDoctorAnalytics = function(appointments) {
     }
 
     // 4. رسم المخطط الدائري (Doughnut Chart)
-    const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d');
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+    // 🌟 التعديل هنا: جلب الترجمة للنصوص أسفل المخطط 🌟
+    const translatedLabels = [
+        t('confirmedAppointments'), 
+        t('pendingAppointments'), 
+        t('cancelledAppointments')
+    ];
 
     doctorChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['مؤكدة', 'قيد الانتظار', 'ملغاة'],
+            labels: translatedLabels, // استخدام المصفوفة المترجمة هنا
             datasets: [{
                 data: [confirmed, pending, cancelled],
                 backgroundColor: [
