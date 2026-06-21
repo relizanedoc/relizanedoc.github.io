@@ -755,11 +755,25 @@ window.loadUserBookings = async function() {
 
     let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
     bookings.forEach(b => {
-      let statusStyle = 'background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;';
+    let statusStyle = 'background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;';
       let statusIndicator = '#f59e0b';
       let displayStatus = t('statusPending');
-      if (b.status === 'confirmed') { statusStyle = 'background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;'; statusIndicator = '#10b981'; displayStatus = t('statusConfirmed'); } 
-      else if (b.status === 'cancelled') { statusStyle = 'background: #fef2f2; color: #ef4444; border: 1px solid #fecaca;'; statusIndicator = '#ef4444'; displayStatus = t('statusCancelled'); }
+      
+      if (b.status === 'confirmed') { 
+          statusStyle = 'background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;'; 
+          statusIndicator = '#10b981'; 
+          displayStatus = t('statusConfirmed'); 
+      } 
+      else if (b.status === 'completed') { 
+          statusStyle = 'background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe;'; 
+          statusIndicator = '#3b82f6'; 
+          displayStatus = state.currentLang === 'ar' ? 'مكتمل' : 'Completed'; 
+      }
+      else if (b.status === 'cancelled') { 
+          statusStyle = 'background: #fef2f2; color: #ef4444; border: 1px solid #fecaca;'; 
+          statusIndicator = '#ef4444'; 
+          displayStatus = t('statusCancelled'); 
+      }
       const doctorName = b.doctors 
     ? (state.currentLang === 'en' && b.doctors.first_name_en && b.doctors.last_name_en 
         ? `${b.doctors.first_name_en} ${b.doctors.last_name_en}` 
@@ -1133,7 +1147,16 @@ if (!firstNameAr || !lastNameAr) {
 };
 
 window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doctorName, appointmentDate) {
-  const confirmMsg = newStatus === 'confirmed' ? (state.currentLang === 'ar' ? 'هل أنت متأكد من تأكيد هذا الموعد؟' : 'Are you sure you want to confirm this appointment?') : (state.currentLang === 'ar' ? 'هل أنت متأكد من إلغاء هذا الموعد؟' : 'Are you sure you want to cancel this appointment?');
+  // 1. تحديد رسالة التأكيد المناسبة بناءً على الحالة
+  let confirmMsg = '';
+  if (newStatus === 'confirmed') {
+      confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من تأكيد هذا الموعد؟' : 'Are you sure you want to confirm this appointment?';
+  } else if (newStatus === 'completed') {
+      confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من إنهاء/إكمال هذا الموعد؟' : 'Are you sure you want to mark this as completed?';
+  } else {
+      confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من إلغاء هذا الموعد؟' : 'Are you sure you want to cancel this appointment?';
+  }
+
   if (!confirm(confirmMsg)) return;
 
   try {
@@ -1141,7 +1164,13 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
     if (!sessionStr) throw new Error('يرجى تسجيل الدخول مجدداً');
     const session = JSON.parse(sessionStr);
 
-    const { error } = await supabaseClient.rpc('update_booking_status_secure', { p_booking_id: bookingId, p_new_status: newStatus, p_doctor_id: session.doctorId, p_session_token: session.sessionToken });
+    // 2. تحديث الحالة في قاعدة البيانات
+    const { error } = await supabaseClient.rpc('update_booking_status_secure', { 
+        p_booking_id: bookingId, 
+        p_new_status: newStatus, 
+        p_doctor_id: session.doctorId, 
+        p_session_token: session.sessionToken 
+    });
     if (error) throw error;
 
     if (newStatus === 'confirmed' && userEmail && userEmail.trim() !== '' && userEmail !== 'null' && userEmail !== 'undefined') {
@@ -1153,13 +1182,26 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
     }
 
     showToast(state.currentLang === 'ar' ? 'تم تحديث حالة الحجز بنجاح' : 'Booking status updated successfully', 'success');
-    const { data: updatedAppointments, error: fetchError } = await supabaseClient.rpc('get_doctor_appointments_secure', { p_doctor_id: session.doctorId, p_session_token: session.sessionToken });
+    
+    // 3. جلب المواعيد المحدثة وإعادة رسم الواجهة والإحصائيات فوراً
+    const { data: updatedAppointments, error: fetchError } = await supabaseClient.rpc('get_doctor_appointments_secure', { 
+        p_doctor_id: session.doctorId, 
+        p_session_token: session.sessionToken 
+    });
     if (fetchError) throw fetchError;
+    
     if (state.globalDashboardData) {
       state.globalDashboardData.appointments = updatedAppointments || [];
       renderDashboardUI(state.globalDashboardData, state.globalDashboardDoctorId);
+      
+      // 🔥 هذا السطر هو السر لتحديث المخطط الدائري (النسبة) فوراً!
+      if(typeof window.renderDoctorAnalytics === 'function') {
+          window.renderDoctorAnalytics(updatedAppointments);
+      }
     }
-  } catch (err) { showToast(state.currentLang === 'ar' ? 'خطأ في تحديث الحالة: ' + err.message : 'Error updating status: ' + err.message, 'error'); }
+  } catch (err) { 
+      showToast(state.currentLang === 'ar' ? 'خطأ في تحديث الحالة: ' + err.message : 'Error updating status: ' + err.message, 'error'); 
+  }
 };
 
 window.handleAddDoctor = async function(e) {
@@ -1242,9 +1284,22 @@ const trackForm = document.getElementById('trackBookingForm');
           const booking = data[0];
           let statusStyle = 'background: #f1f5f9; color: #64748b;';
           let displayStatus = booking.status;
-          if (booking.status === 'confirmed') { statusStyle = 'background: #ecfdf5; color: #10b981;'; displayStatus = state.currentLang === 'ar' ? 'مؤكد' : 'Confirmed'; } 
-          else if (booking.status === 'cancelled') { statusStyle = 'background: #fef2f2; color: #ef4444;'; displayStatus = state.currentLang === 'ar' ? 'ملغى' : 'Cancelled'; } 
-          else displayStatus = state.currentLang === 'ar' ? 'قيد الانتظار' : 'Pending';
+          
+          if (booking.status === 'confirmed') { 
+              statusStyle = 'background: #ecfdf5; color: #10b981;'; 
+              displayStatus = state.currentLang === 'ar' ? 'مؤكد' : 'Confirmed'; 
+          } 
+          else if (booking.status === 'completed') { 
+              statusStyle = 'background: #eff6ff; color: #3b82f6;'; 
+              displayStatus = state.currentLang === 'ar' ? 'مكتمل' : 'Completed'; 
+          }
+          else if (booking.status === 'cancelled') { 
+              statusStyle = 'background: #fef2f2; color: #ef4444;'; 
+              displayStatus = state.currentLang === 'ar' ? 'ملغى' : 'Cancelled'; 
+          } 
+          else {
+              displayStatus = state.currentLang === 'ar' ? 'قيد الانتظار' : 'Pending';
+          }
 
           resultDiv.innerHTML = `
             <h4 class="font-bold mb-2">${state.currentLang === 'ar' ? 'تفاصيل الحجز:' : 'Booking Details:'}</h4>
