@@ -25,7 +25,7 @@ jobs:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
       # تم تغيير مسار التشغيل هنا ليطابق المجلد الجديد الخاص بك (cript)
-      run: node cript/generate-meta.js
+      run: node scripts/generate-meta.js
 
     - name: Commit and push changes
       run: |
