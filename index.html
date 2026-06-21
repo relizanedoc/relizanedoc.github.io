@@ -818,17 +818,28 @@
   </div>
   <div class='accordion-content' id='analyticsContent'>
     <div style='padding-top: 1.25rem; border-top: 1px dashed var(--border); margin-top: 0.75rem;'>
-        <div class="grid grid-1 grid-2 mb-4">
+        
+        <div class="grid grid-1 grid-2 grid-4 mb-4">
             <div style="background: var(--bg); padding: 1rem; border-radius: var(--radius); text-align: center; border: 1px solid var(--border);">
                 <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: bold;">إجمالي المواعيد</div>
                 <div id="statTotalAppointments" style="font-size: 1.8rem; font-weight: 900; color: var(--primary-dark);">0</div>
             </div>
             <div style="background: var(--bg); padding: 1rem; border-radius: var(--radius); text-align: center; border: 1px solid var(--border);">
-                <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: bold;">المواعيد المؤكدة</div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: bold;">مؤكدة</div>
                 <div id="statConfirmedAppointments" style="font-size: 1.8rem; font-weight: 900; color: var(--success);">0</div>
             </div>
+            <div style="background: var(--bg); padding: 1rem; border-radius: var(--radius); text-align: center; border: 1px solid var(--border);">
+                <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: bold;">قيد الانتظار</div>
+                <div id="statPendingAppointments" style="font-size: 1.8rem; font-weight: 900; color: var(--warning);">0</div>
+            </div>
+            <div style="background: var(--bg); padding: 1rem; border-radius: var(--radius); text-align: center; border: 1px solid var(--border);">
+                <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: bold;">ملغاة</div>
+                <div id="statCancelledAppointments" style="font-size: 1.8rem; font-weight: 900; color: var(--danger);">0</div>
+            </div>
         </div>
+        
         <canvas id="appointmentsChart" style="width: 100%; max-height: 250px;"></canvas>
+        
     </div>
   </div>
 </div>
