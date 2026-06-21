@@ -1148,9 +1148,10 @@ if (!firstNameAr || !lastNameAr) {
 
 window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doctorName, appointmentDate) {
   let confirmMsg = '';
-  // الرسالة تظهر حسب الإجراء
-  if (newStatus === 'completed') {
-      confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من تأكيد وإكمال هذا الموعد؟' : 'Are you sure you want to confirm and complete this appointment?';
+  if (newStatus === 'confirmed') {
+      confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من تأكيد هذا الموعد؟' : 'Are you sure you want to confirm this appointment?';
+  } else if (newStatus === 'completed') {
+      confirmMsg = state.currentLang === 'ar' ? 'هل تم فحص المريض وتريد إغلاق هذا الموعد؟' : 'Has the patient been examined and you want to complete this?';
   } else {
       confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من إلغاء هذا الموعد؟' : 'Are you sure you want to cancel this appointment?';
   }
@@ -1170,8 +1171,8 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
     });
     if (error) throw error;
 
-    // 🔥 التعديل هنا: إرسال الإيميل مباشرة عند تحول الموعد إلى 'completed'
-    if (newStatus === 'completed' && userEmail && userEmail.trim() !== '' && userEmail !== 'null' && userEmail !== 'undefined') {
+    // الإيميل يرسل فقط عند التأكيد
+    if (newStatus === 'confirmed' && userEmail && userEmail.trim() !== '' && userEmail !== 'null' && userEmail !== 'undefined') {
       supabaseClient.functions.invoke('send-booking-email', { body: { userEmail, doctorName, appointmentDate } })
       .then(({ error: funcError }) => {
         if (funcError) showToast('حدث خطأ أثناء إرسال إيميل التأكيد.', 'error');
@@ -1181,6 +1182,7 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
 
     showToast(state.currentLang === 'ar' ? 'تم تحديث حالة الحجز بنجاح' : 'Booking status updated successfully', 'success');
     
+    // جلب المواعيد الجديدة لتحديث الرسم البياني فوراً
     const { data: updatedAppointments, error: fetchError } = await supabaseClient.rpc('get_doctor_appointments_secure', { 
         p_doctor_id: session.doctorId, 
         p_session_token: session.sessionToken 
@@ -1191,6 +1193,7 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
       state.globalDashboardData.appointments = updatedAppointments || [];
       renderDashboardUI(state.globalDashboardData, state.globalDashboardDoctorId);
       
+      // تحديث الرسم الدائري (النسبة)
       if(typeof window.renderDoctorAnalytics === 'function') {
           window.renderDoctorAnalytics(updatedAppointments);
       }
