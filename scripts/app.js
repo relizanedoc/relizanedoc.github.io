@@ -50,7 +50,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         const hash = window.location.hash;
         if (!hash.includes('access_token') && !hash.includes('error=')) {
             const cleanHash = hash.replace('#', '');
-const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard', 'doctor-profile', 'admin'].includes(cleanHash) ? cleanHash : 'home';
+const startView = ['home', 'add-doctor', 'booking', 'dashboard', 'login', 'track', 'user-dashboard', 'doctor-profile'].includes(cleanHash) ? cleanHash : 'home';
             window.router(startView, false); // هذا السطر هو الذي يبقيك في صفحتك الحالية
         }
         isAuthInitialized = true;
@@ -85,20 +85,6 @@ window.router = async function(viewName, pushHistory = true) {
       return window.router('login');
     }
   }
-
-  // 🌟 بداية كود الحماية الجديد للوحة الإدارة 🌟
-  if (viewName === 'admin') {
-    const user = await getCurrentUser();
-    // ⚠️ استبدل هذا الإيميل ببريدك الإلكتروني الشخصي الذي ستدير به الموقع
-    const adminEmail = "sisi.sou27@gmail.com"; 
-
-    if (!user || user.Email !== adminEmail) {
-      showToast(state.currentLang === 'ar' ? 'عذراً، هذه الصفحة مخصصة للإدارة فقط.' : 'Access denied. Admins only.', 'error');
-      return window.router('home', false); // طرد المستخدم فوراً للصفحة الرئيسية
-    }
-  }
-  // 🌟 نهاية كود الحماية 🌟
-
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
   const target = document.getElementById('view-' + viewName);
   if (target) target.classList.remove('hidden');
@@ -1213,76 +1199,7 @@ window.createDoctorGitHubPageAsync = function(doctorData, doctorId) {
     if (!error && data && data.success) showToast('تم إنشاء صفحة الطبيب للـ SEO!', 'success');
   }).catch(err => console.error('Edge Function Error:', err));
 };
-// 🌟 الكود المضاف: دوال الإدارة العليا 🌟
-window.loadAdminDashboard = async function() {
-    const container = document.getElementById('pendingReviewsContainer');
-    try {
-        const { data: reviews, error } = await supabaseClient
-            .from('reviews')
-            .select('id, rating, comment, patient_name, doctors(first_name, last_name, first_name_en, last_name_en)')
-            .eq('status', 'pending')
-            .order('created_at', { ascending: false });
 
-        if (error) throw error;
-
-        if (!reviews || reviews.length === 0) {
-            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">✅</div><div data-i18n="noPendingReviews">${state.currentLang === 'ar' ? 'لا توجد تقييمات معلقة للمراجعة.' : 'No pending reviews to moderate.'}</div></div>`;
-            return;
-        }
-
-        let html = '';
-        reviews.forEach(r => {
-            const doc = r.doctors;
-            const doctorName = doc ? (state.currentLang === 'en' && doc.first_name_en ? `${doc.first_name_en} ${doc.last_name_en}` : `${doc.first_name} ${doc.last_name}`) : 'طبيب محذوف';
-            
-            html += `
-            <div class="review-card" id="admin-review-${r.id}" style="border-right: 4px solid var(--warning);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
-                    <div style="flex: 1; min-width: 250px;">
-                        <div style="margin-bottom: 0.5rem; font-size: 0.9rem;">
-                            <span style="color: var(--text-secondary);">${state.currentLang === 'ar' ? 'المريض:' : 'Patient:'}</span> <strong style="color: var(--text);">${escapeHtml(r.patient_name || 'مجهول')}</strong> <br>
-                            <span style="color: var(--text-secondary);">${state.currentLang === 'ar' ? 'لطبيب:' : 'For Doctor:'}</span> <strong style="color: var(--primary-dark);">د. ${escapeHtml(doctorName)}</strong>
-                        </div>
-                        <div style="color: #f59e0b; font-size: 1.1rem; letter-spacing: 2px;">${'★'.repeat(r.rating)}<span style="color:#e2e8f0">${'★'.repeat(5 - r.rating)}</span></div>
-                        <p class="mt-2 text-sm" style="background: var(--bg); padding: 0.75rem; border-radius: 8px; color: var(--text); border: 1px solid var(--border);">${escapeHtml(r.comment)}</p>
-                    </div>
-                    <div style="display: flex; gap: 0.5rem; flex-direction: column; min-width: 120px;">
-                        <button class="btn btn-success btn-sm" style="padding: 0.5rem;" onclick="window.updateReviewStatus('${r.id}', 'published')">
-                            ${state.currentLang === 'ar' ? 'موافقة ونشر ✔️' : 'Approve ✔️'}
-                        </button>
-                        <button class="btn btn-secondary btn-sm" style="padding: 0.5rem; color: var(--danger); border-color: var(--danger);" onclick="window.updateReviewStatus('${r.id}', 'deleted')">
-                            ${state.currentLang === 'ar' ? 'رفض وحذف ❌' : 'Reject ❌'}
-                        </button>
-                    </div>
-                </div>
-            </div>`;
-        });
-        container.innerHTML = html;
-    } catch (err) {
-        container.innerHTML = `<div class="text-danger p-4 text-center">خطأ في الاتصال بقاعدة البيانات: ${err.message}</div>`;
-    }
-};
-
-window.updateReviewStatus = async function(reviewId, newStatus) {
-    const confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من هذا الإجراء؟' : 'Are you sure about this action?';
-    if (!confirm(confirmMsg)) return;
-    
-    try {
-        const { error } = await supabaseClient.from('reviews').update({ status: newStatus }).eq('id', reviewId);
-        if (error) throw error;
-        
-        showToast(state.currentLang === 'ar' ? 'تم التنفيذ بنجاح' : 'Action successful', 'success');
-        const reviewElement = document.getElementById(`admin-review-${reviewId}`);
-        if (reviewElement) {
-            reviewElement.style.opacity = '0';
-            reviewElement.style.transform = 'scale(0.95)';
-            setTimeout(() => reviewElement.remove(), 300);
-        }
-    } catch (err) {
-        showToast((state.currentLang === 'ar' ? 'خطأ: ' : 'Error: ') + err.message, 'error');
-    }
-};
-// 🌟 نهاية كود دوال الإدارة 🌟
 // ==========================================
 // 5. تهيئة التطبيق عند التحميل (Initialization)
 // ==========================================
