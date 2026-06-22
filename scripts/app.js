@@ -1228,6 +1228,7 @@ window.saveClinicProfile = async function() {
         p_whatsapp_number: whatsapp,
         p_facebook_link: facebook,
         p_map_link: mapLink,
+        p_phone_2: phone2,
         p_services: formattedServices,
         p_certificates: certificatesText,
         p_clinic_images: finalImageUrls
@@ -1349,11 +1350,13 @@ window.handleAddDoctor = async function(e) {
     const defaultPassword = data.Phone.replace(/\s/g, '');
 
     // 2. تجميع بيانات الطبيب
-    const payload = {
-      p_first_name: data.FirstName.trim(), p_last_name: data.LastName.trim(), p_phone: defaultPassword,
-      p_exact_location: data.ExactLocation.trim(), p_specialty: data.Specialty.trim(), p_municipality: data.Municipality.trim(),
-      p_extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '', p_raw_password: defaultPassword
-    };
+   const phone2 = data.Phone2 ? data.Phone2.replace(/\s/g, '') : null; // استخراج الرقم الثاني
+const payload = {
+  p_first_name: data.FirstName.trim(), p_last_name: data.LastName.trim(), p_phone: defaultPassword,
+  p_phone_2: phone2, // 🌟 السطر الجديد
+  p_exact_location: data.ExactLocation.trim(), p_specialty: data.Specialty.trim(), p_municipality: data.Municipality.trim(),
+  p_extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '', p_raw_password: defaultPassword
+};
 
     // 3. إرسال الطلب عبر الدالة السحابية الآمنة
     const { data: functionResponse, error: functionError } = await supabaseClient.functions.invoke('verify-add-doctor', {
