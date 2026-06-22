@@ -1083,28 +1083,36 @@ async function saveClinicProfile() {
 
     const certificatesText = document.getElementById('dash_certificates') ? document.getElementById('dash_certificates').value.trim() : '';
     
-    // جلب البيانات الحالية من الواجهة
+  // جلب البيانات الحالية من الواجهة
     let finalImageUrls = window.dashboardCurrentImages ? [...window.dashboardCurrentImages] : []; 
     
-    // 🌟 الخوارزمية الجديدة لحذف الصور اليتيمة من Storage 🌟
-    const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
-    const originalImages = docIndex > -1 ? (state.allDoctors[docIndex].clinic_images || []) : [];
+    // 🌟 الخوارزمية المصححة لحذف الصور اليتيمة 🌟
+    // 1. الاستعلام المباشر من قاعدة البيانات لمعرفة الصور القديمة بدقة
+    const { data: dbDoctor } = await supabaseClient
+        .from('doctors')
+        .select('clinic_images')
+        .eq('id', session.doctorId)
+        .single();
+        
+    const originalImages = dbDoctor && dbDoctor.clinic_images ? dbDoctor.clinic_images : [];
     
-    // استخراج الصور التي كانت موجودة وتم حذفها من الواجهة
+    // 2. تصفية واستخراج الصور التي حذفها الطبيب من الواجهة للتو
     const imagesToDelete = originalImages.filter(url => !finalImageUrls.includes(url));
 
     if (imagesToDelete.length > 0) {
         const pathsToDelete = imagesToDelete.map(url => {
-            // استخراج المسار الداخلي للملف من الرابط العام (Public URL)
+            // استخراج المسار مع إضافة decodeURIComponent لضمان قراءته حتى لو احتوى على رموز
             const parts = url.split('/clinic-images/');
-            return parts.length > 1 ? parts[1].split('?')[0] : null; 
+            return parts.length > 1 ? decodeURIComponent(parts[1].split('?')[0]) : null; 
         }).filter(Boolean);
 
         if (pathsToDelete.length > 0) {
-            // إرسال أمر الحذف الفعلي لمساحة التخزين في Supabase
+            // 3. إرسال أمر الحذف الفعلي للـ Storage
             const { error: deleteError } = await supabaseClient.storage.from('clinic-images').remove(pathsToDelete);
             if (deleteError) {
-                console.warn("لم نتمكن من حذف الصورة من Storage قد تكون محذوفة مسبقاً أو هناك نقص في الصلاحيات:", deleteError);
+                console.warn("تحذير: لم نتمكن من مسح الصورة من Storage:", deleteError);
+            } else {
+                console.log("✅ تم تنظيف مساحة التخزين من الصور المحذوفة بنجاح.");
             }
         }
     }
