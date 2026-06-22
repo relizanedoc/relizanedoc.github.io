@@ -228,6 +228,11 @@ window._currentClinicImages = doc.clinic_images || [];
       </div>
   `;
 
+ let phonesDisplayHtml = `<div style="font-weight: 900; color: #0f172a; font-size: 1.25rem; letter-spacing: 1px;" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone))}</div>`;
+if (doc.phone_2 && doc.phone_2.trim() !== '') {
+    phonesDisplayHtml += `<div style="font-weight: 900; color: #0f172a; font-size: 1.25rem; letter-spacing: 1px; margin-top: 6px; border-top: 1px dashed rgba(16,185,129,0.3); padding-top: 6px;" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone_2))}</div>`;
+}
+
   document.getElementById('fullProfileContent').innerHTML = `
     <div class="grid grid-1 grid-2" style="gap: 1.5rem; align-items: start;">
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -241,10 +246,6 @@ window._currentClinicImages = doc.clinic_images || [];
                 <div style="font-weight: 900; color: #0f172a; font-size: 1.1rem; line-height: 1.4;">${escapeHtml(doc.exact_location)}, <span style="color: var(--primary);">${escapeHtml(t(doc.municipality))}</span></div>
               </div>
             </div>
-let phonesDisplayHtml = `<div style="font-weight: 900; color: #0f172a; font-size: 1.25rem; letter-spacing: 1px;" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone))}</div>`;
-if (doc.phone_2 && doc.phone_2.trim() !== '') {
-    phonesDisplayHtml += `<div style="font-weight: 900; color: #0f172a; font-size: 1.25rem; letter-spacing: 1px; margin-top: 6px; border-top: 1px dashed rgba(16,185,129,0.3); padding-top: 6px;" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone_2))}</div>`;
-}
 
 <div style="display: flex; align-items: flex-start; gap: 1rem; background: rgba(16, 185, 129, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(16,185,129,0.1);">
   <div style="background: white; color: #10b981; padding: 0.75rem; border-radius: 12px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(16,185,129,0.1); margin-top: 4px;">
