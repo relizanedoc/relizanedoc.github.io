@@ -725,19 +725,61 @@ export function openScheduleModal(doctorName, scheduleHtml) {
 }
 
 // --- ربط الدوال المساعدة للواجهة بنافذة المتصفح (Window) ---
+// ==========================================
+// نظام الأكورديون (Accordion) للوحة تحكم الطبيب
+// ==========================================
+
+// 1. دالة مركزية لإغلاق جميع البطاقات
+window.closeAllDashboardPanels = function(exceptId) {
+    const panels = ['analytics', 'workingHours', 'clinicProfile', 'appointments']; 
+    
+    panels.forEach(prefix => {
+        if (prefix !== exceptId) {
+            const content = document.getElementById(prefix + 'Content');
+            const header = document.getElementById(prefix + 'Toggle');
+            if (content) content.classList.remove('open');
+            if (header) header.classList.remove('open');
+        }
+    });
+};
+
+// 2. تحديث دوال الفتح والإغلاق لتكون ذكية
 window.toggleWorkingHours = function() {
-  const content = document.getElementById('workingHoursContent');
-  const header = document.getElementById('workingHoursToggle');
-  content.classList.toggle('open');
-  header.classList.toggle('open');
+    window.closeAllDashboardPanels('workingHours');
+    document.getElementById('workingHoursContent')?.classList.toggle('open');
+    document.getElementById('workingHoursToggle')?.classList.toggle('open');
 };
 
 window.toggleAppointments = function() {
-  const content = document.getElementById('appointmentsContent');
-  const header = document.getElementById('appointmentsToggle');
-  content.classList.toggle('open');
-  header.classList.toggle('open');
+    window.closeAllDashboardPanels('appointments');
+    document.getElementById('appointmentsContent')?.classList.toggle('open');
+    document.getElementById('appointmentsToggle')?.classList.toggle('open');
 };
+
+window.toggleClinicProfile = function() {
+    window.closeAllDashboardPanels('clinicProfile');
+    document.getElementById('clinicProfileContent')?.classList.toggle('open');
+    document.getElementById('clinicProfileToggle')?.classList.toggle('open');
+};
+
+window.toggleAnalytics = function() {
+    window.closeAllDashboardPanels('analytics');
+    document.getElementById('analyticsContent')?.classList.toggle('open');
+    document.getElementById('analyticsToggle')?.classList.toggle('open');
+};
+
+// 3. مراقب النقرات (لإغلاق البطاقات عند النقر في أي مكان فارغ)
+document.addEventListener('click', (event) => {
+    const dashboard = document.getElementById('dashboardSection');
+    if (dashboard && !dashboard.classList.contains('hidden')) {
+        const clickedOnToggle = event.target.closest('[id$="Toggle"]');
+        const clickedOnContent = event.target.closest('[id$="Content"]');
+        
+        if (!clickedOnToggle && !clickedOnContent) {
+            window.closeAllDashboardPanels(null);
+        }
+    }
+});
 
 window.handleQrError = function(img) {
   if(!img.dataset.fallback){
