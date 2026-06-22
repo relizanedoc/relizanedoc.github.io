@@ -454,10 +454,6 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
               qrContainer.innerHTML = `<img src="${qrPrimary}" data-fallback-url="${qrFallback}" onerror="window.handleQrError(this)" alt="QR Code" style="width: 140px; height: 140px; mix-blend-mode: multiply;" />`;
           }
       }
-
-      if (Array.isArray(doc.clinic_images) && doc.clinic_images.length > 1) {
-          window.initClinicSlider(`clinicSlider_${doc.id}`, doc.id, doc.clinic_images.length);
-      }
   }, 150);
 }
 
