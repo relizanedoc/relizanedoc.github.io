@@ -1247,7 +1247,7 @@ window.saveClinicProfile = async function() {
         state.allDoctors[docIndex] = { 
             ...state.allDoctors[docIndex], 
             first_name: firstNameAr, last_name: lastNameAr, first_name_en: firstNameEn, last_name_en: lastNameEn,
-            contact_email: contactEmail, whatsapp_number: whatsapp, facebook_link: facebook, map_link: mapLink, 
+            contact_email: contactEmail, whatsapp_number: whatsapp, facebook_link: facebook, map_link: mapLink, phone_2: phone2,
             services: formattedServices, certificates: certificatesText, clinic_images: finalImageUrls 
         };
         if (typeof window.createDoctorGitHubPageAsync === 'function') {
