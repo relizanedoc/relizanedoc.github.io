@@ -1347,16 +1347,23 @@ window.handleAddDoctor = async function(e) {
       throw new Error("يرجى إكمال التحقق الأمني (الكابتشا).");
     }
 
-    const defaultPassword = data.Phone.replace(/\s/g, '');
+  const defaultPassword = data.Phone.replace(/\s/g, '');
 
-    // 2. تجميع بيانات الطبيب
-   const phone2 = data.Phone2 ? data.Phone2.replace(/\s/g, '') : null; // استخراج الرقم الثاني
-const payload = {
-  p_first_name: data.FirstName.trim(), p_last_name: data.LastName.trim(), p_phone: defaultPassword,
-  p_phone_2: phone2, // 🌟 السطر الجديد
-  p_exact_location: data.ExactLocation.trim(), p_specialty: data.Specialty.trim(), p_municipality: data.Municipality.trim(),
-  p_extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '', p_raw_password: defaultPassword
-};
+    // 2. تجميع بيانات الطبيب بشكل سليم 🌟
+    const phone1 = data.Phone ? data.Phone.replace(/\s/g, '') : '';
+    const phone2 = data.Phone2 ? data.Phone2.replace(/\s/g, '') : null;
+    
+    const payload = {
+      p_first_name: data.FirstName.trim(), 
+      p_last_name: data.LastName.trim(), 
+      p_phone: phone1,      
+      p_phone_2: phone2,
+      p_exact_location: data.ExactLocation.trim(), 
+      p_specialty: data.Specialty.trim(), 
+      p_municipality: data.Municipality.trim(),
+      p_extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '', 
+      p_raw_password: defaultPassword
+    };
 
     // 3. إرسال الطلب عبر الدالة السحابية الآمنة
     const { data: functionResponse, error: functionError } = await supabaseClient.functions.invoke('verify-add-doctor', {
