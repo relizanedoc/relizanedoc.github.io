@@ -1238,7 +1238,7 @@ async function saveClinicProfile() {
     });
 
     if (dbError) throw dbError;
-
+const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
     if (docIndex > -1) {
         state.allDoctors[docIndex] = { 
             ...state.allDoctors[docIndex], 
