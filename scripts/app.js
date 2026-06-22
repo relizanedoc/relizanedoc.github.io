@@ -1065,6 +1065,7 @@ window.saveWorkingHours = async function() {
   } catch(err) { showToast('خطأ: ' + err.message, 'error'); } 
   finally { setLoading(btn, false, 'حفظ الأوقات'); }
 };
+
 async function saveClinicProfile() {
   const sessionStr = localStorage.getItem('doctorSession');
   if (!sessionStr) return;
@@ -1082,8 +1083,32 @@ async function saveClinicProfile() {
 
     const certificatesText = document.getElementById('dash_certificates') ? document.getElementById('dash_certificates').value.trim() : '';
     
-    // استخدام مصفوفة فارغة كقيمة افتراضية إذا لم تكن موجودة
+    // جلب البيانات الحالية من الواجهة
     let finalImageUrls = window.dashboardCurrentImages ? [...window.dashboardCurrentImages] : []; 
+    
+    // 🌟 الخوارزمية الجديدة لحذف الصور اليتيمة من Storage 🌟
+    const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
+    const originalImages = docIndex > -1 ? (state.allDoctors[docIndex].clinic_images || []) : [];
+    
+    // استخراج الصور التي كانت موجودة وتم حذفها من الواجهة
+    const imagesToDelete = originalImages.filter(url => !finalImageUrls.includes(url));
+
+    if (imagesToDelete.length > 0) {
+        const pathsToDelete = imagesToDelete.map(url => {
+            // استخراج المسار الداخلي للملف من الرابط العام (Public URL)
+            const parts = url.split('/clinic-images/');
+            return parts.length > 1 ? parts[1].split('?')[0] : null; 
+        }).filter(Boolean);
+
+        if (pathsToDelete.length > 0) {
+            // إرسال أمر الحذف الفعلي لمساحة التخزين في Supabase
+            const { error: deleteError } = await supabaseClient.storage.from('clinic-images').remove(pathsToDelete);
+            if (deleteError) {
+                console.warn("لم نتمكن من حذف الصورة من Storage قد تكون محذوفة مسبقاً أو هناك نقص في الصلاحيات:", deleteError);
+            }
+        }
+    }
+
     const fileInput = document.getElementById('dash_clinic_images');
 
     if (fileInput && fileInput.files.length > 0) {
@@ -1103,7 +1128,7 @@ async function saveClinicProfile() {
             showToast(`تم اختيار أول ${remainingSlots} صور فقط لعدم تجاوز الحد الأقصى (4 صور).`, 'warning');
         }
 
-        // 🌟 خوارزمية ضغط الصور المحلية (بدون مكتبات خارجية) 🌟
+        // خوارزمية ضغط الصور المحلية (Client-Side Compression)
         const compressImage = (file) => {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1117,7 +1142,6 @@ async function saveClinicProfile() {
                         let width = img.width;
                         let height = img.height;
 
-                        // الحفاظ على أبعاد الصورة (Aspect Ratio) وتقليصها
                         if (width > height) {
                             if (width > MAX_WIDTH) {
                                 height = Math.round(height * MAX_WIDTH / width);
@@ -1136,7 +1160,6 @@ async function saveClinicProfile() {
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        // تحويل الصورة إلى WebP بجودة 80%
                         canvas.toBlob((blob) => {
                             const newFile = new File([blob], `${Date.now()}.webp`, {
                                 type: 'image/webp',
@@ -1151,17 +1174,16 @@ async function saveClinicProfile() {
             });
         };
 
-        // رفع الصور بعد الضغط
+        // الرفع المباشر إلى Supabase Storage
         for (const originalFile of filesToUpload) {
             try {
-                // 1. تمرير الصورة لخوارزمية الضغط
                 const compressedFile = await compressImage(originalFile);
 
-                // 2. إنشاء اسم فريد بصيغة WebP
-                const fileName = `${session.doctorId}-${Date.now()}-${Math.random().toString(36).substring(2)}.webp`;
-                const filePath = `clinics/${fileName}`;
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.webp`;
+                
+                // 🌟 التعديل: إنشاء مجلد ديناميكي لكل طبيب يحمل الـ ID الخاص به 🌟
+                const filePath = `clinics/${session.doctorId}/${fileName}`;
 
-                // 3. رفع الصورة المضغوطة جداً إلى Supabase
                 const { error: uploadError } = await supabaseClient.storage.from('clinic-images').upload(filePath, compressedFile);
 
                 if (uploadError) throw new Error("فشل رفع الصورة: " + uploadError.message);
@@ -1209,7 +1231,6 @@ async function saveClinicProfile() {
 
     if (dbError) throw dbError;
 
-    const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
     if (docIndex > -1) {
         state.allDoctors[docIndex] = { 
             ...state.allDoctors[docIndex], 
@@ -1225,7 +1246,6 @@ async function saveClinicProfile() {
             certificates: certificatesText, 
             clinic_images: finalImageUrls 
         };
-        // تحديث صفحة الطبيب في GitHub للمساعدة في الـ SEO
         if (typeof window.createDoctorGitHubPageAsync === 'function') {
             window.createDoctorGitHubPageAsync(state.allDoctors[docIndex], session.doctorId);
         }
