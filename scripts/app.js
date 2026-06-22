@@ -1066,13 +1066,19 @@ window.saveWorkingHours = async function() {
   finally { setLoading(btn, false, 'حفظ الأوقات'); }
 };
 window.saveClinicProfile = async function() {
+  // 🌟 1. قفل الأمان يمنع التشغيل المزدوج
+  if (window.isSavingProfile) return; 
+  window.isSavingProfile = true;
+
   const sessionStr = localStorage.getItem('doctorSession');
-  if (!sessionStr) return;
+  if (!sessionStr) { window.isSavingProfile = false; return; }
   const session = JSON.parse(sessionStr);
   const btn = document.getElementById('saveProfileBtn');
   setLoading(btn, true, 'جاري الحفظ...');
 
   try {
+      // ... (اترك كل الكود الداخلي للدالة كما هو بدون أي تغيير) ...
+      // ...
     const formattedServices = [];
     document.querySelectorAll('.service-row').forEach(row => {
       const category = row.querySelector('.svc-category').value.trim();
@@ -1250,14 +1256,17 @@ window.saveClinicProfile = async function() {
     
     showToast('تم حفظ التغييرات بنجاح', 'success');
     setTimeout(() => location.reload(), 1000);
-  } catch (err) { 
+} catch (err) { 
       console.error("❌ خطأ قاتل في الدالة:", err);
       showToast('خطأ: ' + err.message, 'error'); 
   } finally { 
+      // 🌟 2. فتح القفل بعد انتهاء العملية
+      window.isSavingProfile = false; 
+
       setLoading(btn, false, 'حفظ التغييرات'); 
       if (document.getElementById('dash_clinic_images')) document.getElementById('dash_clinic_images').value = ''; 
   }
-}
+};
 
 window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doctorName, appointmentDate) {
   let confirmMsg = '';
@@ -1426,10 +1435,6 @@ const trackForm = document.getElementById('trackBookingForm');
       } catch (err) { showToast(state.currentLang === 'ar' ? 'خطأ في الاتصال بقاعدة البيانات' : 'Connection Error', 'error'); } 
       finally { setLoading(btn, false, state.currentLang === 'ar' ? 'بحث عن الحجز' : 'Search Booking'); }
     });
-  }
-  const saveProfileBtn = document.getElementById('saveProfileBtn');
-  if (saveProfileBtn) {
-    saveProfileBtn.addEventListener('click', saveClinicProfile);
   }
 
   document.querySelectorAll('input[type="tel"]').forEach(input => {
