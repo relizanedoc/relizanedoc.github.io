@@ -1083,36 +1083,48 @@ async function saveClinicProfile() {
 
     const certificatesText = document.getElementById('dash_certificates') ? document.getElementById('dash_certificates').value.trim() : '';
     
-  // جلب البيانات الحالية من الواجهة
+    // 1. جلب الصور المتبقية في الواجهة بعد أن قام الطبيب بالحذف
     let finalImageUrls = window.dashboardCurrentImages ? [...window.dashboardCurrentImages] : []; 
+    console.log("🔍 [رادار 1] الصور المتبقية في الواجهة:", finalImageUrls);
     
-    // 🌟 الخوارزمية المصححة لحذف الصور اليتيمة 🌟
-    // 1. الاستعلام المباشر من قاعدة البيانات لمعرفة الصور القديمة بدقة
-    const { data: dbDoctor } = await supabaseClient
+    // 2. الاستعلام الدقيق من قاعدة البيانات لمعرفة ما كان موجوداً قبل التعديل
+    const { data: dbDoctor, error: fetchErr } = await supabaseClient
         .from('doctors')
         .select('clinic_images')
         .eq('id', session.doctorId)
         .single();
         
-    const originalImages = dbDoctor && dbDoctor.clinic_images ? dbDoctor.clinic_images : [];
+    if (fetchErr) console.error("❌ [رادار 2] خطأ في جلب بيانات الطبيب:", fetchErr);
     
-    // 2. تصفية واستخراج الصور التي حذفها الطبيب من الواجهة للتو
+    const originalImages = dbDoctor && dbDoctor.clinic_images ? dbDoctor.clinic_images : [];
+    console.log("🔍 [رادار 3] الصور القديمة في قاعدة البيانات:", originalImages);
+    
+    // 3. تحديد الصور التي يجب تدميرها
     const imagesToDelete = originalImages.filter(url => !finalImageUrls.includes(url));
+    console.log("🗑️ [رادار 4] الصور التي تم اكتشاف حذفها:", imagesToDelete);
 
     if (imagesToDelete.length > 0) {
         const pathsToDelete = imagesToDelete.map(url => {
-            // استخراج المسار مع إضافة decodeURIComponent لضمان قراءته حتى لو احتوى على رموز
-            const parts = url.split('/clinic-images/');
-            return parts.length > 1 ? decodeURIComponent(parts[1].split('?')[0]) : null; 
+            try {
+                // استخراج مسار التخزين بشكل صارم لتجنب أخطاء الروابط
+                const urlObj = new URL(url);
+                const pathParts = urlObj.pathname.split('/clinic-images/');
+                if (pathParts.length > 1) return decodeURIComponent(pathParts[1]);
+            } catch (e) {
+                const parts = url.split('/clinic-images/');
+                if (parts.length > 1) return decodeURIComponent(parts[1].split('?')[0]);
+            }
+            return null;
         }).filter(Boolean);
 
+        console.log("📂 [رادار 5] مسارات Storage التي سيتم حذفها:", pathsToDelete);
+
         if (pathsToDelete.length > 0) {
-            // 3. إرسال أمر الحذف الفعلي للـ Storage
-            const { error: deleteError } = await supabaseClient.storage.from('clinic-images').remove(pathsToDelete);
+            const { data: delData, error: deleteError } = await supabaseClient.storage.from('clinic-images').remove(pathsToDelete);
             if (deleteError) {
-                console.warn("تحذير: لم نتمكن من مسح الصورة من Storage:", deleteError);
+                console.error("❌ فشل تدمير الصور من Storage:", deleteError);
             } else {
-                console.log("✅ تم تنظيف مساحة التخزين من الصور المحذوفة بنجاح.");
+                console.log("✅ تم تدمير الصور من Storage بنجاح!", delData);
             }
         }
     }
@@ -1133,10 +1145,9 @@ async function saveClinicProfile() {
         const filesToUpload = Array.from(fileInput.files).slice(0, remainingSlots);
 
         if (fileInput.files.length > remainingSlots) {
-            showToast(`تم اختيار أول ${remainingSlots} صور فقط لعدم تجاوز الحد الأقصى (4 صور).`, 'warning');
+            showToast(`تم اختيار أول ${remainingSlots} صور فقط لعدم تجاوز الحد الأقصى.`, 'warning');
         }
 
-        // خوارزمية ضغط الصور المحلية (Client-Side Compression)
         const compressImage = (file) => {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1149,32 +1160,16 @@ async function saveClinicProfile() {
                         const MAX_HEIGHT = 1200;
                         let width = img.width;
                         let height = img.height;
-
                         if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height = Math.round(height * MAX_WIDTH / width);
-                                width = MAX_WIDTH;
-                            }
+                            if (width > MAX_WIDTH) { height = Math.round(height * MAX_WIDTH / width); width = MAX_WIDTH; }
                         } else {
-                            if (height > MAX_HEIGHT) {
-                                width = Math.round(width * MAX_HEIGHT / height);
-                                height = MAX_HEIGHT;
-                            }
+                            if (height > MAX_HEIGHT) { width = Math.round(width * MAX_HEIGHT / height); height = MAX_HEIGHT; }
                         }
-
                         const canvas = document.createElement('canvas');
-                        canvas.width = width;
-                        canvas.height = height;
+                        canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-
-                        canvas.toBlob((blob) => {
-                            const newFile = new File([blob], `${Date.now()}.webp`, {
-                                type: 'image/webp',
-                                lastModified: Date.now()
-                            });
-                            resolve(newFile);
-                        }, 'image/webp', 0.8);
+                        canvas.toBlob((blob) => { resolve(new File([blob], `${Date.now()}.webp`, { type: 'image/webp', lastModified: Date.now() })); }, 'image/webp', 0.8);
                     };
                     img.onerror = (error) => reject(error);
                 };
@@ -1182,28 +1177,23 @@ async function saveClinicProfile() {
             });
         };
 
-        // الرفع المباشر إلى Supabase Storage
         for (const originalFile of filesToUpload) {
             try {
                 const compressedFile = await compressImage(originalFile);
-
                 const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.webp`;
-                
-                // 🌟 التعديل: إنشاء مجلد ديناميكي لكل طبيب يحمل الـ ID الخاص به 🌟
                 const filePath = `clinics/${session.doctorId}/${fileName}`;
-
                 const { error: uploadError } = await supabaseClient.storage.from('clinic-images').upload(filePath, compressedFile);
-
-                if (uploadError) throw new Error("فشل رفع الصورة: " + uploadError.message);
-
+                if (uploadError) throw new Error("فشل الرفع: " + uploadError.message);
                 const { data: publicUrlData } = supabaseClient.storage.from('clinic-images').getPublicUrl(filePath);
                 finalImageUrls.push(publicUrlData.publicUrl);
             } catch (imgError) {
-                console.error("Image Processing Error:", imgError);
-                showToast("حدث خطأ أثناء معالجة إحدى الصور.", "error");
+                console.error("Image Error:", imgError);
+                showToast("حدث خطأ أثناء معالجة صورة.", "error");
             }
         }
     }
+
+    console.log("📤 [رادار 6] الروابط النهائية التي ستُرسل لقاعدة البيانات:", finalImageUrls);
 
     const firstNameAr = document.getElementById('dash_first_name_ar').value.trim();
     const lastNameAr = document.getElementById('dash_last_name_ar').value.trim();
@@ -1221,6 +1211,7 @@ async function saveClinicProfile() {
     const facebook = document.getElementById('dash_facebook').value.trim();
     const mapLink = document.getElementById('dash_map_link').value.trim();
 
+    // 4. إرسال البيانات للـ RPC
     const { error: dbError } = await supabaseClient.rpc('update_clinic_profile_secure', {
         p_doctor_id: session.doctorId,
         p_session_token: session.sessionToken,
@@ -1238,30 +1229,32 @@ async function saveClinicProfile() {
     });
 
     if (dbError) throw dbError;
-const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
+
+    // 🌟 خطوة طوارئ: تحديث مباشر في حال كانت الـ RPC تتجاهل المصفوفة الفارغة
+    if (finalImageUrls.length === 0) {
+        console.log("⚠️ [رادار 7] تم اكتشاف مصفوفة فارغة، جاري فرض التحديث المباشر...");
+        await supabaseClient.from('doctors').update({ clinic_images: [] }).eq('id', session.doctorId);
+    }
+
+    const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
     if (docIndex > -1) {
         state.allDoctors[docIndex] = { 
             ...state.allDoctors[docIndex], 
-            first_name: firstNameAr,
-            last_name: lastNameAr,
-            first_name_en: firstNameEn,
-            last_name_en: lastNameEn,
-            contact_email: contactEmail, 
-            whatsapp_number: whatsapp, 
-            facebook_link: facebook, 
-            map_link: mapLink, 
-            services: formattedServices, 
-            certificates: certificatesText, 
-            clinic_images: finalImageUrls 
+            first_name: firstNameAr, last_name: lastNameAr, first_name_en: firstNameEn, last_name_en: lastNameEn,
+            contact_email: contactEmail, whatsapp_number: whatsapp, facebook_link: facebook, map_link: mapLink, 
+            services: formattedServices, certificates: certificatesText, clinic_images: finalImageUrls 
         };
         if (typeof window.createDoctorGitHubPageAsync === 'function') {
             window.createDoctorGitHubPageAsync(state.allDoctors[docIndex], session.doctorId);
         }
     }
     
+    showToast('تم حفظ التغييرات بنجاح', 'success');
     setTimeout(() => location.reload(), 1000);
-  } catch (err) { showToast('خطأ: ' + err.message, 'error'); } 
-  finally { 
+  } catch (err) { 
+      console.error("❌ خطأ قاتل في الدالة:", err);
+      showToast('خطأ: ' + err.message, 'error'); 
+  } finally { 
       setLoading(btn, false, 'حفظ التغييرات'); 
       if (document.getElementById('dash_clinic_images')) document.getElementById('dash_clinic_images').value = ''; 
   }
