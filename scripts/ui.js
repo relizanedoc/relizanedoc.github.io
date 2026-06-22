@@ -781,8 +781,26 @@ window.renderClinicImageThumbnails = function() {
 window.removeClinicImage = function(index) {
   const confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من إزالة هذه الصورة؟' : 'Are you sure you want to remove this image?';
   if (confirm(confirmMsg)) {
+      // 1. مسح الصورة من المصفوفة المؤقتة للوحة التحكم
       window.dashboardCurrentImages.splice(index, 1); 
+      
+      // 2. 🌟 التعديل السحري: مسح الصورة من مصفوفة state.allDoctors الحية للـ session الحالي 🌟
+      const sessionStr = localStorage.getItem('doctorSession');
+      if (sessionStr) {
+          const session = JSON.parse(sessionStr);
+          const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
+          if (docIndex > -1 && state.allDoctors[docIndex].clinic_images) {
+              // نحتفظ فقط بالصور الموجودة حالياً في dashboardCurrentImages لكي نخدع دالة الحفظ
+              state.allDoctors[docIndex].clinic_images = [...window.dashboardCurrentImages];
+          }
+      }
+
+      // 3. إعادة رسم الشاشة (إخفاء الصورة من العرض)
       window.renderClinicImageThumbnails(); 
+      
+      // 4. تفريغ حقل رفع الصور لإجباره على قبول رفع صورة جديدة إن أراد الطبيب
+      const fileInput = document.getElementById('dash_clinic_images');
+      if (fileInput) fileInput.value = '';
   }
 };
 
