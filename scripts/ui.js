@@ -241,16 +241,20 @@ window._currentClinicImages = doc.clinic_images || [];
                 <div style="font-weight: 900; color: #0f172a; font-size: 1.1rem; line-height: 1.4;">${escapeHtml(doc.exact_location)}, <span style="color: var(--primary);">${escapeHtml(t(doc.municipality))}</span></div>
               </div>
             </div>
-            
-            <div style="display: flex; align-items: center; gap: 1rem; background: rgba(16, 185, 129, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(16,185,129,0.1);">
-              <div style="background: white; color: #10b981; padding: 0.75rem; border-radius: 12px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(16,185,129,0.1);">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-              </div>
-              <div style="flex: 1;">
-                <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.2rem;">${state.currentLang === 'ar' ? 'رقم العيادة' : 'Clinic Phone'}</div>
-                <div style="font-weight: 900; color: #0f172a; font-size: 1.25rem; letter-spacing: 1px;" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone))}</div>
-              </div>
-            </div>
+let phonesDisplayHtml = `<div style="font-weight: 900; color: #0f172a; font-size: 1.25rem; letter-spacing: 1px;" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone))}</div>`;
+if (doc.phone_2 && doc.phone_2.trim() !== '') {
+    phonesDisplayHtml += `<div style="font-weight: 900; color: #0f172a; font-size: 1.25rem; letter-spacing: 1px; margin-top: 6px; border-top: 1px dashed rgba(16,185,129,0.3); padding-top: 6px;" dir="ltr">${escapeHtml(formatPhoneNumber(doc.phone_2))}</div>`;
+}
+
+<div style="display: flex; align-items: flex-start; gap: 1rem; background: rgba(16, 185, 129, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(16,185,129,0.1);">
+  <div style="background: white; color: #10b981; padding: 0.75rem; border-radius: 12px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(16,185,129,0.1); margin-top: 4px;">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+  </div>
+  <div style="flex: 1;">
+    <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem;">${state.currentLang === 'ar' ? 'أرقام العيادة' : 'Clinic Phones'}</div>
+    ${phonesDisplayHtml} 
+  </div>
+</div>
         </div>
 
         <div style="background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.03);">
@@ -502,9 +506,12 @@ document.getElementById('dashboardSubtitle').textContent = rawDashName ? (state.
     if(lNameAr) lNameAr.value = data.doctorDetails.last_name || '';
     if(fNameEn) fNameEn.value = data.doctorDetails.first_name_en || '';
     if(lNameEn) lNameEn.value = data.doctorDetails.last_name_en || '';
-  if (data.doctorDetails) {
-    document.getElementById('dash_contact_email').value = data.doctorDetails.contact_email || '';
-    document.getElementById('dash_whatsapp').value = data.doctorDetails.whatsapp_number || '';
+if (data.doctorDetails) {
+  document.getElementById('dash_contact_email').value = data.doctorDetails.contact_email || '';
+  document.getElementById('dash_whatsapp').value = data.doctorDetails.whatsapp_number || '';
+  const dashPhone2 = document.getElementById('dash_phone_2'); 
+  if (dashPhone2) dashPhone2.value = data.doctorDetails.phone_2 || '';
+  
     document.getElementById('dash_facebook').value = data.doctorDetails.facebook_link || '';
     document.getElementById('dash_map_link').value = data.doctorDetails.map_link || '';
 
