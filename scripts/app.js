@@ -1797,3 +1797,28 @@ window.addEventListener('keydown', function(e) {
         return false;
     }
 }, true);
+
+window.migrateOldDoctors = async function() {
+    console.log("🚀 بدء تحديث ملفات GitHub لجميع الأطباء القدامى...");
+    try {
+        // جلب جميع الأطباء من قاعدة البيانات
+        const { data: doctors, error } = await supabaseClient.from('doctors').select('*');
+        if (error) throw error;
+
+        console.log(`تم العثور على ${doctors.length} طبيب. جاري إنشاء الملفات التلقائية...`);
+        
+        let count = 0;
+        for (const doc of doctors) {
+            const finalSlug = doc.slug || doc.id; 
+            await supabaseClient.functions.invoke('create-github-page', { 
+                body: { doctorData: doc, doctorId: doc.id, slug: finalSlug } 
+            });
+            console.log(`✅ تم بناء ملف: ${finalSlug}.html`);
+            count++;
+        }
+        console.log(`🎉 اكتمل التحديث بنجاح! تم رفع ${count} ملف إلى GitHub.`);
+        alert('تمت ترقية جميع ملفات الأطباء القدامى بنجاح!');
+    } catch (err) {
+        console.error("❌ حدث خطأ أثناء التحديث:", err);
+    }
+};
