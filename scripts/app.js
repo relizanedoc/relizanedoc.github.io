@@ -1373,11 +1373,22 @@ window.handleAddDoctor = async function(e) {
     if (functionError) throw new Error("خطأ في الاتصال بالخادم الداخلي.");
     if (functionResponse && functionResponse.error) throw new Error(functionResponse.error);
 
-    const responseData = functionResponse.data;
+   const responseData = functionResponse.data;
     if (!responseData || !responseData.id) throw new Error(responseData?.error || 'فشل في جلب معرف الطبيب الجديد');
 
     showToast(t('toastRegisterSuccess') + responseData.id, 'success');
-    window.createDoctorGitHubPageAsync({ first_name: data.FirstName.trim(), last_name: data.LastName.trim(), phone: defaultPassword, exact_location: data.ExactLocation.trim(), specialty: data.Specialty.trim(), municipality: data.Municipality.trim(), extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '' }, responseData.id);
+    
+    // نمرر الـ slug المرتجع من السيرفر مباشرة ل دالة الرفع ليكون هو اسم ملف الـ HTML
+    window.createDoctorGitHubPageAsync({ 
+      first_name: data.FirstName.trim(), 
+      last_name: data.LastName.trim(), 
+      phone: defaultPassword, 
+      exact_location: data.ExactLocation.trim(), 
+      specialty: data.Specialty.trim(), 
+      municipality: data.Municipality.trim(), 
+      extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '',
+      slug: responseData.slug // 🌟 تمرير الرابط النظيف
+    }, responseData.id);
 
     e.target.reset();
     await window.loadDoctors();
