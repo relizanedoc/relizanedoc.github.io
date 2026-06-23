@@ -287,18 +287,13 @@
     };
 
     // 🌟 التعديل الثالث: دالة التحديث الجديدة التي ترسل الطلب إلى GitHub
-    window.refreshDoctorPage = async function(doctorId, firstName, lastName, slug) {
+    window.refreshDoctorPage = async function(doctorId, firstName, lastName) {
         const fullName = `${firstName} ${lastName}`;
-        const finalSlug = slug || doctorId;
 
-        if (!confirm(`هل أنت متأكد أنك تريد إعادة بناء وتحديث صفحة د. ${fullName} في الموقع؟\n\nالرابط المعتمد سيكون: ${finalSlug}`)) {
-            return;
-        }
-
-        window.showAdminToast('جاري تحضير البيانات وإرسالها... ⏳', 'info');
+        window.showAdminToast('جاري التحقق من أحدث البيانات... ⏳', 'info');
 
         try {
-            // جلب بيانات الطبيب كاملة لإرسالها للـ Edge Function
+            // 1. جلب أحدث بيانات (طازجة) من قاعدة البيانات مباشرة قبل أي شيء
             const { data: fullDoc, error: fetchErr } = await supabaseClient
                 .from('doctors')
                 .select('*')
@@ -307,12 +302,22 @@
 
             if (fetchErr) throw fetchErr;
 
-            // إرسال البيانات لدالة إنشاء الصفحة
+            // 2. التقاط الرابط الجديد الذي عدلته يدوياً
+            const freshSlug = fullDoc.slug || doctorId;
+
+            // 3. عرض رسالة التأكيد بالرابط الصحيح والطازج
+            if (!confirm(`هل أنت متأكد أنك تريد إعادة بناء وتحديث صفحة د. ${fullName} في الموقع؟\n\nالرابط المعتمد سيكون:\n${freshSlug}`)) {
+                return; // التوقف إذا تم الضغط على إلغاء
+            }
+
+            window.showAdminToast('جاري إرسال البيانات لبناء الصفحة... ⏳', 'info');
+
+            // 4. إرسال الطلب لـ GitHub بالرابط الجديد حصراً
             const { data, error } = await supabaseClient.functions.invoke('create-github-page', { 
                 body: { 
                     doctorData: fullDoc, 
                     doctorId: doctorId, 
-                    slug: finalSlug 
+                    slug: freshSlug 
                 } 
             });
 
