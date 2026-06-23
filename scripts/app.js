@@ -1398,7 +1398,6 @@ window.handleAddDoctor = async function(e) {
   } 
   finally { setLoading(btn, false); }
 };
-
 window.createDoctorGitHubPageAsync = function(doctorData, doctorId) {
   // 🌟 إرسال الرابط النظيف للدالة السحابية
   const finalSlug = doctorData.slug || doctorId; 
