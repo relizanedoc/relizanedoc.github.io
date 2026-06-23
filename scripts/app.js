@@ -1400,7 +1400,10 @@ window.handleAddDoctor = async function(e) {
 };
 
 window.createDoctorGitHubPageAsync = function(doctorData, doctorId) {
-  supabaseClient.functions.invoke('create-github-page', { body: { doctorData, doctorId } })
+  // 🌟 إرسال الرابط النظيف للدالة السحابية
+  const finalSlug = doctorData.slug || doctorId; 
+  
+  supabaseClient.functions.invoke('create-github-page', { body: { doctorData, doctorId, slug: finalSlug } })
   .then(({ data, error }) => {
     if (!error && data && data.success) showToast('تم إنشاء صفحة الطبيب للـ SEO!', 'success');
   }).catch(err => console.error('Edge Function Error:', err));
