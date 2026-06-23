@@ -137,7 +137,8 @@ window._currentClinicImages = doc.clinic_images || [];
   if (fbLink && !fbLink.match(/^https?:\/\//i)) {
       fbLink = 'https://' + fbLink;
   }
-  const profileUrl = `${window.location.origin}/doctors/${doc.id}.html`;
+const currentSlug = doc.slug || doc.id; // 🌟 استخدام الرابط النظيف من قاعدة البيانات
+const profileUrl = `${window.location.origin}/doctors/${currentSlug}.html`;
   const shareText = state.currentLang === 'ar' ? 'مشاركة الرابط' : 'Share Link';
   const isBookingEnabled = doc.booking_enabled === true;
 
@@ -441,8 +442,7 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
   `;
 
   window.router('doctor-profile');
-  window.history.replaceState({ view: 'doctor-profile' }, document.title, `/doctors/${doc.id}.html`);
-
+window.history.replaceState({ view: 'doctor-profile' }, document.title, `/doctors/${currentSlug}.html`);
   setTimeout(() => {
       const qrContainer = document.getElementById('vcard-qrcode');
       if (qrContainer) {
