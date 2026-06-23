@@ -1211,11 +1211,11 @@ window.saveClinicProfile = async function() {
         return;
     }
     
-    const contactEmail = document.getElementById('dash_contact_email').value.trim();
+ const contactEmail = document.getElementById('dash_contact_email').value.trim();
     const whatsapp = document.getElementById('dash_whatsapp').value.trim();
     const facebook = document.getElementById('dash_facebook').value.trim();
     const mapLink = document.getElementById('dash_map_link').value.trim();
-
+    const phone2 = document.getElementById('dash_phone_2') ? document.getElementById('dash_phone_2').value.trim() : null;
     // 4. إرسال البيانات للـ RPC
     const { error: dbError } = await supabaseClient.rpc('update_clinic_profile_secure', {
         p_doctor_id: session.doctorId,
