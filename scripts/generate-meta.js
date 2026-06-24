@@ -7,8 +7,11 @@ const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 async function generateMeta() {
     try {
         console.log('Fetching doctors data from Supabase...');
-        // نستخدم REST API المباشر لتجنب الحاجة لتثبيت مكتبات خارجية
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/doctors?select=id,first_name,last_name,first_name_en,last_name_en,specialty,municipality,exact_location`, {
+        
+        // 🌟 التعديل المعماري هنا: إضافة كلمة slug إلى نهاية قائمة الحقول المطلوبة (select)
+        const selectFields = 'id,slug,first_name,last_name,first_name_en,last_name_en,specialty,municipality,exact_location';
+        
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/doctors?select=${selectFields}`, {
             headers: {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`
@@ -24,7 +27,7 @@ async function generateMeta() {
         // حفظ الملف في المسار الرئيسي للمشروع
         const filePath = path.join(__dirname, '../doctors-meta.json');
         fs.writeFileSync(filePath, JSON.stringify(data));
-        console.log(`✅ Successfully generated doctors-meta.json with ${data.length} records.`);
+        console.log(`✅ Successfully generated doctors-meta.json with ${data.length} records, including slugs.`);
         
     } catch (error) {
         console.error('❌ Error generating meta file:', error);
