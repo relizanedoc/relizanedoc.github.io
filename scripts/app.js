@@ -325,7 +325,7 @@ window.fetchGlobalDirectory = async function() {
         
         // الخطة البديلة (Fallback): الاتصال بقاعدة البيانات في حال فشل الملف
         try {
-            const { data, error } = await supabaseClient.from('doctors').select('id, first_name, last_name, first_name_en, last_name_en, specialty, municipality, exact_location');
+const { data, error } = await supabaseClient.from('doctors').select('id, slug, first_name, last_name, first_name_en, last_name_en, specialty, municipality, exact_location');
             if (error) throw error;
             
             state.globalDirectory = data || [];
