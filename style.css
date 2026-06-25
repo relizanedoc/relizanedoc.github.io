@@ -1912,7 +1912,9 @@ th {
         display: none !important; /* إخفاء النص الفرعي لتجنب التشوه والزحام البصري */
     }
 }
-/* تنسيقات الشريط الإخباري */
+/* ==========================================
+   تنسيقات الشريط الإخباري المتحرك
+   ========================================== */
 #news-ticker-container {
     background-color: #f0f9ff; /* أزرق فاتح جداً مريح للعين */
     color: #0f172a;
@@ -1932,8 +1934,14 @@ th {
     animation: tickerScroll 30s linear infinite; 
 }
 
-/* إيقاف الحركة عند وضع الماوس (للحاسوب) أو اللمس (للهاتف) */
-#news-ticker-container:hover .news-ticker-track,
+/* إيقاف الحركة للحواسيب فقط (الأجهزة التي تمتلك ماوس حقيقي) */
+@media (hover: hover) and (pointer: fine) {
+    #news-ticker-container:hover .news-ticker-track {
+        animation-play-state: paused;
+    }
+}
+
+/* للهواتف: إيقاف الحركة فقط أثناء استمرار الضغط القوي بالإصبع (Touch & Hold) */
 #news-ticker-container:active .news-ticker-track {
     animation-play-state: paused;
 }
@@ -1951,14 +1959,16 @@ th {
     100% { transform: translateX(50%); } 
 }
 
-/* تصغير الخط قليلا في الهواتف */
+/* تصغير الخط وتقليل المسافات في التابلت والهواتف المتوسطة */
 @media (max-width: 768px) {
     #news-ticker-container { font-size: 0.85rem; padding: 6px 0; }
-    .news-ticker-track { gap: 20px; } /* تقليل المسافة الفاصلة قليلاً */
+    .news-ticker-track { gap: 20px; }
 }
 
-/* تصغير إضافي للهواتف الصغيرة جداً */
+/* تصغير إضافي للهواتف الصغيرة جداً (تم إضافة القوس المغلق هنا) */
 @media (max-width: 480px) {
     #news-ticker-container { font-size: 0.8rem; padding: 4px 0; }
+    .news-ticker-track { gap: 15px; }
+}
     .news-ticker-track { gap: 15px; } /* مسافة فاصلة أصغر لتناسب عرض الهاتف */
 }
