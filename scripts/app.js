@@ -387,12 +387,12 @@ window.filterDoctors = function() {
 // ==========================================
 // دالة معالجة الروابط وفتح نافذة الطبيب (محدثة لدعم الروابط النظيفة SEO)
 // ==========================================
-window.handleSEOAndRender = function(reset = true) {
+window.handleSEOAndRender = function(reset = true) { // 🌟 لا نحتاج async أبداً
   const urlParams = new URLSearchParams(window.location.search);
-  let targetDocId = urlParams.get('doc'); // لدعم الروابط القديمة إن وجدت
+  let targetDocId = urlParams.get('doc');
   let targetSlug = null;
 
-  // 🌟 استخراج الـ Slug من الرابط النظيف (مثال: /doctors/dr-ahmed.html)
+  // استخراج الـ Slug من الرابط النظيف
   const pathname = window.location.pathname;
   if (pathname.includes('/doctors/') && pathname.endsWith('.html')) {
       const parts = pathname.split('/');
@@ -400,12 +400,11 @@ window.handleSEOAndRender = function(reset = true) {
       targetSlug = filename.replace('.html', '').toLowerCase();
   }
 
-  // إذا وجدنا هدفاً (سواء عبر الـ Slug النظيف أو الـ ID القديم)
   if ((targetDocId || targetSlug) && reset) {
       let targetDoc = null;
 
+      // 1. البحث في الأطباء المحملين حالياً في الشاشة (الصفحة الأولى)
       if (targetSlug) {
-          // البحث باستخدام الـ Slug، وإذا لم نجده نجرب البحث بالـ ID (كخطة بديلة)
           targetDoc = state.allDoctors.find(d => 
               (d.slug && String(d.slug).toLowerCase() === targetSlug) || 
               (String(d.id).toLowerCase() === targetSlug)
@@ -415,22 +414,33 @@ window.handleSEOAndRender = function(reset = true) {
           targetDoc = state.allDoctors.find(d => String(d.id).trim().toLowerCase() === targetDocId);
       }
 
+      // 🌟 2. الحل العبقري: البحث في الدليل الشامل (ملف JSON المرفوع على GitHub) 🌟
+      if (!targetDoc && state.globalDirectory && state.globalDirectory.length > 0) {
+          if (targetSlug) {
+              targetDoc = state.globalDirectory.find(d => 
+                  (d.slug && String(d.slug).toLowerCase() === targetSlug) || 
+                  (String(d.id).toLowerCase() === targetSlug)
+              );
+          } else if (targetDocId) {
+              targetDoc = state.globalDirectory.find(d => String(d.id).trim().toLowerCase() === targetDocId);
+          }
+      }
+
+      // 3. فتح النافذة إذا وجدنا الطبيب
       if (targetDoc) {
           updateSEOMetaTags(targetDoc);
-          renderDoctors([targetDoc]); // رسم بطاقة هذا الطبيب فقط في الخلفية
+          renderDoctors([targetDoc]); 
           
           const rawName = state.currentLang === 'en' && targetDoc.first_name_en && targetDoc.last_name_en 
               ? `${targetDoc.first_name_en} ${targetDoc.last_name_en}` 
               : `${targetDoc.first_name} ${targetDoc.last_name}`;
           const doctorName = (state.currentLang === 'ar' ? 'د. ' : 'Dr. ') + rawName;
           
-          // تأخير بسيط لضمان رسم الواجهة قبل فتح النافذة
           setTimeout(() => {
               try { openDoctorProfileModal(targetDoc, doctorName); } 
               catch(e) { console.error("Error opening modal:", e); }
           }, 300);
           
-          // إعداد زر العودة للرئيسية
           let backBtn = document.getElementById('seoBackBtn');
           if(!backBtn) {
              backBtn = document.createElement('button');
@@ -438,19 +448,18 @@ window.handleSEOAndRender = function(reset = true) {
              backBtn.className = 'btn btn-secondary btn-block mb-4';
              backBtn.innerHTML = state.currentLang === 'ar' ? '→ عرض جميع الأطباء المتاحين' : '← View All Available Doctors';
              backBtn.onclick = () => {
-                 // 🌟 عند العودة، نمسح الرابط الخاص بالطبيب من المتصفح لنعود للرئيسية حقاً
                  window.history.pushState({}, document.title, '/');
                  document.title = state.currentLang === 'ar' ? 'دليل أطباء ولاية غليزان' : 'Relizane Medical Directory';
-                 window.loadDoctors(true); // إعادة تحميل جميع الأطباء
+                 window.loadDoctors(true); 
                  backBtn.remove();
              };
              document.getElementById('doctorsList').insertAdjacentElement('beforebegin', backBtn);
           }
-          return; // إنهاء الدالة هنا حتى لا يتم رسم كل الأطباء
+          return; 
       }
   }
   
-  // إذا لم يكن هناك طبيب محدد في الرابط، ارسم الصفحة الرئيسية العادية
+  // إذا الرابط لا يحتوي على طبيب أو كان خاطئاً تماماً
   renderDoctors(state.allDoctors);
 };
 
