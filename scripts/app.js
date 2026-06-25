@@ -390,7 +390,6 @@ window.filterDoctors = function() {
 window.handleSEOAndRender = function(reset = true) {
   const urlParams = new URLSearchParams(window.location.search);
   let targetDocId = urlParams.get('doc');
-  let targetDocId = urlParams.get('doc'); // لدعم الروابط القديمة إن وجدت
   let targetSlug = null;
 
   // 🌟 استخراج الـ Slug من الرابط النظيف (مثال: /doctors/dr-ahmed.html)
