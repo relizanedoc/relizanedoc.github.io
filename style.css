@@ -1970,8 +1970,7 @@ th {
     #news-ticker-container { font-size: 0.8rem; padding: 4px 0; }
     .news-ticker-track { gap: 15px; }
 }
-    .news-ticker-track { gap: 15px; } /* مسافة فاصلة أصغر لتناسب عرض الهاتف */
-}
+
 /* ==========================================
    دعم الوضع الليلي (Dark Mode) للشريط الإخباري
    ========================================== */
@@ -1984,4 +1983,50 @@ th {
 /* تفتيح لون الأيقونات قليلاً في الوضع الليلي لتبدو أوضح */
 [data-theme="dark"] .ticker-item .ticker-icon {
     color: var(--primary-light, #38bdf8);
+}
+
+/* ==========================================
+   إصلاح سلايدر تسجيل دخول الطبيب في الوضع الليلي
+   ========================================== */
+
+/* 1. التفعيل عبر السمة (زر التبديل اليدوي إن وجد) */
+[data-theme="dark"] #view-dashboard .card,
+[data-theme="dark"] .login-pitch-container {
+    background-color: var(--surface, #1e293b) !important;
+    border-color: var(--border, #334155) !important;
+}
+[data-theme="dark"] .pitch-slide h3,
+[data-theme="dark"] .pitch-slide h4,
+[data-theme="dark"] .pitch-slide p,
+[data-theme="dark"] .pitch-slide span {
+    color: var(--text, #f8fafc) !important;
+}
+[data-theme="dark"] .pitch-slide {
+    background-color: #0f172a !important; /* لون داكن للقسم السفلي */
+}
+[data-theme="dark"] #view-dashboard .card > h3,
+[data-theme="dark"] .login-pitch-container > h3 {
+    color: var(--primary-light, #38bdf8) !important;
+}
+
+/* 2. التفعيل التلقائي (حسب إعدادات نظام جهاز الزائر) لضمان التوافق التام مع باقي موقعك */
+@media (prefers-color-scheme: dark) {
+    #view-dashboard .card,
+    .login-pitch-container {
+        background-color: var(--surface, #1e293b) !important;
+        border-color: var(--border, #334155) !important;
+    }
+    .pitch-slide h3,
+    .pitch-slide h4,
+    .pitch-slide p,
+    .pitch-slide span {
+        color: var(--text, #f8fafc) !important;
+    }
+    .pitch-slide {
+        background-color: #0f172a !important;
+    }
+    #view-dashboard .card > h3,
+    .login-pitch-container > h3 {
+        color: var(--primary-light, #38bdf8) !important;
+    }
 }
