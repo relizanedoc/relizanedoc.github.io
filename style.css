@@ -1972,3 +1972,16 @@ th {
 }
     .news-ticker-track { gap: 15px; } /* مسافة فاصلة أصغر لتناسب عرض الهاتف */
 }
+/* ==========================================
+   دعم الوضع الليلي (Dark Mode) للشريط الإخباري
+   ========================================== */
+[data-theme="dark"] #news-ticker-container {
+    background-color: var(--surface, #1e293b); /* خلفية داكنة متناسقة مع كروت الموقع */
+    color: var(--text, #f8fafc); /* نص فاتح */
+    border-bottom: 1px solid var(--border, #334155); /* حدود داكنة */
+}
+
+/* تفتيح لون الأيقونات قليلاً في الوضع الليلي لتبدو أوضح */
+[data-theme="dark"] .ticker-item .ticker-icon {
+    color: var(--primary-light, #38bdf8);
+}
