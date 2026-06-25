@@ -96,6 +96,7 @@ window.router = async function(viewName, pushHistory = true) {
       return window.router('login');
     }
   }
+  
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
   const target = document.getElementById('view-' + viewName);
   if (target) target.classList.remove('hidden');
@@ -104,12 +105,23 @@ window.router = async function(viewName, pushHistory = true) {
   const activeNav = document.querySelector(`.nav-btn[data-nav="${viewName}"]`);
   if (activeNav) activeNav.classList.add('active');
 
-  if (pushHistory) history.pushState({ view: viewName }, '', '#' + viewName);
+  // 🌟 [إصلاح مشكلة التوجيه العميق]: تنظيف الرابط عند التنقل داخل الموقع 🌟
+  if (pushHistory) {
+      // إذا كنا داخل صفحة طبيب (رابط عميق) وأردنا الانتقال لصفحة أخرى، يجب مسح مسار الطبيب من المتصفح
+      if (window.location.pathname.includes('/doctors/')) {
+          history.pushState({ view: viewName }, '', '/#' + viewName); // نُجبره على العودة لـ /
+      } else {
+          history.pushState({ view: viewName }, '', '#' + viewName);
+      }
+  }
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   if (viewName === 'home') {
+      // 🌟 استعادة عنوان الصفحة الرئيسي حتى لا يبقى اسم الطبيب معلقاً
+      document.title = state.currentLang === 'ar' ? 'دليل أطباء ولاية غليزان' : 'Relizane Medical Directory';
+      
       const searchInput = document.getElementById('searchInput');
-      // إجبار المتصفح على تفريغ حقل البحث من أي ملء تلقائي خاطئ
       if (searchInput) searchInput.value = ''; 
       
       window.loadDoctors(true); // جلب جميع الأطباء
@@ -124,12 +136,11 @@ window.router = async function(viewName, pushHistory = true) {
       updateUserUI(session ? session.user : null);
     }).catch(err => console.error("Error fetching session:", err));
   }
-  // 🌟 الكود المضاف: تفعيل لوحة الإدارة 🌟
   if (viewName === 'admin') {
       if (typeof window.loadAdminDashboard === 'function') {
           window.loadAdminDashboard();
       }
- }
+  }
 };
 
 window.setLang = function(lang) {
