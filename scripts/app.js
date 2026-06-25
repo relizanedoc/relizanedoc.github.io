@@ -384,25 +384,58 @@ window.filterDoctors = function() {
   }, 500); 
 };
 
+// ==========================================
+// دالة معالجة الروابط وفتح نافذة الطبيب (محدثة لدعم الروابط النظيفة SEO)
+// ==========================================
 window.handleSEOAndRender = function(reset = true) {
   const urlParams = new URLSearchParams(window.location.search);
   let targetDocId = urlParams.get('doc');
+  let targetDocId = urlParams.get('doc'); // لدعم الروابط القديمة إن وجدت
+  let targetSlug = null;
+
+  // 🌟 استخراج الـ Slug من الرابط النظيف (مثال: /doctors/dr-ahmed.html)
+  const pathname = window.location.pathname;
+  if (pathname.includes('/doctors/') && pathname.endsWith('.html')) {
+      const parts = pathname.split('/');
+      const filename = parts[parts.length - 1];
+      targetSlug = filename.replace('.html', '').toLowerCase();
+  }
 
   if (targetDocId && reset) {
       targetDocId = targetDocId.trim().toLowerCase(); 
       const targetDoc = state.allDoctors.find(d => String(d.id).trim().toLowerCase() === targetDocId);
+  // إذا وجدنا هدفاً (سواء عبر الـ Slug النظيف أو الـ ID القديم)
+  if ((targetDocId || targetSlug) && reset) {
+      let targetDoc = null;
+
+      if (targetSlug) {
+          // البحث باستخدام الـ Slug، وإذا لم نجده نجرب البحث بالـ ID (كخطة بديلة)
+          targetDoc = state.allDoctors.find(d => 
+              (d.slug && String(d.slug).toLowerCase() === targetSlug) || 
+              (String(d.id).toLowerCase() === targetSlug)
+          );
+      } else if (targetDocId) {
+          targetDocId = targetDocId.trim().toLowerCase();
+          targetDoc = state.allDoctors.find(d => String(d.id).trim().toLowerCase() === targetDocId);
+      }
 
       if (targetDoc) {
           updateSEOMetaTags(targetDoc);
           renderDoctors([targetDoc]);
+          renderDoctors([targetDoc]); // رسم بطاقة هذا الطبيب فقط في الخلفية
+          
           const rawName = state.currentLang === 'en' && targetDoc.first_name_en && targetDoc.last_name_en 
               ? `${targetDoc.first_name_en} ${targetDoc.last_name_en}` 
               : `${targetDoc.first_name} ${targetDoc.last_name}`;
           const doctorName = (state.currentLang === 'ar' ? 'د. ' : 'Dr. ') + rawName;
+          
+          // تأخير بسيط لضمان رسم الواجهة قبل فتح النافذة
           setTimeout(() => {
               try { openDoctorProfileModal(targetDoc, doctorName); } 
               catch(e) { console.error("Error opening modal:", e); }
           }, 300);
+          
+          // إعداد زر العودة للرئيسية
           let backBtn = document.getElementById('seoBackBtn');
           if(!backBtn) {
              backBtn = document.createElement('button');
@@ -411,15 +444,21 @@ window.handleSEOAndRender = function(reset = true) {
              backBtn.innerHTML = state.currentLang === 'ar' ? '→ عرض جميع الأطباء المتاحين' : '← View All Available Doctors';
              backBtn.onclick = () => {
                  window.history.pushState({}, document.title, window.location.pathname);
+                 // 🌟 عند العودة، نمسح الرابط الخاص بالطبيب من المتصفح لنعود للرئيسية حقاً
+                 window.history.pushState({}, document.title, '/');
                  document.title = state.currentLang === 'ar' ? 'دليل أطباء ولاية غليزان' : 'Relizane Medical Directory';
                  renderDoctors(state.allDoctors);
+                 window.loadDoctors(true); // إعادة تحميل جميع الأطباء
                  backBtn.remove();
              };
              document.getElementById('doctorsList').insertAdjacentElement('beforebegin', backBtn);
           }
           return; 
+          return; // إنهاء الدالة هنا حتى لا يتم رسم كل الأطباء
       }
   }
+  
+  // إذا لم يكن هناك طبيب محدد في الرابط، ارسم الصفحة الرئيسية العادية
   renderDoctors(state.allDoctors);
 };
 
@@ -1827,24 +1866,24 @@ async function initNewsTicker() {
     try {
         // نستخدم تاريخ اليوم لضمان جلب الملف المحدث يومياً
         const today = new Date().toISOString().slice(0, 10);
-        
+
         // 🌟 السحر هنا: جلب البيانات من ملف JSON المجاني والسريع بدلاً من قاعدة البيانات
         const response = await fetch(`./doctors-meta.json?v=${today}`);
-        
+
         // إذا لم يكن الملف موجوداً، لا نفعل شيئاً (يظل الشريط مخفياً)
         if (!response.ok) return; 
 
         const doctorsData = await response.json();
-        
+
         // 1. حساب عدد الأطباء الكلي
         const totalDoctors = doctorsData.length;
-        
+
         // 2. حساب عدد البلديات المغطاة (عبر استخراج البلديات الفريدة فقط)
         const uniqueMunicipalities = new Set(doctorsData.map(d => d.municipality).filter(Boolean)).size;
 
         const tickerTrack = document.getElementById('dynamicNewsTicker');
         const tickerContainer = document.getElementById('news-ticker-container');
-        
+
         if (!tickerTrack || !tickerContainer) return;
 
         // 3. تجهيز الجمل الإخبارية
@@ -1859,7 +1898,7 @@ async function initNewsTicker() {
         const content = messages.join(` ${separator} `) + ` ${separator} ` + messages.join(` ${separator} `);
 
         tickerTrack.innerHTML = content;
-        
+
         // 5. إظهار الشريط بعد اكتمال تجهيز المحتوى
         tickerContainer.style.display = 'block'; 
 
