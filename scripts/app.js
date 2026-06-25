@@ -97,34 +97,52 @@ window.router = async function(viewName, pushHistory = true) {
     }
   }
   
+  // 1. إخفاء جميع الواجهات وإظهار الواجهة المطلوبة
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
   const target = document.getElementById('view-' + viewName);
   if (target) target.classList.remove('hidden');
 
+  // 2. تحديث حالة أزرار التنقل (Active State)
   document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
   const activeNav = document.querySelector(`.nav-btn[data-nav="${viewName}"]`);
   if (activeNav) activeNav.classList.add('active');
 
-  // 🌟 التعديل الجوهري: تنظيف مسار الرابط عند العودة للرئيسية
-  let basePath = window.location.pathname + window.location.search;
-  if (viewName === 'home' && (basePath.includes('/doctors/') || basePath.includes('doc='))) {
-      basePath = '/'; // إعادة الرابط للمسار الجذري النظيف
+  // ==========================================
+  // 🌟 التعديل الهندسي الصارم: تنظيف مسار الرابط (URL Sanitization)
+  // ==========================================
+  let basePath = window.location.pathname;
+  
+  // القاعدة: إذا كان المستخدم داخل مسار طبيب (/doctors/...) وطلب الانتقال لأي قسم آخر
+  if (basePath.includes('/doctors/') && viewName !== 'doctor-profile') {
+      basePath = '/'; // إجبار العودة للمسار الجذري النظيف
       
-      // إزالة زر "العودة" المخصص الذي يتم توليده في صفحة الطبيب
+      // تنظيف الـ DOM من زر العودة الخاص بالـ SEO لتجنب التكرار
       const seoBtn = document.getElementById('seoBackBtn');
       if (seoBtn) seoBtn.remove();
   }
 
-  // تحديث سجل المتصفح (History) بالرابط النظيف
-  if (pushHistory) history.pushState({ view: viewName }, document.title, basePath + '#' + viewName);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // بناء الرابط النهائي
+  let finalUrl = basePath;
+  if (viewName === 'home') {
+      // إذا كانت الوجهة هي الرئيسية، نجعل الرابط جذرياً ونظيفاً تماماً
+      finalUrl = basePath; 
+  } else {
+      // لأي قسم آخر، نستخدم نظام الـ Hash المعياري للتطبيق
+      finalUrl = basePath + '#' + viewName;
+  }
 
+  // تحديث شريط المتصفح بشكل صامت (بدون Refresh)
+  if (pushHistory) {
+      history.pushState({ view: viewName }, '', finalUrl);
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // ==========================================
+
+  // 3. تنفيذ الإجراءات الخاصة بكل صفحة
   if (viewName === 'home') {
       const searchInput = document.getElementById('searchInput');
-      // إجبار المتصفح على تفريغ حقل البحث من أي ملء تلقائي خاطئ
       if (searchInput) searchInput.value = ''; 
-
-      window.loadDoctors(true); // جلب جميع الأطباء بأمان الآن
+      window.loadDoctors(true); 
   }
   
   if (viewName === 'user-dashboard') window.loadUserBookings();
