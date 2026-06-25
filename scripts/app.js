@@ -62,7 +62,7 @@ window.addEventListener('load', async () => {
 
     // 🟢 الكود الجديد: استرجاع اللغة المحفوظة أو تعيين العربية كافتراضي
     const savedLang = localStorage.getItem('appLanguage') || 'ar';
-    
+
     // تأخير بسيط جداً لضمان تحميل عناصر DOM قبل تغيير اللغة
     setTimeout(() => {
         if(typeof window.setLang === 'function') {
@@ -96,7 +96,6 @@ window.router = async function(viewName, pushHistory = true) {
       return window.router('login');
     }
   }
-  
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
   const target = document.getElementById('view-' + viewName);
   if (target) target.classList.remove('hidden');
@@ -105,25 +104,14 @@ window.router = async function(viewName, pushHistory = true) {
   const activeNav = document.querySelector(`.nav-btn[data-nav="${viewName}"]`);
   if (activeNav) activeNav.classList.add('active');
 
-  // 🌟 [إصلاح مشكلة التوجيه العميق]: تنظيف الرابط عند التنقل داخل الموقع 🌟
-  if (pushHistory) {
-      // إذا كنا داخل صفحة طبيب (رابط عميق) وأردنا الانتقال لصفحة أخرى، يجب مسح مسار الطبيب من المتصفح
-      if (window.location.pathname.includes('/doctors/')) {
-          history.pushState({ view: viewName }, '', '/#' + viewName); // نُجبره على العودة لـ /
-      } else {
-          history.pushState({ view: viewName }, '', '#' + viewName);
-      }
-  }
-
+  if (pushHistory) history.pushState({ view: viewName }, '', '#' + viewName);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   if (viewName === 'home') {
-      // 🌟 استعادة عنوان الصفحة الرئيسي حتى لا يبقى اسم الطبيب معلقاً
-      document.title = state.currentLang === 'ar' ? 'دليل أطباء ولاية غليزان' : 'Relizane Medical Directory';
-      
       const searchInput = document.getElementById('searchInput');
+      // إجبار المتصفح على تفريغ حقل البحث من أي ملء تلقائي خاطئ
       if (searchInput) searchInput.value = ''; 
-      
+
       window.loadDoctors(true); // جلب جميع الأطباء
   }
   if (viewName === 'user-dashboard') window.loadUserBookings();
@@ -136,11 +124,12 @@ window.router = async function(viewName, pushHistory = true) {
       updateUserUI(session ? session.user : null);
     }).catch(err => console.error("Error fetching session:", err));
   }
+  // 🌟 الكود المضاف: تفعيل لوحة الإدارة 🌟
   if (viewName === 'admin') {
       if (typeof window.loadAdminDashboard === 'function') {
           window.loadAdminDashboard();
       }
-  }
+ }
 };
 
 window.setLang = function(lang) {
@@ -313,10 +302,10 @@ window.fetchGlobalDirectory = async function() {
         // حيلة برمجية: نستخدم تاريخ اليوم لضمان جلب أحدث نسخة من الملف مرة واحدة يومياً
         // مما يقلل استهلاك باقة الإنترنت للمستخدم ويسرع الموقع
         const today = new Date().toISOString().slice(0, 10);
-        
+
         // جلب الملف الثابت من مسار المشروع
         const response = await fetch(`./doctors-meta.json?v=${today}`);
-        
+
         if (!response.ok) {
             throw new Error('لم يتم العثور على ملف meta');
         }
@@ -330,15 +319,15 @@ window.fetchGlobalDirectory = async function() {
 
         window.populateFilters();
         filterOptionsLoaded = true;
-        
+
     } catch (e) {
         console.warn("⚠️ فشل جلب ملف meta، تفعيل الخطة البديلة عبر Supabase...", e);
-        
+
         // الخطة البديلة (Fallback): الاتصال بقاعدة البيانات في حال فشل الملف
         try {
 const { data, error } = await supabaseClient.from('doctors').select('id, slug, first_name, last_name, first_name_en, last_name_en, specialty, municipality, exact_location');
             if (error) throw error;
-            
+
             state.globalDirectory = data || [];
             globalSpecs = [...new Set(data.map(d => d.specialty).filter(Boolean))].sort();
             globalMuns = [...new Set(data.map(d => d.municipality).filter(Boolean))].sort();
@@ -395,63 +384,25 @@ window.filterDoctors = function() {
   }, 500); 
 };
 
-// ==========================================
-// دالة معالجة الروابط وفتح نافذة الطبيب (محدثة لدعم الروابط النظيفة SEO)
-// ==========================================
-window.handleSEOAndRender = function(reset = true) { // 🌟 لا نحتاج async أبداً
+window.handleSEOAndRender = function(reset = true) {
   const urlParams = new URLSearchParams(window.location.search);
   let targetDocId = urlParams.get('doc');
-  let targetSlug = null;
 
-  // استخراج الـ Slug من الرابط النظيف
-  const pathname = window.location.pathname;
-  if (pathname.includes('/doctors/') && pathname.endsWith('.html')) {
-      const parts = pathname.split('/');
-      const filename = parts[parts.length - 1];
-      targetSlug = filename.replace('.html', '').toLowerCase();
-  }
+  if (targetDocId && reset) {
+      targetDocId = targetDocId.trim().toLowerCase(); 
+      const targetDoc = state.allDoctors.find(d => String(d.id).trim().toLowerCase() === targetDocId);
 
-  if ((targetDocId || targetSlug) && reset) {
-      let targetDoc = null;
-
-      // 1. البحث في الأطباء المحملين حالياً في الشاشة (الصفحة الأولى)
-      if (targetSlug) {
-          targetDoc = state.allDoctors.find(d => 
-              (d.slug && String(d.slug).toLowerCase() === targetSlug) || 
-              (String(d.id).toLowerCase() === targetSlug)
-          );
-      } else if (targetDocId) {
-          targetDocId = targetDocId.trim().toLowerCase();
-          targetDoc = state.allDoctors.find(d => String(d.id).trim().toLowerCase() === targetDocId);
-      }
-
-      // 🌟 2. الحل العبقري: البحث في الدليل الشامل (ملف JSON المرفوع على GitHub) 🌟
-      if (!targetDoc && state.globalDirectory && state.globalDirectory.length > 0) {
-          if (targetSlug) {
-              targetDoc = state.globalDirectory.find(d => 
-                  (d.slug && String(d.slug).toLowerCase() === targetSlug) || 
-                  (String(d.id).toLowerCase() === targetSlug)
-              );
-          } else if (targetDocId) {
-              targetDoc = state.globalDirectory.find(d => String(d.id).trim().toLowerCase() === targetDocId);
-          }
-      }
-
-      // 3. فتح النافذة إذا وجدنا الطبيب
       if (targetDoc) {
           updateSEOMetaTags(targetDoc);
-          renderDoctors([targetDoc]); 
-          
+          renderDoctors([targetDoc]);
           const rawName = state.currentLang === 'en' && targetDoc.first_name_en && targetDoc.last_name_en 
               ? `${targetDoc.first_name_en} ${targetDoc.last_name_en}` 
               : `${targetDoc.first_name} ${targetDoc.last_name}`;
           const doctorName = (state.currentLang === 'ar' ? 'د. ' : 'Dr. ') + rawName;
-          
           setTimeout(() => {
               try { openDoctorProfileModal(targetDoc, doctorName); } 
               catch(e) { console.error("Error opening modal:", e); }
           }, 300);
-          
           let backBtn = document.getElementById('seoBackBtn');
           if(!backBtn) {
              backBtn = document.createElement('button');
@@ -459,9 +410,9 @@ window.handleSEOAndRender = function(reset = true) { // 🌟 لا نحتاج asy
              backBtn.className = 'btn btn-secondary btn-block mb-4';
              backBtn.innerHTML = state.currentLang === 'ar' ? '→ عرض جميع الأطباء المتاحين' : '← View All Available Doctors';
              backBtn.onclick = () => {
-                 window.history.pushState({}, document.title, '/');
+                 window.history.pushState({}, document.title, window.location.pathname);
                  document.title = state.currentLang === 'ar' ? 'دليل أطباء ولاية غليزان' : 'Relizane Medical Directory';
-                 window.loadDoctors(true); 
+                 renderDoctors(state.allDoctors);
                  backBtn.remove();
              };
              document.getElementById('doctorsList').insertAdjacentElement('beforebegin', backBtn);
@@ -469,8 +420,6 @@ window.handleSEOAndRender = function(reset = true) { // 🌟 لا نحتاج asy
           return; 
       }
   }
-  
-  // إذا الرابط لا يحتوي على طبيب أو كان خاطئاً تماماً
   renderDoctors(state.allDoctors);
 };
 
@@ -844,7 +793,7 @@ window.loadUserBookings = async function() {
     let statusStyle = 'background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;';
       let statusIndicator = '#f59e0b';
       let displayStatus = t('statusPending');
-      
+
       if (b.status === 'confirmed') { 
           statusStyle = 'background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0;'; 
           statusIndicator = '#10b981'; 
@@ -1002,12 +951,12 @@ window.handleDashboardLogin = async function(e) {
 // ✅ التعديل المعماري: كشف الخطأ الفعلي بدلاً من طمسه
 if (functionError) {
   console.error("🚨 الخلل الفعلي القادم من السيرفر:", functionError);
-  
+
   // التحقق مما إذا كان الخطأ بسبب انقطاع الشبكة أو الـ Timeout
   if (functionError instanceof TypeError || functionError.message === 'Failed to fetch') {
       throw new Error("مشكلة في الاتصال بالإنترنت أو أن السيرفر يستغرق وقتاً طويلاً للاستجابة. يرجى المحاولة مرة أخرى.");
   }
-  
+
   // محاولة استخراج رسالة الخطأ الأصلية إن وجدت
   const errorMessage = functionError.message || functionError.context || "حدث خطأ غير متوقع في الخادم.";
   throw new Error(`تعذر الاتصال بالخادم: ${errorMessage}`);
@@ -1138,23 +1087,23 @@ window.saveClinicProfile = async function() {
     });
 
     const certificatesText = document.getElementById('dash_certificates') ? document.getElementById('dash_certificates').value.trim() : '';
-    
+
     // 1. جلب الصور المتبقية في الواجهة بعد أن قام الطبيب بالحذف
     let finalImageUrls = window.dashboardCurrentImages ? [...window.dashboardCurrentImages] : []; 
     console.log("🔍 [رادار 1] الصور المتبقية في الواجهة:", finalImageUrls);
-    
+
     // 2. الاستعلام الدقيق من قاعدة البيانات لمعرفة ما كان موجوداً قبل التعديل
     const { data: dbDoctor, error: fetchErr } = await supabaseClient
         .from('doctors')
         .select('clinic_images')
         .eq('id', session.doctorId)
         .single();
-        
+
     if (fetchErr) console.error("❌ [رادار 2] خطأ في جلب بيانات الطبيب:", fetchErr);
-    
+
     const originalImages = dbDoctor && dbDoctor.clinic_images ? dbDoctor.clinic_images : [];
     console.log("🔍 [رادار 3] الصور القديمة في قاعدة البيانات:", originalImages);
-    
+
     // 3. تحديد الصور التي يجب تدميرها
     const imagesToDelete = originalImages.filter(url => !finalImageUrls.includes(url));
     console.log("🗑️ [رادار 4] الصور التي تم اكتشاف حذفها:", imagesToDelete);
@@ -1261,7 +1210,7 @@ window.saveClinicProfile = async function() {
         setLoading(btn, false);
         return;
     }
-    
+
  const contactEmail = document.getElementById('dash_contact_email').value.trim();
     const whatsapp = document.getElementById('dash_whatsapp').value.trim();
     const facebook = document.getElementById('dash_facebook').value.trim();
@@ -1305,7 +1254,7 @@ window.saveClinicProfile = async function() {
             window.createDoctorGitHubPageAsync(state.allDoctors[docIndex], session.doctorId);
         }
     }
-    
+
     showToast('تم حفظ التغييرات بنجاح', 'success');
     setTimeout(() => location.reload(), 1000);
 } catch (err) { 
@@ -1355,18 +1304,18 @@ window.changeBookingStatus = async function(bookingId, newStatus, userEmail, doc
     }
 
     showToast(state.currentLang === 'ar' ? 'تم تحديث حالة الحجز بنجاح' : 'Booking status updated successfully', 'success');
-    
+
     // جلب المواعيد الجديدة لتحديث الرسم البياني فوراً
     const { data: updatedAppointments, error: fetchError } = await supabaseClient.rpc('get_doctor_appointments_secure', { 
         p_doctor_id: session.doctorId, 
         p_session_token: session.sessionToken 
     });
     if (fetchError) throw fetchError;
-    
+
     if (state.globalDashboardData) {
       state.globalDashboardData.appointments = updatedAppointments || [];
       renderDashboardUI(state.globalDashboardData, state.globalDashboardDoctorId);
-      
+
       // تحديث الرسم الدائري (النسبة)
       if(typeof window.renderDoctorAnalytics === 'function') {
           window.renderDoctorAnalytics(updatedAppointments);
@@ -1403,7 +1352,7 @@ window.handleAddDoctor = async function(e) {
     // 2. تجميع بيانات الطبيب بشكل سليم 🌟
     const phone1 = data.Phone ? data.Phone.replace(/\s/g, '') : '';
     const phone2 = data.Phone2 ? data.Phone2.replace(/\s/g, '') : null;
-    
+
     const payload = {
       p_first_name: data.FirstName.trim(), 
       p_last_name: data.LastName.trim(), 
@@ -1428,7 +1377,7 @@ window.handleAddDoctor = async function(e) {
     if (!responseData || !responseData.id) throw new Error(responseData?.error || 'فشل في جلب معرف الطبيب الجديد');
 
     showToast(t('toastRegisterSuccess') + responseData.id, 'success');
-    
+
     // نمرر الـ slug المرتجع من السيرفر مباشرة ل دالة الرفع ليكون هو اسم ملف الـ HTML
     window.createDoctorGitHubPageAsync({ 
       first_name: data.FirstName.trim(), 
@@ -1452,7 +1401,7 @@ window.handleAddDoctor = async function(e) {
 window.createDoctorGitHubPageAsync = function(doctorData, doctorId) {
   // 🌟 إرسال الرابط النظيف للدالة السحابية
   const finalSlug = doctorData.slug || doctorId; 
-  
+
   supabaseClient.functions.invoke('create-github-page', { body: { doctorData, doctorId, slug: finalSlug } })
   .then(({ data, error }) => {
     if (!error && data && data.success) showToast('تم إنشاء صفحة الطبيب للـ SEO!', 'success');
@@ -1479,7 +1428,7 @@ const trackForm = document.getElementById('trackBookingForm');
           const booking = data[0];
           let statusStyle = 'background: #f1f5f9; color: #64748b;';
           let displayStatus = booking.status;
-          
+
           if (booking.status === 'confirmed') { 
               statusStyle = 'background: #ecfdf5; color: #10b981;'; 
               displayStatus = state.currentLang === 'ar' ? 'مؤكد' : 'Confirmed'; 
@@ -1523,7 +1472,7 @@ const trackForm = document.getElementById('trackBookingForm');
 document.addEventListener('click', (event) => {
   const hamburgerBtn = document.getElementById('hamburgerBtn');
   const navLinks = document.getElementById('navLinks');
-  
+
   // التحقق مما إذا كانت القائمة مفتوحة والشاشة بحجم الهاتف
   if (navLinks && navLinks.classList.contains('show') && window.innerWidth <= 768) {
     // إذا كان مكان النقر ليس داخل القائمة نفسها، وليس على زر الهامبرغر
@@ -1544,7 +1493,7 @@ document.getElementById('btn-ar').onclick = () => window.setLang('ar');
   const bookingToggleSwitch = document.getElementById('bookingToggleSwitch'); if (bookingToggleSwitch) bookingToggleSwitch.onchange = window.handleToggleBooking;
   const logoutBtn = document.getElementById('logoutBtn'); if (logoutBtn) logoutBtn.onclick = window.logoutUser;
 // --- أزرار صفحة تسجيل دخول الأعضاء ---
-  
+
   // 1. زر العودة للدليل (يعيدك للصفحة الرئيسية)
   const backToHomeBtn = document.getElementById('backToHomeBtn');
   if (backToHomeBtn) {
@@ -1646,7 +1595,7 @@ const logoHomeBtn = document.getElementById('logoHomeBtn');
       try {
         const user = await getCurrentUser();
         if (!user) { showToast(state.currentLang === 'ar' ? 'يجب تسجيل الدخول أولاً' : 'Please login first', 'error'); setLoading(btn, false); return; }
-        
+
         // 1. البحث عن تقييم سابق لنفس الطبيب والمستخدم
         const { data: existingReview, error: checkError } = await supabaseClient
           .from('reviews')
@@ -1724,11 +1673,11 @@ window.openClinicLightbox = function(imageUrl, index, docId) {
     const lb = document.getElementById('clinicLightbox_' + docId);
     const img = document.getElementById('clinicLightboxImg_' + docId);
     if (!lb || !img) return;
-    
+
     // تخزين البيانات الحالية لسهولة التنقل
     window._currentLightboxDocId = docId;
     window._currentLightboxIndex = index;
-    
+
     img.src = imageUrl;
     lb.style.display = 'flex';
     document.body.style.overflow = 'hidden'; // منع تمرير الصفحة
@@ -1743,7 +1692,7 @@ window.navigateLightbox = function(direction, docId) {
 
     // حساب الفهرس الجديد (الصورة التالية أو السابقة)
     let newIndex = window._currentLightboxIndex + direction;
-    
+
     // نظام الدوران (إذا تجاوزنا النهاية نعود للبداية والعكس)
     if (newIndex >= images.length) newIndex = 0;
     if (newIndex < 0) newIndex = images.length - 1;
@@ -1757,7 +1706,7 @@ window.navigateLightbox = function(direction, docId) {
             img.style.opacity = '1';
         }, 150);
     }
-    
+
     // تحديث الفهرس الحالي
     window._currentLightboxIndex = newIndex;
 };
@@ -1811,18 +1760,18 @@ document.addEventListener('touchend', e => {
 function handleSwipe() {
     const docId = window._currentLightboxDocId;
     if (!docId) return;
-    
+
     const lb = document.getElementById('clinicLightbox_' + docId);
     if (lb && lb.style.display === 'flex') {
         const threshold = 50; // المسافة المطلوبة لاعتبارها سحبة (Swipe)
         const diff = touchEndX - touchStartX;
-        
+
         if (Math.abs(diff) > threshold) {
             const isRTL = document.documentElement.dir === 'rtl';
             // سحب لليسار يعني الصورة التالية، سحب لليمين يعني السابقة
             let direction = diff < 0 ? 1 : -1; 
             if (isRTL) direction = -direction; // ضبط الاتجاه للغة العربية
-            
+
             window.navigateLightbox(direction, docId);
         }
     }
@@ -1857,7 +1806,7 @@ window.migrateOldDoctors = async function() {
         if (error) throw error;
 
         console.log(`تم العثور على ${doctors.length} طبيب. جاري إنشاء الملفات التلقائية...`);
-        
+
         let count = 0;
         for (const doc of doctors) {
             const finalSlug = doc.slug || doc.id; 
