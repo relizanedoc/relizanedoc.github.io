@@ -1912,3 +1912,53 @@ th {
         display: none !important; /* إخفاء النص الفرعي لتجنب التشوه والزحام البصري */
     }
 }
+/* تنسيقات الشريط الإخباري */
+#news-ticker-container {
+    background-color: #f0f9ff; /* أزرق فاتح جداً مريح للعين */
+    color: #0f172a;
+    padding: 8px 0;
+    overflow: hidden;
+    position: relative;
+    border-bottom: 1px solid #e0f2fe;
+    font-size: 0.95rem;
+    z-index: 10;
+}
+
+.news-ticker-track {
+    display: flex;
+    width: max-content;
+    gap: 30px;
+    /* مدة 30 ثانية لتكون السرعة مريحة للقراءة */
+    animation: tickerScroll 30s linear infinite; 
+}
+
+/* إيقاف الحركة عند وضع الماوس (للحاسوب) أو اللمس (للهاتف) */
+#news-ticker-container:hover .news-ticker-track,
+#news-ticker-container:active .news-ticker-track {
+    animation-play-state: paused;
+}
+
+.ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+/* حركة الشريط متوافقة مع اللغة العربية (RTL) */
+@keyframes tickerScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(50%); } 
+}
+
+/* تصغير الخط قليلا في الهواتف */
+@media (max-width: 768px) {
+    #news-ticker-container { font-size: 0.85rem; padding: 6px 0; }
+    .news-ticker-track { gap: 20px; } /* تقليل المسافة الفاصلة قليلاً */
+}
+
+/* تصغير إضافي للهواتف الصغيرة جداً */
+@media (max-width: 480px) {
+    #news-ticker-container { font-size: 0.8rem; padding: 4px 0; }
+    .news-ticker-track { gap: 15px; } /* مسافة فاصلة أصغر لتناسب عرض الهاتف */
+}
