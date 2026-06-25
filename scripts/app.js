@@ -96,6 +96,7 @@ window.router = async function(viewName, pushHistory = true) {
       return window.router('login');
     }
   }
+  
   document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
   const target = document.getElementById('view-' + viewName);
   if (target) target.classList.remove('hidden');
@@ -104,7 +105,18 @@ window.router = async function(viewName, pushHistory = true) {
   const activeNav = document.querySelector(`.nav-btn[data-nav="${viewName}"]`);
   if (activeNav) activeNav.classList.add('active');
 
-  if (pushHistory) history.pushState({ view: viewName }, '', '#' + viewName);
+  // 🌟 التعديل الجوهري: تنظيف مسار الرابط عند العودة للرئيسية
+  let basePath = window.location.pathname + window.location.search;
+  if (viewName === 'home' && (basePath.includes('/doctors/') || basePath.includes('doc='))) {
+      basePath = '/'; // إعادة الرابط للمسار الجذري النظيف
+      
+      // إزالة زر "العودة" المخصص الذي يتم توليده في صفحة الطبيب
+      const seoBtn = document.getElementById('seoBackBtn');
+      if (seoBtn) seoBtn.remove();
+  }
+
+  // تحديث سجل المتصفح (History) بالرابط النظيف
+  if (pushHistory) history.pushState({ view: viewName }, document.title, basePath + '#' + viewName);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   if (viewName === 'home') {
@@ -112,8 +124,9 @@ window.router = async function(viewName, pushHistory = true) {
       // إجبار المتصفح على تفريغ حقل البحث من أي ملء تلقائي خاطئ
       if (searchInput) searchInput.value = ''; 
 
-      window.loadDoctors(true); // جلب جميع الأطباء
+      window.loadDoctors(true); // جلب جميع الأطباء بأمان الآن
   }
+  
   if (viewName === 'user-dashboard') window.loadUserBookings();
 
   const pill = document.getElementById('userPill');
@@ -124,12 +137,13 @@ window.router = async function(viewName, pushHistory = true) {
       updateUserUI(session ? session.user : null);
     }).catch(err => console.error("Error fetching session:", err));
   }
-  // 🌟 الكود المضاف: تفعيل لوحة الإدارة 🌟
+  
+  // تفعيل لوحة الإدارة 
   if (viewName === 'admin') {
       if (typeof window.loadAdminDashboard === 'function') {
           window.loadAdminDashboard();
       }
- }
+  }
 };
 
 window.setLang = function(lang) {
