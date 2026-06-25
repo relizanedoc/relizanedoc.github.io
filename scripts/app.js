@@ -399,10 +399,6 @@ window.handleSEOAndRender = function(reset = true) {
       const filename = parts[parts.length - 1];
       targetSlug = filename.replace('.html', '').toLowerCase();
   }
-
-  if (targetDocId && reset) {
-      targetDocId = targetDocId.trim().toLowerCase(); 
-      const targetDoc = state.allDoctors.find(d => String(d.id).trim().toLowerCase() === targetDocId);
   // إذا وجدنا هدفاً (سواء عبر الـ Slug النظيف أو الـ ID القديم)
   if ((targetDocId || targetSlug) && reset) {
       let targetDoc = null;
@@ -453,7 +449,6 @@ window.handleSEOAndRender = function(reset = true) {
              document.getElementById('doctorsList').insertAdjacentElement('beforebegin', backBtn);
           }
           return; 
-          return; // إنهاء الدالة هنا حتى لا يتم رسم كل الأطباء
       }
   }
   
