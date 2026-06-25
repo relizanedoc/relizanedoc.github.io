@@ -137,7 +137,8 @@ window._currentClinicImages = doc.clinic_images || [];
   if (fbLink && !fbLink.match(/^https?:\/\//i)) {
       fbLink = 'https://' + fbLink;
   }
-const currentSlug = String(doc.slug || doc.id).toLowerCase(); // 🌟 إجبار الرابط على أن يكون بحروف صغيرة دائماً
+  const profileUrl = `${window.location.origin}/doctors/${doc.id}.html`;
+const currentSlug = doc.slug || doc.id; // 🌟 استخدام الرابط النظيف من قاعدة البيانات
 const profileUrl = `${window.location.origin}/doctors/${currentSlug}.html`;
   const shareText = state.currentLang === 'ar' ? 'مشاركة الرابط' : 'Share Link';
   const isBookingEnabled = doc.booking_enabled === true;
@@ -442,6 +443,8 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
   `;
 
   window.router('doctor-profile');
+  window.history.replaceState({ view: 'doctor-profile' }, document.title, `/doctors/${doc.id}.html`);
+
 window.history.replaceState({ view: 'doctor-profile' }, document.title, `/doctors/${currentSlug}.html`);
   setTimeout(() => {
       const qrContainer = document.getElementById('vcard-qrcode');
@@ -512,7 +515,7 @@ if (data.doctorDetails) {
   document.getElementById('dash_whatsapp').value = data.doctorDetails.whatsapp_number || '';
   const dashPhone2 = document.getElementById('dash_phone_2'); 
   if (dashPhone2) dashPhone2.value = data.doctorDetails.phone_2 || '';
-  
+
     document.getElementById('dash_facebook').value = data.doctorDetails.facebook_link || '';
     document.getElementById('dash_map_link').value = data.doctorDetails.map_link || '';
 
@@ -740,7 +743,7 @@ export function openScheduleModal(doctorName, scheduleHtml) {
 // 1. دالة مركزية لإغلاق جميع البطاقات الأخرى
 window.closeAllDashboardPanels = function(exceptPrefix) {
     const panels = ['analytics', 'workingHours', 'clinicProfile', 'appointments'];
-    
+
     panels.forEach(prefix => {
         if (prefix !== exceptPrefix) {
             const content = document.getElementById(prefix + 'Content');
@@ -824,7 +827,7 @@ window.removeClinicImage = function(index) {
   if (confirm(confirmMsg)) {
       // 1. مسح الصورة من المصفوفة المؤقتة للوحة التحكم
       window.dashboardCurrentImages.splice(index, 1); 
-      
+
       // 2. 🌟 التعديل السحري: مسح الصورة من مصفوفة state.allDoctors الحية للـ session الحالي 🌟
       const sessionStr = localStorage.getItem('doctorSession');
       if (sessionStr) {
@@ -838,7 +841,7 @@ window.removeClinicImage = function(index) {
 
       // 3. إعادة رسم الشاشة (إخفاء الصورة من العرض)
       window.renderClinicImageThumbnails(); 
-      
+
       // 4. تفريغ حقل رفع الصور لإجباره على قبول رفع صورة جديدة إن أراد الطبيب
       const fileInput = document.getElementById('dash_clinic_images');
       if (fileInput) fileInput.value = '';
