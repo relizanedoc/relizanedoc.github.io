@@ -1822,3 +1822,51 @@ window.migrateOldDoctors = async function() {
         console.error("❌ حدث خطأ أثناء التحديث:", err);
     }
 };
+// دالة تشغيل الشريط الإخباري
+async function initNewsTicker() {
+    try {
+        // نستخدم تاريخ اليوم لضمان جلب الملف المحدث يومياً
+        const today = new Date().toISOString().slice(0, 10);
+        
+        // 🌟 السحر هنا: جلب البيانات من ملف JSON المجاني والسريع بدلاً من قاعدة البيانات
+        const response = await fetch(`./doctors-meta.json?v=${today}`);
+        
+        // إذا لم يكن الملف موجوداً، لا نفعل شيئاً (يظل الشريط مخفياً)
+        if (!response.ok) return; 
+
+        const doctorsData = await response.json();
+        
+        // 1. حساب عدد الأطباء الكلي
+        const totalDoctors = doctorsData.length;
+        
+        // 2. حساب عدد البلديات المغطاة (عبر استخراج البلديات الفريدة فقط)
+        const uniqueMunicipalities = new Set(doctorsData.map(d => d.municipality).filter(Boolean)).size;
+
+        const tickerTrack = document.getElementById('dynamicNewsTicker');
+        const tickerContainer = document.getElementById('news-ticker-container');
+        
+        if (!tickerTrack || !tickerContainer) return;
+
+        // 3. تجهيز الجمل الإخبارية
+        const messages = [
+            `<span class="ticker-item">🌟 انضم إلينا أكثر من <strong style="color: #ea580c; margin: 0 4px; font-size: 1.1rem;">${totalDoctors}</strong> طبيب وطبيبة من مختلف التخصصات.</span>`,
+            `<span class="ticker-item">📍 نغطي الآن <strong style="color: #0ea5e9; margin: 0 4px; font-size: 1.1rem;">${uniqueMunicipalities}</strong> بلدية في ولاية غليزان لخدمتكم.</span>`,
+            `<span class="ticker-item">📅 احجز موعدك أونلاين أو تواصل مع العيادة مباشرة بكل سهولة وبشكل مجاني.</span>`
+        ];
+
+        // 4. تكرار الرسائل لضمان استمرارية دوران الشريط دون انقطاع
+        const separator = '<span style="color:#cbd5e1; margin:0 10px;">|</span>';
+        const content = messages.join(` ${separator} `) + ` ${separator} ` + messages.join(` ${separator} `);
+
+        tickerTrack.innerHTML = content;
+        
+        // 5. إظهار الشريط بعد اكتمال تجهيز المحتوى
+        tickerContainer.style.display = 'block'; 
+
+    } catch (error) {
+        console.error("فشل تحميل الشريط الإخباري:", error);
+    }
+}
+
+// تشغيل الدالة فور تحميل الصفحة
+document.addEventListener('DOMContentLoaded', initNewsTicker);
