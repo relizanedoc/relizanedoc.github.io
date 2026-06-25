@@ -384,25 +384,53 @@ window.filterDoctors = function() {
   }, 500); 
 };
 
+// ==========================================
+// دالة معالجة الروابط وفتح نافذة الطبيب (محدثة لدعم الروابط النظيفة SEO)
+// ==========================================
 window.handleSEOAndRender = function(reset = true) {
   const urlParams = new URLSearchParams(window.location.search);
-  let targetDocId = urlParams.get('doc');
+  let targetDocId = urlParams.get('doc'); // لدعم الروابط القديمة إن وجدت
+  let targetSlug = null;
 
-  if (targetDocId && reset) {
-      targetDocId = targetDocId.trim().toLowerCase(); 
-      const targetDoc = state.allDoctors.find(d => String(d.id).trim().toLowerCase() === targetDocId);
+  // 🌟 استخراج الـ Slug من الرابط النظيف (مثال: /doctors/dr-ahmed.html)
+  const pathname = window.location.pathname;
+  if (pathname.includes('/doctors/') && pathname.endsWith('.html')) {
+      const parts = pathname.split('/');
+      const filename = parts[parts.length - 1];
+      targetSlug = filename.replace('.html', '').toLowerCase();
+  }
+
+  // إذا وجدنا هدفاً (سواء عبر الـ Slug النظيف أو الـ ID القديم)
+  if ((targetDocId || targetSlug) && reset) {
+      let targetDoc = null;
+
+      if (targetSlug) {
+          // البحث باستخدام الـ Slug، وإذا لم نجده نجرب البحث بالـ ID (كخطة بديلة)
+          targetDoc = state.allDoctors.find(d => 
+              (d.slug && String(d.slug).toLowerCase() === targetSlug) || 
+              (String(d.id).toLowerCase() === targetSlug)
+          );
+      } else if (targetDocId) {
+          targetDocId = targetDocId.trim().toLowerCase();
+          targetDoc = state.allDoctors.find(d => String(d.id).trim().toLowerCase() === targetDocId);
+      }
 
       if (targetDoc) {
           updateSEOMetaTags(targetDoc);
-          renderDoctors([targetDoc]);
+          renderDoctors([targetDoc]); // رسم بطاقة هذا الطبيب فقط في الخلفية
+          
           const rawName = state.currentLang === 'en' && targetDoc.first_name_en && targetDoc.last_name_en 
               ? `${targetDoc.first_name_en} ${targetDoc.last_name_en}` 
               : `${targetDoc.first_name} ${targetDoc.last_name}`;
           const doctorName = (state.currentLang === 'ar' ? 'د. ' : 'Dr. ') + rawName;
+          
+          // تأخير بسيط لضمان رسم الواجهة قبل فتح النافذة
           setTimeout(() => {
               try { openDoctorProfileModal(targetDoc, doctorName); } 
               catch(e) { console.error("Error opening modal:", e); }
           }, 300);
+          
+          // إعداد زر العودة للرئيسية
           let backBtn = document.getElementById('seoBackBtn');
           if(!backBtn) {
              backBtn = document.createElement('button');
@@ -410,16 +438,19 @@ window.handleSEOAndRender = function(reset = true) {
              backBtn.className = 'btn btn-secondary btn-block mb-4';
              backBtn.innerHTML = state.currentLang === 'ar' ? '→ عرض جميع الأطباء المتاحين' : '← View All Available Doctors';
              backBtn.onclick = () => {
-                 window.history.pushState({}, document.title, window.location.pathname);
+                 // 🌟 عند العودة، نمسح الرابط الخاص بالطبيب من المتصفح لنعود للرئيسية حقاً
+                 window.history.pushState({}, document.title, '/');
                  document.title = state.currentLang === 'ar' ? 'دليل أطباء ولاية غليزان' : 'Relizane Medical Directory';
-                 renderDoctors(state.allDoctors);
+                 window.loadDoctors(true); // إعادة تحميل جميع الأطباء
                  backBtn.remove();
              };
              document.getElementById('doctorsList').insertAdjacentElement('beforebegin', backBtn);
           }
-          return; 
+          return; // إنهاء الدالة هنا حتى لا يتم رسم كل الأطباء
       }
   }
+  
+  // إذا لم يكن هناك طبيب محدد في الرابط، ارسم الصفحة الرئيسية العادية
   renderDoctors(state.allDoctors);
 };
 
