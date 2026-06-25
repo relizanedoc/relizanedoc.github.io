@@ -385,26 +385,27 @@ window.filterDoctors = function() {
 };
 
 // ==========================================
-// دالة معالجة الروابط وفتح نافذة الطبيب (محدثة لدعم الروابط النظيفة SEO)
+// دالة معالجة الروابط وفتح نافذة الطبيب (محدثة لدعم الروابط النظيفة والبحث العميق)
 // ==========================================
-window.handleSEOAndRender = function(reset = true) {
+window.handleSEOAndRender = async function(reset = true) { // 👈 تم تحويلها لـ async
   const urlParams = new URLSearchParams(window.location.search);
   let targetDocId = urlParams.get('doc');
   let targetSlug = null;
 
-  // 🌟 استخراج الـ Slug من الرابط النظيف (مثال: /doctors/dr-ahmed.html)
+  // 🌟 استخراج الـ Slug من الرابط النظيف
   const pathname = window.location.pathname;
   if (pathname.includes('/doctors/') && pathname.endsWith('.html')) {
       const parts = pathname.split('/');
       const filename = parts[parts.length - 1];
       targetSlug = filename.replace('.html', '').toLowerCase();
   }
+
   // إذا وجدنا هدفاً (سواء عبر الـ Slug النظيف أو الـ ID القديم)
   if ((targetDocId || targetSlug) && reset) {
       let targetDoc = null;
 
+      // 1. البحث أولاً في الذاكرة المحلية (أول 12 طبيب)
       if (targetSlug) {
-          // البحث باستخدام الـ Slug، وإذا لم نجده نجرب البحث بالـ ID (كخطة بديلة)
           targetDoc = state.allDoctors.find(d => 
               (d.slug && String(d.slug).toLowerCase() === targetSlug) || 
               (String(d.id).toLowerCase() === targetSlug)
@@ -414,9 +415,43 @@ window.handleSEOAndRender = function(reset = true) {
           targetDoc = state.allDoctors.find(d => String(d.id).trim().toLowerCase() === targetDocId);
       }
 
+      // 🚨 2. الحل الجذري: إذا لم نجده محلياً، نجلبه من السيرفر مباشرة 🚨
+      if (!targetDoc) {
+          try {
+              const searchTerm = targetSlug || targetDocId;
+
+              // البحث بواسطة Slug أولاً
+              let { data: fetchedDoc, error } = await supabaseClient
+                  .from('doctors')
+                  .select('*')
+                  .ilike('slug', searchTerm)
+                  .maybeSingle();
+
+              // إذا لم نعثر عليه، قد يكون الرابط القديم يستخدم الـ ID
+              if (!fetchedDoc) {
+                  const { data: idDoc } = await supabaseClient
+                      .from('doctors')
+                      .select('*')
+                      .eq('id', searchTerm)
+                      .maybeSingle();
+                  fetchedDoc = idDoc;
+              }
+
+              if (fetchedDoc) {
+                  targetDoc = fetchedDoc;
+                  // حقن الطبيب في الذاكرة المحلية لضمان عمل دالة الحجوزات (openBooking)
+                  if (!state.allDoctors.find(d => d.id === targetDoc.id)) {
+                      state.allDoctors.push(targetDoc);
+                  }
+              }
+          } catch (err) {
+              console.error("❌ خطأ في جلب بيانات الطبيب من الرابط:", err);
+          }
+      }
+
+      // 3. عرض الطبيب إذا تم العثور عليه (محلياً أو من السيرفر)
       if (targetDoc) {
           updateSEOMetaTags(targetDoc);
-          renderDoctors([targetDoc]);
           renderDoctors([targetDoc]); // رسم بطاقة هذا الطبيب فقط في الخلفية
           
           const rawName = state.currentLang === 'en' && targetDoc.first_name_en && targetDoc.last_name_en 
@@ -452,7 +487,7 @@ window.handleSEOAndRender = function(reset = true) {
       }
   }
   
-  // إذا لم يكن هناك طبيب محدد في الرابط، ارسم الصفحة الرئيسية العادية
+  // إذا لم يكن هناك طبيب محدد في الرابط، أو لم يتم العثور عليه نهائياً
   renderDoctors(state.allDoctors);
 };
 
