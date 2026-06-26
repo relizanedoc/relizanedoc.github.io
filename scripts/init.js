@@ -333,45 +333,11 @@ window.handleAddDoctor = async function(e) {
     if (!responseData || !responseData.id) throw new Error(responseData?.error || 'فشل في جلب معرف الطبيب الجديد');
 
     showToast(t('toastRegisterSuccess') + responseData.id, 'success');
-
-    if (typeof window.createDoctorGitHubPageAsync === 'function') {
-        window.createDoctorGitHubPageAsync({ 
-          first_name: data.FirstName.trim(), last_name: data.LastName.trim(), phone: defaultPassword, 
-          exact_location: data.ExactLocation.trim(), specialty: data.Specialty.trim(), municipality: data.Municipality.trim(), 
-          extra_info: data.ExtraInfo ? data.ExtraInfo.trim() : '', slug: responseData.slug 
-        }, responseData.id);
-    }
-
     e.target.reset();
     if(typeof window.loadDoctors === 'function') await window.loadDoctors();
     setTimeout(() => { if(typeof window.router === 'function') window.router('home'); }, 1500);
   } catch (err) { showToast((state.currentLang === 'ar' ? 'خطأ: ' : 'Error: ') + err.message, 'error'); } 
   finally { setLoading(btn, false); }
-};
-
-window.createDoctorGitHubPageAsync = function(doctorData, doctorId) {
-  const finalSlug = doctorData.slug || doctorId; 
-  supabaseClient.functions.invoke('create-github-page', { body: { doctorData, doctorId, slug: finalSlug } })
-  .then(({ data, error }) => { if (!error && data && data.success) showToast('تم إنشاء صفحة الطبيب للـ SEO!', 'success'); })
-  .catch(err => console.error('Edge Function Error:', err));
-};
-
-window.migrateOldDoctors = async function() {
-    console.log("🚀 بدء تحديث ملفات GitHub لجميع الأطباء القدامى...");
-    try {
-        const { data: doctors, error } = await supabaseClient.from('doctors').select('*');
-        if (error) throw error;
-        console.log(`تم العثور على ${doctors.length} طبيب. جاري إنشاء الملفات التلقائية...`);
-        let count = 0;
-        for (const doc of doctors) {
-            const finalSlug = doc.slug || doc.id; 
-            await supabaseClient.functions.invoke('create-github-page', { body: { doctorData: doc, doctorId: doc.id, slug: finalSlug } });
-            console.log(`✅ تم بناء ملف: ${finalSlug}.html`);
-            count++;
-        }
-        console.log(`🎉 اكتمل التحديث بنجاح! تم رفع ${count} ملف إلى GitHub.`);
-        alert('تمت ترقية جميع ملفات الأطباء القدامى بنجاح!');
-    } catch (err) { console.error("❌ حدث خطأ أثناء التحديث:", err); }
 };
 
 async function initNewsTicker() {
