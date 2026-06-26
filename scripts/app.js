@@ -9,6 +9,7 @@ import { isAccountLocked, recordFailedAttempt, resetLoginAttempts, getCurrentUse
 import { initChatbot } from './chatbot.js'; 
 import './gallery.js';
 import './reviews.js';
+import './booking.js';
 
 // ✅ ✅ ✅ الاستماع لتغيير حالة المصادقة
 let isAuthInitialized = false;
@@ -1450,9 +1451,6 @@ document.addEventListener('click', (event) => {
 document.getElementById('btn-en').onclick = () => window.setLang('en');
 document.getElementById('btn-ar').onclick = () => window.setLang('ar');
   const addDoctorForm = document.getElementById('addDoctorForm'); if (addDoctorForm) addDoctorForm.onsubmit = window.handleAddDoctor;
-  const bookingBtn = document.getElementById('bookingBtn'); if (bookingBtn) bookingBtn.onclick = window.confirmBooking;
-  const confirmDialogOkBtn = document.getElementById('confirmDialogOkBtn'); if (confirmDialogOkBtn) confirmDialogOkBtn.onclick = window.submitBooking;
-  const cancelDialogBtn = document.getElementById('cancelDialogBtn'); if (cancelDialogBtn) cancelDialogBtn.onclick = window.closeConfirmDialog;
   const dashboardLoginForm = document.getElementById('dashboardLoginForm'); if (dashboardLoginForm) dashboardLoginForm.onsubmit = window.handleDashboardLogin;
   const dashboardLogoutBtn = document.getElementById('dashboardLogoutBtn'); if (dashboardLogoutBtn) dashboardLogoutBtn.onclick = window.logoutDashboard;
   const bookingToggleSwitch = document.getElementById('bookingToggleSwitch'); if (bookingToggleSwitch) bookingToggleSwitch.onchange = window.handleToggleBooking;
