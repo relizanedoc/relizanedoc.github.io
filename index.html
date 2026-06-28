@@ -377,22 +377,37 @@
 
         <h2 class='text-xl font-bold mb-6' data-i18n='registerDoctor'>Register New Doctor</h2>
 
-               <form id='addDoctorForm'>
+<form id='addDoctorForm'>
 
-  <div class='grid grid-1 grid-2'>
+  <!-- 🌟 الأسطر الجديدة: تحديد نوع الحساب -->
+  <div class='form-group' style='margin-bottom: 1.5rem; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);'>
+    <label style='font-size: 1.1rem; color: var(--primary-dark);'>نوع الحساب *</label>
+    <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem;">
+      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+        <input type="radio" name="AccountType" value="Doctor" checked onchange="toggleClinicFields(this.value)" style="width: auto;"> طبيب مستقل
+      </label>
+      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+        <input type="radio" name="AccountType" value="Clinic" onchange="toggleClinicFields(this.value)" style="width: auto;"> عيادة طبية / مجمع
+      </label>
+    </div>
+  </div>
 
+  <!-- 🌟 حقل اسم العيادة (مخفي افتراضياً) -->
+  <div class='form-group hidden' id='clinicNameGroup'>
+    <label>اسم العيادة *</label>
+    <input name='ClinicName' id='clinicNameInput' placeholder='مثال: عيادة السنابل الطبية' type='text'>
+  </div>
+
+  <!-- حقول الاسم واللقب (ستختفي إذا اخترنا عيادة) -->
+  <div class='grid grid-1 grid-2' id='doctorNameGroup'>
     <div class='form-group'>
-
       <label data-i18n='firstName'>First Name *</label>
-<input name='FirstName' data-i18n-placeholder='firstNamePlaceholder' placeholder='e.g. Amine' required='required' type='text'>
+      <input name='FirstName' id='firstNameInput' data-i18n-placeholder='firstNamePlaceholder' placeholder='e.g. Amine' required='required' type='text'>
     </div>
-
     <div class='form-group'>
-
       <label data-i18n='lastName'>Last Name *</label>
-<input name='LastName' data-i18n-placeholder='lastNamePlaceholder' placeholder='e.g. Benali' required='required' type='text'>
+      <input name='LastName' id='lastNameInput' data-i18n-placeholder='lastNamePlaceholder' placeholder='e.g. Benali' required='required' type='text'>
     </div>
-
   </div>
 
   <div class='form-group'>
