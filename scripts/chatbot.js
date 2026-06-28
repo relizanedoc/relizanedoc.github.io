@@ -97,7 +97,14 @@ function handleConversationalMessage(cleanMsg, rawMsg) {
             : 'You are very welcome! Let me know if you need anything else. 😊';
     }
 
-    // 2. التحقق من التحيات
+    // 2. التحقق من "السلام" أولاً (لها أولوية ورد خاص)
+    if (cleanMsg.includes('سلام')) {
+        return lang === 'ar'
+            ? `وعليكم السلام ورحمة الله! 👋 كيف يمكنني مساعدتك في العثور على طبيبك اليوم؟`
+            : `Hello! 👋 How can I help you find a doctor today?`;
+    }
+
+    // 3. التحقق من باقي التحيات (مرحبا، صباح الخير، مساء الخير)
     if (CONVERSATION_KEYWORDS.greetings.some(kw => cleanMsg.includes(kw))) {
         const hour = new Date().getHours();
         let timeGreeting = '';
@@ -107,22 +114,22 @@ function handleConversationalMessage(cleanMsg, rawMsg) {
         } else if (cleanMsg.includes('مساء') || hour >= 12) {
             timeGreeting = lang === 'ar' ? 'مساء الخيرات!' : 'Good afternoon/evening!';
         } else {
-            timeGreeting = lang === 'ar' ? 'أهلاً بك!' : 'Hello!';
+            timeGreeting = lang === 'ar' ? 'أهلاً بك!' : 'Welcome!';
         }
 
         return lang === 'ar'
-            ? `${timeGreeting} 👋 كيف يمكنني مساعدتك في العثور على طبيبك اليوم؟ (يمكنك كتابة التخصص أو اسم الطبيب)`
-            : `${timeGreeting} 👋 How can I help you find a doctor today?`;
+            ? `${timeGreeting} 👋 تفضل، ابحث عن تخصص (مثل: طبيب أسنان) أو اسم طبيب.`
+            : `${timeGreeting} 👋 Please, search for a specialty or a doctor's name.`;
     }
 
-    // 3. التحقق من طلب المساعدة
+    // 4. التحقق من طلب المساعدة
     if (CONVERSATION_KEYWORDS.help.some(kw => cleanMsg.includes(kw))) {
         return lang === 'ar'
-            ? `<strong>أنا هنا لمساعدتك! 💡</strong><br><br>يمكنك أن تطلب مني:<br>1️⃣ البحث عن تخصص (مثل: طبيب أسنان)<br>2️⃣ البحث عن اسم طبيب<br>3️⃣ البحث بالمنطقة (مثل: طبيب في الشلف)<br>4️⃣ الإبلاغ عن حالة طوارئ`
-            : `<strong>I'm here to help! 💡</strong><br><br>You can ask me to:<br>1️⃣ Search for a specialty<br>2️⃣ Search for a doctor's name<br>3️⃣ Search by location<br>4️⃣ Report an emergency`;
+            ? `<strong>أنا هنا لمساعدتك! 💡</strong><br><br>يمكنك أن تطلب مني:<br>1️⃣ البحث عن تخصص<br>2️⃣ البحث عن اسم طبيب<br>3️⃣ البحث بالبلدية<br>4️⃣ الإبلاغ عن حالة طوارئ`
+            : `<strong>I'm here to help! 💡</strong><br><br>You can ask me to:<br>1️⃣ Search for a specialty<br>2️⃣ Search for a doctor's name<br>3️⃣ Search by municipality<br>4️⃣ Report an emergency`;
     }
 
-    return null; // إذا لم تكن محادثة جانبية، نرجع null لنكمل مسار البحث عن طبيب
+    return null; 
 }
 // ==========================================
 // 3. معالجة رسائل المستخدم
