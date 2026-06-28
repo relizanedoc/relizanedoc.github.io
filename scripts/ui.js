@@ -57,13 +57,8 @@ export function updateToggleText(isEnabled) {
 
 export function updateSEOMetaTags(doc) {
   if (!doc) return;
-  const isClinic = doc.account_type === 'Clinic';
-  const name = isClinic 
-    ? doc.clinic_name 
-    : (state.currentLang === 'ar' ? `د. ${doc.first_name} ${doc.last_name}` : `Dr. ${doc.first_name} ${doc.last_name}`);
-
-  const pageTitle = state.currentLang === 'ar' ? `${name} | ${doc.specialty} في ${doc.municipality}` : `${name} | ${doc.specialty} in ${doc.municipality}`;
-  const pageDesc = state.currentLang === 'ar' ? `احجز موعدك مع ${name}، أخصائي ${doc.specialty} في ${doc.municipality}، ولاية غليزان. العنوان: ${doc.exact_location}` : `Book an appointment with ${name}, ${doc.specialty} in ${doc.municipality}, Relizane.`;
+  const pageTitle = state.currentLang === 'ar' ? `د. ${doc.first_name} ${doc.last_name} | ${doc.specialty} في ${doc.municipality}` : `Dr. ${doc.first_name} ${doc.last_name} | ${doc.specialty} in ${doc.municipality}`;
+  const pageDesc = state.currentLang === 'ar' ? `احجز موعدك مع د. ${doc.first_name} ${doc.last_name}، أخصائي ${doc.specialty} في ${doc.municipality}، ولاية غليزان. العنوان: ${doc.exact_location}` : `Book an appointment with Dr. ${doc.first_name} ${doc.last_name}, ${doc.specialty} in ${doc.municipality}, Relizane.`;
 
   document.title = pageTitle;
   let metaDesc = document.querySelector('meta[name="description"]');
@@ -88,28 +83,15 @@ export function renderDoctors(doctors) {
     card.className = 'card doctor-card card-hover';
     card.style.cssText = 'cursor: pointer;';
 
-    const isClinic = doc.account_type === 'Clinic';
-    let rawName = '';
-    let avatarChars = '';
-    const docPrefix = isClinic ? '' : (state.currentLang === 'ar' ? 'د.' : 'Dr.');
-
-    if (isClinic) {
-      rawName = doc.clinic_name || 'عيادة طبية';
-      let nameWithoutClinic = rawName.replace('عيادة', '').trim();
-      avatarChars = nameWithoutClinic ? nameWithoutClinic.substring(0, 2) : rawName.substring(0, 2);
-    } else {
-      rawName = state.currentLang === 'en' && doc.first_name_en && doc.last_name_en 
-        ? `${doc.first_name_en} ${doc.last_name_en}` 
-        : `${doc.first_name} ${doc.last_name}`;
-      avatarChars = (doc.first_name?.[0] || '') + (doc.last_name?.[0] || '');
-    }
-
-    const doctorName = isClinic ? escapeHtml(rawName) : `${docPrefix} ${escapeHtml(rawName)}`;
-
     const avatar = document.createElement('div');
     avatar.className = 'avatar';
-    avatar.textContent = avatarChars;
+    avatar.textContent = (doc.first_name?.[0] || '') + (doc.last_name?.[0] || '');
 
+    const docPrefix = state.currentLang === 'ar' ? 'د.' : 'Dr.';
+const rawName = state.currentLang === 'en' && doc.first_name_en && doc.last_name_en 
+    ? `${doc.first_name_en} ${doc.last_name_en}` 
+    : `${doc.first_name} ${doc.last_name}`;
+const doctorName = `${docPrefix} ${escapeHtml(rawName)}`;
     const headerRight = document.createElement('div');
     headerRight.style.cssText = 'flex: 1; min-width: 0;'; 
     headerRight.innerHTML = `
@@ -149,19 +131,19 @@ export function renderDoctors(doctors) {
 }
 
 export function openDoctorProfileModal(doc, doctorName) {
-  window.activeProfileDoctor = doc;
-  window._currentClinicImages = doc.clinic_images || [];     
+window.activeProfileDoctor = doc;
+window._currentClinicImages = doc.clinic_images || [];     
   let fbLink = doc.facebook_link || '';
   if (fbLink && !fbLink.match(/^https?:\/\//i)) {
       fbLink = 'https://' + fbLink;
   }
-  const currentSlug = String(doc.slug || doc.id).toLowerCase(); 
-  const profileUrl = `${window.location.origin}/doctors/${currentSlug}.html`;
+const currentSlug = doc.slug || doc.id; // 🌟 استخدام الرابط النظيف من قاعدة البيانات
+const currentSlug = String(doc.slug || doc.id).toLowerCase(); // 🌟 إجبار الرابط على أن يكون بحروف صغيرة دائماً
+const profileUrl = `${window.location.origin}/doctors/${currentSlug}.html`;
   const shareText = state.currentLang === 'ar' ? 'مشاركة الرابط' : 'Share Link';
   const isBookingEnabled = doc.booking_enabled === true;
-  const isClinic = doc.account_type === 'Clinic';
 
-  const shareMessageText = state.currentLang === 'ar' ? `احجز موعد مع ${doctorName} عبر دليل أطباء غليزان` : `Book an appointment with ${doctorName} via Relizane Medical Directory`;
+  const shareMessageText = state.currentLang === 'ar' ? `احجز موعد مع د. ${doctorName} عبر دليل أطباء غليزان` : `Book an appointment with Dr. ${doctorName} via Relizane Medical Directory`;
   const encodedShareText = encodeURIComponent(shareMessageText + '\n\n' + profileUrl);
   const encodedUrl = encodeURIComponent(profileUrl);
 
@@ -176,15 +158,7 @@ export function openDoctorProfileModal(doc, doctorName) {
 
   document.getElementById('fullProfileName').textContent = doctorName;
   document.getElementById('fullProfileSpec').querySelector('span').textContent = escapeHtml(t(doc.specialty));
-
-  let avatarChars = '';
-  if (isClinic) {
-    let nameWithoutClinic = (doc.clinic_name || '').replace('عيادة', '').trim();
-    avatarChars = nameWithoutClinic ? nameWithoutClinic.substring(0, 2) : (doc.clinic_name || '').substring(0, 2);
-  } else {
-    avatarChars = (doc.first_name?.[0] || '') + (doc.last_name?.[0] || '');
-  }
-  document.getElementById('fullProfileAvatar').textContent = avatarChars;
+  document.getElementById('fullProfileAvatar').textContent = (doc.first_name?.[0] || '') + (doc.last_name?.[0] || '');
 
   let scheduleHtml = '';
   if (doc.working_days && Object.keys(doc.working_days).length > 0) {
@@ -390,9 +364,14 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
 }
 @media (max-width: 480px) {
     .clinic-marquee-item { width: 280px; height: 200px; }
+    .clinic-marquee-item { 
+        width: 280px; 
+        height: 200px; 
+    }
 }
 </style>
 
+<!-- هذا هو كود السلايدر الذي كان مفقوداً -->
 <div style="margin-top: 1.5rem; background: white; border-radius: 20px; padding: 1.25rem; box-shadow: 0 10px 25px rgba(0,0,0,0.03); max-width: 90%px; margin-left: auto; margin-right: auto;">
     <h4 style="font-size: 1.15rem; font-weight: 900; margin-bottom: 1rem; color: #0f172a;">
         ${state.currentLang === 'ar' ? 'صور العيادة' : 'Clinic Gallery'}
@@ -414,6 +393,7 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
     </div>
 </div>
 
+<!-- كود نافذة التكبير -->
 <div id="clinicLightbox_${doc.id}" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 99999; align-items: center; justify-content: center; padding: 1rem;" onclick="window.closeClinicLightbox('${doc.id}')">
     <button onclick="event.stopPropagation(); window.closeClinicLightbox('${doc.id}')" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; color: white; font-size: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: background 0.3s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">×</button>
     
@@ -463,7 +443,7 @@ ${Array.isArray(doc.clinic_images) && doc.clinic_images.length > 0 ? `
   `;
 
   window.router('doctor-profile');
-  window.history.replaceState({ view: 'doctor-profile' }, document.title, `/doctors/${currentSlug}.html`);
+window.history.replaceState({ view: 'doctor-profile' }, document.title, `/doctors/${currentSlug}.html`);
   setTimeout(() => {
       const qrContainer = document.getElementById('vcard-qrcode');
       if (qrContainer) {
@@ -487,23 +467,13 @@ export function renderDashboardUI(data, doctorId) {
   state.globalDashboardData = data;
   state.globalDashboardDoctorId = doctorId;
 
-  let rawDashName = data.doctorName;
-  let isDashClinic = data.doctorDetails && data.doctorDetails.account_type === 'Clinic';
-
-  if (data.doctorDetails) {
-    if (isDashClinic) {
-        rawDashName = data.doctorDetails.clinic_name || rawDashName;
-    } else {
-        rawDashName = state.currentLang === 'en' && data.doctorDetails.first_name_en && data.doctorDetails.last_name_en 
-            ? `${data.doctorDetails.first_name_en} ${data.doctorDetails.last_name_en}` 
-            : `${data.doctorDetails.first_name} ${data.doctorDetails.last_name}`;
-    }
-  }
-
-  document.getElementById('dashboardSubtitle').textContent = rawDashName 
-    ? (isDashClinic ? rawDashName : (state.currentLang === 'ar' ? `د. ${rawDashName}` : `Dr. ${rawDashName}`)) 
-    : doctorId;
-    
+let rawDashName = data.doctorName;
+if (data.doctorDetails) {
+    rawDashName = state.currentLang === 'en' && data.doctorDetails.first_name_en && data.doctorDetails.last_name_en 
+        ? `${data.doctorDetails.first_name_en} ${data.doctorDetails.last_name_en}` 
+        : `${data.doctorDetails.first_name} ${data.doctorDetails.last_name}`;
+}
+document.getElementById('dashboardSubtitle').textContent = rawDashName ? (state.currentLang === 'ar' ? `د. ${rawDashName}` : `Dr. ${rawDashName}`) : doctorId;
   const daysNames = state.currentLang === 'ar' ? ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'] : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   let savedDays = {};
@@ -528,7 +498,7 @@ export function renderDashboardUI(data, doctorId) {
     `;
     container.appendChild(row);
   }
-
+// 🔴 جلب الأسماء باللغتين
     const fNameAr = document.getElementById('dash_first_name_ar');
     const lNameAr = document.getElementById('dash_last_name_ar');
     const fNameEn = document.getElementById('dash_first_name_en');
@@ -538,12 +508,11 @@ export function renderDashboardUI(data, doctorId) {
     if(lNameAr) lNameAr.value = data.doctorDetails.last_name || '';
     if(fNameEn) fNameEn.value = data.doctorDetails.first_name_en || '';
     if(lNameEn) lNameEn.value = data.doctorDetails.last_name_en || '';
-
-  if (data.doctorDetails) {
-    document.getElementById('dash_contact_email').value = data.doctorDetails.contact_email || '';
-    document.getElementById('dash_whatsapp').value = data.doctorDetails.whatsapp_number || '';
-    const dashPhone2 = document.getElementById('dash_phone_2'); 
-    if (dashPhone2) dashPhone2.value = data.doctorDetails.phone_2 || '';
+if (data.doctorDetails) {
+  document.getElementById('dash_contact_email').value = data.doctorDetails.contact_email || '';
+  document.getElementById('dash_whatsapp').value = data.doctorDetails.whatsapp_number || '';
+  const dashPhone2 = document.getElementById('dash_phone_2'); 
+  if (dashPhone2) dashPhone2.value = data.doctorDetails.phone_2 || '';
 
     document.getElementById('dash_facebook').value = data.doctorDetails.facebook_link || '';
     document.getElementById('dash_map_link').value = data.doctorDetails.map_link || '';
@@ -616,24 +585,27 @@ export function renderDashboardUI(data, doctorId) {
 
     let actionsHtml = '';
     if (statusTextDb === 'pending') {
+        // زر التأكيد الأخضر
         actionsHtml = `
           <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #ecfdf5; border: 1px solid #10b981; color: #10b981; border-radius: 6px;" 
-            onclick="window.changeBookingStatus('${bookingId}', 'confirmed', '${userEmail}', '${escapeHtml(rawDashName)}', '${apptDate}')">
+            onclick="window.changeBookingStatus('${bookingId}', 'confirmed', '${userEmail}', '${escapeHtml(data.doctorName)}', '${apptDate}')">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><polyline points="20 6 9 17 4 12"></polyline></svg>${confirmTxt}
           </button>
           <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #fef2f2; border: 1px solid #ef4444; color: #ef4444; border-radius: 6px;" 
-            onclick="window.changeBookingStatus('${bookingId}', 'cancelled', '${userEmail}', '${escapeHtml(rawDashName)}', '${apptDate}')">
+            onclick="window.changeBookingStatus('${bookingId}', 'cancelled', '${userEmail}', '${escapeHtml(data.doctorName)}', '${apptDate}')">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>${cancelTxt}
           </button>
         `;
     } else if (statusTextDb === 'confirmed') {
+        // زر إنهاء الزيارة الأزرق (يظهر فقط بعد التأكيد)
         actionsHtml = `
           <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #eff6ff; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 6px;" 
-            onclick="window.changeBookingStatus('${bookingId}', 'completed', '', '${escapeHtml(rawDashName)}', '${apptDate}')">
+            onclick="window.changeBookingStatus('${bookingId}', 'completed', '', '${escapeHtml(data.doctorName)}', '${apptDate}')">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><polyline points="20 6 9 17 4 12"></polyline></svg>${state.currentLang === 'ar' ? 'إنهاء الزيارة (مكتمل)' : 'Mark Completed'}
           </button>
         `;
     } else {
+        // شارة ثابتة للملغى أو المكتمل
         const finishedTxt = statusTextDb === 'completed' ? (state.currentLang === 'ar' ? 'تم الانتهاء' : 'Finished') : displayStatus;
         actionsHtml = `<span class="badge" style="background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); padding: 0.4rem 0.8rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end: 0.25rem; vertical-align: middle;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>${finishedTxt}</span>`;
     }
@@ -735,6 +707,7 @@ export function displayTimeSlots(container, slots, timeInput) {
   if (eveningDiv.querySelector('.slots-grid').hasChildNodes()) container.appendChild(eveningDiv);
 }
 
+// ✅ الدالة المفقودة: فتح نافذة الجدول الأسبوعي
 export function openScheduleModal(doctorName, scheduleHtml) {
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; padding: 1rem;';
@@ -760,6 +733,12 @@ export function openScheduleModal(doctorName, scheduleHtml) {
     overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
 }
 
+// --- ربط الدوال المساعدة للواجهة بنافذة المتصفح (Window) ---
+// ==========================================
+// نظام الأكورديون (Accordion) للوحة تحكم الطبيب
+// ==========================================
+
+// 1. دالة مركزية لإغلاق جميع البطاقات الأخرى
 window.closeAllDashboardPanels = function(exceptPrefix) {
     const panels = ['analytics', 'workingHours', 'clinicProfile', 'appointments'];
 
@@ -773,6 +752,7 @@ window.closeAllDashboardPanels = function(exceptPrefix) {
     });
 };
 
+// 2. دوال الفتح والإغلاق (سلسة وبدون تداخل)
 window.toggleWorkingHours = function() {
     window.closeAllDashboardPanels('workingHours');
     const content = document.getElementById('workingHoursContent');
@@ -843,19 +823,24 @@ window.renderClinicImageThumbnails = function() {
 window.removeClinicImage = function(index) {
   const confirmMsg = state.currentLang === 'ar' ? 'هل أنت متأكد من إزالة هذه الصورة؟' : 'Are you sure you want to remove this image?';
   if (confirm(confirmMsg)) {
+      // 1. مسح الصورة من المصفوفة المؤقتة للوحة التحكم
       window.dashboardCurrentImages.splice(index, 1); 
 
+      // 2. 🌟 التعديل السحري: مسح الصورة من مصفوفة state.allDoctors الحية للـ session الحالي 🌟
       const sessionStr = localStorage.getItem('doctorSession');
       if (sessionStr) {
           const session = JSON.parse(sessionStr);
           const docIndex = state.allDoctors.findIndex(d => d.id === session.doctorId);
           if (docIndex > -1 && state.allDoctors[docIndex].clinic_images) {
+              // نحتفظ فقط بالصور الموجودة حالياً في dashboardCurrentImages لكي نخدع دالة الحفظ
               state.allDoctors[docIndex].clinic_images = [...window.dashboardCurrentImages];
           }
       }
 
+      // 3. إعادة رسم الشاشة (إخفاء الصورة من العرض)
       window.renderClinicImageThumbnails(); 
 
+      // 4. تفريغ حقل رفع الصور لإجباره على قبول رفع صورة جديدة إن أراد الطبيب
       const fileInput = document.getElementById('dash_clinic_images');
       if (fileInput) fileInput.value = '';
   }
@@ -880,7 +865,10 @@ window.addServiceCategory = function(category = '', items = '') {
   container.appendChild(row);
 };
 
-window.showToast = showToast; 
+window.showToast = showToast; // لضمان وصولها من الـ HTML
+// ==========================================
+// نظام تحريك الصور (السلايدر التسويقي)
+// ==========================================
 
 let slideIndex = 0;
 let slideTimer;
@@ -913,10 +901,12 @@ function showSlides(n) {
   dots[slideIndex - 1].classList.add("active");
 }
 
+// جعل الدالة متاحة عالمياً (مهم جداً لأنك تستخدم Modules)
 window.currentSlide = function(n) {
   showSlides(n);
 };
 
+// تشغيل السلايدر بمجرد تحميل الصفحة
 document.addEventListener("DOMContentLoaded", function() {
   showSlides(1); 
   slideTimer = setInterval(() => showSlides(), 4000); 
