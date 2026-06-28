@@ -77,20 +77,74 @@ function getEmergencyResponse() {
         </div>
     `;
 }
+// ==========================================
+// 2.5. نظام المحادثة الطبيعية (التحيات والشكر والمساعدة)
+// ==========================================
+const CONVERSATION_KEYWORDS = {
+    greetings: ['سلام', 'مرحبا', 'اهلين', 'صباح', 'مساء', 'هلا', 'أهلا'],
+    thanks: ['شكرا', 'مشكور', 'يعطيك الصحة', 'بارك الله فيك', 'يعطيك العافيه', 'تسلم'],
+    help: ['مساعدة', 'كيف', 'وش ندير', 'شرح', 'help']
+};
 
+// دالة لمعالجة المحادثات الجانبية (لماذا نفصلها؟ للحفاظ على نظافة كود البحث الأساسي)
+function handleConversationalMessage(cleanMsg, rawMsg) {
+    const lang = state.currentLang;
+    
+    // 1. التحقق من الشكر
+    if (CONVERSATION_KEYWORDS.thanks.some(kw => cleanMsg.includes(kw))) {
+        return lang === 'ar' 
+            ? 'العفو! أنا هنا دائماً في خدمتك وخدمة صحتك. هل تحتاج لأي مساعدة أخرى؟ 😊' 
+            : 'You are very welcome! Let me know if you need anything else. 😊';
+    }
+
+    // 2. التحقق من التحيات
+    if (CONVERSATION_KEYWORDS.greetings.some(kw => cleanMsg.includes(kw))) {
+        const hour = new Date().getHours();
+        let timeGreeting = '';
+        
+        if (cleanMsg.includes('صباح') || (hour < 12 && !cleanMsg.includes('مساء'))) {
+            timeGreeting = lang === 'ar' ? 'صباح النور والسرور!' : 'Good morning!';
+        } else if (cleanMsg.includes('مساء') || hour >= 12) {
+            timeGreeting = lang === 'ar' ? 'مساء الخيرات!' : 'Good afternoon/evening!';
+        } else {
+            timeGreeting = lang === 'ar' ? 'أهلاً بك!' : 'Hello!';
+        }
+
+        return lang === 'ar'
+            ? `${timeGreeting} 👋 كيف يمكنني مساعدتك في العثور على طبيبك اليوم؟ (يمكنك كتابة التخصص أو اسم الطبيب)`
+            : `${timeGreeting} 👋 How can I help you find a doctor today?`;
+    }
+
+    // 3. التحقق من طلب المساعدة
+    if (CONVERSATION_KEYWORDS.help.some(kw => cleanMsg.includes(kw))) {
+        return lang === 'ar'
+            ? `<strong>أنا هنا لمساعدتك! 💡</strong><br><br>يمكنك أن تطلب مني:<br>1️⃣ البحث عن تخصص (مثل: طبيب أسنان)<br>2️⃣ البحث عن اسم طبيب<br>3️⃣ البحث بالمنطقة (مثل: طبيب في الشلف)<br>4️⃣ الإبلاغ عن حالة طوارئ`
+            : `<strong>I'm here to help! 💡</strong><br><br>You can ask me to:<br>1️⃣ Search for a specialty<br>2️⃣ Search for a doctor's name<br>3️⃣ Search by location<br>4️⃣ Report an emergency`;
+    }
+
+    return null; // إذا لم تكن محادثة جانبية، نرجع null لنكمل مسار البحث عن طبيب
+}
 // ==========================================
 // 3. معالجة رسائل المستخدم
 // ==========================================
 async function processUserMessage(rawMsg) {
     const cleanMsg = normalizeText(rawMsg);
     
+    // 1. فحص الطوارئ أولاً (الأولوية القصوى)
+    if (detectEmergency(rawMsg)) return getEmergencyResponse();
+
+    // 2. فحص حجز المواعيد
     if (cleanMsg.includes('حجز موعد') || cleanMsg.includes('احجز موعد') || cleanMsg === 'حجز') {
         return state.currentLang === 'ar' 
             ? `لحجز موعد، يمكنك:<br><br>1️⃣ <strong>البحث عن طبيب</strong> أولاً (اكتب التخصص أو الاسم)<br>2️⃣ ثم اضغط على زر "عرض التفاصيل والحجز"`
             : `To book an appointment:<br><br>1️⃣ <strong>Search for a doctor</strong> first<br>2️⃣ Then click "View Details & Book"`;
     }
-    
-    if (detectEmergency(rawMsg)) return getEmergencyResponse();
+
+    // 3. فحص المحادثات الطبيعية (السلام، الشكر، المساعدة) - الإضافة الجديدة
+    const conversationalResponse = handleConversationalMessage(cleanMsg, rawMsg);
+    if (conversationalResponse) {
+        return conversationalResponse;
+    }
 
     try {
         if (!state.globalDirectory || state.globalDirectory.length === 0) {
@@ -99,20 +153,19 @@ async function processUserMessage(rawMsg) {
                 : 'Loading doctors data... please try again in a moment.';
         }
 
-        // 🌟 قائمة الكلمات الزائدة (Stop Words) التي يجب على البوت تجاهلها 🌟
+        // 🌟 قائمة الكلمات الزائدة (Stop Words) 🌟
         const stopWords = ['ابحث', 'عن', 'اريد', 'طبيب', 'طبيبة', 'د', 'دكتور', 'دكتورة', 'في', 'من', 'احجز', 'موعد', 'ولاية', 'بلدية'];
         
-        // استخراج الكلمات المفتاحية الحقيقية فقط
+        // استخراج الكلمات المفتاحية
         const searchTerms = cleanMsg.split(/\s+/).filter(t => t.length > 0 && !stopWords.includes(t));
 
-        // إذا كتب المستخدم كلمات زائدة فقط (مثل: "ابحث عن طبيب")
         if (searchTerms.length === 0) {
             return state.currentLang === 'ar' 
                 ? 'الرجاء كتابة اسم الطبيب أو التخصص الذي تبحث عنه.' 
                 : 'Please type the doctor name or specialty.';
         }
         
-        // خوارزمية البحث المحلي الذكية
+        // خوارزمية البحث المحلي
         let matchedDoctors = state.globalDirectory.filter(doc => {
             const searchString = normalizeText(`
                 ${doc.first_name || ''} ${doc.last_name || ''} 
@@ -120,7 +173,6 @@ async function processUserMessage(rawMsg) {
                 ${doc.specialty || ''} ${doc.municipality || ''} 
             `);
             
-            // يجب أن تتطابق الكلمات المفتاحية فقط مع سجل الطبيب
             return searchTerms.every(term => searchString.includes(term));
         });
 
