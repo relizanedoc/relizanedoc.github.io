@@ -29,6 +29,16 @@ function normalizeText(text) {
         .replace(/[^a-z0-9ا-ي\s]/g, '');
 }
 // ==========================================
+// دالة مساعدة لرفع الأداء (Debounce)
+// ==========================================
+function debounce(func, delay) {
+    let timeoutId;
+    return function (...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+// ==========================================
 // 1.5. خوارزمية البحث المرن (Levenshtein Distance)
 // ==========================================
 function getLevenshteinDistance(a, b) {
@@ -509,10 +519,12 @@ export function initChatbot() {
     chatbotToggleBtn.addEventListener('click', toggleChat);
     closeChatBtn.addEventListener('click', toggleChat);
 
-    // ربط الاقتراحات بحقل الإدخال
-    chatInputText.addEventListener('input', function() {
-        showChatSuggestions(this.value.trim());
-    });
+   // ربط الاقتراحات بحقل الإدخال باستخدام تقنية Debounce لتخفيف العبء على المعالج
+    const debouncedSuggestions = debounce(function(e) {
+        showChatSuggestions(e.target.value.trim());
+    }, 300);
+
+    chatInputText.addEventListener('input', debouncedSuggestions);
 
     // إخفاء الاقتراحات عند الضغط خارجها
     document.addEventListener('click', function(e) {
