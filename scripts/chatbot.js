@@ -28,7 +28,39 @@ function normalizeText(text) {
         .replace(/[ًٌٍَُِّْ]/g, '')
         .replace(/[^a-z0-9ا-ي\s]/g, '');
 }
+// ==========================================
+// 1.5. خوارزمية البحث المرن (Levenshtein Distance)
+// ==========================================
+function getLevenshteinDistance(a, b) {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
 
+    const matrix = [];
+
+    // تهيئة المصفوفة
+    for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+    }
+    for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+    }
+
+    // حساب المسافة
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1, // استبدال حرف
+                    matrix[i][j - 1] + 1,     // إضافة حرف
+                    matrix[i - 1][j] + 1      // حذف حرف
+                );
+            }
+        }
+    }
+    return matrix[b.length][a.length];
+}
 // ==========================================
 // 2. نظام الطوارئ الذكي
 // ==========================================
@@ -172,15 +204,34 @@ async function processUserMessage(rawMsg) {
                 : 'Please type the doctor name or specialty.';
         }
         
-        // خوارزمية البحث المحلي
+        // خوارزمية البحث المحلي الذكية + البحث المرن (Fuzzy Search)
         let matchedDoctors = state.globalDirectory.filter(doc => {
-            const searchString = normalizeText(`
+            // تجميع وتطبيع نص الطبيب
+            const docText = normalizeText(`
                 ${doc.first_name || ''} ${doc.last_name || ''} 
                 ${doc.first_name_en || ''} ${doc.last_name_en || ''} 
                 ${doc.specialty || ''} ${doc.municipality || ''} 
             `);
             
-            return searchTerms.every(term => searchString.includes(term));
+            // تقسيم نص الطبيب إلى كلمات منفصلة لمقارنتها رياضياً
+            const docWords = docText.split(/\s+/).filter(w => w.length > 0);
+
+            // يجب أن يتطابق كل مصطلح بحثه المستخدم (إما تطابق تام أو مرن)
+            return searchTerms.every(term => {
+                // 1. الفحص السريع: التطابق التام كنص فرعي
+                if (docText.includes(term)) return true;
+
+                // 2. الفحص المرن: حساب المسافة لتصحيح الأخطاء المطبعية
+                const maxDistance = term.length <= 3 ? 0 : (term.length <= 6 ? 1 : 2);
+
+                return docWords.some(docWord => {
+                    // تجنب مقارنة الكلمات التي يختلف طولها بشكل كبير جداً
+                    if (Math.abs(term.length - docWord.length) > maxDistance) return false;
+                    
+                    const distance = getLevenshteinDistance(term, docWord);
+                    return distance <= maxDistance;
+                });
+            });
         });
 
         matchedDoctors = matchedDoctors.slice(0, 5);
