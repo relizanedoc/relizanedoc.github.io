@@ -5,12 +5,12 @@ import { supabaseClient } from './api.js';
 import { state } from './state.js';
 import { t, showToast, setLoading } from './utils.js';
 
-const DOCS_PER_PAGE = 12; 
+const DOCS_PER_PAGE = 12; // عدد الأطباء في كل دفعة
 let currentDocPage = 0;
 let isFetchingDocs = false;
 let filterOptionsLoaded = false;
-let globalSpecs = []; 
-let globalMuns = [];  
+let globalSpecs = []; // تخزين الاختصاصات
+let globalMuns = [];  // تخزين البلديات
 
 window.loadDoctors = async function(reset = true) {
   if (isFetchingDocs) return;
@@ -19,6 +19,7 @@ window.loadDoctors = async function(reset = true) {
   const container = document.getElementById('doctorsList');
   let loadMoreBtn = document.getElementById('loadMoreDocsBtn');
 
+  // 1. إنشاء زر "عرض المزيد" ديناميكياً إذا لم يكن موجوداً
   if (!loadMoreBtn) {
     loadMoreBtn = document.createElement('button');
     loadMoreBtn.id = 'loadMoreDocsBtn';
@@ -40,26 +41,23 @@ window.loadDoctors = async function(reset = true) {
   }
 
   try {
+    // 2. جلب الفلاتر مرة واحدة فقط لتخفيف الضغط
     if (!filterOptionsLoaded) await window.fetchGlobalDirectory();
     const searchQ = (document.getElementById('searchInput')?.value || '').trim();
     const specQ = document.getElementById('specialtyFilter')?.value || '';
     const munQ = document.getElementById('municipalityFilter')?.value || '';
 
-    // 🌟 التعديل الأول: تحديد نوع الحساب النشط حالياً (الافتراضي: طبيب)
-    // نفترض أنك ستضيف state.activeTab في state.js للتبديل بين 'Doctor' و 'Clinic'
-    const accountType = state.activeTab === 'Clinic' ? 'Clinic' : 'Doctor';
-
-    let query = supabaseClient.from('doctors')
-        .select('*', { count: 'exact' })
-        .eq('account_type', accountType); // 🌟 تصفية النتائج حسب النوع
+    // 3. بناء الاستعلام المعماري (Server-side Filtering)
+    let query = supabaseClient.from('doctors').select('*', { count: 'exact' });
 
     if (specQ) query = query.eq('specialty', specQ);
     if (munQ) query = query.eq('municipality', munQ);
     if (searchQ) {
-      // 🌟 التعديل الثاني: إضافة clinic_name لمحرك البحث ليعثر على العيادات باسمها
-      query = query.or(`first_name.ilike.%${searchQ}%,last_name.ilike.%${searchQ}%,first_name_en.ilike.%${searchQ}%,last_name_en.ilike.%${searchQ}%,exact_location.ilike.%${searchQ}%,clinic_name.ilike.%${searchQ}%`);
+      // بحث متقدم في جميع أعمدة الأسماء والموقع
+      query = query.or(`first_name.ilike.%${searchQ}%,last_name.ilike.%${searchQ}%,first_name_en.ilike.%${searchQ}%,last_name_en.ilike.%${searchQ}%,exact_location.ilike.%${searchQ}%`);
     }
 
+    // 4. تطبيق الترقيم (Pagination)
     const start = currentDocPage * DOCS_PER_PAGE;
     const end = start + DOCS_PER_PAGE - 1;
     query = query.order('created_at', { ascending: false }).range(start, end);
@@ -67,9 +65,11 @@ window.loadDoctors = async function(reset = true) {
     const { data, error, count } = await query;
     if (error) throw new Error(error.message);
 
+    // 5. التحديث والرسم
     if (reset) {
         state.allDoctors = data || [];
     } else {
+        // إضافة الأطباء الجدد للقائمة الموجودة
         state.allDoctors = [...state.allDoctors, ...(data || [])];
     }
 
@@ -79,6 +79,7 @@ window.loadDoctors = async function(reset = true) {
         if(typeof window.handleSEOAndRender === 'function') window.handleSEOAndRender(reset); 
     }
 
+    // إظهار/إخفاء زر المزيد بناءً على العدد الكلي في السيرفر
     if (count > (currentDocPage + 1) * DOCS_PER_PAGE) {
         loadMoreBtn.classList.remove('hidden');
         setLoading(loadMoreBtn, false, state.currentLang === 'ar' ? 'عرض المزيد ↓' : 'Load More ↓');
@@ -87,7 +88,7 @@ window.loadDoctors = async function(reset = true) {
     }
 
   } catch (err) {
-    console.error('Failed to load records:', err);
+    console.error('Failed to load doctors:', err);
     if (reset) container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div>' + t('loadingError') + '</div></div>';
     showToast(t('toastLoadError'), 'error');
   } finally {
@@ -97,6 +98,7 @@ window.loadDoctors = async function(reset = true) {
 
 window.fetchGlobalDirectory = async function() {
     try {
+        // حيلة برمجية: نستخدم تاريخ اليوم لضمان جلب أحدث نسخة من الملف مرة واحدة يومياً
         const today = new Date().toISOString().slice(0, 10);
         const response = await fetch(`./doctors-meta.json?v=${today}`);
 
@@ -116,8 +118,7 @@ window.fetchGlobalDirectory = async function() {
     } catch (e) {
         console.warn("⚠️ فشل جلب ملف meta، تفعيل الخطة البديلة عبر Supabase...", e);
         try {
-            // 🌟 التعديل الثالث: تضمين account_type و clinic_name في الخطة البديلة
-            const { data, error } = await supabaseClient.from('doctors').select('id, slug, first_name, last_name, first_name_en, last_name_en, specialty, municipality, exact_location, account_type, clinic_name');
+            const { data, error } = await supabaseClient.from('doctors').select('id, slug, first_name, last_name, first_name_en, last_name_en, specialty, municipality, exact_location');
             if (error) throw error;
 
             state.globalDirectory = data || [];
