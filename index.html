@@ -1173,6 +1173,32 @@
     }
   }
 </script>
+    <script>
+  window.toggleClinicFields = function(type) {
+    const clinicGroup = document.getElementById('clinicNameGroup');
+    const doctorGroup = document.getElementById('doctorNameGroup');
+    const clinicInput = document.getElementById('clinicNameInput');
+    const fNameInput = document.getElementById('firstNameInput');
+    const lNameInput = document.getElementById('lastNameInput');
+
+    if (type === 'Clinic') {
+      // إظهار حقل العيادة وجعله إجبارياً
+      clinicGroup.classList.remove('hidden');
+      clinicInput.required = true;
+      // إخفاء حقول الطبيب وجعلها اختيارية
+      doctorGroup.classList.add('hidden');
+      fNameInput.required = false;
+      lNameInput.required = false;
+    } else {
+      // العكس
+      clinicGroup.classList.add('hidden');
+      clinicInput.required = false;
+      doctorGroup.classList.remove('hidden');
+      fNameInput.required = true;
+      lNameInput.required = true;
+    }
+  }
+</script>
 </body>
 
 </html> 
