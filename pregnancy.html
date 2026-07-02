@@ -3,23 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حاسبة الحمل والولادة المتقدمة</title>
+    <title>حاسبة الحمل والولادة المتقدمة | Pregnancy Calculator Pro</title>
     
-    <!-- استخدام Tailwind CSS عبر الـ CDN لسرعة الإعداد في GitHub Pages -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- خطوط جوجل (Cairo) لمظهر احترافي ومناسب للواجهات الطبية -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- خطوط جوجل -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome للأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- إعدادات Tailwind مخصصة -->
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Cairo', 'sans-serif'] },
+                    fontFamily: { 
+                        sans: ['Cairo', 'Tajawal', 'sans-serif'],
+                        display: ['Cairo', 'sans-serif']
+                    },
                     colors: {
-                        primary: '#0d9488', // لون طبي هادئ (Teal)
-                        secondary: '#fbcfe8', // لون وردي خفيف لبيانات الحمل
+                        primary: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        },
+                        pink: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            300: '#f9a8d4',
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'gradient': 'gradient 8s ease infinite',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'fade-in': 'fadeIn 0.8s ease-out',
+                        'bounce-slow': 'bounce 3s infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        gradient: {
+                            '0%, 100%': { 'background-position': '0% 50%' },
+                            '50%': { 'background-position': '100% 50%' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
                     }
                 }
             }
@@ -27,63 +79,341 @@
     </script>
 
     <style>
-        body { background-color: #f8fafc; }
-        .glass-card {
-            background: #ffffff;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-            border: 1px solid #e2e8f0;
+        * {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
         }
-        /* انتقال سلس لشريط التقدم */
-        .progress-bar { transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* خلفية متحركة gradient */
+        body {
+            background: linear-gradient(-45deg, #f0fdfa, #fdf2f8, #e0f2fe, #fef3c7);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        .dark body {
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #1e3a8a);
+            background-size: 400% 400%;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* تأثير Glassmorphism */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* تأثيرات hover متقدمة */
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        /* شريط التقدم المتحرك */
+        .progress-bar {
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(90deg, #14b8a6, #ec4899, #f59e0b);
+            background-size: 200% 100%;
+            animation: gradient 3s ease infinite;
+        }
+
+        /* Particles في الخلفية */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #14b8a6, #ec4899);
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* تأثيرات الأيقونات */
+        .icon-bounce {
+            animation: bounce-slow 3s infinite;
+        }
+
+        /* Tooltip مخصص */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            right: 50%;
+            transform: translateX(50%);
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+
+        /* تأثيرات الإدخال */
+        input:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+        }
+
+        /* تأثيرات الأزرار */
+        .btn-primary {
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-primary:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* تأثيرات التمرير */
+        .scroll-smooth {
+            scroll-behavior: smooth;
+        }
+
+        /* تأثيرات التحميل */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* تأثيرات البطاقات */
+        .card-gradient {
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(236, 72, 153, 0.1));
+        }
+
+        /* تأثيرات النصوص */
+        .text-gradient {
+            background: linear-gradient(135deg, #14b8a6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* تأثيرات العداد التنازلي */
+        .countdown-item {
+            background: linear-gradient(135deg, #f0fdfa, #fdf2f8);
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .countdown-item {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.8));
+        }
+
+        /* تأثيرات الطباعة */
+        @media print {
+            body {
+                background: white !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .glass-card {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+        }
+
+        /* تأثيرات الشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .glass-card {
+                padding: 1.5rem !important;
+            }
+        }
     </style>
 </head>
-<body class="text-gray-800 antialiased min-h-screen flex flex-col items-center py-10 px-4">
+<body class="text-gray-800 dark:text-gray-100 antialiased min-h-screen flex flex-col items-center py-10 px-4 scroll-smooth relative overflow-x-hidden">
 
-    <div class="w-full max-w-3xl">
+    <!-- Particles في الخلفية -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden">
+        <div class="particle w-2 h-2 top-20 right-10" style="animation-delay: 0s;"></div>
+        <div class="particle w-3 h-3 top-40 right-20" style="animation-delay: 1s;"></div>
+        <div class="particle w-2 h-2 top-60 right-30" style="animation-delay: 2s;"></div>
+        <div class="particle w-4 h-4 top-80 right-40" style="animation-delay: 3s;"></div>
+        <div class="particle w-2 h-2 top-100 right-50" style="animation-delay: 4s;"></div>
+    </div>
+
+    <div class="w-full max-w-5xl relative z-10">
+        
+        <!-- زر الوضع الليلي -->
+        <div class="fixed top-4 left-4 z-50 no-print">
+            <button id="darkModeToggle" class="glass-card p-3 rounded-full hover-lift shadow-lg">
+                <i class="fas fa-moon text-primary-600 dark:text-yellow-400 text-xl"></i>
+            </button>
+        </div>
+
+        <!-- زر الطباعة -->
+        <div class="fixed top-4 left-20 z-50 no-print">
+            <button onclick="window.print()" class="glass-card p-3 rounded-full hover-lift shadow-lg">
+                <i class="fas fa-print text-primary-600 dark:text-primary-400 text-xl"></i>
+            </button>
+        </div>
+
         <!-- الترويسة -->
-        <div class="text-center mb-10">
-            <h1 class="text-3xl font-bold text-primary mb-2">حاسبة الحمل والولادة المتقدمة</h1>
-            <p class="text-gray-500 text-sm">أداة طبية دقيقة لحساب موعد الولادة، التبويض، وتتبع مراحل الحمل</p>
+        <div class="text-center mb-12 animate-fade-in">
+            <div class="inline-block mb-6">
+                <div class="relative">
+                    <i class="fas fa-baby text-6xl text-primary-500 icon-bounce"></i>
+                    <div class="absolute -top-2 -right-2 w-4 h-4 bg-pink-500 rounded-full animate-pulse"></div>
+                </div>
+            </div>
+            <h1 class="text-5xl font-black text-gradient mb-4">حاسبة الحمل والولادة المتقدمة</h1>
+            <p class="text-gray-600 dark:text-gray-300 text-lg max-w-2xl mx-auto leading-relaxed">
+                أداة طبية دقيقة واحترافية لحساب موعد الولادة، تتبع مراحل الحمل، ومعرفة تطور الجنين أسبوعياً
+            </p>
+            <div class="flex justify-center gap-4 mt-6 text-sm text-gray-500 dark:text-gray-400">
+                <span class="flex items-center gap-2">
+                    <i class="fas fa-check-circle text-primary-500"></i>
+                    دقيقة 100%
+                </span>
+                <span class="flex items-center gap-2">
+                    <i class="fas fa-shield-alt text-primary-500"></i>
+                    آمنة وموثوقة
+                </span>
+                <span class="flex items-center gap-2">
+                    <i class="fas fa-globe text-primary-500"></i>
+                    متاحة للجميع
+                </span>
+            </div>
         </div>
 
         <!-- قسم الإدخال -->
-        <div class="glass-card p-6 mb-8">
-            <form id="calcForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="lmp" class="block text-sm font-semibold text-gray-700 mb-2">تاريخ أول يوم من آخر دورة شهرية</label>
-                    <input type="date" id="lmp" required
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" />
+        <div class="glass-card p-8 mb-8 animate-slide-up hover-lift">
+            <form id="calcForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="lmp" class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">
+                            <i class="fas fa-calendar-alt text-primary-500"></i>
+                            تاريخ أول يوم من آخر دورة شهرية
+                            <span class="tooltip" data-tooltip="اختر أول يوم من آخر دورة شهرية لك">
+                                <i class="fas fa-info-circle text-gray-400 text-xs"></i>
+                            </span>
+                        </label>
+                        <input type="date" id="lmp" required
+                            class="w-full px-5 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:ring-4 focus:ring-primary-200 dark:focus:ring-primary-800 focus:border-primary-500 outline-none transition-all bg-white dark:bg-gray-800" />
+                    </div>
+                    <div>
+                        <label for="cycle" class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">
+                            <i class="fas fa-sync-alt text-primary-500"></i>
+                            متوسط طول الدورة الشهرية (بالأيام)
+                            <span class="tooltip" data-tooltip="المعدل الطبيعي 28 يوم">
+                                <i class="fas fa-info-circle text-gray-400 text-xs"></i>
+                            </span>
+                        </label>
+                        <input type="number" id="cycle" value="28" min="20" max="45" required
+                            class="w-full px-5 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:ring-4 focus:ring-primary-200 dark:focus:ring-primary-800 focus:border-primary-500 outline-none transition-all bg-white dark:bg-gray-800" />
+                    </div>
                 </div>
-                <div>
-                    <label for="cycle" class="block text-sm font-semibold text-gray-700 mb-2">متوسط طول الدورة الشهرية (بالأيام)</label>
-                    <input type="number" id="cycle" value="28" min="20" max="45" required
-                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" />
-                </div>
-                <div class="md:col-span-2">
-                    <button type="submit" 
-                        class="w-full bg-primary hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">
-                        إجراء الحسابات
-                    </button>
-                </div>
+                
+                <button type="submit" 
+                    class="btn-primary w-full text-white font-bold py-4 px-6 rounded-xl shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group">
+                    <span class="relative z-10 flex items-center justify-center gap-2">
+                        <i class="fas fa-calculator"></i>
+                        إجراء الحسابات المتقدمة
+                    </span>
+                </button>
             </form>
         </div>
 
         <!-- قسم النتائج (مخفي افتراضياً) -->
-        <div id="resultsArea" class="hidden space-y-6">
+        <div id="resultsArea" class="hidden space-y-8">
             
+            <!-- العداد التنازلي -->
+            <div class="glass-card p-8 border-t-4 border-t-pink-500 animate-slide-up">
+                <h2 class="text-2xl font-bold text-center mb-6 text-gradient">
+                    <i class="fas fa-hourglass-half text-pink-500"></i>
+                    العد التنازلي للولادة
+                </h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="countdown-item">
+                        <div id="countdownDays" class="text-4xl font-black text-primary-600 dark:text-primary-400">--</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-2">يوم</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div id="countdownWeeks" class="text-4xl font-black text-pink-600 dark:text-pink-400">--</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-2">أسبوع</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div id="countdownMonths" class="text-4xl font-black text-purple-600 dark:text-purple-400">--</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-2">شهر</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div id="countdownHours" class="text-4xl font-black text-amber-600 dark:text-amber-400">--</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-2">ساعة</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- البطاقة الرئيسية: موعد الولادة -->
-            <div class="glass-card p-6 border-t-4 border-t-primary text-center">
-                <h2 class="text-lg text-gray-500 font-semibold mb-1">موعد الولادة المتوقع</h2>
-                <div id="eddResult" class="text-4xl font-bold text-primary mb-4">--/--/----</div>
+            <div class="glass-card p-8 border-t-4 border-t-primary-500 text-center animate-slide-up hover-lift">
+                <h2 class="text-xl text-gray-600 dark:text-gray-300 font-semibold mb-3">
+                    <i class="fas fa-baby-carriage text-primary-500"></i>
+                    موعد الولادة المتوقع
+                </h2>
+                <div id="eddResult" class="text-4xl font-black text-gradient mb-6">--/--/----</div>
                 
                 <!-- شريط تقدم الحمل -->
-                <div class="relative w-full bg-gray-200 rounded-full h-4 mb-2 overflow-hidden">
-                    <div id="progressBar" class="progress-bar bg-primary h-4 rounded-full" style="width: 0%"></div>
+                <div class="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-6 mb-3 overflow-hidden shadow-inner">
+                    <div id="progressBar" class="progress-bar h-6 rounded-full flex items-center justify-center text-white text-sm font-bold" style="width: 0%">
+                        <span id="progressText">0%</span>
+                    </div>
                 </div>
-                <div class="flex justify-between text-xs text-gray-500 font-semibold">
+                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 font-semibold">
                     <span>البداية</span>
-                    <span id="progressText">0%</span>
                     <span>الولادة</span>
                 </div>
             </div>
@@ -91,46 +421,229 @@
             <!-- شبكة التفاصيل -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- بطاقة عمر الحمل -->
-                <div class="glass-card p-5 flex items-center space-x-4 space-x-reverse">
-                    <div class="p-3 bg-teal-50 rounded-full text-primary">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div class="glass-card p-6 flex items-center space-x-4 space-x-reverse animate-slide-up hover-lift">
+                    <div class="p-4 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 rounded-2xl text-primary-600 dark:text-primary-300">
+                        <i class="fas fa-clock text-3xl"></i>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-semibold">عمر الحمل الحالي</p>
-                        <p id="gestationalAge" class="text-xl font-bold text-gray-800">-- أسبوع و -- أيام</p>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-600 dark:text-gray-400 font-semibold mb-1">عمر الحمل الحالي</p>
+                        <p id="gestationalAge" class="text-2xl font-black text-gray-800 dark:text-gray-100">-- أسبوع و -- أيام</p>
                     </div>
                 </div>
 
                 <!-- بطاقة المرحلة الحالية -->
-                <div class="glass-card p-5 flex items-center space-x-4 space-x-reverse">
-                    <div class="p-3 bg-teal-50 rounded-full text-primary">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div class="glass-card p-6 flex items-center space-x-4 space-x-reverse animate-slide-up hover-lift">
+                    <div class="p-4 bg-gradient-to-br from-pink-100 to-pink-200 dark:from-pink-900 dark:to-pink-800 rounded-2xl text-pink-600 dark:text-pink-300">
+                        <i class="fas fa-chart-line text-3xl"></i>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-semibold">مرحلة الحمل</p>
-                        <p id="trimester" class="text-xl font-bold text-gray-800">الثلث --</p>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-600 dark:text-gray-400 font-semibold mb-1">مرحلة الحمل</p>
+                        <p id="trimester" class="text-2xl font-black text-gray-800 dark:text-gray-100">الثلث --</p>
                     </div>
                 </div>
 
                 <!-- بطاقة التبويض والإخصاب -->
-                <div class="glass-card p-5 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-100">
-                    <div>
-                        <p class="text-sm text-gray-500 font-semibold mb-1">نافذة التبويض المتوقعة</p>
-                        <p id="ovulationDate" class="text-lg font-bold text-gray-800">--/--/----</p>
-                        <p class="text-xs text-gray-400 mt-1">الفترة الأكثر خصوبة لحدوث هذا الحمل</p>
+                <div class="glass-card p-6 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-100 dark:border-gray-700 animate-slide-up">
+                    <div class="flex items-center space-x-4 space-x-reverse">
+                        <div class="p-4 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800 rounded-2xl text-purple-600 dark:text-purple-300">
+                            <i class="fas fa-calendar-check text-3xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 font-semibold mb-1">نافذة التبويض المتوقعة</p>
+                            <p id="ovulationDate" class="text-lg font-bold text-gray-800 dark:text-gray-100">--/--/----</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">الفترة الأكثر خصوبة</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500 font-semibold mb-1">تاريخ الإخصاب التقريبي</p>
-                        <p id="conceptionDate" class="text-lg font-bold text-gray-800">--/--/----</p>
+                    <div class="flex items-center space-x-4 space-x-reverse">
+                        <div class="p-4 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900 dark:to-amber-800 rounded-2xl text-amber-600 dark:text-amber-300">
+                            <i class="fas fa-heart text-3xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 font-semibold mb-1">تاريخ الإخصاب التقريبي</p>
+                            <p id="conceptionDate" class="text-lg font-bold text-gray-800 dark:text-gray-100">--/--/----</p>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- بطاقة تطور الجنين -->
+            <div class="glass-card p-8 animate-slide-up hover-lift">
+                <h2 class="text-2xl font-bold text-center mb-6 text-gradient">
+                    <i class="fas fa-seedling text-primary-500"></i>
+                    تطور الجنين هذا الأسبوع
+                </h2>
+                <div class="flex flex-col md:flex-row items-center gap-6">
+                    <div class="text-center">
+                        <div id="fruitIcon" class="text-8xl mb-4">🍓</div>
+                        <p id="fruitName" class="text-xl font-bold text-gray-800 dark:text-gray-100">حجم الجنين مثل</p>
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-gradient-to-br from-primary-50 to-pink-50 dark:from-primary-900/20 dark:to-pink-900/20 rounded-2xl p-6">
+                            <h3 id="weekTitle" class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">الأسبوع --</h3>
+                            <p id="weekDescription" class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                                وصف تطور الجنين هذا الأسبوع...
+                            </p>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <span id="babySize" class="bg-white dark:bg-gray-800 px-4 py-2 rounded-full text-sm font-semibold text-primary-600 dark:text-primary-400 shadow">
+                                    الطول: -- سم
+                                </span>
+                                <span id="babyWeight" class="bg-white dark:bg-gray-800 px-4 py-2 rounded-full text-sm font-semibold text-pink-600 dark:text-pink-400 shadow">
+                                    الوزن: -- غرام
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نصائح طبية -->
+            <div class="glass-card p-8 animate-slide-up hover-lift">
+                <h2 class="text-2xl font-bold text-center mb-6 text-gradient">
+                    <i class="fas fa-lightbulb text-amber-500"></i>
+                    نصائح طبية لهذا الأسبوع
+                </h2>
+                <div id="medicalTips" class="space-y-4">
+                    <!-- سيتم ملؤها ديناميكياً -->
+                </div>
+            </div>
+
+            <!-- تحذيرات طبية -->
+            <div class="glass-card p-8 border-r-4 border-r-red-500 animate-slide-up">
+                <h2 class="text-2xl font-bold text-center mb-6 text-red-600 dark:text-red-400">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    علامات تستدعي الاتصال بالطبيب فوراً
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 p-4 rounded-xl">
+                        <i class="fas fa-times-circle text-red-500 text-xl mt-1"></i>
+                        <p class="text-gray-700 dark:text-gray-300">نزيف مهبلي شديد أو مستمر</p>
+                    </div>
+                    <div class="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 p-4 rounded-xl">
+                        <i class="fas fa-times-circle text-red-500 text-xl mt-1"></i>
+                        <p class="text-gray-700 dark:text-gray-300">صداع شديد مع تشوش في الرؤية</p>
+                    </div>
+                    <div class="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 p-4 rounded-xl">
+                        <i class="fas fa-times-circle text-red-500 text-xl mt-1"></i>
+                        <p class="text-gray-700 dark:text-gray-300">ألم شديد في البطن أو الظهر</p>
+                    </div>
+                    <div class="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 p-4 rounded-xl">
+                        <i class="fas fa-times-circle text-red-500 text-xl mt-1"></i>
+                        <p class="text-gray-700 dark:text-gray-300">تورم مفاجئ في الوجه أو اليدين</p>
+                    </div>
+                    <div class="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 p-4 rounded-xl">
+                        <i class="fas fa-times-circle text-red-500 text-xl mt-1"></i>
+                        <p class="text-gray-700 dark:text-gray-300">حمى شديدة (أعلى من 38°م)</p>
+                    </div>
+                    <div class="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 p-4 rounded-xl">
+                        <i class="fas fa-times-circle text-red-500 text-xl mt-1"></i>
+                        <p class="text-gray-700 dark:text-gray-300">انخفاض حركة الجنين بعد الأسبوع 28</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- معلومات إضافية -->
+            <div class="glass-card p-8 text-center animate-slide-up">
+                <p class="text-gray-600 dark:text-gray-400 text-sm">
+                    <i class="fas fa-info-circle text-primary-500"></i>
+                    هذه الأداة للاستخدام التعليمي فقط ولا تغني عن استشارة الطبيب المختص
+                </p>
             </div>
 
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="mt-16 text-center text-gray-600 dark:text-gray-400 text-sm no-print">
+        <p>© 2026 حاسبة الحمل المتقدمة | جميع الحقوق محفوظة</p>
+        <p class="mt-2">صُممت بعناية ❤️ للأمهات حول العالم</p>
+    </footer>
+
     <!-- المنطق البرمجي (JavaScript) -->
     <script>
+        // بيانات تطور الجنين أسبوعياً
+        const fetalDevelopment = {
+            4: { fruit: "🌱", fruitName: "بذرة الخشخاش", size: "0.1", weight: "0.01", description: "يبدأ تكوين الكيس الأمنيوسي وبدء تطور الجهاز العصبي" },
+            5: { fruit: "🌰", fruitName: "بذرة السمسم", size: "0.2", weight: "0.02", description: "يبدأ تشكل القلب والدماغ والحبل الشوكي" },
+            6: { fruit: "🫘", fruitName: "عدسة", size: "0.5", weight: "0.05", description: "تبدأ ملامح الوجه بالتشكل وتظهر براعم الأطراف" },
+            7: { fruit: "🫐", fruitName: "توت أزرق", size: "1.3", weight: "0.5", description: "يبدأ نمو الدماغ بسرعة وتتشكل العيون والأذنين" },
+            8: { fruit: "🍇", fruitName: "توت العليق", size: "1.6", weight: "1", description: "تتطور الأصابع وتبدأ حركات الجنين الأولى" },
+            9: { fruit: "🍇", fruitName: "عنب", size: "2.3", weight: "2", description: "تتطور الأعضاء الحيوية وتبدأ الأظافر بالتشكل" },
+            10: { fruit: "🍊", fruitName: "كمكوات", size: "3.1", weight: "4", description: "ينمو الجنين بسرعة وتتشكل الأعضاء التناسلية" },
+            11: { fruit: "🍋", fruitName: "ليمون", size: "4.1", weight: "7", description: "تتطور بصمات الأصابع وتبدأ العظام بالتصلب" },
+            12: { fruit: "🍑", fruitName: "خوخ", size: "5.4", weight: "14", description: "تتطور ردود الفعل ويمكن للجنين فتح وإغلاق قبضة يديه" },
+            13: { fruit: "🍊", fruitName: "برتقال", size: "7.4", weight: "23", description: "تتطور الحبال الصوتية وتبدأ البصمات الفريدة بالتشكل" },
+            14: { fruit: "🍋", fruitName: "ليمون كبير", size: "8.7", weight: "43", description: "تتطور تعابير الوجه ويمكن للجنين المص والبلع" },
+            15: { fruit: "🍎", fruitName: "تفاحة", size: "10", weight: "70", description: "يمكن للجنين سماع الأصوات من الخارج" },
+            16: { fruit: "🍐", fruitName: "كمثرى", size: "11.6", weight: "100", description: "تتطور حاسة التذوق وتبدأ الحركات التنفسية" },
+            17: { fruit: "🥑", fruitName: "أفوكادو", size: "13", weight: "140", description: "يتطور النسيج الدهني وتصبح الحركات أكثر تناسقاً" },
+            18: { fruit: "🫑", fruitName: "فلفل رومي", size: "14.2", weight: "190", description: "تتطور الأذنين بشكل كامل ويمكن سماع دقات القلب" },
+            19: { fruit: "🥭", fruitName: "مانجو", size: "15.3", weight: "240", description: "تتطور الحواس الخمس وتبدأ الحواجب والرموش بالنمو" },
+            20: { fruit: "🍌", fruitName: "موز", size: "16.4", weight: "300", description: "نصف رحلة الحمل! الجنين يصبح أكثر نشاطاً" },
+            21: { fruit: "🥕", fruitName: "جزرة كبيرة", size: "26.7", weight: "360", description: "تتطور الحواجب وتبدأ الجفون بالتشكل" },
+            22: { fruit: "🌽", fruitName: "ذرة", size: "27.8", weight: "430", description: "يتطور الشعر على الرأس وتتشكل الرموش" },
+            23: { fruit: "🍊", fruitName: "جريب فروت", size: "28.9", weight: "500", description: "تتطور الرئتان وتبدأ بإنتاج المادة الفعالة سطحياً" },
+            24: { fruit: "🌽", fruitName: "ذرة حلوة", size: "30", weight: "600", description: "تتطور حاسة السمع بشكل كامل ويستجيب للأصوات" },
+            25: { fruit: "🍆", fruitName: "باذنجان", size: "34.6", weight: "660", description: "تتطور الرئتان وتبدأ بإنتاج المادة الفعالة سطحياً" },
+            26: { fruit: "🥒", fruitName: "خيار", size: "35.6", weight: "760", description: "تفتح العيون ويستجيب الجنين للضوء" },
+            27: { fruit: "🥦", fruitName: "قرنبيط", size: "36.6", weight: "875", description: "يتطور الدماغ بسرعة وتنتظم دورات النوم والاستيقاظ" },
+            28: { fruit: "🍆", fruitName: "باذنجان كبير", size: "37.6", weight: "1005", description: "بداية الثلث الثالث! الجنين يحلم ويبدأ بتخزين الدهون" },
+            29: { fruit: "🎃", fruitName: "يقطين صغير", size: "38.6", weight: "1153", description: "تتطور العضلات والرئتان وتزداد الحركات" },
+            30: { fruit: "🥬", fruitName: "ملفوف صيني", size: "39.9", weight: "1319", description: "يتطور نخاع العظم وتبدأ كريات الدم الحمراء بالتشكل" },
+            31: { fruit: "🥥", fruitName: "جوزة هند", size: "41.1", weight: "1502", description: "تتطور الاتصالات العصبية في الدماغ بسرعة" },
+            32: { fruit: "🍍", fruitName: "أناناس", size: "42.4", weight: "1702", description: "تتطور الأظافر بالكامل ويبدأ الشعر بالنمو" },
+            33: { fruit: "🍍", fruitName: "أناناس كبير", size: "43.7", weight: "1918", description: "تتطور العظام وتتصلب باستثناء جمجمة الرأس" },
+            34: { fruit: "🥥", fruitName: "جوزة هند كبيرة", size: "45", weight: "2146", description: "تتطور الرئتان بشكل شبه كامل" },
+            35: { fruit: "🍈", fruitName: "شمام", size: "46.2", weight: "2383", description: "يتطور الكبد والجهاز المناعي" },
+            36: { fruit: "🍉", fruitName: "بطيخ صغير", size: "47.4", weight: "2622", description: "تتطور قبضة اليد ويصبح الجنين مستعداً للولادة" },
+            37: { fruit: "🍉", fruitName: "بطيخ", size: "48.6", weight: "2859", description: "الجنين مكتمل النمو! ينتظر اللحظة المناسبة للولادة" },
+            38: { fruit: "🍉", fruitName: "بطيخ كبير", size: "49.8", weight: "3100", description: "الجنين جاهز للولادة في أي وقت" },
+            39: { fruit: "🎃", fruitName: "يقطين كبير", size: "50.7", weight: "3300", description: "الولادة يمكن أن تحدث في أي لحظة" },
+            40: { fruit: "🎃", fruitName: "يقطين ضخم", size: "51.2", weight: "3500", description: "موعد الولادة! الجنين مكتمل النمو تماماً" },
+        };
+
+        // نصائح طبية حسب المرحلة
+        const medicalTips = {
+            first: [
+                { icon: "💊", text: "تناولي حمض الفوليك يومياً (400-800 ميكروغرام)" },
+                { icon: "🥗", text: "تناولي وجبات صحية متوازنة غنية بالفيتامينات" },
+                { icon: "💧", text: "اشربي 8-10 أكواب من الماء يومياً" },
+                { icon: "🚫", text: "تجنبي الكافيين والكحول والتدخين" },
+                { icon: "😴", text: "احصلي على قسط كافٍ من الراحة والنوم" },
+                { icon: "🏃‍♀️", text: "مارسي تمارين خفيفة مثل المشي بعد استشارة الطبيب" },
+            ],
+            second: [
+                { icon: "🥛", text: "زيادة تناول الكالسيوم والحديد" },
+                { icon: "👶", text: "ابدئي بالحديث مع جنينك والغناء له" },
+                { icon: "🧘‍♀️", text: "مارسي تمارين كيجل لتقوية عضلات الحوض" },
+                { icon: "📚", text: "ابدئي بالقراءة عن الولادة والعناية بالمولود" },
+                { icon: "👗", text: "ارتدي ملابس مريحة وحمالة صدر داعمة" },
+                { icon: "📸", text: "فكري في تصوير جلسة حمل تذكارية" },
+            ],
+            third: [
+                { icon: "🏥", text: "جهزي حقيبة المستشفى مبكراً" },
+                { icon: "🚗", text: "ركبي مقعد الطفل في السيارة" },
+                { icon: "📋", text: "تعرفي على علامات الولادة المبكرة" },
+                { icon: "🤱", text: "تعلمي عن الرضاعة الطبيعية" },
+                { icon: "🛏️", text: "نامي على جانبك الأيسر لتحسين الدورة الدموية" },
+                { icon: "📞", text: "احتفظي برقم الطوارئ الطبي قريباً" },
+            ]
+        };
+
+        // الوضع الليلي
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const html = document.documentElement;
+        
+        // التحقق من الوضع المحفوظ
+        if (localStorage.getItem('darkMode') === 'true') {
+            html.classList.add('dark');
+        }
+
+        darkModeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            localStorage.setItem('darkMode', html.classList.contains('dark'));
+        });
+
+        // المنطق الرئيسي
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('calcForm');
             const ONE_DAY = 1000 * 60 * 60 * 24;
@@ -138,50 +651,59 @@
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
 
-                // 1. استخراج المدخلات
+                // استخراج المدخلات
                 const lmpInput = document.getElementById('lmp').value;
                 const cycleLength = parseInt(document.getElementById('cycle').value);
 
-                if (!lmpInput || isNaN(cycleLength)) return;
+                if (!lmpInput || isNaN(cycleLength)) {
+                    alert('الرجاء إدخال جميع البيانات المطلوبة');
+                    return;
+                }
 
                 const lmpDate = new Date(lmpInput);
                 const today = new Date();
 
-                // 2. الحسابات الطبية (المنطق الأساسي)
-                // القاعدة العامة: الولادة بعد 280 يوم لدورة من 28 يوم.
-                // يتم التعديل بناءً على فارق طول الدورة عن 28 يوماً.
+                // التحقق من صحة التاريخ
+                if (lmpDate > today) {
+                    alert('لا يمكن أن يكون تاريخ آخر دورة في المستقبل');
+                    return;
+                }
+
+                // الحسابات الطبية
                 const cycleAdjustment = cycleLength - 28;
                 
-                // يوم التبويض/الإخصاب التقريبي (في العادة قبل 14 يوم من الدورة التالية)
+                // يوم التبويض/الإخصاب
                 const conceptionTime = lmpDate.getTime() + ((14 + cycleAdjustment) * ONE_DAY);
                 const conceptionDate = new Date(conceptionTime);
 
-                // موعد الولادة المتوقع (EDD)
+                // موعد الولادة المتوقع (EDD) - قاعدة Naegele
                 const eddTime = lmpDate.getTime() + ((280 + cycleAdjustment) * ONE_DAY);
                 const eddDate = new Date(eddTime);
 
                 // حساب عمر الحمل الحالي
                 let diffDays = Math.floor((today - lmpDate) / ONE_DAY);
                 
-                // التأكد من أن الحمل لم يتجاوز 42 أسبوعاً وأن التاريخ ليس في المستقبل
                 if (diffDays < 0) diffDays = 0;
-                if (diffDays > 294) diffDays = 294; // أقصى حد للحمل 42 أسبوع
+                if (diffDays > 294) diffDays = 294;
 
                 const currentWeek = Math.floor(diffDays / 7);
                 const currentDay = diffDays % 7;
 
-                // حساب نسبة التقدم المئوية
+                // حساب نسبة التقدم
                 const progressPercentage = Math.min(100, Math.max(0, (diffDays / 280) * 100));
 
-                // تحديد ثلث الحمل (Trimester)
+                // تحديد ثلث الحمل
                 let trimester = "الأول (أسابيع 1-13)";
+                let trimesterKey = "first";
                 if (currentWeek >= 14 && currentWeek <= 27) {
                     trimester = "الثاني (أسابيع 14-27)";
+                    trimesterKey = "second";
                 } else if (currentWeek >= 28) {
                     trimester = "الثالث (أسابيع 28-40+)";
+                    trimesterKey = "third";
                 }
 
-                // 3. تنسيق وعرض النتائج
+                // تنسيق التواريخ
                 const formatDate = (date) => {
                     return date.toLocaleDateString('ar-DZ', { 
                         year: 'numeric', 
@@ -191,10 +713,11 @@
                     });
                 };
 
+                // عرض النتائج
                 document.getElementById('eddResult').innerText = formatDate(eddDate);
                 document.getElementById('conceptionDate').innerText = formatDate(conceptionDate);
                 
-                // نافذة التبويض (يومين قبل ويوم بعد تاريخ الإخصاب)
+                // نافذة التبويض
                 const ovulationStart = new Date(conceptionTime - (2 * ONE_DAY));
                 const ovulationEnd = new Date(conceptionTime + (1 * ONE_DAY));
                 document.getElementById('ovulationDate').innerText = 
@@ -203,18 +726,73 @@
                 document.getElementById('gestationalAge').innerText = `${currentWeek} أسبوع و ${currentDay} أيام`;
                 document.getElementById('trimester').innerText = trimester;
 
+                // العداد التنازلي
+                const daysUntilBirth = Math.max(0, Math.floor((eddDate - today) / ONE_DAY));
+                const weeksUntilBirth = Math.floor(daysUntilBirth / 7);
+                const monthsUntilBirth = Math.floor(daysUntilBirth / 30);
+                const hoursUntilBirth = Math.max(0, Math.floor(((eddDate - today) / (1000 * 60 * 60))));
+
+                document.getElementById('countdownDays').innerText = daysUntilBirth;
+                document.getElementById('countdownWeeks').innerText = weeksUntilBirth;
+                document.getElementById('countdownMonths').innerText = monthsUntilBirth;
+                document.getElementById('countdownHours').innerText = hoursUntilBirth;
+
+                // تطور الجنين
+                const weekData = fetalDevelopment[Math.min(40, Math.max(4, currentWeek))] || fetalDevelopment[20];
+                document.getElementById('fruitIcon').innerText = weekData.fruit;
+                document.getElementById('fruitName').innerText = `بحجم ${weekData.fruitName}`;
+                document.getElementById('weekTitle').innerText = `الأسبوع ${currentWeek}`;
+                document.getElementById('weekDescription').innerText = weekData.description;
+                document.getElementById('babySize').innerText = `الطول: ${weekData.size} سم`;
+                document.getElementById('babyWeight').innerText = `الوزن: ${weekData.weight} غرام`;
+
+                // النصائح الطبية
+                const tipsContainer = document.getElementById('medicalTips');
+                tipsContainer.innerHTML = '';
+                medicalTips[trimesterKey].forEach(tip => {
+                    const tipElement = document.createElement('div');
+                    tipElement.className = 'flex items-start gap-4 bg-gradient-to-br from-primary-50 to-pink-50 dark:from-primary-900/20 dark:to-pink-900/20 p-4 rounded-xl hover-lift';
+                    tipElement.innerHTML = `
+                        <div class="text-3xl">${tip.icon}</div>
+                        <p class="text-gray-700 dark:text-gray-300 flex-1">${tip.text}</p>
+                    `;
+                    tipsContainer.appendChild(tipElement);
+                });
+
                 // تحديث شريط التقدم
                 setTimeout(() => {
                     document.getElementById('progressBar').style.width = `${progressPercentage}%`;
                     document.getElementById('progressText').innerText = `${Math.floor(progressPercentage)}%`;
                 }, 100);
 
+                // حفظ البيانات
+                localStorage.setItem('pregnancyData', JSON.stringify({
+                    lmp: lmpInput,
+                    cycle: cycleLength,
+                    edd: eddDate.toISOString(),
+                    savedAt: new Date().toISOString()
+                }));
+
                 // إظهار قسم النتائج
                 document.getElementById('resultsArea').classList.remove('hidden');
                 
-                // تمرير الشاشة للأسفل بسلاسة لرؤية النتائج
-                document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth' });
+                // تمرير الشاشة
+                setTimeout(() => {
+                    document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 200);
             });
+
+            // تحميل البيانات المحفوظة
+            const savedData = localStorage.getItem('pregnancyData');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    document.getElementById('lmp').value = data.lmp;
+                    document.getElementById('cycle').value = data.cycle;
+                } catch (e) {
+                    console.error('خطأ في تحميل البيانات المحفوظة');
+                }
+            }
         });
     </script>
 </body>
