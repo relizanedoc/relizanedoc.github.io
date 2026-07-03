@@ -23,20 +23,22 @@
     --pink-500: #ec4899;
     --pink-600: #db2777;
 
-    /* الألوان المحايدة */
-    --white: #ffffff;
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-400: #9ca3af;
-    --gray-500: #6b7280;
-    --gray-600: #4b5563;
-    --gray-700: #374151;
-    --gray-800: #1f2937;
-    --gray-900: #111827;
-
-    /* الظلال */
+    /* الألوان المحايدة - الوضع الفاتح */
+    --bg-primary: #f0fdfa;
+    --bg-secondary: #fdf2f8;
+    --bg-tertiary: #e0f2fe;
+    --bg-quaternary: #fef3c7;
+    
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+    --text-tertiary: #6b7280;
+    --text-muted: #9ca3af;
+    
+    --border-color: rgba(255, 255, 255, 0.3);
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --input-bg: #ffffff;
+    --input-border: #e5e7eb;
+    
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
@@ -54,10 +56,38 @@
     --glass-blur: 20px;
 }
 
-/* الوضع الليلي */
+/* ===================================
+   🌙 الوضع الليلي (Dark Mode)
+   =================================== */
 .dark {
-    --glass-bg: rgba(30, 41, 59, 0.8);
+    /* ألوان الخلفية */
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e1b4b;
+    --bg-tertiary: #312e81;
+    --bg-quaternary: #1e3a8a;
+    
+    /* ألوان النصوص */
+    --text-primary: #f9fafb;
+    --text-secondary: #e5e7eb;
+    --text-tertiary: #d1d5db;
+    --text-muted: #9ca3af;
+    
+    /* الحدود والبطاقات */
+    --border-color: rgba(255, 255, 255, 0.1);
+    --card-bg: rgba(30, 41, 59, 0.8);
+    --input-bg: #1e293b;
+    --input-border: #475569;
+    
+    /* الزجاج */
+    --glass-bg: rgba(30, 41, 59, 0.85);
     --glass-border: rgba(255, 255, 255, 0.1);
+    
+    /* الظلال */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
 }
 
 /* ===================================
@@ -74,18 +104,15 @@ html {
 }
 
 body {
-    background: linear-gradient(-45deg, #f0fdfa, #fdf2f8, #e0f2fe, #fef3c7);
+    background: linear-gradient(-45deg, var(--bg-primary), var(--bg-secondary), var(--bg-tertiary), var(--bg-quaternary));
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
     min-height: 100vh;
     line-height: 1.6;
+    color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-}
-
-.dark body {
-    background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #1e3a8a);
-    background-size: 400% 400%;
+    transition: background 0.5s ease, color 0.3s ease;
 }
 
 /* تحسين الأداء */
@@ -114,7 +141,7 @@ body {
 }
 
 .dark ::selection {
-    background: var(--primary-800);
+    background: var(--primary-700);
     color: var(--primary-100);
 }
 
@@ -128,7 +155,7 @@ body {
     border-radius: 1.5rem;
     box-shadow: var(--shadow-xl);
     border: 1px solid var(--glass-border);
-    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    transition: all var(--transition-normal);
     will-change: transform;
 }
 
@@ -186,6 +213,11 @@ body {
     opacity: 0.15;
     animation: float 6s ease-in-out infinite;
     pointer-events: none;
+}
+
+.dark .particle {
+    opacity: 0.1;
+    background: linear-gradient(135deg, var(--primary-400), var(--pink-400));
 }
 
 .particle:nth-child(1) { animation-delay: 0s; }
@@ -255,6 +287,9 @@ body {
    📝 تأثيرات الإدخال (Input Effects)
    =================================== */
 input, select, textarea {
+    background: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
     transition: all var(--transition-normal);
 }
 
@@ -262,10 +297,17 @@ input:focus, select:focus, textarea:focus {
     transform: scale(1.02);
     box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
     outline: none;
+    border-color: var(--primary-500);
 }
 
 .dark input:focus, .dark select:focus, .dark textarea:focus {
     box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.25);
+    background: var(--input-bg);
+}
+
+/* Placeholder */
+input::placeholder, textarea::placeholder {
+    color: var(--text-muted);
 }
 
 /* ===================================
@@ -278,6 +320,7 @@ input:focus, select:focus, textarea:focus {
     overflow: hidden;
     border: none;
     cursor: pointer;
+    color: white;
 }
 
 .btn-primary::before {
@@ -345,6 +388,10 @@ input:focus, select:focus, textarea:focus {
     background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(236, 72, 153, 0.1));
 }
 
+.dark .card-gradient {
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.15), rgba(236, 72, 153, 0.15));
+}
+
 /* ===================================
    🔢 تأثيرات العداد التنازلي
    =================================== */
@@ -356,16 +403,18 @@ input:focus, select:focus, textarea:focus {
     box-shadow: var(--shadow-md);
     transition: transform var(--transition-normal), box-shadow var(--transition-normal);
     border: 1px solid rgba(255, 255, 255, 0.5);
+    color: var(--text-primary);
+}
+
+.dark .countdown-item {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(51, 65, 85, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
 }
 
 .countdown-item:hover {
     transform: translateY(-3px) scale(1.02);
     box-shadow: var(--shadow-lg);
-}
-
-.dark .countdown-item {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.8));
-    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ===================================
@@ -485,23 +534,14 @@ input:focus, select:focus, textarea:focus {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--gray-100);
+    background: var(--bg-primary);
     border-radius: 10px;
-}
-
-.dark ::-webkit-scrollbar-track {
-    background: var(--gray-800);
 }
 
 ::-webkit-scrollbar-thumb {
     background: linear-gradient(135deg, var(--primary-400), var(--pink-400));
     border-radius: 10px;
-    border: 2px solid var(--gray-100);
-}
-
-.dark ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, var(--primary-600), var(--pink-600));
-    border: 2px solid var(--gray-800);
+    border: 2px solid var(--bg-primary);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -511,11 +551,7 @@ input:focus, select:focus, textarea:focus {
 /* Firefox */
 * {
     scrollbar-width: thin;
-    scrollbar-color: var(--primary-400) var(--gray-100);
-}
-
-.dark * {
-    scrollbar-color: var(--primary-600) var(--gray-800);
+    scrollbar-color: var(--primary-400) var(--bg-primary);
 }
 
 /* ===================================
@@ -610,4 +646,139 @@ textarea:focus-visible {
 .progress-circle__circle {
     transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
     transform-origin: 50% 50%;
+}
+
+/* ===================================
+   🎨 تحسينات إضافية للوضع الليلي
+   =================================== */
+
+/* تحسين ألوان النصوص في الوضع الليلي */
+.dark .text-gray-800 {
+    color: var(--text-primary) !important;
+}
+
+.dark .text-gray-700 {
+    color: var(--text-secondary) !important;
+}
+
+.dark .text-gray-600 {
+    color: var(--text-tertiary) !important;
+}
+
+.dark .text-gray-500 {
+    color: var(--text-muted) !important;
+}
+
+.dark .text-gray-400 {
+    color: var(--text-muted) !important;
+}
+
+.dark .text-gray-300 {
+    color: var(--text-secondary) !important;
+}
+
+.dark .text-gray-200 {
+    color: var(--text-primary) !important;
+}
+
+.dark .text-gray-100 {
+    color: var(--text-primary) !important;
+}
+
+/* تحسين ألوان الخلفيات في الوضع الليلي */
+.dark .bg-white {
+    background-color: var(--input-bg) !important;
+}
+
+.dark .bg-gray-50 {
+    background-color: rgba(30, 41, 59, 0.5) !important;
+}
+
+.dark .bg-gray-100 {
+    background-color: rgba(30, 41, 59, 0.6) !important;
+}
+
+.dark .bg-gray-200 {
+    background-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+/* تحسين ألوان الحدود في الوضع الليلي */
+.dark .border-gray-100 {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .border-gray-200 {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.dark .border-gray-600 {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* تحسين ألوان التحذيرات في الوضع الليلي */
+.dark .bg-red-50 {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+.dark .bg-red-900\/20 {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+}
+
+/* تحسين تدرجات الألوان في الوضع الليلي */
+.dark .bg-gradient-to-br {
+    opacity: 0.9;
+}
+
+.dark .from-primary-100 {
+    --tw-gradient-from: rgba(20, 184, 166, 0.2) !important;
+}
+
+.dark .to-primary-200 {
+    --tw-gradient-to: rgba(20, 184, 166, 0.3) !important;
+}
+
+.dark .from-pink-100 {
+    --tw-gradient-from: rgba(236, 72, 153, 0.2) !important;
+}
+
+.dark .to-pink-200 {
+    --tw-gradient-to: rgba(236, 72, 153, 0.3) !important;
+}
+
+/* تحسين ألوان الأيقونات في الوضع الليلي */
+.dark .text-primary-600 {
+    color: var(--primary-400) !important;
+}
+
+.dark .text-primary-500 {
+    color: var(--primary-400) !important;
+}
+
+.dark .text-pink-600 {
+    color: var(--pink-400) !important;
+}
+
+.dark .text-pink-500 {
+    color: var(--pink-400) !important;
+}
+
+.dark .text-amber-600 {
+    color: #fbbf24 !important;
+}
+
+.dark .text-purple-600 {
+    color: #a78bfa !important;
+}
+
+.dark .text-red-600 {
+    color: #f87171 !important;
+}
+
+.dark .text-red-500 {
+    color: #f87171 !important;
+}
+
+/* تحسين خلفية Shimmer في الوضع الليلي */
+.dark .progress-bar::after {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
 }
