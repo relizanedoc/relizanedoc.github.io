@@ -1,16 +1,16 @@
 // بيانات تطور الجنين أسبوعياً
 const fetalDevelopment = {
     4: { fruit: "🌱", fruitName: "بذرة الخشخاش", size: "0.1", weight: "0.01", description: "يبدأ تكوين الكيس الأمنيوسي وبدء تطور الجهاز العصبي" },
-    5: { fruit: "🌰", fruitName: "بذرة السمسم", size: "0.2", weight: "0.02", description: "يبدأ تشكل القلب والدماغ والحبل الشوكي" },
+    5: { fruit: "", fruitName: "بذرة السمسم", size: "0.2", weight: "0.02", description: "يبدأ تشكل القلب والدماغ والحبل الشوكي" },
     6: { fruit: "🫘", fruitName: "عدسة", size: "0.5", weight: "0.05", description: "تبدأ ملامح الوجه بالتشكل وتظهر براعم الأطراف" },
-    7: { fruit: "🫐", fruitName: "توت أزرق", size: "1.3", weight: "0.5", description: "يبدأ نمو الدماغ بسرعة وتتشكل العيون والأذنين" },
+    7: { fruit: "", fruitName: "توت أزرق", size: "1.3", weight: "0.5", description: "يبدأ نمو الدماغ بسرعة وتتشكل العيون والأذنين" },
     8: { fruit: "🍇", fruitName: "توت العليق", size: "1.6", weight: "1", description: "تتطور الأصابع وتبدأ حركات الجنين الأولى" },
     9: { fruit: "🍇", fruitName: "عنب", size: "2.3", weight: "2", description: "تتطور الأعضاء الحيوية وتبدأ الأظافر بالتشكل" },
     10: { fruit: "🍊", fruitName: "كمكوات", size: "3.1", weight: "4", description: "ينمو الجنين بسرعة وتتشكل الأعضاء التناسلية" },
     11: { fruit: "🍋", fruitName: "ليمون", size: "4.1", weight: "7", description: "تتطور بصمات الأصابع وتبدأ العظام بالتصلب" },
     12: { fruit: "🍑", fruitName: "خوخ", size: "5.4", weight: "14", description: "تتطور ردود الفعل ويمكن للجنين فتح وإغلاق قبضة يديه" },
-    13: { fruit: "🍊", fruitName: "برتقال", size: "7.4", weight: "23", description: "تتطور الحبال الصوتية وتبدأ البصمات الفريدة بالتشكل" },
-    14: { fruit: "🍋", fruitName: "ليمون كبير", size: "8.7", weight: "43", description: "تتطور تعابير الوجه ويمكن للجنين المص والبلع" },
+    13: { fruit: "", fruitName: "برتقال", size: "7.4", weight: "23", description: "تتطور الحبال الصوتية وتبدأ البصمات الفريدة بالتشكل" },
+    14: { fruit: "", fruitName: "ليمون كبير", size: "8.7", weight: "43", description: "تتطور تعابير الوجه ويمكن للجنين المص والبلع" },
     15: { fruit: "🍎", fruitName: "تفاحة", size: "10", weight: "70", description: "يمكن للجنين سماع الأصوات من الخارج" },
     16: { fruit: "🍐", fruitName: "كمثرى", size: "11.6", weight: "100", description: "تتطور حاسة التذوق وتبدأ الحركات التنفسية" },
     17: { fruit: "🥑", fruitName: "أفوكادو", size: "13", weight: "140", description: "يتطور النسيج الدهني وتصبح الحركات أكثر تناسقاً" },
@@ -19,27 +19,27 @@ const fetalDevelopment = {
     20: { fruit: "🍌", fruitName: "موز", size: "16.4", weight: "300", description: "نصف رحلة الحمل! الجنين يصبح أكثر نشاطاً" },
     21: { fruit: "🥕", fruitName: "جزرة كبيرة", size: "26.7", weight: "360", description: "تتطور الحواجب وتبدأ الجفون بالتشكل" },
     22: { fruit: "🌽", fruitName: "ذرة", size: "27.8", weight: "430", description: "يتطور الشعر على الرأس وتتشكل الرموش" },
-    23: { fruit: "🍊", fruitName: "جريب فروت", size: "28.9", weight: "500", description: "تتطور الرئتان وتبدأ بإنتاج المادة الفعالة سطحياً" },
-    24: { fruit: "🌽", fruitName: "ذرة حلوة", size: "30", weight: "600", description: "تتطور حاسة السمع بشكل كامل ويستجيب للأصوات" },
+    23: { fruit: "", fruitName: "جريب فروت", size: "28.9", weight: "500", description: "تتطور الرئتان وتبدأ بإنتاج المادة الفعالة سطحياً" },
+    24: { fruit: "", fruitName: "ذرة حلوة", size: "30", weight: "600", description: "تتطور حاسة السمع بشكل كامل ويستجيب للأصوات" },
     25: { fruit: "🍆", fruitName: "باذنجان", size: "34.6", weight: "660", description: "تتطور الرئتان وتبدأ بإنتاج المادة الفعالة سطحياً" },
     26: { fruit: "🥒", fruitName: "خيار", size: "35.6", weight: "760", description: "تفتح العيون ويستجيب الجنين للضوء" },
     27: { fruit: "🥦", fruitName: "قرنبيط", size: "36.6", weight: "875", description: "يتطور الدماغ بسرعة وتنتظم دورات النوم والاستيقاظ" },
-    28: { fruit: "🍆", fruitName: "باذنجان كبير", size: "37.6", weight: "1005", description: "بداية الثلث الثالث! الجنين يحلم ويبدأ بتخزين الدهون" },
+    28: { fruit: "", fruitName: "باذنجان كبير", size: "37.6", weight: "1005", description: "بداية الثلث الثالث! الجنين يحلم ويبدأ بتخزين الدهون" },
     29: { fruit: "🎃", fruitName: "يقطين صغير", size: "38.6", weight: "1153", description: "تتطور العضلات والرئتان وتزداد الحركات" },
-    30: { fruit: "🥬", fruitName: "ملفوف صيني", size: "39.9", weight: "1319", description: "يتطور نخاع العظم وتبدأ كريات الدم الحمراء بالتشكل" },
+    30: { fruit: "", fruitName: "ملفوف صيني", size: "39.9", weight: "1319", description: "يتطور نخاع العظم وتبدأ كريات الدم الحمراء بالتشكل" },
     31: { fruit: "🥥", fruitName: "جوزة هند", size: "41.1", weight: "1502", description: "تتطور الاتصالات العصبية في الدماغ بسرعة" },
     32: { fruit: "🍍", fruitName: "أناناس", size: "42.4", weight: "1702", description: "تتطور الأظافر بالكامل ويبدأ الشعر بالنمو" },
     33: { fruit: "🍍", fruitName: "أناناس كبير", size: "43.7", weight: "1918", description: "تتطور العظام وتتصلب باستثناء جمجمة الرأس" },
     34: { fruit: "🥥", fruitName: "جوزة هند كبيرة", size: "45", weight: "2146", description: "تتطور الرئتان بشكل شبه كامل" },
     35: { fruit: "🍈", fruitName: "شمام", size: "46.2", weight: "2383", description: "يتطور الكبد والجهاز المناعي" },
-    36: { fruit: "🍉", fruitName: "بطيخ صغير", size: "47.4", weight: "2622", description: "تتطور قبضة اليد ويصبح الجنين مستعداً للولادة" },
+    36: { fruit: "", fruitName: "بطيخ صغير", size: "47.4", weight: "2622", description: "تتطور قبضة اليد ويصبح الجنين مستعداً للولادة" },
     37: { fruit: "🍉", fruitName: "بطيخ", size: "48.6", weight: "2859", description: "الجنين مكتمل النمو! ينتظر اللحظة المناسبة للولادة" },
-    38: { fruit: "🍉", fruitName: "بطيخ كبير", size: "49.8", weight: "3100", description: "الجنين جاهز للولادة في أي وقت" },
+    38: { fruit: "", fruitName: "بطيخ كبير", size: "49.8", weight: "3100", description: "الجنين جاهز للولادة في أي وقت" },
     39: { fruit: "🎃", fruitName: "يقطين كبير", size: "50.7", weight: "3300", description: "الولادة يمكن أن تحدث في أي لحظة" },
-    40: { fruit: "🎃", fruitName: "يقطين ضخم", size: "51.2", weight: "3500", description: "موعد الولادة! الجنين مكتمل النمو تماماً" },
+    40: { fruit: "", fruitName: "يقطين ضخم", size: "51.2", weight: "3500", description: "موعد الولادة! الجنين مكتمل النمو تماماً" },
 };
 
-// نصائح طبية حسب المرحلة
+// نصائح طبية حسب المرحلة (معدلة للقيم الإسلامية)
 const medicalTips = {
     first: [
         { icon: "💊", text: "تناولي حمض الفوليك يومياً (400-800 ميكروغرام)" },
@@ -48,22 +48,25 @@ const medicalTips = {
         { icon: "🚫", text: "تجنبي الكافيين والكحول والتدخين" },
         { icon: "😴", text: "احصلي على قسط كافٍ من الراحة والنوم" },
         { icon: "🏃‍♀️", text: "مارسي تمارين خفيفة مثل المشي بعد استشارة الطبيب" },
+        { icon: "📖", text: "أكثري من قراءة القرآن والاستماع إليه لتهدئة النفس" },
+        { icon: "🤲", text: "أكثري من الدعاء والذكر وطلب الحفظ من الله" },
     ],
     second: [
         { icon: "🥛", text: "زيادة تناول الكالسيوم والحديد" },
-        { icon: "👶", text: "ابدئي بالحديث مع جنينك والغناء له" },
-        { icon: "🧘‍♀️", text: "مارسي تمارين كيجل لتقوية عضلات الحوض" },
+        { icon: "👶", text: "ابدئي بالحديث مع جنينك وقراءة القرآن له" },
+        { icon: "🧘♀️", text: "مارسي تمارين كيجل لتقوية عضلات الحوض" },
         { icon: "📚", text: "ابدئي بالقراءة عن الولادة والعناية بالمولود" },
-        { icon: "👗", text: "ارتدي ملابس مريحة وحمالة صدر داعمة" },
-        { icon: "📸", text: "فكري في تصوير جلسة حمل تذكارية" },
+        { icon: "👗", text: "ارتدي ملابس مريحة وفضفاضة" },
+        { icon: "🕌", text: "حافظي على الصلاة والذكر والدعاء للجنين" },
     ],
     third: [
         { icon: "🏥", text: "جهزي حقيبة المستشفى مبكراً" },
         { icon: "🚗", text: "ركبي مقعد الطفل في السيارة" },
         { icon: "📋", text: "تعرفي على علامات الولادة المبكرة" },
-        { icon: "🤱", text: "تعلمي عن الرضاعة الطبيعية" },
+        { icon: "", text: "تعلمي عن الرضاعة الطبيعية وأحكامها" },
         { icon: "🛏️", text: "نامي على جانبك الأيسر لتحسين الدورة الدموية" },
         { icon: "📞", text: "احتفظي برقم الطوارئ الطبي قريباً" },
+        { icon: "🤲", text: "أكثري من الدعاء بولادة سهلة وميسرة" },
     ]
 };
 
@@ -80,6 +83,39 @@ darkModeToggle.addEventListener('click', () => {
     html.classList.toggle('dark');
     localStorage.setItem('darkMode', html.classList.contains('dark'));
 });
+
+// دالة تنسيق التاريخ بالعربية
+const formatDate = (date) => {
+    const months = [
+        'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+        'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+    ];
+    
+    const days = [
+        'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'
+    ];
+    
+    const dayName = days[date.getDay()];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    
+    return `${dayName}، ${day} ${month} ${year}`;
+};
+
+// دالة تنسيق التاريخ المختصر
+const formatDateShort = (date) => {
+    const months = [
+        'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+        'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+    ];
+    
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    
+    return `${day} ${month} ${year}`;
+};
 
 // المنطق الرئيسي
 document.addEventListener('DOMContentLoaded', () => {
@@ -141,16 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
             trimesterKey = "third";
         }
 
-        // تنسيق التواريخ
-        const formatDate = (date) => {
-            return date.toLocaleDateString('ar-DZ', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                weekday: 'long'
-            });
-        };
-
         // عرض النتائج
         document.getElementById('eddResult').innerText = formatDate(eddDate);
         document.getElementById('conceptionDate').innerText = formatDate(conceptionDate);
@@ -159,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const ovulationStart = new Date(conceptionTime - (2 * ONE_DAY));
         const ovulationEnd = new Date(conceptionTime + (1 * ONE_DAY));
         document.getElementById('ovulationDate').innerText =
-            `${ovulationStart.toLocaleDateString('ar-DZ')} - ${ovulationEnd.toLocaleDateString('ar-DZ')}`;
+            `${formatDateShort(ovulationStart)} - ${formatDateShort(ovulationEnd)}`;
 
         document.getElementById('gestationalAge').innerText = `${currentWeek} أسبوع و ${currentDay} أيام`;
         document.getElementById('trimester').innerText = trimester;
