@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>النسب الطبيعية لجسم الإنسان</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <!-- LOADER -->
+    <div class="loader" id="loader">
+        <div class="loader-heartbeat"><i class="fas fa-heartbeat"></i></div>
+        <div class="loader-text">جاري تحميل البيانات الطبية...</div>
+        <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+    </div>
+
+    <!-- BACKGROUND ANIMATION -->
+    <div class="bg-animation">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="header" id="header">
+        <div class="header-inner">
+            <a href="#" class="logo">
+                <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+                <div class="logo-text"><span>Vital</span>Check</div>
+            </a>
+            <div class="header-actions">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="ابحث عن مؤشر طبي...">
+                </div>
+                <button class="theme-toggle" id="themeToggle" title="تبديل الوضع">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-badge">
+            <span class="pulse-dot"></span>
+            مرجع طبي شامل ومحدّث
+        </div>
+        <h1>النسب الطبيعية<br><span class="gradient-text">لجسم الإنسان</span></h1>
+        <p>دليلك الشامل للتعرف على المؤشرات الحيوية والنسب الطبيعية في الجسم، مصمم بطريقة تفاعلية وسهلة الفهم</p>
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number" id="totalIndicators">0</div>
+                <div class="stat-label">مؤشر طبي</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="totalCategories">0</div>
+                <div class="stat-label">تصنيف</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="totalTests">0</div>
+                <div class="stat-label">تحليل مخبري</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="nav-tabs">
+        <div class="tabs-wrapper" id="tabsWrapper">
+            <button class="tab-btn active" data-category="all">
+                <i class="fas fa-th-large"></i> الكل
+            </button>
+            <button class="tab-btn" data-category="vital">
+                <i class="fas fa-heartbeat"></i> العلامات الحيوية
+            </button>
+            <button class="tab-btn" data-category="blood">
+                <i class="fas fa-tint"></i> تحاليل الدم
+            </button>
+            <button class="tab-btn" data-category="metabolic">
+                <i class="fas fa-flask"></i> الأيض والكيمياء
+            </button>
+            <button class="tab-btn" data-category="organ">
+                <i class="fas fa-lungs"></i> وظائف الأعضاء
+            </button>
+            <button class="tab-btn" data-category="hormone">
+                <i class="fas fa-dna"></i> الهرمونات
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content" id="mainContent">
+        <!-- Cards will be injected by JS -->
+    </main>
+
+    <!-- BMI CALCULATOR -->
+    <section class="main-content">
+        <div class="bmi-section" id="bmiSection">
+            <div class="bmi-header">
+                <h2>🧮 حاسبة مؤشر كتلة الجسم (BMI)</h2>
+                <p>أدخل بياناتك لمعرفة ما إذا كان وزنك ضمن النطاق الصحي</p>
+            </div>
+            <div class="bmi-form">
+                <div class="form-group">
+                    <label>الوزن (كجم)</label>
+                    <input type="number" id="weightInput" placeholder="70" min="20" max="300">
+                </div>
+                <div class="form-group">
+                    <label>الطول (سم)</label>
+                    <input type="number" id="heightInput" placeholder="170" min="100" max="250">
+                </div>
+                <div class="form-group">
+                    <label>العمر</label>
+                    <input type="number" id="ageInput" placeholder="30" min="1" max="120">
+                </div>
+                <div class="form-group">
+                    <label>الجنس</label>
+                    <select id="genderInput">
+                        <option value="male">ذكر</option>
+                        <option value="female">أنثى</option>
+                    </select>
+                </div>
+                <button class="calc-btn" onclick="calculateBMI()">
+                    <i class="fas fa-calculator"></i> احسب
+                </button>
+            </div>
+            <div class="bmi-result" id="bmiResult">
+                <div class="bmi-value" id="bmiValue">--</div>
+                <div class="bmi-category" id="bmiCategory">--</div>
+                <div class="bmi-scale">
+                    <div class="underweight"></div>
+                    <div class="normal-w"></div>
+                    <div class="overweight"></div>
+                    <div class="obese"></div>
+                    <div class="very-obese"></div>
+                    <div class="bmi-pointer" id="bmiPointer"></div>
+                </div>
+                <div class="bmi-scale-labels">
+                    <span>نحافة</span>
+                    <span>طبيعي</span>
+                    <span>وزن زائد</span>
+                    <span>سمنة</span>
+                    <span>سمنة مفرطة</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>صُنع بـ <span class="heart">❤️</span> كمصدر تعليمي | لا يُغني عن استشارة الطبيب المختص</p>
+    </footer>
+
+    <!-- BACK TO TOP -->
+    <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0})">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="script.js"></script>
+</body>
+</html>
