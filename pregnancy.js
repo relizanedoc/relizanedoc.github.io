@@ -1,50 +1,29 @@
 // ===================================
-// 📅 إنشاء قوائم التاريخ (يوم، شهر، سنة)
+// 🌙 الوضع الليلي
 // ===================================
+const darkModeToggle = document.getElementById('darkModeToggle');
+const html = document.documentElement;
 
+if (localStorage.getItem('darkMode') === 'true') {
+    html.classList.add('dark');
+}
+
+darkModeToggle.addEventListener('click', () => {
+    html.classList.toggle('dark');
+    localStorage.setItem('darkMode', html.classList.contains('dark'));
+});
+
+// ===================================
+// 📅 أسماء الشهور (لهجة جزائرية)
+// ===================================
 const months = [
     'جانفي', 'فيفري', 'مارس', 'أبريل', 'ماي', 'جوان',
     'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
 ];
 
-// إنشاء قائمة الأيام (1-31)
-const daySelect = document.getElementById('day');
-for (let i = 1; i <= 31; i++) {
-    const option = document.createElement('option');
-    option.value = i;
-    option.textContent = i;
-    daySelect.appendChild(option);
-}
-
-// إنشاء قائمة الشهور (1-12)
-const monthSelect = document.getElementById('month');
-months.forEach((month, index) => {
-    const option = document.createElement('option');
-    option.value = index + 1;
-    option.textContent = month;
-    monthSelect.appendChild(option);
-});
-
-// إنشاء قائمة السنوات (السنة الحالية والسنة السابقة فقط)
-const yearSelect = document.getElementById('year');
-const currentYear = new Date().getFullYear();
-
-// نحتاج فقط السنة الحالية والسنة الماضية
-// لأن آخر دورة شهرية تكون عادةً في آخر 9-10 أشهر
-for (let year = currentYear; year >= currentYear - 1; year--) {
-    const option = document.createElement('option');
-    option.value = year;
-    option.textContent = year;
-    yearSelect.appendChild(option);
-}
-
-// تحديد التاريخ الافتراضي (أمس)
-const yesterday = new Date();
-yesterday.setDate(yesterday.getDate() - 1);
-daySelect.value = yesterday.getDate();
-monthSelect.value = yesterday.getMonth() + 1;
-yearSelect.value = yesterday.getFullYear();
-// بيانات تطور الجنين أسبوعياً
+// ===================================
+// 📅 بيانات تطور الجنين أسبوعياً
+// ===================================
 const fetalDevelopment = {
     1: { fruit: "🌸", fruitName: "بداية الدورة", size: "0", weight: "0", description: "الأسبوع الأول من الحمل يُحسب من أول يوم في آخر دورة شهرية. لم يحدث الحمل بعد فعلياً" },
     2: { fruit: "🥚", fruitName: "بويضة", size: "0.01", weight: "0", description: "يستعد الجسم للإباضة. تخرج بويضة ناضجة من المبيض في نهاية هذا الأسبوع" },
@@ -82,12 +61,15 @@ const fetalDevelopment = {
     34: { fruit: "🥥", fruitName: "جوزة هند كبيرة", size: "45", weight: "2146", description: "تتطور الرئتان بشكل شبه كامل" },
     35: { fruit: "🍈", fruitName: "شمام", size: "46.2", weight: "2383", description: "يتطور الكبد والجهاز المناعي" },
     36: { fruit: "🍈", fruitName: "شمام كبير", size: "47.4", weight: "2622", description: "تتطور قبضة اليد ويصبح الجنين مستعداً للولادة" },
-    37: { fruit: "🍉", fruitName: "بطيخة صغيرة", size: "48.6", weight: "2859", description: "الحمل في مرحلة المكتمل المبكر . الجنين مستعد للحياة خارج الرحم" }, 
+    37: { fruit: "🍉", fruitName: "بطيخة صغيرة", size: "48.6", weight: "2859", description: "الحمل في مرحلة المكتمل المبكر. الجنين مستعد للحياة خارج الرحم" },
     38: { fruit: "🍉", fruitName: "بطيخة متوسطة", size: "49.8", weight: "3100", description: "يستمر النضج النهائي للدماغ والرئتين، والجنين جاهز للولادة" },
-    39: { fruit: "🍉", fruitName: "بطيخة كبيرة", size: "50.7", weight: "3300", description: "الجنين مكتمل النمو تماماً ، والولادة يمكن أن تحدث في أي لحظة" },
+    39: { fruit: "🍉", fruitName: "بطيخة كبيرة", size: "50.7", weight: "3300", description: "الجنين مكتمل النمو تماماً، والولادة يمكن أن تحدث في أي لحظة" },
     40: { fruit: "🍉", fruitName: "بطيخة كاملة", size: "51.2", weight: "3500", description: "موعد الولادة! الجنين مكتمل النمو تماماً" },
 };
-// نصائح طبية حسب المرحلة (معدلة للقيم الإسلامية)
+
+// ===================================
+// 💡 نصائح طبية حسب المرحلة
+// ===================================
 const medicalTips = {
     first: [
         { icon: "💊", text: "تناولي حمض الفوليك يومياً (400-800 ميكروغرام)" },
@@ -102,7 +84,7 @@ const medicalTips = {
     second: [
         { icon: "🥛", text: "زيادة تناول الكالسيوم والحديد" },
         { icon: "👶", text: "ابدئي بالحديث مع جنينك وقراءة القرآن له" },
-        { icon: "🧘♀️", text: "مارسي تمارين كيجل لتقوية عضلات الحوض" },
+        { icon: "🧘‍♀️", text: "مارسي تمارين كيجل لتقوية عضلات الحوض" },
         { icon: "📚", text: "ابدئي بالقراءة عن الولادة والعناية بالمولود" },
         { icon: "👗", text: "ارتدي ملابس مريحة وفضفاضة" },
         { icon: "🕌", text: "حافظي على الصلاة والذكر والدعاء للجنين" },
@@ -111,34 +93,17 @@ const medicalTips = {
         { icon: "🏥", text: "جهزي حقيبة المستشفى مبكراً" },
         { icon: "🚗", text: "ركبي مقعد الطفل في السيارة" },
         { icon: "📋", text: "تعرفي على علامات الولادة المبكرة" },
-        { icon: "", text: "تعلمي عن الرضاعة الطبيعية وأحكامها" },
+        { icon: "🤱", text: "تعلمي عن الرضاعة الطبيعية وأحكامها" },
         { icon: "🛏️", text: "نامي على جانبك الأيسر لتحسين الدورة الدموية" },
         { icon: "📞", text: "احتفظي برقم الطوارئ الطبي قريباً" },
         { icon: "🤲", text: "أكثري من الدعاء بولادة سهلة وميسرة" },
     ]
 };
 
-// الوضع الليلي
-const darkModeToggle = document.getElementById('darkModeToggle');
-const html = document.documentElement;
-
-// التحقق من الوضع المحفوظ
-if (localStorage.getItem('darkMode') === 'true') {
-    html.classList.add('dark');
-}
-
-darkModeToggle.addEventListener('click', () => {
-    html.classList.toggle('dark');
-    localStorage.setItem('darkMode', html.classList.contains('dark'));
-});
-
-// دالة تنسيق التاريخ بالعربية
+// ===================================
+// 📝 دوال تنسيق التاريخ
+// ===================================
 const formatDate = (date) => {
-    const months = [
-        'يناير', 'فبراير', 'مارس', 'أبريل', 'ماي', 'جوان',
-        'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-    ];
-    
     const days = [
         'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'
     ];
@@ -151,13 +116,7 @@ const formatDate = (date) => {
     return `${dayName}، ${day} ${month} ${year}`;
 };
 
-// دالة تنسيق التاريخ المختصر
 const formatDateShort = (date) => {
-    const months = [
-        'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-        'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-    ];
-    
     const day = date.getDate();
     const month = months[date.getMonth()];
     const year = date.getFullYear();
@@ -165,43 +124,86 @@ const formatDateShort = (date) => {
     return `${day} ${month} ${year}`;
 };
 
-// المنطق الرئيسي
+// ===================================
+// 🚀 المنطق الرئيسي
+// ===================================
 document.addEventListener('DOMContentLoaded', () => {
+    
+    // ✅ ملء قوائم التاريخ (داخل DOMContentLoaded)
+    const daySelect = document.getElementById('day');
+    const monthSelect = document.getElementById('month');
+    const yearSelect = document.getElementById('year');
+    
+    // ملء قائمة الأيام (1-31)
+    for (let i = 1; i <= 31; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        daySelect.appendChild(option);
+    }
+    
+    // ملء قائمة الشهور (1-12)
+    months.forEach((month, index) => {
+        const option = document.createElement('option');
+        option.value = index + 1;
+        option.textContent = month;
+        monthSelect.appendChild(option);
+    });
+    
+    // ملء قائمة السنوات (السنة الحالية والسنة السابقة)
+    const currentYear = new Date().getFullYear();
+    for (let year = currentYear; year >= currentYear - 1; year--) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    }
+    
+    // تحديد التاريخ الافتراضي (أمس)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    daySelect.value = yesterday.getDate();
+    monthSelect.value = yesterday.getMonth() + 1;
+    yearSelect.value = yesterday.getFullYear();
+    
+    // ===================================
+    // 📊 معالجة النموذج
+    // ===================================
     const form = document.getElementById('calcForm');
     const ONE_DAY = 1000 * 60 * 60 * 24;
 
-   form.addEventListener('submit', function(e) {
-    e.preventDefault();
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
 
-    // استخراج المدخلات من القوائم المنسدلة
-    const day = parseInt(document.getElementById('day').value);
-    const month = parseInt(document.getElementById('month').value);
-    const year = parseInt(document.getElementById('year').value);
-    const cycleLength = parseInt(document.getElementById('cycle').value);
+        // استخراج المدخلات
+        const day = parseInt(document.getElementById('day').value);
+        const month = parseInt(document.getElementById('month').value);
+        const year = parseInt(document.getElementById('year').value);
+        const cycleLength = parseInt(document.getElementById('cycle').value);
 
-    // إنشاء تاريخ من القيم المختارة
-    const lmpDate = new Date(year, month - 1, day);
+        // التحقق من المدخلات
+        if (!day || !month || !year || isNaN(cycleLength)) {
+            alert('الرجاء إدخال جميع البيانات المطلوبة');
+            return;
+        }
 
-       if (!day || !month || !year || isNaN(cycleLength)) {
-    alert('الرجاء إدخال جميع البيانات المطلوبة');
-    return;
-}
+        // إنشاء تاريخ من القيم المختارة
+        const lmpDate = new Date(year, month - 1, day);
+        const today = new Date();
 
-const today = new Date();
+        // التحقق من صحة التاريخ
+        if (lmpDate > today) {
+            alert('لا يمكن أن يكون تاريخ آخر دورة في المستقبل');
+            return;
+        }
 
-// التحقق من صحة التاريخ
-if (lmpDate > today) {
-    alert('لا يمكن أن يكون تاريخ آخر دورة في المستقبل');
-    return;
-}
-
-// التحقق من أن التاريخ ليس قديماً جداً (أكثر من سنة)
-const oneYearAgo = new Date();
-oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-if (lmpDate < oneYearAgo) {
-    alert('الرجاء التأكد من صحة التاريخ المدخل');
-    return;
-}
+        // التحقق من أن التاريخ ليس قديماً جداً
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        if (lmpDate < oneYearAgo) {
+            alert('الرجاء التأكد من صحة التاريخ المدخل');
+            return;
+        }
 
         // الحسابات الطبية
         const cycleAdjustment = cycleLength - 28;
@@ -210,7 +212,7 @@ if (lmpDate < oneYearAgo) {
         const conceptionTime = lmpDate.getTime() + ((14 + cycleAdjustment) * ONE_DAY);
         const conceptionDate = new Date(conceptionTime);
 
-        // موعد الولادة المتوقع (EDD) - قاعدة Naegele
+        // موعد الولادة المتوقع
         const eddTime = lmpDate.getTime() + ((280 + cycleAdjustment) * ONE_DAY);
         const eddDate = new Date(eddTime);
 
@@ -262,7 +264,7 @@ if (lmpDate < oneYearAgo) {
         document.getElementById('countdownHours').innerText = hoursUntilBirth;
 
         // تطور الجنين
-        const weekData = fetalDevelopment[Math.min(40, Math.max(4, currentWeek))] || fetalDevelopment[20];
+        const weekData = fetalDevelopment[Math.min(40, Math.max(1, currentWeek))] || fetalDevelopment[20];
         document.getElementById('fruitIcon').innerText = weekData.fruit;
         document.getElementById('fruitName').innerText = `بحجم ${weekData.fruitName}`;
         document.getElementById('weekTitle').innerText = `الأسبوع ${currentWeek}`;
@@ -290,14 +292,14 @@ if (lmpDate < oneYearAgo) {
         }, 100);
 
         // حفظ البيانات
-       localStorage.setItem('pregnancyData', JSON.stringify({
-    day: day,
-    month: month,
-    year: year,
-    cycle: cycleLength,
-    edd: eddDate.toISOString(),
-    savedAt: new Date().toISOString()
-}));
+        localStorage.setItem('pregnancyData', JSON.stringify({
+            day: day,
+            month: month,
+            year: year,
+            cycle: cycleLength,
+            edd: eddDate.toISOString(),
+            savedAt: new Date().toISOString()
+        }));
 
         // إظهار قسم النتائج
         document.getElementById('resultsArea').classList.remove('hidden');
@@ -308,17 +310,19 @@ if (lmpDate < oneYearAgo) {
         }, 200);
     });
 
-   // تحميل البيانات المحفوظة
-const savedData = localStorage.getItem('pregnancyData');
-if (savedData) {
-    try {
-        const data = JSON.parse(savedData);
-        document.getElementById('day').value = data.day || day;
-        document.getElementById('month').value = data.month || month;
-        document.getElementById('year').value = data.year || year;
-        document.getElementById('cycle').value = data.cycle;
-    } catch (e) {
-        console.error('خطأ في تحميل البيانات المحفوظة');
+    // ===================================
+    // 💾 تحميل البيانات المحفوظة
+    // ===================================
+    const savedData = localStorage.getItem('pregnancyData');
+    if (savedData) {
+        try {
+            const data = JSON.parse(savedData);
+            if (data.day) daySelect.value = data.day;
+            if (data.month) monthSelect.value = data.month;
+            if (data.year) yearSelect.value = data.year;
+            if (data.cycle) document.getElementById('cycle').value = data.cycle;
+        } catch (e) {
+            console.error('خطأ في تحميل البيانات المحفوظة');
+        }
     }
-}
 });
