@@ -1,3 +1,46 @@
+// ===================================
+// 📅 إنشاء قوائم التاريخ (يوم، شهر، سنة)
+// ===================================
+
+const months = [
+    'جانفي', 'فيفري', 'مارس', 'أبريل', 'ماي', 'جوان',
+    'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+];
+
+// إنشاء قائمة الأيام (1-31)
+const daySelect = document.getElementById('day');
+for (let i = 1; i <= 31; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = i;
+    daySelect.appendChild(option);
+}
+
+// إنشاء قائمة الشهور (1-12)
+const monthSelect = document.getElementById('month');
+months.forEach((month, index) => {
+    const option = document.createElement('option');
+    option.value = index + 1;
+    option.textContent = month;
+    monthSelect.appendChild(option);
+});
+
+// إنشاء قائمة السنوات (من 2020 إلى 2026)
+const yearSelect = document.getElementById('year');
+const currentYear = new Date().getFullYear();
+for (let year = currentYear; year >= currentYear - 6; year--) {
+    const option = document.createElement('option');
+    option.value = year;
+    option.textContent = year;
+    yearSelect.appendChild(option);
+}
+
+// تحديد التاريخ الافتراضي (أمس)
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+daySelect.value = yesterday.getDate();
+monthSelect.value = yesterday.getMonth() + 1;
+yearSelect.value = yesterday.getFullYear();
 // بيانات تطور الجنين أسبوعياً
 const fetalDevelopment = {
     1: { fruit: "🌸", fruitName: "بداية الدورة", size: "0", weight: "0", description: "الأسبوع الأول من الحمل يُحسب من أول يوم في آخر دورة شهرية. لم يحدث الحمل بعد فعلياً" },
@@ -124,26 +167,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('calcForm');
     const ONE_DAY = 1000 * 60 * 60 * 24;
 
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
+   form.addEventListener('submit', function(e) {
+    e.preventDefault();
 
-        // استخراج المدخلات
-        const lmpInput = document.getElementById('lmp').value;
-        const cycleLength = parseInt(document.getElementById('cycle').value);
+    // استخراج المدخلات من القوائم المنسدلة
+    const day = parseInt(document.getElementById('day').value);
+    const month = parseInt(document.getElementById('month').value);
+    const year = parseInt(document.getElementById('year').value);
+    const cycleLength = parseInt(document.getElementById('cycle').value);
 
-        if (!lmpInput || isNaN(cycleLength)) {
-            alert('الرجاء إدخال جميع البيانات المطلوبة');
-            return;
-        }
+    // إنشاء تاريخ من القيم المختارة
+    const lmpDate = new Date(year, month - 1, day);
 
-        const lmpDate = new Date(lmpInput);
-        const today = new Date();
+       if (!day || !month || !year || isNaN(cycleLength)) {
+    alert('الرجاء إدخال جميع البيانات المطلوبة');
+    return;
+}
 
-        // التحقق من صحة التاريخ
-        if (lmpDate > today) {
-            alert('لا يمكن أن يكون تاريخ آخر دورة في المستقبل');
-            return;
-        }
+const today = new Date();
+
+// التحقق من صحة التاريخ
+if (lmpDate > today) {
+    alert('لا يمكن أن يكون تاريخ آخر دورة في المستقبل');
+    return;
+}
+
+// التحقق من أن التاريخ ليس قديماً جداً (أكثر من سنة)
+const oneYearAgo = new Date();
+oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+if (lmpDate < oneYearAgo) {
+    alert('الرجاء التأكد من صحة التاريخ المدخل');
+    return;
+}
 
         // الحسابات الطبية
         const cycleAdjustment = cycleLength - 28;
@@ -232,12 +287,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
 
         // حفظ البيانات
-        localStorage.setItem('pregnancyData', JSON.stringify({
-            lmp: lmpInput,
-            cycle: cycleLength,
-            edd: eddDate.toISOString(),
-            savedAt: new Date().toISOString()
-        }));
+       localStorage.setItem('pregnancyData', JSON.stringify({
+    day: day,
+    month: month,
+    year: year,
+    cycle: cycleLength,
+    edd: eddDate.toISOString(),
+    savedAt: new Date().toISOString()
+}));
 
         // إظهار قسم النتائج
         document.getElementById('resultsArea').classList.remove('hidden');
@@ -248,15 +305,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 200);
     });
 
-    // تحميل البيانات المحفوظة
-    const savedData = localStorage.getItem('pregnancyData');
-    if (savedData) {
-        try {
-            const data = JSON.parse(savedData);
-            document.getElementById('lmp').value = data.lmp;
-            document.getElementById('cycle').value = data.cycle;
-        } catch (e) {
-            console.error('خطأ في تحميل البيانات المحفوظة');
-        }
+   // تحميل البيانات المحفوظة
+const savedData = localStorage.getItem('pregnancyData');
+if (savedData) {
+    try {
+        const data = JSON.parse(savedData);
+        document.getElementById('day').value = data.day || day;
+        document.getElementById('month').value = data.month || month;
+        document.getElementById('year').value = data.year || year;
+        document.getElementById('cycle').value = data.cycle;
+    } catch (e) {
+        console.error('خطأ في تحميل البيانات المحفوظة');
     }
+}
 });
