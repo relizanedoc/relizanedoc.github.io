@@ -643,7 +643,30 @@ function createCard(item) {
         </article>
     `;
 }
+// ===== INTERSECTION OBSERVER =====
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const card = entry.target;
+            card.classList.add('visible');
+            
+            const gaugeFill = card.querySelector('.gauge-fill');
+            if (gaugeFill) {
+                gaugeFill.style.strokeDashoffset = gaugeFill.dataset.target;
+            }
+            
+            const rangeFill = card.querySelector('.range-fill');
+            if (rangeFill) {
+                rangeFill.style.width = rangeFill.dataset.width;
+            }
+            
+            observer.unobserve(card);
+        }
+    });
+}, { threshold: 0.1 });
 
+function renderCards(filter = 'all') {
+}
 function renderCards(filter = 'all') {
     const container = document.getElementById('mainContent');
     const filtered = filter === 'all' 
@@ -815,23 +838,3 @@ window.addEventListener('load', () => {
         animateCounter(document.getElementById('totalTests'), 45, 1500);
     }, 1800);
 });
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const card = entry.target;
-            card.classList.add('visible');
-            
-            const gaugeFill = card.querySelector('.gauge-fill');
-            if (gaugeFill) {
-                gaugeFill.style.strokeDashoffset = gaugeFill.dataset.target;
-            }
-            
-            const rangeFill = card.querySelector('.range-fill');
-            if (rangeFill) {
-                rangeFill.style.width = rangeFill.dataset.width;
-            }
-            
-            observer.unobserve(card);
-        }
-    });
-}, { threshold: 0.1 });
