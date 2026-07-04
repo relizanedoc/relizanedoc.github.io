@@ -666,8 +666,6 @@ const observer = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 
 function renderCards(filter = 'all') {
-}
-function renderCards(filter = 'all') {
     const container = document.getElementById('mainContent');
     const filtered = filter === 'all' 
         ? medicalData 
