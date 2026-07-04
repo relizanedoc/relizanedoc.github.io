@@ -132,6 +132,10 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    /* إصلاح الحروف العربية */
+    line-height: 1.8;
+    padding-bottom: 0.15em;
+    display: inline-block;
 }
 
 /* تأثير تحديد النص */
