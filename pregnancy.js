@@ -25,10 +25,13 @@ months.forEach((month, index) => {
     monthSelect.appendChild(option);
 });
 
-// إنشاء قائمة السنوات (من 2020 إلى 2026)
+// إنشاء قائمة السنوات (السنة الحالية والسنة السابقة فقط)
 const yearSelect = document.getElementById('year');
 const currentYear = new Date().getFullYear();
-for (let year = currentYear; year >= currentYear - 6; year--) {
+
+// نحتاج فقط السنة الحالية والسنة الماضية
+// لأن آخر دورة شهرية تكون عادةً في آخر 9-10 أشهر
+for (let year = currentYear; year >= currentYear - 1; year--) {
     const option = document.createElement('option');
     option.value = year;
     option.textContent = year;
