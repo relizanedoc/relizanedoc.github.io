@@ -677,24 +677,9 @@ function renderCards(filter = 'all') {
     container.innerHTML = html;
 
     // Animate cards in
-    requestAnimationFrame(() => {
-        const cards = container.querySelectorAll('.vital-card');
-        cards.forEach((card, index) => {
-            setTimeout(() => {
-                card.classList.add('visible');
-                // Animate gauge
-                const gaugeFill = card.querySelector('.gauge-fill');
-                if (gaugeFill) {
-                    gaugeFill.style.strokeDashoffset = gaugeFill.dataset.target;
-                }
-                // Animate range bar
-                const rangeFill = card.querySelector('.range-fill');
-                if (rangeFill) {
-                    rangeFill.style.width = rangeFill.dataset.width;
-                }
-            }, index * 80);
-        });
-    });
+    document.querySelectorAll('.vital-card').forEach(card => {
+    observer.observe(card);
+});
 }
 
 // ===== SEARCH =====
@@ -830,3 +815,23 @@ window.addEventListener('load', () => {
         animateCounter(document.getElementById('totalTests'), 45, 1500);
     }, 1800);
 });
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const card = entry.target;
+            card.classList.add('visible');
+            
+            const gaugeFill = card.querySelector('.gauge-fill');
+            if (gaugeFill) {
+                gaugeFill.style.strokeDashoffset = gaugeFill.dataset.target;
+            }
+            
+            const rangeFill = card.querySelector('.range-fill');
+            if (rangeFill) {
+                rangeFill.style.width = rangeFill.dataset.width;
+            }
+            
+            observer.unobserve(card);
+        }
+    });
+}, { threshold: 0.1 });
