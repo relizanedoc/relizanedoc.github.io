@@ -467,7 +467,7 @@
                 font-size: 2.5rem;
             }
         }
-        /* Footer */
+       /* Footer */
 footer {
     background: var(--bg-card);
     backdrop-filter: blur(10px);
@@ -477,13 +477,19 @@ footer {
     text-align: center;
     color: var(--text-secondary);
     font-size: 0.95rem;
+    direction: ltr;
+}
+
+footer > div:first-child {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 15px;
 }
 
 footer .footer-links {
     display: flex;
     justify-content: center;
     gap: 25px;
-    margin-top: 15px;
     flex-wrap: wrap;
 }
 
@@ -491,7 +497,9 @@ footer .footer-links a {
     color: var(--footer-link);
     text-decoration: none;
     font-weight: 600;
+    font-size: 0.9rem;
     transition: all 0.3s;
+    padding: 5px 0;
 }
 
 footer .footer-links a:hover {
@@ -500,9 +508,32 @@ footer .footer-links a:hover {
 }
 
 @media (max-width: 640px) {
+    footer {
+        padding: 25px 15px;
+    }
+
+    footer > div:first-child {
+        font-size: 0.85rem;
+    }
+
     footer .footer-links {
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
+        align-items: center;
+    }
+
+    footer .footer-links a {
+        font-size: 0.85rem;
+        padding: 8px 20px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        width: 100%;
+        max-width: 250px;
+    }
+
+    footer .footer-links a:hover {
+        background: var(--bg-input);
+        border-color: var(--accent-purple);
     }
 }
     </style>
