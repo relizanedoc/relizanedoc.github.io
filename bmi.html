@@ -3,22 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حاسبة مؤشر كتلة الجسم (BMI)-دليل أطباء غليزان</title>
-    <link rel="stylesheet" href="ranges.css">
+    <title>حاسبة مؤشر كتلة الجسم (BMI)</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
-            --bg-card: rgba(255, 255, 255, 0.95);
-            --glass-border: rgba(255, 255, 255, 0.2);
+            --bg-page: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-card: rgba(255, 255, 255, 0.98);
+            --bg-input: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
             --accent-blue: #3b82f6;
             --accent-purple: #8b5cf6;
             --accent-pink: #ec4899;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
             --success: #10b981;
-            --warning: #f59e0b;
             --danger: #ef4444;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --result-bg: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            --result-border: #bae6fd;
+        }
+
+        [data-theme="dark"] {
+            --bg-page: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --bg-card: rgba(30, 41, 59, 0.98);
+            --bg-input: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --result-bg: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
+            --result-border: #3b82f6;
         }
 
         * {
@@ -29,30 +44,96 @@
 
         body {
             font-family: 'Tajawal', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-page);
+            min-height: 100vh;
             color: var(--text-primary);
-            line-height: 1.6;
+            transition: all 0.3s ease;
         }
 
+        /* Navbar */
+        .navbar {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px var(--shadow);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            color: var(--accent-blue);
+            -webkit-text-fill-color: var(--accent-blue);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent-blue);
+            transform: scale(1.05);
+        }
+
+        /* BMI Page */
         .bmi-page {
-            min-height: 100vh;
-            padding: 120px 20px 60px;
+            min-height: calc(100vh - 70px);
+            padding: 60px 20px;
         }
 
         .bmi-container {
-            max-width: 800px;
+            max-width: 700px;
             margin: 0 auto;
         }
 
         .bmi-card {
             background: var(--bg-card);
-            border: 1px solid var(--glass-border);
+            border: 1px solid var(--border);
             border-radius: 24px;
-            padding: 50px 40px;
+            padding: 40px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 60px var(--shadow);
         }
 
         .bmi-card::before {
@@ -67,20 +148,28 @@
 
         .bmi-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 35px;
         }
 
-        .bmi-header i {
-            font-size: 3rem;
+        .bmi-header .icon {
+            width: 70px;
+            height: 70px;
             background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 15px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .bmi-header .icon i {
+            font-size: 2rem;
+            color: white;
         }
 
         .bmi-header h1 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 800;
             color: var(--text-primary);
             margin-bottom: 10px;
@@ -88,51 +177,59 @@
 
         .bmi-header p {
             color: var(--text-secondary);
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
-        .bmi-form {
+        /* Form */
+        .form-grid {
             display: grid;
-            gap: 25px;
-            margin-bottom: 30px;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
         }
 
         .form-group {
             position: relative;
         }
 
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
         .form-group label {
-            display: block;
-            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
             margin-bottom: 10px;
             color: var(--text-primary);
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
         .form-group label i {
-            margin-left: 8px;
             color: var(--accent-blue);
         }
 
         .input-wrapper {
             position: relative;
-            display: flex;
-            align-items: center;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
-            padding: 15px 20px;
-            padding-left: 80px;
-            border: 2px solid #e5e7eb;
+            padding: 14px 18px;
+            padding-left: 70px;
+            border: 2px solid var(--border);
             border-radius: 12px;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-family: 'Tajawal', sans-serif;
-            transition: all 0.3s ease;
-            background: white;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transition: all 0.3s;
         }
 
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             border-color: var(--accent-blue);
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
@@ -140,25 +237,47 @@
 
         .input-unit {
             position: absolute;
-            left: 20px;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
             color: var(--text-secondary);
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .form-group select {
+            padding-left: 18px;
+            cursor: pointer;
+            appearance: none;
+        }
+
+        .select-arrow {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
         }
 
         .bmi-button {
             width: 100%;
-            padding: 18px;
+            padding: 16px;
             background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
             color: white;
             border: none;
             border-radius: 12px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
             font-family: 'Tajawal', sans-serif;
             box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .bmi-button:hover {
@@ -166,18 +285,19 @@
             box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
         }
 
-        .bmi-button:active {
-            transform: translateY(0);
-        }
-
+        /* Result */
         .bmi-result {
-            margin-top: 40px;
+            margin-top: 30px;
             padding: 30px;
             border-radius: 16px;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 2px solid #bae6fd;
+            background: var(--result-bg);
+            border: 2px solid var(--result-border);
             display: none;
             animation: slideIn 0.5s ease;
+        }
+
+        .bmi-result.show {
+            display: block;
         }
 
         @keyframes slideIn {
@@ -189,10 +309,6 @@
                 opacity: 1;
                 transform: translateY(0);
             }
-        }
-
-        .bmi-result.show {
-            display: block;
         }
 
         .result-header {
@@ -211,38 +327,32 @@
         }
 
         .bmi-category {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            margin-bottom: 15px;
-            padding: 10px 20px;
+            padding: 10px 25px;
             border-radius: 25px;
             display: inline-block;
+            margin-bottom: 15px;
         }
 
-        .category-underweight {
-            background: #dbeafe;
-            color: #1e40af;
-        }
+        .category-underweight { background: #dbeafe; color: #1e40af; }
+        .category-normal { background: #d1fae5; color: #065f46; }
+        .category-overweight { background: #fef3c7; color: #92400e; }
+        .category-obese { background: #fee2e2; color: #991b1b; }
 
-        .category-normal {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .category-overweight {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .category-obese {
-            background: #fee2e2;
-            color: #991b1b;
-        }
+        [data-theme="dark"] .category-underweight { background: #1e3a8a; color: #93c5fd; }
+        [data-theme="dark"] .category-normal { background: #065f46; color: #6ee7b7; }
+        [data-theme="dark"] .category-overweight { background: #92400e; color: #fcd34d; }
+        [data-theme="dark"] .category-obese { background: #991b1b; color: #fca5a5; }
 
         .bmi-ranges {
             margin-top: 25px;
             padding-top: 25px;
             border-top: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .bmi-ranges {
+            border-top-color: rgba(255, 255, 255, 0.1);
         }
 
         .range-item {
@@ -251,6 +361,10 @@
             align-items: center;
             padding: 12px 0;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .range-item {
+            border-bottom-color: rgba(255, 255, 255, 0.05);
         }
 
         .range-item:last-child {
@@ -270,20 +384,22 @@
         .bmi-tips {
             margin-top: 25px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.7);
+            background: var(--bg-input);
             border-radius: 12px;
             border-right: 4px solid var(--accent-blue);
         }
 
         .bmi-tips h3 {
             color: var(--accent-blue);
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .bmi-tips ul {
             list-style: none;
-            padding-right: 0;
         }
 
         .bmi-tips li {
@@ -312,6 +428,11 @@
             display: none;
         }
 
+        [data-theme="dark"] .error-message {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
         .error-message.show {
             display: block;
             animation: shake 0.5s ease;
@@ -323,86 +444,111 @@
             75% { transform: translateX(10px); }
         }
 
-        @media (max-width: 768px) {
-            .bmi-page {
-                padding: 80px 15px 40px;
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
             }
-
+            
             .bmi-card {
-                padding: 30px 20px;
+                padding: 25px;
             }
-
+            
             .bmi-header h1 {
-                font-size: 2rem;
+                font-size: 1.5rem;
             }
-
+            
             .bmi-value {
                 font-size: 2.5rem;
-            }
-
-            .form-group input {
-                font-size: 1rem;
-                padding: 12px 15px;
-                padding-left: 70px;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="bmi.html" class="logo">
+                <i class="fas fa-heartbeat"></i>
+                <span>VitalCheck</span>
+            </a>
+            <div class="nav-actions">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                    <span id="themeText">الوضع الليلي</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- BMI Page -->
     <div class="bmi-page">
         <div class="bmi-container">
             <div class="bmi-card">
                 <div class="bmi-header">
-                    <i class="fas fa-weight-scale"></i>
+                    <div class="icon">
+                        <i class="fas fa-weight-scale"></i>
+                    </div>
                     <h1>حاسبة مؤشر كتلة الجسم</h1>
-                    <p>احسب مؤشر كتلة جسمك لمعرفة ما إذا كان وزنك مثاليًا</p>
+                    <p>احسب مؤشر كتلة جسمك لمعرفة ما إذا كان وزنك مثالياً</p>
                 </div>
 
-                <form class="bmi-form" id="bmiForm">
-                    <div class="form-group">
-                        <label for="weight">
-                            <i class="fas fa-weight-hanging"></i>
-                            الوزن
-                        </label>
-                        <div class="input-wrapper">
-                            <input 
-                                type="number" 
-                                id="weight" 
-                                name="weight" 
-                                placeholder="أدخل وزنك"
-                                min="20"
-                                max="300"
-                                step="0.1"
-                                required
-                            >
-                            <span class="input-unit">كجم</span>
+                <form id="bmiForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="weight">
+                                <i class="fas fa-weight-hanging"></i>
+                                الوزن
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="number" id="weight" placeholder="أدخل وزنك" min="20" max="300" step="0.1" required>
+                                <span class="input-unit">كجم</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="height">
+                                <i class="fas fa-ruler-vertical"></i>
+                                الطول
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="number" id="height" placeholder="أدخل طولك" min="50" max="250" step="0.1" required>
+                                <span class="input-unit">سم</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="age">
+                                <i class="fas fa-calendar-alt"></i>
+                                العمر
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="number" id="age" placeholder="عمرك" min="2" max="120" required>
+                                <span class="input-unit">سنة</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gender">
+                                <i class="fas fa-venus-mars"></i>
+                                الجنس
+                            </label>
+                            <div class="input-wrapper">
+                                <select id="gender" required>
+                                    <option value="">اختر الجنس</option>
+                                    <option value="male">ذكر</option>
+                                    <option value="female">أنثى</option>
+                                </select>
+                                <i class="fas fa-chevron-down select-arrow"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <button type="submit" class="bmi-button">
+                                <i class="fas fa-calculator"></i>
+                                احسب مؤشر كتلة الجسم
+                            </button>
                         </div>
                     </div>
-
-                    <div class="form-group">
-                        <label for="height">
-                            <i class="fas fa-ruler-vertical"></i>
-                            الطول
-                        </label>
-                        <div class="input-wrapper">
-                            <input 
-                                type="number" 
-                                id="height" 
-                                name="height" 
-                                placeholder="أدخل طولك"
-                                min="50"
-                                max="250"
-                                step="0.1"
-                                required
-                            >
-                            <span class="input-unit">سم</span>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="bmi-button">
-                        <i class="fas fa-calculator"></i>
-                        احسب مؤشر كتلة الجسم
-                    </button>
                 </form>
 
                 <div class="error-message" id="errorMessage">
@@ -445,44 +591,75 @@
     </div>
 
     <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.removeAttribute('data-theme');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                themeText.textContent = 'الوضع الليلي';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                themeText.textContent = 'الوضع النهاري';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Load saved theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.getElementById('themeIcon').classList.remove('fa-moon');
+            document.getElementById('themeIcon').classList.add('fa-sun');
+            document.getElementById('themeText').textContent = 'الوضع النهاري';
+        }
+
+        // BMI Calculator
         document.getElementById('bmiForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const weight = parseFloat(document.getElementById('weight').value);
             const height = parseFloat(document.getElementById('height').value);
+            const age = parseInt(document.getElementById('age').value);
+            const gender = document.getElementById('gender').value;
+            
             const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
             const resultDiv = document.getElementById('bmiResult');
             
-            // إخفاء الرسائل السابقة
             errorMessage.classList.remove('show');
             resultDiv.classList.remove('show');
             
-            // التحقق من صحة المدخلات
-            if (isNaN(weight) || isNaN(height) || weight <= 0 || height <= 0) {
-                errorText.textContent = 'يرجى إدخال قيم صحيحة للوزن والطول';
+            // Validation
+            if (isNaN(weight) || isNaN(height) || isNaN(age) || !gender) {
+                document.getElementById('errorText').textContent = 'يرجى ملء جميع الحقول بشكل صحيح';
                 errorMessage.classList.add('show');
                 return;
             }
             
             if (weight < 20 || weight > 300) {
-                errorText.textContent = 'يرجى إدخال وزن بين 20 و 300 كجم';
+                document.getElementById('errorText').textContent = 'يرجى إدخال وزن بين 20 و 300 كجم';
                 errorMessage.classList.add('show');
                 return;
             }
             
             if (height < 50 || height > 250) {
-                errorText.textContent = 'يرجى إدخال طول بين 50 و 250 سم';
+                document.getElementById('errorText').textContent = 'يرجى إدخال طول بين 50 و 250 سم';
                 errorMessage.classList.add('show');
                 return;
             }
             
-            // حساب مؤشر كتلة الجسم
+            // Calculate BMI
             const heightInMeters = height / 100;
             const bmi = weight / (heightInMeters * heightInMeters);
             const bmiRounded = bmi.toFixed(1);
             
-            // تحديد الفئة
+            // Determine category
             let category = '';
             let categoryClass = '';
             let tips = [];
@@ -490,49 +667,28 @@
             if (bmi < 18.5) {
                 category = 'نقص في الوزن';
                 categoryClass = 'category-underweight';
-                tips = [
-                    'تناول وجبات غنية بالسعرات الحرارية الصحية',
-                    'زيادة عدد الوجبات إلى 5-6 وجبات صغيرة يومياً',
-                    'ممارسة تمارين بناء العضلات',
-                    'استشارة أخصائي تغذية'
-                ];
+                tips = getTips('underweight', gender, age);
             } else if (bmi >= 18.5 && bmi < 25) {
                 category = 'وزن طبيعي';
                 categoryClass = 'category-normal';
-                tips = [
-                    'الحفاظ على نظام غذائي متوازن',
-                    'ممارسة الرياضة بانتظام (30 دقيقة يومياً)',
-                    'شرب كمية كافية من الماء (8 أكواب يومياً)',
-                    'النوم لمدة 7-8 ساعات يومياً'
-                ];
+                tips = getTips('normal', gender, age);
             } else if (bmi >= 25 && bmi < 30) {
                 category = 'زيادة في الوزن';
                 categoryClass = 'category-overweight';
-                tips = [
-                    'تقليل تناول السكريات والدهون المشبعة',
-                    'زيادة النشاط البدني تدريجياً',
-                    'تناول المزيد من الخضروات والفواكه',
-                    'مراقبة حجم الحصص الغذائية'
-                ];
+                tips = getTips('overweight', gender, age);
             } else {
                 category = 'سمنة';
                 categoryClass = 'category-obese';
-                tips = [
-                    'استشارة طبيب أو أخصائي تغذية فوراً',
-                    'بدء برنامج رياضي تدريجي',
-                    'تغيير عادات الأكل الصحية',
-                    'مراقبة السعرات الحرارية المستهلكة',
-                    'النظر في الانضمام لبرنامج دعم'
-                ];
+                tips = getTips('obese', gender, age);
             }
             
-            // عرض النتائج
+            // Display results
             document.getElementById('bmiValue').textContent = bmiRounded;
             const categoryDiv = document.getElementById('bmiCategory');
             categoryDiv.textContent = category;
             categoryDiv.className = 'bmi-category ' + categoryClass;
             
-            // عرض النصائح
+            // Display tips
             const tipsList = document.getElementById('tipsList');
             tipsList.innerHTML = '';
             tips.forEach(tip => {
@@ -541,19 +697,58 @@
                 tipsList.appendChild(li);
             });
             
-            // إظهار النتيجة
             resultDiv.classList.add('show');
-            
-            // التمرير إلى النتيجة
             resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
         
-        // إعادة تعيين النموذج عند الضغط على Enter
-        document.getElementById('weight').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('height').focus();
+        function getTips(category, gender, age) {
+            const baseTips = {
+                underweight: [
+                    'تناول 5-6 وجبات صغيرة غنية بالسعرات الصحية',
+                    'ركز على الأطعمة الغنية بالبروتين',
+                    'مارس تمارين المقاومة لبناء العضلات',
+                    'استشارة أخصائي تغذية'
+                ],
+                normal: [
+                    'حافظ على نظام غذائي متوازن',
+                    'مارس الرياضة 150 دقيقة أسبوعياً',
+                    'اشرب 8 أكواب ماء يومياً',
+                    'نم 7-8 ساعات يومياً'
+                ],
+                overweight: [
+                    'قلل من السكريات والدهون المشبعة',
+                    'زد من تناول الخضروات والفواكه',
+                    'امشِ 30 دقيقة يومياً على الأقل',
+                    'راقب حجم الحصص الغذائية'
+                ],
+                obese: [
+                    'استشر طبيباً أو أخصائي تغذية',
+                    'ابدأ بتمارين خفيفة مثل المشي',
+                    'سجل ما تتناوله من طعام يومياً',
+                    'حدد أهدافاً واقعية لفقدان الوزن'
+                ]
+            };
+            
+            let tips = [...baseTips[category]];
+            
+            // Gender-specific tips
+            if (gender === 'female') {
+                if (category === 'underweight' || category === 'normal') {
+                    tips.push('اهتمي بصحة العظام وتناول الكالسيوم');
+                }
             }
-        });
+            
+            // Age-specific tips
+            if (age < 18) {
+                tips.push('استشر والديك وطبيبك قبل بدء أي نظام غذائي');
+                tips.push('ركز على النمو الصحي وليس فقدان الوزن السريع');
+            } else if (age > 60) {
+                tips.push('استشر طبيبك قبل بدء أي برنامج رياضي');
+                tips.push('ركز على الحفاظ على الكتلة العضلية');
+            }
+            
+            return tips;
+        }
     </script>
 </body>
 </html>
