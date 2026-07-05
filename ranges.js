@@ -779,54 +779,6 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// ===== BMI CALCULATOR =====
-function calculateBMI() {
-    const weight = parseFloat(document.getElementById('weightInput').value);
-    const height = parseFloat(document.getElementById('heightInput').value) / 100;
-
-    if (!weight || !height || weight <= 0 || height <= 0) {
-        alert('الرجاء إدخال وزن وطول صحيحين');
-        return;
-    }
-
-    const bmi = (weight / (height * height)).toFixed(1);
-    let category, color;
-
-    if (bmi < 18.5) {
-        category = 'نقص في الوزن';
-        color = 'var(--accent-cyan)';
-    } else if (bmi < 25) {
-        category = 'وزن طبيعي ✅';
-        color = 'var(--accent-green)';
-    } else if (bmi < 30) {
-        category = 'وزن زائد ⚠️';
-        color = 'var(--accent-yellow)';
-    } else if (bmi < 35) {
-        category = 'سمنة من الدرجة الأولى 🔶';
-        color = 'var(--accent-orange)';
-    } else {
-        category = 'سمنة مفرطة 🔴';
-        color = 'var(--accent-red)';
-    }
-
-    const result = document.getElementById('bmiResult');
-    const bmiValueEl = document.getElementById('bmiValue');
-    const bmiCategoryEl = document.getElementById('bmiCategory');
-    const pointer = document.getElementById('bmiPointer');
-
-    bmiValueEl.textContent = bmi;
-    bmiValueEl.style.color = color;
-    bmiCategoryEl.textContent = category;
-    bmiCategoryEl.style.color = color;
-
-    // Position pointer (BMI range 15-40 mapped to 0-100%)
-    const pointerPos = Math.min(Math.max(((bmi - 15) / 25) * 100, 2), 98);
-    pointer.style.left = pointerPos + '%';
-
-    result.classList.add('show');
-    result.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
 // ===== ANIMATED COUNTERS =====
 function animateCounter(element, target, duration = 2000) {
     let start = 0;
