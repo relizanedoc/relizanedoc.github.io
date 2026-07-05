@@ -730,28 +730,35 @@ document.getElementById('tabsWrapper').addEventListener('click', function(e) {
 // ===== THEME TOGGLE =====
 const themeToggle = document.getElementById('themeToggle');
 
-// دالة لتحديد الوضع بناءً على إعدادات النظام
-function getSystemTheme() {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
+// الحصول على الثيم الحالي
+let currentTheme = document.documentElement.getAttribute('data-theme') || 
+                   (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
-// تطبيق الوضع التلقائي عند التحميل
-let isDark = getSystemTheme() === 'dark';
-document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-themeToggle.innerHTML = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+// تحديث الأيقونة حسب الثيم الحالي
+themeToggle.innerHTML = currentTheme === 'dark' 
+    ? '<i class="fas fa-moon"></i>' 
+    : '<i class="fas fa-sun"></i>';
 
-// الاستماع لتغييرات إعدادات النظام تلقائياً
+// الاستماع لتغييرات إعدادات النظام
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-    isDark = e.matches;
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    themeToggle.innerHTML = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+    // فقط إذا لم يختر المستخدم ثيم يدوياً
+    if (!localStorage.getItem('theme')) {
+        currentTheme = e.matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        themeToggle.innerHTML = currentTheme === 'dark' 
+            ? '<i class="fas fa-moon"></i>' 
+            : '<i class="fas fa-sun"></i>';
+    }
 });
 
-// التبديل اليدوي
+// التبديل اليدوي مع الحفظ
 themeToggle.addEventListener('click', () => {
-    isDark = !isDark;
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    themeToggle.innerHTML = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    localStorage.setItem('theme', currentTheme); // حفظ الاختيار
+    themeToggle.innerHTML = currentTheme === 'dark' 
+        ? '<i class="fas fa-moon"></i>' 
+        : '<i class="fas fa-sun"></i>';
 });
 
 // ===== HEADER SCROLL =====
