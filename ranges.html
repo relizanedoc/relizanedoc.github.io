@@ -114,59 +114,6 @@
         <!-- Cards will be injected by JS -->
     </main>
 
-    <!-- BMI CALCULATOR -->
-    <section class="main-content">
-        <div class="bmi-section" id="bmiSection">
-            <div class="bmi-header">
-                <h2>🧮 حاسبة مؤشر كتلة الجسم (BMI)</h2>
-                <p>أدخل بياناتك لمعرفة ما إذا كان وزنك ضمن النطاق الصحي</p>
-            </div>
-            <div class="bmi-form">
-                <div class="form-group">
-                    <label>الوزن (كجم)</label>
-                    <input type="number" id="weightInput" placeholder="70" min="20" max="300">
-                </div>
-                <div class="form-group">
-                    <label>الطول (سم)</label>
-                    <input type="number" id="heightInput" placeholder="170" min="100" max="250">
-                </div>
-                <div class="form-group">
-                    <label>العمر</label>
-                    <input type="number" id="ageInput" placeholder="30" min="1" max="120">
-                </div>
-                <div class="form-group">
-                    <label>الجنس</label>
-                    <select id="genderInput">
-                        <option value="male">ذكر</option>
-                        <option value="female">أنثى</option>
-                    </select>
-                </div>
-                <button class="calc-btn" onclick="calculateBMI()">
-                    <i class="fas fa-calculator"></i> احسب
-                </button>
-            </div>
-            <div class="bmi-result" id="bmiResult">
-                <div class="bmi-value" id="bmiValue">--</div>
-                <div class="bmi-category" id="bmiCategory">--</div>
-                <div class="bmi-scale">
-                    <div class="underweight"></div>
-                    <div class="normal-w"></div>
-                    <div class="overweight"></div>
-                    <div class="obese"></div>
-                    <div class="very-obese"></div>
-                    <div class="bmi-pointer" id="bmiPointer"></div>
-                </div>
-                <div class="bmi-scale-labels">
-                    <span>نحافة</span>
-                    <span>طبيعي</span>
-                    <span>وزن زائد</span>
-                    <span>سمنة</span>
-                    <span>سمنة مفرطة</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- FOOTER -->
     <footer class="footer">
         <p>صُنع بـ <span class="heart">❤️</span> كمصدر تعليمي | لا يُغني عن استشارة الطبيب المختص</p>
