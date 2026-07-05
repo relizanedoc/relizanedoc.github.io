@@ -181,7 +181,41 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
+.home-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+    color: white;
+    text-decoration: none;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    transition: var(--transition);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
 
+.home-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+}
+
+.home-btn i {
+    font-size: 16px;
+}
+
+/* للهواتف */
+@media (max-width: 768px) {
+    .home-btn span {
+        display: none;
+    }
+    .home-btn {
+        padding: 10px 14px;
+    }
+}
 .header-actions {
     display: flex;
     align-items: center;
