@@ -729,14 +729,29 @@ document.getElementById('tabsWrapper').addEventListener('click', function(e) {
 
 // ===== THEME TOGGLE =====
 const themeToggle = document.getElementById('themeToggle');
-let isDark = true;
 
+// دالة لتحديد الوضع بناءً على إعدادات النظام
+function getSystemTheme() {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+// تطبيق الوضع التلقائي عند التحميل
+let isDark = getSystemTheme() === 'dark';
+document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+themeToggle.innerHTML = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+
+// الاستماع لتغييرات إعدادات النظام تلقائياً
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    isDark = e.matches;
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    themeToggle.innerHTML = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+});
+
+// التبديل اليدوي
 themeToggle.addEventListener('click', () => {
     isDark = !isDark;
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    themeToggle.innerHTML = isDark 
-        ? '<i class="fas fa-moon"></i>' 
-        : '<i class="fas fa-sun"></i>';
+    themeToggle.innerHTML = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
 });
 
 // ===== HEADER SCROLL =====
