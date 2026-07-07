@@ -283,8 +283,10 @@ window.loadUserBookings = async function() {
   } catch(err) { container.innerHTML = `<div class="text-center p-4 text-danger">خطأ في الاتصال: تعذر جلب المواعيد.</div>`; }
 };
 
-// ربط أزرار الحجز واستقبال طلبات تطبيق الهاتف بطريقة آمنة
-document.addEventListener('DOMContentLoaded', () => {
+// ----------------------------------------------------
+// تهيئة أزرار الحجز واستقبال طلبات تطبيق الهاتف (نسخة آمنة لبيئة الموديول)
+// ----------------------------------------------------
+function initBookingSystem() {
   // 1. ربط الأزرار الأصلية للموقع
   const bookingBtn = document.getElementById('bookingBtn'); 
   if (bookingBtn) bookingBtn.onclick = window.confirmBooking;
@@ -299,17 +301,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const doctorIdToBook = urlParams.get('book');
   
-  if (doctorIdToBook && typeof window.openBooking === 'function') {
-      // مراقبة تحميل البيانات بدلاً من الانتظار الأعمى
-      const checkDataInterval = setInterval(() => {
-          // نتحقق إذا كانت مصفوفة الأطباء قد امتلأت بالبيانات من الخادم
-          if (state && state.allDoctors && state.allDoctors.length > 0) {
-              clearInterval(checkDataInterval); // نوقف المراقبة
-              window.openBooking(doctorIdToBook); // نفتح نافذة الحجز بأمان
-          }
-      }, 500); // يفحص كل نصف ثانية
+  if (doctorIdToBook) {
+      const cleanId = doctorIdToBook.trim(); // تنظيف المعرف من أي مسافات زائدة قد يضيفها المتصفح
       
-      // إيقاف المراقبة إجبارياً بعد 15 ثانية لتجنب استهلاك الذاكرة في حال انقطاع الإنترنت تماماً
+      const checkDataInterval = setInterval(() => {
+          // نتأكد من تحميل الأطباء، وأن دالة الحجز موجودة، وأن نظام التنقل (router) جاهز للعمل
+          if (state && state.allDoctors && state.allDoctors.length > 0 && typeof window.openBooking === 'function' && typeof window.router === 'function') {
+              clearInterval(checkDataInterval); // إيقاف المراقبة
+              window.openBooking(cleanId); // فتح نافذة الحجز للطبيب المطلوب
+          }
+      }, 500);
+      
+      // إيقاف المراقبة بعد 15 ثانية كإجراء وقائي
       setTimeout(() => clearInterval(checkDataInterval), 15000);
   }
-});
+}
+
+// التنفيذ الذكي: هل الصفحة محملة مسبقاً؟
+if (document.readyState === 'loading') {
+    // إذا كانت لا تزال تحمل، ننتظر الحدث
+    document.addEventListener('DOMContentLoaded', initBookingSystem);
+} else {
+    // إذا اكتمل التحميل (وهو ما يحدث غالباً مع الـ modules)، ننفذ فوراً
+    initBookingSystem();
+}
