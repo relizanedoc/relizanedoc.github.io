@@ -2,9 +2,9 @@ name: Update Mobile App Meta File
 
 on:
   schedule:
-    # يعمل كل 48 ساعة (كل يومين) في الساعة 02:00 صباحاً بتوقيت الخادم
-    - cron: '0 2 */2 * *'
-  workflow_dispatch: # يتيح لك تشغيله يدوياً بضغطة زر متى شئت
+    # تم التعديل هنا: */4 تعني كل 4 أيام، في الساعة 02:00 صباحاً
+    - cron: '0 2 */4 * *'
+  workflow_dispatch: 
 
 jobs:
   generate-app-data:
@@ -28,7 +28,6 @@ jobs:
       env:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-      # تشغيل السكربت الجديد الذي أنشأناه
       run: node scripts/generate-app-meta.js
 
     - name: Commit and push changes
@@ -36,4 +35,4 @@ jobs:
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git add doctors-app-meta.json
-        git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-update mobile app doctors data" && git push)
+        git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-update mobile app doctors data (4-day cycle)" && git push)
