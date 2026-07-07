@@ -284,10 +284,10 @@ window.loadUserBookings = async function() {
 };
 
 // ----------------------------------------------------
-// تهيئة أزرار الحجز واستقبال طلبات تطبيق الهاتف (نسخة آمنة لبيئة الموديول)
+// تهيئة أزرار الحجز واستقبال طلبات تطبيق الهاتف عبر الـ Slug
 // ----------------------------------------------------
 function initBookingSystem() {
-  // 1. ربط الأزرار الأصلية للموقع
+  // ربط الأزرار الأصلية
   const bookingBtn = document.getElementById('bookingBtn'); 
   if (bookingBtn) bookingBtn.onclick = window.confirmBooking;
   
@@ -297,31 +297,33 @@ function initBookingSystem() {
   const cancelDialogBtn = document.getElementById('cancelDialogBtn'); 
   if (cancelDialogBtn) cancelDialogBtn.onclick = window.closeConfirmDialog;
 
-  // 2. الاستقبال الآمن للقادمين من تطبيق الهاتف
+  // الاستقبال الآمن للقادمين من التطبيق عبر الرابط
   const urlParams = new URLSearchParams(window.location.search);
-  const doctorIdToBook = urlParams.get('book');
+  const doctorSlugOrId = urlParams.get('book');
   
-  if (doctorIdToBook) {
-      const cleanId = doctorIdToBook.trim(); // تنظيف المعرف من أي مسافات زائدة قد يضيفها المتصفح
+  if (doctorSlugOrId) {
+      const cleanValue = doctorSlugOrId.trim(); 
       
       const checkDataInterval = setInterval(() => {
-          // نتأكد من تحميل الأطباء، وأن دالة الحجز موجودة، وأن نظام التنقل (router) جاهز للعمل
-          if (state && state.allDoctors && state.allDoctors.length > 0 && typeof window.openBooking === 'function' && typeof window.router === 'function') {
-              clearInterval(checkDataInterval); // إيقاف المراقبة
-              window.openBooking(cleanId); // فتح نافذة الحجز للطبيب المطلوب
+          if (state && state.allDoctors && state.allDoctors.length > 0 && typeof window.openBooking === 'function') {
+              clearInterval(checkDataInterval); 
+              
+              // 🛡️ التحديث الذكي: البحث عن الطبيب باستخدام الـ slug أو الـ id
+              const targetDoctor = state.allDoctors.find(d => d.slug === cleanValue || d.id === cleanValue);
+              
+              if (targetDoctor) {
+                  // تمرير الـ ID الأصلي لدالة الحجز لكي يعمل اتصال Supabase بدون أخطاء
+                  window.openBooking(targetDoctor.id); 
+              }
           }
       }, 500);
       
-      // إيقاف المراقبة بعد 15 ثانية كإجراء وقائي
       setTimeout(() => clearInterval(checkDataInterval), 15000);
   }
 }
 
-// التنفيذ الذكي: هل الصفحة محملة مسبقاً؟
 if (document.readyState === 'loading') {
-    // إذا كانت لا تزال تحمل، ننتظر الحدث
     document.addEventListener('DOMContentLoaded', initBookingSystem);
 } else {
-    // إذا اكتمل التحميل (وهو ما يحدث غالباً مع الـ modules)، ننفذ فوراً
     initBookingSystem();
 }
