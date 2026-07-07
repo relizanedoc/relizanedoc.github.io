@@ -6,7 +6,7 @@ import { state } from './state.js';
 import { t, escapeHtml, showToast, setLoading } from './utils.js';
 import { generateTimeSlots, displayTimeSlots } from './ui.js';
 import { getCurrentUser } from './auth.js';
- 
+
 window.openBooking = function(doctorId) {
   state.currentDoctor = state.allDoctors.find(d => d.id === doctorId);
   if (!state.currentDoctor) { showToast(state.currentLang === 'ar' ? 'الطبيب غير موجود' : 'Doctor not found', 'error'); return; }
@@ -283,47 +283,14 @@ window.loadUserBookings = async function() {
   } catch(err) { container.innerHTML = `<div class="text-center p-4 text-danger">خطأ في الاتصال: تعذر جلب المواعيد.</div>`; }
 };
 
-// ----------------------------------------------------
-// تهيئة أزرار الحجز واستقبال طلبات تطبيق الهاتف عبر الـ Slug
-// ----------------------------------------------------
-function initBookingSystem() {
-  // ربط الأزرار الأصلية
-  const bookingBtn = document.getElementById('bookingBtn'); 
-  if (bookingBtn) bookingBtn.onclick = window.confirmBooking;
-  
-  const confirmDialogOkBtn = document.getElementById('confirmDialogOkBtn'); 
-  if (confirmDialogOkBtn) confirmDialogOkBtn.onclick = window.submitBooking;
-  
-  const cancelDialogBtn = document.getElementById('cancelDialogBtn'); 
-  if (cancelDialogBtn) cancelDialogBtn.onclick = window.closeConfirmDialog;
-
-  // الاستقبال الآمن للقادمين من التطبيق عبر الرابط
-  const urlParams = new URLSearchParams(window.location.search);
-  const doctorSlugOrId = urlParams.get('book');
-  
-  if (doctorSlugOrId) {
-      const cleanValue = doctorSlugOrId.trim(); 
-      
-      const checkDataInterval = setInterval(() => {
-          if (state && state.allDoctors && state.allDoctors.length > 0 && typeof window.openBooking === 'function') {
-              clearInterval(checkDataInterval); 
-              
-              // 🛡️ التحديث الذكي: البحث عن الطبيب باستخدام الـ slug أو الـ id
-              const targetDoctor = state.allDoctors.find(d => d.slug === cleanValue || d.id === cleanValue);
-              
-              if (targetDoctor) {
-                  // تمرير الـ ID الأصلي لدالة الحجز لكي يعمل اتصال Supabase بدون أخطاء
-                  window.openBooking(targetDoctor.id); 
-              }
-          }
-      }, 500);
-      
-      setTimeout(() => clearInterval(checkDataInterval), 15000);
-  }
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initBookingSystem);
-} else {
-    initBookingSystem();
-}
+// ربط أزرار الحجز تلقائياً عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    const bookingBtn = document.getElementById('bookingBtn'); 
+    if (bookingBtn) bookingBtn.onclick = window.confirmBooking;
+    
+    const confirmDialogOkBtn = document.getElementById('confirmDialogOkBtn'); 
+    if (confirmDialogOkBtn) confirmDialogOkBtn.onclick = window.submitBooking;
+    
+    const cancelDialogBtn = document.getElementById('cancelDialogBtn'); 
+    if (cancelDialogBtn) cancelDialogBtn.onclick = window.closeConfirmDialog;
+});
