@@ -283,14 +283,33 @@ window.loadUserBookings = async function() {
   } catch(err) { container.innerHTML = `<div class="text-center p-4 text-danger">خطأ في الاتصال: تعذر جلب المواعيد.</div>`; }
 };
 
-// ربط أزرار الحجز تلقائياً عند تحميل الصفحة
+// ربط أزرار الحجز واستقبال طلبات تطبيق الهاتف بطريقة آمنة
 document.addEventListener('DOMContentLoaded', () => {
-    const bookingBtn = document.getElementById('bookingBtn'); 
-    if (bookingBtn) bookingBtn.onclick = window.confirmBooking;
-    
-    const confirmDialogOkBtn = document.getElementById('confirmDialogOkBtn'); 
-    if (confirmDialogOkBtn) confirmDialogOkBtn.onclick = window.submitBooking;
-    
-    const cancelDialogBtn = document.getElementById('cancelDialogBtn'); 
-    if (cancelDialogBtn) cancelDialogBtn.onclick = window.closeConfirmDialog;
+  // 1. ربط الأزرار الأصلية للموقع
+  const bookingBtn = document.getElementById('bookingBtn'); 
+  if (bookingBtn) bookingBtn.onclick = window.confirmBooking;
+  
+  const confirmDialogOkBtn = document.getElementById('confirmDialogOkBtn'); 
+  if (confirmDialogOkBtn) confirmDialogOkBtn.onclick = window.submitBooking;
+  
+  const cancelDialogBtn = document.getElementById('cancelDialogBtn'); 
+  if (cancelDialogBtn) cancelDialogBtn.onclick = window.closeConfirmDialog;
+
+  // 2. الاستقبال الآمن للقادمين من تطبيق الهاتف
+  const urlParams = new URLSearchParams(window.location.search);
+  const doctorIdToBook = urlParams.get('book');
+  
+  if (doctorIdToBook && typeof window.openBooking === 'function') {
+      // مراقبة تحميل البيانات بدلاً من الانتظار الأعمى
+      const checkDataInterval = setInterval(() => {
+          // نتحقق إذا كانت مصفوفة الأطباء قد امتلأت بالبيانات من الخادم
+          if (state && state.allDoctors && state.allDoctors.length > 0) {
+              clearInterval(checkDataInterval); // نوقف المراقبة
+              window.openBooking(doctorIdToBook); // نفتح نافذة الحجز بأمان
+          }
+      }, 500); // يفحص كل نصف ثانية
+      
+      // إيقاف المراقبة إجبارياً بعد 15 ثانية لتجنب استهلاك الذاكرة في حال انقطاع الإنترنت تماماً
+      setTimeout(() => clearInterval(checkDataInterval), 15000);
+  }
 });
