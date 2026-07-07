@@ -1,0 +1,39 @@
+name: Update Mobile App Meta File
+
+on:
+  schedule:
+    # يعمل كل 48 ساعة (كل يومين) في الساعة 02:00 صباحاً بتوقيت الخادم
+    - cron: '0 2 */2 * *'
+  workflow_dispatch: # يتيح لك تشغيله يدوياً بضغطة زر متى شئت
+
+jobs:
+  generate-app-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+
+    - name: Install Dependencies
+      run: npm install @supabase/supabase-js
+
+    - name: Generate App JSON Meta File
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      # تشغيل السكربت الجديد الذي أنشأناه
+      run: node scripts/generate-app-meta.js
+
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add doctors-app-meta.json
+        git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-update mobile app doctors data" && git push)
