@@ -6,7 +6,7 @@ import { state } from './state.js';
 import { t, escapeHtml, showToast, setLoading } from './utils.js';
 import { generateTimeSlots, displayTimeSlots } from './ui.js';
 import { getCurrentUser } from './auth.js';
-
+ 
 window.openBooking = function(doctorId) {
   state.currentDoctor = state.allDoctors.find(d => d.id === doctorId);
   if (!state.currentDoctor) { showToast(state.currentLang === 'ar' ? 'الطبيب غير موجود' : 'Doctor not found', 'error'); return; }
