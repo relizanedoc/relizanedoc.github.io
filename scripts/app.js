@@ -13,6 +13,6 @@ import './booking.js';
 import './dashboard.js';
 import './router.js';
 import './directory.js';
-import './init.js'; // 👈 هذا هو الملف الذي أنشأناه للتو
+import './init.js';
 
 console.log("✅ التطبيق يعمل الآن بمعمارية نظيفة تماماً بنجاح!");
