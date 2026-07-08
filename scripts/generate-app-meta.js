@@ -34,13 +34,7 @@ async function generateAppMeta() {
     certificates,
     clinic_images,
     working_days,
-    booking_enabled,
-    booking_url,
-    rating,
-    reviews_count,
-    languages,
-    insurance_accepted,
-    years_of_experience
+    booking_enabled
   `)
   .order('created_at', { ascending: false });
 
