@@ -19,7 +19,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "60b540f2-545c-4111-861b-ddd6c82472da",
@@ -41,7 +42,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "e395abfe-fa22-4601-8135-6d4de08fe10e",
@@ -63,7 +65,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "befd2432-0838-4808-be28-267be4de43cc",
@@ -85,7 +88,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "4e5c9659-54f4-4541-bd15-b8bd4146758f",
@@ -107,7 +111,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "18efd20e-24ac-4b6a-a333-8bfac13ea04c",
@@ -129,7 +134,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0dae41d6-f658-4303-8c32-e90cf8609663",
@@ -151,7 +157,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "9bf4033a-e809-4845-9465-68d244ad1c0c",
@@ -173,7 +180,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "c9feb092-303a-42e7-be2c-e10f15758bbf",
@@ -195,7 +203,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "1857b17e-5e2b-4f3b-b9f2-db19672ca359",
@@ -217,7 +226,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "169cb2fa-f2d9-4241-87bf-625f5240fa6b",
@@ -239,7 +249,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "27453036-aa3a-4f18-b0b9-136ae96025d6",
@@ -261,7 +272,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "afc012a9-775b-4d54-84bc-effa26ff4956",
@@ -283,7 +295,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "df9abe57-cf3d-4f4a-8731-5b380c00347b",
@@ -305,7 +318,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "c05b9656-94b8-4d59-8e47-8bd878bf63fd",
@@ -327,7 +341,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "65549b07-773d-47e3-b15a-e93dbfff89f1",
@@ -349,7 +364,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a923c235-b018-45ba-8547-212cfd798253",
@@ -371,7 +387,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "1b6ac586-0b80-452c-9eb6-39e660fbfb1e",
@@ -393,7 +410,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "81cb76e7-3837-4e3f-bbd3-570713597bf7",
@@ -415,7 +433,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ec384507-3f09-4bed-90a7-30f5425bf0af",
@@ -437,7 +456,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "6b26eb40-9d5b-4d22-b9dc-9a55086aef46",
@@ -459,7 +479,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "9624f641-a099-489b-bed4-1c2758e07dae",
@@ -481,7 +502,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b0c4e6e6-a4b7-4e83-ab7a-7c3eb4bf5e14",
@@ -503,7 +525,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "5e34d484-4c20-4271-a1bf-84ec41d3dc16",
@@ -525,7 +548,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "c1066dd4-53f7-4d12-988f-d9de5bc32b49",
@@ -547,7 +571,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "f38c1936-c948-4d50-8418-07a66d99446a",
@@ -569,7 +594,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0f19ef1a-6112-4a02-9c8c-bb5cc245d442",
@@ -591,7 +617,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "765da3c2-1c85-4963-9b51-d41e7e2882f3",
@@ -613,7 +640,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a54fda07-8ec9-46b7-890e-785ba28c6057",
@@ -635,7 +663,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "e1e8de0c-7413-4141-9818-038130637dd0",
@@ -657,7 +686,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "5abe6798-34b4-4ebb-8675-04f6cdb834b5",
@@ -679,7 +709,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "01557dc2-140e-4306-975c-6c38a889221a",
@@ -701,7 +732,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "979dd9cf-faba-47ec-8dc0-f136d7a68b42",
@@ -723,7 +755,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "16103a78-20c6-4a0b-8a79-29a18baf9162",
@@ -745,7 +778,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "95de6274-4159-4076-a022-72ca73b2f36c",
@@ -767,7 +801,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "e7cb3de3-548c-4c64-acd6-d48c069bd7ff",
@@ -789,7 +824,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "abaf7184-3b0e-4074-8362-49ec73857008",
@@ -811,7 +847,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "339147f9-8525-4d5c-9c17-8e7b449d6fc0",
@@ -833,7 +870,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "845b55b8-bc09-42ff-9ea6-181d63b01c5e",
@@ -855,7 +893,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "23d5befc-ed25-43fd-b9b3-c63888ba3c86",
@@ -877,7 +916,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b6ef4113-74ee-4e11-a58c-6d548a822848",
@@ -899,7 +939,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "c7ccd821-38c7-4662-a60a-5689168445e3",
@@ -921,7 +962,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "4bdc270c-4ae4-43ac-ace2-4194c5d44d0b",
@@ -943,7 +985,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "af3d3306-80fa-4cb9-af41-605a24b87ba4",
@@ -965,7 +1008,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "97056cb7-7989-4eac-b75f-38e5a283e6d8",
@@ -987,7 +1031,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "f482dcd7-96e8-4cfa-96dd-9a6b54b15aea",
@@ -1009,7 +1054,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "c67c89ce-eae9-41c7-be8c-86ab0cdf109c",
@@ -1031,7 +1077,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ddb2e602-88f5-4fe5-9cb2-9a66ab2b8b47",
@@ -1053,7 +1100,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "902af20c-47cc-42f2-bc21-c79c598b1e0e",
@@ -1075,7 +1123,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "70b2128c-666d-49f4-91d4-3b2211f6b38d",
@@ -1097,7 +1146,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b8391091-aae5-4881-ae92-7cc75ee57bd3",
@@ -1119,7 +1169,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "38afdf0f-2b2c-4e93-b438-70637a14ff41",
@@ -1141,7 +1192,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b5c6a847-3abd-4cca-8e07-0a4ab5246c18",
@@ -1163,7 +1215,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "7592ac19-cd62-445b-a4ea-c8dca86ee862",
@@ -1185,7 +1238,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "82dc6b21-6af0-41fb-902e-4990d243e537",
@@ -1207,7 +1261,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ad54a03a-4508-4dbf-8d6a-044c4626660b",
@@ -1229,7 +1284,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "2f1c8e8c-da51-43d6-a6d9-a8943a62e35f",
@@ -1251,7 +1307,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "edbe6719-bc08-4283-91c2-043dd9cd61e3",
@@ -1273,7 +1330,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "1e2b0022-0960-42dd-8456-a4f5feec32bb",
@@ -1295,7 +1353,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "3127f1d6-f729-4aee-8735-6aeb3df7e44a",
@@ -1317,7 +1376,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "6344b9cf-f57e-43ac-9631-96ad1093c05e",
@@ -1339,7 +1399,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "78b69304-245e-428f-9be9-155ff960d010",
@@ -1361,7 +1422,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "9b502e25-5eed-4468-aa19-474866ede20b",
@@ -1383,7 +1445,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "c0de73c0-3b11-48b4-8a96-b8d50fae3c92",
@@ -1405,7 +1468,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "40ef64f6-1cfa-4b9f-90c0-5fa9a33bd82a",
@@ -1427,7 +1491,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "6bfee0ae-4035-4d27-ab95-39d18b61164b",
@@ -1449,7 +1514,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a5241724-0ad4-47d9-935b-7eedd793c51f",
@@ -1471,7 +1537,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "7047b85c-68d9-4da1-bfbf-9b4486ae4f8f",
@@ -1493,7 +1560,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "43c55706-7630-4b29-9758-1d8df6f08158",
@@ -1515,7 +1583,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0c45fa6d-2507-4d24-a436-4a9a267e8ced",
@@ -1537,7 +1606,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b18ea4e9-f5b8-47c5-976a-bb1842fe0a54",
@@ -1559,7 +1629,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "90d8284f-a217-40b0-9ed4-250baf55713c",
@@ -1581,7 +1652,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "2e75a0db-b6e2-436a-815f-c8f11380ea90",
@@ -1603,7 +1675,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ae0a3a9e-e979-49de-9022-0371d2a10895",
@@ -1625,7 +1698,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "bbe75095-e504-4cb8-b500-ac2e5913fae9",
@@ -1647,7 +1721,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "f7fc8d70-082b-46b5-a95f-47b0506a8f21",
@@ -1669,7 +1744,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0fc35587-0eaa-4735-849e-84041bcff05e",
@@ -1691,7 +1767,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "36c336c5-1d8c-4ede-b913-3ff9aef79324",
@@ -1713,7 +1790,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ac2bb51c-2a75-48a5-aabd-f0e63ef03b95",
@@ -1735,7 +1813,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "8398a5c2-d189-4fb7-a603-31bf0fbca669",
@@ -1757,7 +1836,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "9a7ed147-9d66-4727-b080-a0d2555b51dd",
@@ -1779,7 +1859,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "fb108d4f-7b30-4919-8c96-8148c65abc3e",
@@ -1801,7 +1882,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b583067b-0643-42f0-ba13-da46e68ba05d",
@@ -1823,7 +1905,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "93c7acef-b3fb-44e3-af4f-9fa019064cc1",
@@ -1845,7 +1928,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "d02f4fa3-aea5-437a-91c1-45654220c24f",
@@ -1867,7 +1951,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "28d36ee1-dc27-4f12-983b-9736980d4a0a",
@@ -1889,7 +1974,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "df9d256e-dcd1-48a0-bc3f-a7c6ef938b12",
@@ -1911,7 +1997,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "e52f19e0-c2e9-499b-997e-a15e1b75ea52",
@@ -1933,7 +2020,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "2976323f-59da-4091-9a7f-877ca54927a3",
@@ -1955,7 +2043,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "404f7d8e-8906-470a-9e9e-d2377d395665",
@@ -1977,7 +2066,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "45cd7f0a-1067-4dd6-ab05-26e00c431e19",
@@ -1999,7 +2089,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "86324832-7aa4-4b2d-8701-2ee344319632",
@@ -2021,7 +2112,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "729640aa-cce8-4de0-bf2a-eb910bed0a19",
@@ -2043,7 +2135,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "bfb3aa94-0d81-4704-a174-163585b5ccfe",
@@ -2065,7 +2158,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "522edeec-9233-4a08-a06b-b324ef0fdcd6",
@@ -2087,7 +2181,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "20e01f59-8bba-42bd-9b78-3d58cafd968b",
@@ -2109,7 +2204,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "f530a9dc-4cfa-4a09-b387-26b50552924e",
@@ -2131,7 +2227,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "82cb46b9-d993-441f-8607-03cfff018cd0",
@@ -2153,7 +2250,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "3672621a-77d9-42b4-bce6-99865897f4db",
@@ -2175,7 +2273,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "d66ab2ab-f43d-43bb-bbd6-0c8c492be927",
@@ -2197,7 +2296,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "dbebd9c7-ee8e-4bee-a40e-407b3a1d5d22",
@@ -2219,7 +2319,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "dc7bf2aa-c901-46ea-9dc1-702db0be628e",
@@ -2241,7 +2342,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "84aca45e-70f1-4d0c-834e-018c153dd66c",
@@ -2263,7 +2365,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "88927a8d-5ba1-436c-adec-08833496dda6",
@@ -2285,7 +2388,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "aa387bd1-e4e0-4221-95e0-7bc7b22927c7",
@@ -2307,7 +2411,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "80073f1c-061f-4c6d-bef4-5f7da4f2b3cb",
@@ -2329,7 +2434,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "3fee1d97-08e7-4396-bbd8-e6caf90a2888",
@@ -2351,7 +2457,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a7a99f06-609d-4ca0-849c-f2aa3371bdfa",
@@ -2373,7 +2480,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0293eaed-a135-4ba7-a8dd-396a81d1852d",
@@ -2395,7 +2503,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "e2d268bc-7b48-46d9-a265-5c53a2cba5f3",
@@ -2417,7 +2526,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a915945a-02d5-48a0-ae64-9210ae5ad9f3",
@@ -2439,7 +2549,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "1172877d-6af4-45fc-b427-f9fd4ae21cb1",
@@ -2461,7 +2572,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "5c0677ec-f705-4bbc-a237-102ac1a0ca68",
@@ -2483,7 +2595,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b1689ab5-a4c0-4847-8fe8-f9f456058de5",
@@ -2505,7 +2618,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "eb7f307c-ecea-44d6-99eb-85f0ec549b82",
@@ -2527,7 +2641,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "dc40161e-e440-455b-9c73-7bad01a97bb1",
@@ -2549,7 +2664,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "81547cd3-41ba-4a4d-bd0e-1856bbb84543",
@@ -2571,7 +2687,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "dc089550-438b-416f-80c6-41ca675bd0a9",
@@ -2593,7 +2710,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "465183e7-fcd9-4d51-9d21-6324d42d66d1",
@@ -2615,7 +2733,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "e904f10e-6fb4-4763-adba-c9a3492cf554",
@@ -2637,7 +2756,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ca39878f-49f4-4b25-8caa-8b085812b490",
@@ -2659,7 +2779,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "f60ee9a5-e71b-4e36-94d9-0ad6ed3bf8c4",
@@ -2681,7 +2802,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ec57fb67-eeba-4e0d-925c-7ffbde492611",
@@ -2703,7 +2825,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "af3ccea1-9304-4049-b275-0b5bb2db926b",
@@ -2725,7 +2848,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "d59df25e-f655-47e3-9452-2a4d787f746a",
@@ -2747,7 +2871,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "2f0bbb15-c622-4327-b2b4-b8406e17c8df",
@@ -2769,7 +2894,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "7e50f161-5a1b-4b52-ade9-a484375bee9c",
@@ -2791,7 +2917,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0b70a999-7cc8-4c91-ba06-afa30361bc10",
@@ -2813,7 +2940,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "47bd3127-f888-4128-a283-402608da29f9",
@@ -2835,7 +2963,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "e9cf8a32-4a55-4498-b284-90e45bd83842",
@@ -2857,7 +2986,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "8d138c8a-4705-45f5-a4eb-ad3cca2ac37f",
@@ -2879,7 +3009,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a7dfe96a-88a3-4026-9a93-4a26143afeb4",
@@ -2901,7 +3032,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "80e92689-f7dc-485f-bf86-140364695a5c",
@@ -2923,7 +3055,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "9b9ab69c-8f2e-4e33-8e06-772292d2362b",
@@ -2945,7 +3078,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "5c37961a-19dd-4350-b31c-772e8db4d608",
@@ -2967,7 +3101,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "481c13c2-9db7-4953-b484-0e124f175cff",
@@ -2989,7 +3124,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "84a9ef4d-2366-403b-b145-5528a05261bc",
@@ -3011,7 +3147,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ee6a1377-d471-4dfd-8270-934a5bbfadd8",
@@ -3033,7 +3170,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "bd4d1c44-6d4d-4a1e-8c16-ffde49fae4c1",
@@ -3055,7 +3193,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b251adad-2175-482b-9673-4add73fce76e",
@@ -3077,7 +3216,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "1b26db4a-dcb2-4ba8-847f-fbdf4a03b937",
@@ -3099,7 +3239,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "2a13495d-4a2a-46a1-b47b-ac877adeb8d4",
@@ -3121,7 +3262,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "2b985716-47bd-48db-b4e9-46e26d983763",
@@ -3143,7 +3285,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "8dee23aa-0f2d-4dfa-8ed7-56ab09be4209",
@@ -3165,7 +3308,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "595c95f1-5393-4756-b6fb-2b1642e0e1b9",
@@ -3187,7 +3331,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "f122c679-0035-4de2-88ac-ed3c52066903",
@@ -3209,7 +3354,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "5b363c36-229d-414f-b70e-59552d8d405f",
@@ -3231,7 +3377,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "db12bff4-b354-46c7-9cb2-a965fc75f0fa",
@@ -3253,7 +3400,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "72b036be-0960-490a-8397-0c0f62f387b2",
@@ -3275,7 +3423,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "eee6b9eb-b855-4df4-8b0f-8cfb1e7dfa6e",
@@ -3297,7 +3446,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "28b28e5d-fe76-4e33-b4a4-9fc35886b865",
@@ -3319,7 +3469,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "f9b7bb63-816c-4bf7-b88b-01e8dacb1da3",
@@ -3341,7 +3492,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "20cf641f-ea48-43d6-9beb-1a9d57fd4add",
@@ -3363,7 +3515,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ca2aeac0-15ed-4eaa-a898-f39372803338",
@@ -3385,7 +3538,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "f5afa176-17c1-4135-a389-cf1c8e82b73a",
@@ -3407,7 +3561,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "5667bed4-a87a-47bc-a894-53cef0cafe2d",
@@ -3429,7 +3584,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "083ffdb9-9b77-439a-9015-64d50551b473",
@@ -3451,7 +3607,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "e97868e0-cdf6-4ae5-99f1-a4cd5ee1f88f",
@@ -3473,7 +3630,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "92abc71b-4222-4b18-8e9f-00b3ddc99276",
@@ -3495,7 +3653,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "47977f06-ef83-43af-80fd-72b0b8684f43",
@@ -3517,7 +3676,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "deb8a19b-f577-4694-84db-914c783a5373",
@@ -3539,7 +3699,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "729acd86-2854-4154-bbb1-2efb2bcd3d71",
@@ -3561,7 +3722,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ff2bec9d-7942-4f8e-9253-b0e46f0585e8",
@@ -3583,7 +3745,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "29bc219c-38c7-496d-8184-d8c721fea453",
@@ -3605,7 +3768,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "55101e5b-ad64-470f-89e5-7117fe6f6cb8",
@@ -3627,7 +3791,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "1ca2b30c-37f2-4baf-8b5b-481c4eb73fe6",
@@ -3649,7 +3814,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "695d8a7a-c246-4982-8729-9852e4d5c801",
@@ -3671,7 +3837,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "980ddc7c-7aad-465f-acd1-ee1b9b26deea",
@@ -3693,7 +3860,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "f1e45be2-11ad-455d-aac5-fd53d680eead",
@@ -3715,7 +3883,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "bc365f8f-b7ac-4df6-a9ad-5ff6259b9c38",
@@ -3737,7 +3906,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "4df31cc3-8859-428b-92fa-7ce7e07852f8",
@@ -3759,7 +3929,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "bfe3b0a4-a4b6-40c8-805d-a9ee6873b6ae",
@@ -3781,7 +3952,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "f8ab0560-3b61-4614-bf96-c11ece0547f0",
@@ -3803,7 +3975,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "dd4be90d-f5a9-460c-bffe-109e6bbeed53",
@@ -3825,7 +3998,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "6f5d546b-9fa6-45f8-9680-2f40d389049b",
@@ -3847,7 +4021,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "2595380c-250d-4ac8-8bec-4fb59fea9695",
@@ -3869,7 +4044,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "857bc64c-6047-4694-9d2e-73ad889cfda6",
@@ -3891,7 +4067,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a08fe554-fffb-4fca-bcd6-a27fa7723860",
@@ -3913,7 +4090,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "bc4fbf15-e92e-46e2-9ecc-55ba46181e6f",
@@ -3935,7 +4113,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a248aee1-a2e1-42f2-90f5-5d66112f8d77",
@@ -3957,7 +4136,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "43480896-caf9-46f7-a903-2837b5a49e92",
@@ -3979,7 +4159,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a90d5cdb-2871-4cef-b185-6720deee4ef4",
@@ -4001,7 +4182,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a70487cd-9b01-4f92-9166-8ba976992fb4",
@@ -4023,7 +4205,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0e2b0d61-edb0-4e8f-bcd1-cdb41e40b7de",
@@ -4045,7 +4228,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "468310e0-4f2d-486f-b918-665c0f51e800",
@@ -4067,7 +4251,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "014bb5b2-f2d6-4d4c-af66-251a5231eaf4",
@@ -4089,7 +4274,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "158eaec4-3118-4141-a576-c9ad5bc7e0fe",
@@ -4111,7 +4297,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a8756bc0-611d-436f-af8d-b1e8f5e3c717",
@@ -4133,7 +4320,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "5ced85c1-a926-46d4-9596-903298812b37",
@@ -4155,7 +4343,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "2d1f9d2c-d440-4551-9de3-e3a3a49346b8",
@@ -4177,7 +4366,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a46d78ec-ca12-4c50-a0b4-a85bb7c770a2",
@@ -4199,7 +4389,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "60cc0c7c-4c63-432d-96d3-54ad3804006c",
@@ -4221,7 +4412,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "6e935b45-e05f-444b-b2c0-e18363f58a5f",
@@ -4243,7 +4435,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "be568b4f-2c14-4cd7-a0af-ce6d1aa65843",
@@ -4265,7 +4458,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "6ce06c5b-e866-491b-b37e-539dd560b07e",
@@ -4287,7 +4481,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "c3078824-b07b-485f-a4eb-39b505a54e0b",
@@ -4309,7 +4504,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b2c27187-8bfd-4e25-97d3-ef544182d928",
@@ -4331,7 +4527,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "64075d1e-e161-4891-87a9-f283807cc37c",
@@ -4353,7 +4550,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "48a7f98a-afc6-4d54-9419-fc1579b48755",
@@ -4375,7 +4573,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a91bec3b-2c9f-4fcf-8b13-93cbebd37e12",
@@ -4397,7 +4596,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "1d65a66e-e50f-4731-8bfe-2a860d55dbe8",
@@ -4419,7 +4619,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "574a0ac5-a47b-4d64-8cf6-a6dfb172eb46",
@@ -4441,7 +4642,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "921a0a25-3da4-4efb-b40f-7a95da38abff",
@@ -4463,7 +4665,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "c0f7ee58-7a42-4038-8be7-d8e44a68acfa",
@@ -4485,7 +4688,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "4ceb92bd-3979-43bd-80bc-e85d62a4ccc8",
@@ -4507,7 +4711,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b73ddb4b-af07-43b6-b4ba-53c319844c12",
@@ -4529,7 +4734,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "3741089d-3deb-4cb4-a27c-58dc6d37d0fa",
@@ -4551,7 +4757,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "bac33e4e-d4f7-446f-8d01-378fa2acc35b",
@@ -4573,7 +4780,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "76759cab-9290-4679-8a91-b0168c56ab70",
@@ -4595,7 +4803,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b168625f-177a-4548-adbe-17522df238a8",
@@ -4617,7 +4826,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "86d1d7a9-0991-4ac8-906b-8912938187de",
@@ -4639,7 +4849,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "e9244fa5-f0e8-4e62-b513-0f6b16e04a57",
@@ -4661,7 +4872,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "f5dadb10-19f4-43d6-985c-a1162c533232",
@@ -4683,7 +4895,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "e85b4243-7cbd-4f59-a5ec-bfddbab1b56d",
@@ -4705,7 +4918,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "20b96f47-29da-44ee-8cd1-42619955a8a5",
@@ -4727,7 +4941,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "294ba06f-4bb3-482e-b5c0-bc4d169bfe03",
@@ -4749,7 +4964,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "bcef3d6b-704b-46e4-88f1-8d4b258d10be",
@@ -4771,7 +4987,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "78e88323-bb12-4680-afea-1504dc25dcb7",
@@ -4793,7 +5010,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "4fbd7691-5000-4aee-b3ca-ded34ab013a6",
@@ -4815,7 +5033,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0dee5ff6-4ef9-4366-888f-5033d4c248e1",
@@ -4837,7 +5056,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0ab4b139-4207-4f01-81f5-38bd30e7236b",
@@ -4859,7 +5079,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "9253bbca-0ac7-4bb0-8a70-3fab6a986cd8",
@@ -4881,7 +5102,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "db5500a4-3b5d-48dc-adf5-5925220595ee",
@@ -4903,7 +5125,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "5cba80c3-a84e-427a-ba12-131ff84ddfd1",
@@ -4925,7 +5148,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "bb00d757-6b69-484e-ada5-b3555657fee4",
@@ -4947,7 +5171,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "213efe54-a083-40da-98cc-8ea25dd35a24",
@@ -4969,7 +5194,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "beaa48c4-050c-48b9-95d8-a4b5886a02e0",
@@ -4991,7 +5217,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "7ad48202-6589-48df-81e9-ec3defed7697",
@@ -5013,7 +5240,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a05129da-00ff-4dcc-90d3-8e2a9e5e9fea",
@@ -5071,7 +5299,8 @@
         "start": "08:00",
         "active": true
       }
-    }
+    },
+    "booking_enabled": true
   },
   {
     "id": "bf7b8bc8-7aab-44ed-934b-e56c3c8de104",
@@ -5093,7 +5322,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "57457a8d-3c1c-4110-86be-fa5edcc5a897",
@@ -5115,7 +5345,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "26d3697a-2061-44e7-b600-f5cdc3b1cf14",
@@ -5137,7 +5368,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "640c6368-357e-468d-a427-01078e6534ee",
@@ -5159,7 +5391,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "8ebde4d8-2eb8-4b70-b707-8e0231e799f5",
@@ -5181,7 +5414,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "157a173a-aa5b-4d32-9b13-71904efdd43a",
@@ -5203,7 +5437,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "d8811e20-d09d-4c4b-88b6-fc882ecff47c",
@@ -5225,7 +5460,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "d837c70d-050b-4ed4-ac5b-754ea853174e",
@@ -5247,7 +5483,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ab6aa58c-699a-4c53-a601-20434c43734d",
@@ -5269,7 +5506,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "35fed7fb-c881-4b3e-afb9-bdd1ed92d930",
@@ -5291,7 +5529,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "d0fc5b5b-3115-4927-a261-f4bd5ea4fd32",
@@ -5313,7 +5552,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "3f79bac8-8f1c-47fb-9b77-38b15309ec22",
@@ -5335,7 +5575,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b06bd03a-4ed0-4b56-9379-3d35ef6d6dbe",
@@ -5357,7 +5598,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "124fb674-c775-46fb-9df5-156d51918e7b",
@@ -5379,7 +5621,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0cb767ab-da95-4af8-8bf3-6403628bbbe7",
@@ -5401,7 +5644,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0c92cb7e-51a4-471a-85d3-e8ed30f0b9ce",
@@ -5423,7 +5667,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "4c87ce4c-9e3b-4b84-b44a-d8dc113340eb",
@@ -5445,7 +5690,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "bb17b930-1620-42b4-bb97-49f39481df32",
@@ -5467,7 +5713,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "7e3ceeac-78cc-46aa-821b-2027572cd81e",
@@ -5489,7 +5736,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "8c13854f-018e-497f-a2b2-d88c05ca03c9",
@@ -5511,7 +5759,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "304ddfa6-57d7-4806-9baf-4953b8533d4e",
@@ -5533,7 +5782,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "69e013d7-8ede-4eb6-a981-6bd145f453ef",
@@ -5555,7 +5805,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0940a6cd-e77e-4737-b98d-6d18e5f58f26",
@@ -5577,7 +5828,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "fc9c37fb-e73e-40c8-bc7e-20d3226fb0ad",
@@ -5599,7 +5851,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "84585562-6087-40b3-8528-ea1902dee06c",
@@ -5621,7 +5874,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "19cf00ec-a7b6-4186-a23f-8d333326d331",
@@ -5643,7 +5897,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a05c30e1-8109-4818-8984-d00b29bbfd49",
@@ -5665,7 +5920,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "760f521c-d55d-47f8-8326-cde415d03622",
@@ -5687,7 +5943,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "93d0c5ba-995a-4561-9bf7-4997c6df2f6b",
@@ -5709,7 +5966,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b3e5a334-27d3-425a-8e58-e9ce0398852f",
@@ -5731,7 +5989,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "de0a09b9-c7e8-4944-b5cb-563b7aada437",
@@ -5753,7 +6012,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "d92922f2-cd63-498f-9b94-69311ffeaa02",
@@ -5775,7 +6035,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0cd11144-301b-490f-aed2-1d61f7b5ed93",
@@ -5797,7 +6058,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a440a32a-6c78-4d2e-a900-0e77761db749",
@@ -5819,7 +6081,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "0b1e6272-3f1d-47a2-9ea0-30f2cf8a87e3",
@@ -5841,7 +6104,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a3d1afc2-f750-477c-96da-b2d28371b308",
@@ -5863,7 +6127,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "62e36e3b-2810-4a3c-a156-e7dc99ece655",
@@ -5885,7 +6150,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "05b83c3a-c499-4edd-afb9-4bbce45b7861",
@@ -5907,7 +6173,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "74afae7b-0e28-4150-bab0-d1d9bdf8cbea",
@@ -5929,7 +6196,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ac9b7831-6dd9-45e6-965f-7d0e4133a563",
@@ -5951,7 +6219,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "cbd2b9d0-ff47-4c17-9302-b833d1b69fe1",
@@ -5973,7 +6242,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ee57467f-dbfb-43da-8aca-d0e515a7e0c9",
@@ -5995,7 +6265,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "c12cfec2-7323-4779-b06b-d11f257d9639",
@@ -6017,7 +6288,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "811ca422-0ed3-4214-8b68-1175a2bf239e",
@@ -6039,7 +6311,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "7c9d45e2-04d4-4a49-adc9-89988d2292e1",
@@ -6061,7 +6334,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "7c6b7954-9f3e-4987-a956-c3c99ad3c30c",
@@ -6083,7 +6357,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "aa44b75f-25e9-4fac-b61f-f571c01aa1e7",
@@ -6105,7 +6380,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "885261aa-0df7-4956-a2df-6f415dbed69a",
@@ -6127,7 +6403,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "3e901a9b-6df2-41f9-8aaf-968491408770",
@@ -6149,7 +6426,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "7cfc740c-9cde-4d2e-ac15-9a5a8397c06d",
@@ -6171,7 +6449,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a648d158-3077-46bc-b4a8-c0cfee2c19f1",
@@ -6193,7 +6472,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "5d22493e-1bfd-4e51-9339-0b7a182b4942",
@@ -6215,7 +6495,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "c5e8862b-3b69-47c4-a0de-afda9462630f",
@@ -6237,7 +6518,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "3bf53a46-b90b-4a53-b58d-39b381316c2c",
@@ -6259,7 +6541,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b6fd0fa8-848a-4a2b-bb2e-2ab2df6855f6",
@@ -6281,7 +6564,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "481af4a0-ff0c-4109-bd39-c853a27d87bc",
@@ -6303,7 +6587,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "cbe4d9d9-4950-48e9-953f-f854aa30ec2c",
@@ -6325,7 +6610,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "39f221a6-b311-45a1-9059-37bb55817d0f",
@@ -6347,7 +6633,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "d54f6074-c4c2-4bdc-8213-3e9953065cf6",
@@ -6369,7 +6656,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "2fffa208-98cb-41a4-be28-2edac885adbd",
@@ -6391,7 +6679,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "451e7457-0efa-425c-b081-7939501cd550",
@@ -6413,7 +6702,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a0fda4df-4c5d-4354-bc66-08746d2cf67c",
@@ -6435,7 +6725,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "17129be2-f71d-466c-bd54-5898293c3f84",
@@ -6457,7 +6748,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "6f8dbd28-92b0-46c0-a3b5-c802e96cb3f8",
@@ -6479,7 +6771,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "c44ae132-d866-44cf-8c69-9adf9607c8a1",
@@ -6501,7 +6794,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "4360410d-001d-4872-8c4a-fe2a8dfd14cb",
@@ -6523,7 +6817,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "6b7b8289-1e00-452d-b62a-544a07bbe620",
@@ -6545,7 +6840,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "aad768a6-73e1-4b1e-b2ab-55fc1cebb579",
@@ -6567,7 +6863,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b94c7af2-fe5d-4cd7-897e-ca31ac0c037f",
@@ -6589,7 +6886,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "1f48ea91-2172-42f1-b5f1-930647edcc47",
@@ -6611,7 +6909,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "f016ea68-8ded-414e-bd04-7f6920918766",
@@ -6633,7 +6932,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "aa0d8017-f39b-4c12-8a82-f61f05a1f627",
@@ -6655,7 +6955,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "e54a1f60-3891-4f08-95f2-17dc5d180588",
@@ -6677,7 +6978,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "7e4281cc-64c6-4c6c-8771-fccb3209bed7",
@@ -6699,7 +7001,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "6aaa1c69-3ae6-4f25-869f-ad8e7e0ccc71",
@@ -6721,7 +7024,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "c48bb052-9986-4c36-9360-c63d69403963",
@@ -6743,7 +7047,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "d6f54227-244f-45e5-9e6f-24a22edaee58",
@@ -6765,7 +7070,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a7f67ff2-cc1a-4ac5-9e7d-1ccedbef6efd",
@@ -6787,7 +7093,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "2be35534-e9ba-4b56-a200-c65ffeaf96df",
@@ -6809,7 +7116,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "4d5d13f1-fc3c-4e08-a780-20f31bbdc6e0",
@@ -6831,7 +7139,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "86f31682-ca08-4fb0-91bd-ddd81aab57c8",
@@ -6853,7 +7162,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "edb4b003-efef-4b29-942e-961e4a38141a",
@@ -6875,7 +7185,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "b324b8b6-9dee-43de-bcfb-207ed9d69fca",
@@ -6897,7 +7208,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "ed93750f-d749-4549-b4a5-8601fcf10a2d",
@@ -6919,7 +7231,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "e79bee0d-6d98-4e25-a28d-da28599127d1",
@@ -6941,7 +7254,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "fd897a5e-ca9a-4c61-9e42-40cc8a5b563f",
@@ -6963,7 +7277,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "2f71bf42-b57b-4910-8cc5-8d0b4c85f039",
@@ -6985,7 +7300,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "1f1e5dc3-9469-4882-b6dd-fab2a2e195c9",
@@ -7007,7 +7323,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "3fd96733-bcfb-4ea1-a290-1f40b0b68f5a",
@@ -7029,7 +7346,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "948607b3-7981-4f0c-8850-4362eae40ed0",
@@ -7051,7 +7369,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "4e0d810d-d2b6-405f-89f1-9ff98184884f",
@@ -7073,7 +7392,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "5a9941d5-5431-4c34-acbc-e104bdaa2c97",
@@ -7095,7 +7415,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "2ecd360b-c18a-41b7-82c5-42843400332b",
@@ -7117,7 +7438,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "1bcfa603-769a-4716-acbb-92584aba75ea",
@@ -7139,7 +7461,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "36681256-fdf0-4a7e-818b-2ec5cbc4d976",
@@ -7161,7 +7484,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "a64e5aa7-6e08-4603-9801-982e75208585",
@@ -7183,7 +7507,8 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   },
   {
     "id": "192ebe31-770b-4fe0-9990-eab7cbf20db8",
@@ -7205,6 +7530,7 @@
     "services": [],
     "certificates": "",
     "clinic_images": [],
-    "working_days": {}
+    "working_days": {},
+    "booking_enabled": false
   }
 ]
