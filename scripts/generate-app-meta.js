@@ -11,31 +11,38 @@ async function generateAppMeta() {
   try {
     // 🛡️ التحديث الأمني: تحديد الأعمدة المطلوبة فقط وتجاهل البيانات الحساسة (مثل password و session_token)
     // حرصت على جلب الأسماء بالإنجليزية والعربية كما هو معتمد في هيكلة بياناتك
-    const { data, error } = await supabase
-      .from('doctors')
-      .select(`
-        id,
-        slug,
-        first_name,
-        last_name,
-        first_name_en,
-        last_name_en,
-        specialty,
-        municipality,
-        exact_location,
-        phone,
-        phone_2,
-        whatsapp_number,
-        contact_email,
-        facebook_link,
-        map_link,
-        extra_info,
-        services,
-        certificates,
-        clinic_images,
-        working_days
-      `)
-      .order('created_at', { ascending: false });
+   const { data, error } = await supabase
+  .from('doctors')
+  .select(`
+    id,
+    slug,
+    first_name,
+    last_name,
+    first_name_en,
+    last_name_en,
+    specialty,
+    municipality,
+    exact_location,
+    phone,
+    phone_2,
+    whatsapp_number,
+    contact_email,
+    facebook_link,
+    map_link,
+    extra_info,
+    services,
+    certificates,
+    clinic_images,
+    working_days,
+    booking_enabled,
+    booking_url,
+    rating,
+    reviews_count,
+    languages,
+    insurance_accepted,
+    years_of_experience
+  `)
+  .order('created_at', { ascending: false });
 
     if (error) throw error;
 
