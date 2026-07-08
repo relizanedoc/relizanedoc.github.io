@@ -1,5 +1,86 @@
 [
   {
+    "id": "612dd8f3-b6a7-44d4-8dae-169dc06590b1",
+    "slug": "dr-mhmd-abd-alkadr",
+    "first_name": "محمد",
+    "last_name": "عبد القادر",
+    "first_name_en": "Mohamed",
+    "last_name_en": "Abdelkader",
+    "specialty": "جراحة المسالك البولية - Urology",
+    "municipality": "وادي رهيو",
+    "exact_location": "شارع الأمير عبد القادر الجزائري وادي رهيو",
+    "phone": "0000000009",
+    "phone_2": "0000000008",
+    "whatsapp_number": "0000000009",
+    "contact_email": "abd@gmail.com",
+    "facebook_link": "www.facebook.com",
+    "map_link": "https://maps.app.goo.gl/zm9ioAPaVRumbTFA7",
+    "extra_info": "سعر الفحص 1500 دج",
+    "services": [
+      {
+        "items": [
+          "عمليات جراحية"
+        ],
+        "category": "جراحة العيون"
+      },
+      {
+        "items": [
+          "فحص طبي"
+        ],
+        "category": "جراحة العيون"
+      },
+      {
+        "items": [
+          "مراجعة دقة النظر"
+        ],
+        "category": "جراحة العيون"
+      }
+    ],
+    "certificates": "دكتوراه في الطب تخصص طب وجراحة العيون",
+    "clinic_images": [
+      "https://iirjtmobphgmkgwkwumc.supabase.co/storage/v1/object/public/clinic-images/clinics/612dd8f3-b6a7-44d4-8dae-169dc06590b1/1783508265884-3lnmween3co.webp",
+      "https://iirjtmobphgmkgwkwumc.supabase.co/storage/v1/object/public/clinic-images/clinics/612dd8f3-b6a7-44d4-8dae-169dc06590b1/1783508297804-lwqtsl6x6of.webp"
+    ],
+    "working_days": {
+      "0": {
+        "end": "16:00",
+        "start": "08:00",
+        "active": true
+      },
+      "1": {
+        "end": "16:00",
+        "start": "08:00",
+        "active": true
+      },
+      "2": {
+        "end": "16:00",
+        "start": "08:00",
+        "active": true
+      },
+      "3": {
+        "end": "16:00",
+        "start": "08:00",
+        "active": true
+      },
+      "4": {
+        "end": "16:00",
+        "start": "08:00",
+        "active": true
+      },
+      "5": {
+        "end": "16:00",
+        "start": "08:00",
+        "active": false
+      },
+      "6": {
+        "end": "16:00",
+        "start": "08:00",
+        "active": false
+      }
+    },
+    "booking_enabled": true
+  },
+  {
     "id": "3ed5c435-ed21-4940-86f8-3a628d92e713",
     "slug": "dr-asma-mdjadji",
     "first_name": "أسماء",
