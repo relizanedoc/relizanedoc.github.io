@@ -2,7 +2,7 @@ name: Update Mobile App Meta File
 
 on:
   schedule:
-    # تم التعديل هنا: */4 تعني كل 4 أيام، في الساعة 02:00 صباحاً
+    # يعمل كل 4 أيام، في الساعة 02:00 صباحاً بتوقيت الخادم
     - cron: '0 2 */4 * *'
   workflow_dispatch: 
 
@@ -19,7 +19,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '24'
+        node-version: '20'
 
     - name: Install Dependencies
       run: npm install @supabase/supabase-js
@@ -35,4 +35,4 @@ jobs:
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git add doctors-app-meta.json
-        git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-update mobile app doctors data (4-day cycle)" && git push)
+        git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-update mobile app doctors data with reviews" && git push)
