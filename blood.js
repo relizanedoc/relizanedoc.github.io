@@ -3,11 +3,11 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ====== 1. منطق صفحة الإضافة (index.html) ======
+// ====== 1. منطق صفحة الإضافة (blood.html) ======
 const addDonorForm = document.getElementById('addDonorForm');
 if (addDonorForm) {
     addDonorForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // هذا السطر هو الذي يمنع الصفحة من تحديث نفسها ومسح البيانات
         
         const submitBtn = document.getElementById('submitBtn');
         const msgDiv = document.getElementById('formMessage');
@@ -29,9 +29,7 @@ if (addDonorForm) {
         };
 
         // إرسال البيانات إلى Supabase
-        const { data, error } = await supabase
-            .from('donors')
-            .insert([donorData]);
+        const { data, error } = await supabase.from('donors').insert([donorData]);
 
         if (error) {
             msgDiv.className = 'message msg-error';
@@ -40,7 +38,7 @@ if (addDonorForm) {
         } else {
             msgDiv.className = 'message msg-success';
             msgDiv.textContent = 'تم تسجيلك كمتبرع بنجاح! جزاك الله خيراً.';
-            addDonorForm.reset();
+            addDonorForm.reset(); // تفريغ الخانات بعد النجاح
         }
         
         submitBtn.disabled = false;
@@ -51,8 +49,6 @@ if (addDonorForm) {
 // ====== 2. منطق صفحة البحث (search.html) ======
 const searchForm = document.getElementById('searchForm');
 if (searchForm) {
-    
-    // دالة لجلب وعرض البيانات
     const fetchDonors = async (municipality = '', blood_type = '') => {
         const resultsGrid = document.getElementById('resultsGrid');
         const loadingMsg = document.getElementById('loadingMessage');
@@ -60,7 +56,6 @@ if (searchForm) {
         resultsGrid.innerHTML = '';
         loadingMsg.style.display = 'block';
 
-        // بناء الاستعلام (Query)
         let query = supabase.from('donors').select('*').order('id', { ascending: false });
         
         if (municipality) query = query.eq('municipality', municipality);
@@ -80,12 +75,10 @@ if (searchForm) {
             return;
         }
 
-        // إنشاء بطاقات المتبرعين
         data.forEach(donor => {
             const card = document.createElement('div');
             card.className = 'donor-card';
             
-            // التعامل مع القيم الفارغة
             const phoneStr = [donor.phone1, donor.phone2].filter(Boolean).join(' / ') || 'غير متوفر';
             const lastDonation = donor.last_donation ? donor.last_donation : 'غير محدد';
             
@@ -93,17 +86,15 @@ if (searchForm) {
                 <h3>${donor.name} <span class="blood-badge">${donor.blood_type}</span></h3>
                 <div class="donor-info"><strong>البلدية:</strong> ${donor.municipality}</div>
                 <div class="donor-info"><strong>الهاتف:</strong> <span dir="ltr">${phoneStr}</span></div>
-                ${donor.age ? `<div class="donor-info"><strong>العمر:</strong> ${donor.age} سنة</div>` : ''}
+                ${donor.age ? '<div class="donor-info"><strong>العمر:</strong> ' + donor.age + ' سنة</div>' : ''}
                 <div class="donor-info"><strong>تاريخ آخر تبرع:</strong> <span dir="ltr">${lastDonation}</span></div>
             `;
             resultsGrid.appendChild(card);
         });
     };
 
-    // جلب جميع المتبرعين عند فتح الصفحة لأول مرة
     fetchDonors();
 
-    // فلترة المتبرعين عند الضغط على بحث
     searchForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const mun = document.getElementById('search_municipality').value;
