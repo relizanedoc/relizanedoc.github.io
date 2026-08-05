@@ -46,6 +46,7 @@ window.router = async function(viewName, pushHistory = true) {
 
   // 4. تنفيذ الإجراءات الخاصة بالصفحات
   if (viewName === 'home') {
+    trackHomeView();
       const searchInput = document.getElementById('searchInput');
       if (searchInput) searchInput.value = ''; 
       if(typeof window.loadDoctors === 'function') window.loadDoctors(true); 
