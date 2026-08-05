@@ -6,6 +6,7 @@ import './state.js';
 import './utils.js';
 import './ui.js';
 import './auth.js';
+import './analytics.js';
 import './chatbot.js'; 
 import './gallery.js';
 import './reviews.js';
