@@ -1,6 +1,7 @@
 // ==========================================
 // router.js - نظام التوجيه، معالجة الروابط، واللغة
 // ==========================================
+import { trackHomeView } from './analytics.js';
 import { supabaseClient } from './api.js';
 import { state, i18n } from './state.js';
 import { t, showToast } from './utils.js';
