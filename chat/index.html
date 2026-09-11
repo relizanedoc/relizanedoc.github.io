@@ -1,140 +1,120 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
-
+```
 <title>مركز التواصل</title>
 
-<link
-    rel="stylesheet"
-    href="style.css"
->
+<link rel="stylesheet" href="style.css">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script src="config.js"></script>
+```
 
 </head>
 
 <body>
 
-<!-- LOGIN -->
+```
+<!-- =========================
+     LOGIN
+========================== -->
 
 <div id="loginScreen" class="login-screen">
 
     <div class="login-box">
 
-        <div class="logo">
-            💬
-        </div>
+        <div class="logo">💬</div>
 
-        <h1>
-            مركز التواصل
-        </h1>
+        <h1>مركز التواصل</h1>
 
-        <p>
-            تسجيل الدخول
-        </p>
+        <p>تسجيل الدخول</p>
 
         <input
             id="email"
             type="email"
             placeholder="البريد الإلكتروني"
+            autocomplete="email"
         >
 
         <input
             id="password"
             type="password"
             placeholder="كلمة المرور"
+            autocomplete="current-password"
         >
 
-<button id="loginButton">
-    دخول
-</button>
+        <button id="loginButton" type="button">
+            دخول
+        </button>
 
-<button
-    id="forgotPasswordButton"
-    type="button"
-    class="forgot-password"
->
-    نسيت كلمة المرور؟
-</button>
+        <button
+            id="forgotPasswordButton"
+            type="button"
+            class="forgot-password"
+        >
+            نسيت كلمة المرور؟
+        </button>
 
-<div id="loginError"></div>
+        <div id="loginError"></div>
 
     </div>
 
 </div>
 
 
-<!-- APP -->
+<!-- =========================
+     MAIN APPLICATION
+========================== -->
 
 <div id="app" class="app hidden">
-
 
     <!-- SIDEBAR -->
 
     <aside class="sidebar">
 
         <div class="brand">
-
             <span>💬</span>
-
-            <strong>
-                مركز التواصل
-            </strong>
-
+            <strong>مركز التواصل</strong>
         </div>
 
+
+        <!-- GROUP -->
 
         <button
             id="groupButton"
             class="conversation-button active"
+            type="button"
         >
 
             <span>👥</span>
 
             <div>
-
-                <strong>
-                    المجموعة
-                </strong>
-
-                <small>
-                    المحادثة الجماعية
-                </small>
-
+                <strong>المجموعة</strong>
+                <small>المحادثة الجماعية</small>
             </div>
 
         </button>
 
 
         <div class="section-title">
-
             المحادثات الخاصة
-
         </div>
 
 
-        <div id="customersList">
-
-        </div>
+        <div id="customersList"></div>
 
 
         <button
             id="logoutButton"
             class="logout"
+            type="button"
         >
-
             تسجيل الخروج
-
         </button>
 
     </aside>
@@ -161,21 +141,23 @@
         </header>
 
 
+        <!-- MESSAGES -->
+
         <section
             id="messages"
             class="messages"
-        >
+        ></section>
 
-        </section>
 
+        <!-- FILE PREVIEW -->
 
         <div
             id="filePreview"
             class="file-preview hidden"
-        >
+        ></div>
 
-        </div>
 
+        <!-- COMPOSER -->
 
         <form
             id="messageForm"
@@ -205,9 +187,7 @@
                 class="action-button"
                 title="تسجيل صوتي"
             >
-
                 🎤
-
             </button>
 
 
@@ -223,9 +203,7 @@
                 type="submit"
                 class="send-button"
             >
-
                 ➤
-
             </button>
 
         </form>
@@ -234,7 +212,12 @@
 
 </div>
 
-<script src="app.js?v=3"></script>
+
+<!-- APPLICATION -->
+
+<script src="app.js?v=10"></script>
+```
+
 </body>
 
 </html>
