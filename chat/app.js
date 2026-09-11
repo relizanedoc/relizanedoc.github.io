@@ -6,10 +6,7 @@
 
 const { createClient } = window.supabase;
 
-if (
-    !window.SUPABASE_URL ||
-    !window.SUPABASE_ANON_KEY
-) {
+if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
     throw new Error(
         "SUPABASE_URL أو SUPABASE_ANON_KEY غير موجود في config.js"
     );
@@ -77,14 +74,12 @@ const recordButton =
 
 let currentUser = null;
 let currentProfile = null;
-
 let currentConversation = null;
 
 let realtimeChannel = null;
 
 let mediaRecorder = null;
 let audioChunks = [];
-
 let recording = false;
 
 let selectedImage = null;
@@ -145,7 +140,6 @@ async function initialize() {
             toggleRecording
         );
 
-
         messageInput.addEventListener(
             "keydown",
             function (event) {
@@ -154,18 +148,14 @@ async function initialize() {
                     event.key === "Enter" &&
                     !event.shiftKey
                 ) {
+
                     event.preventDefault();
 
                     messageForm.requestSubmit();
                 }
-
             }
         );
 
-
-        /*
-         * مراقبة حالة تسجيل الدخول
-         */
 
         db.auth.onAuthStateChange(
             async function (event, session) {
@@ -185,6 +175,7 @@ async function initialize() {
                         session.user &&
                         !currentUser
                     ) {
+
                         await startApplication(
                             session.user
                         );
@@ -200,6 +191,8 @@ async function initialize() {
                     currentProfile = null;
                     currentConversation = null;
 
+                    profileCache.clear();
+
                     if (realtimeChannel) {
 
                         await db.removeChannel(
@@ -211,14 +204,9 @@ async function initialize() {
 
                     showLoginScreen();
                 }
-
             }
         );
 
-
-        /*
-         * الحصول على الجلسة الحالية
-         */
 
         const {
             data,
@@ -248,8 +236,8 @@ async function initialize() {
         } else {
 
             showLoginScreen();
-
         }
+
 
     } catch (error) {
 
@@ -318,8 +306,8 @@ async function login() {
             data,
             error
         } = await db.auth.signInWithPassword({
-            email: email,
-            password: password
+            email,
+            password
         });
 
 
@@ -352,6 +340,7 @@ async function login() {
             data.user
         );
 
+
     } catch (error) {
 
         console.error(
@@ -363,6 +352,7 @@ async function login() {
             error.message ||
             "حدث خطأ أثناء تسجيل الدخول."
         );
+
 
     } finally {
 
@@ -408,12 +398,6 @@ async function resetPassword() {
 
     try {
 
-        /*
-         * مهم:
-         * يجب أن يكون redirectTo هو عنوان الموقع نفسه
-         * وليس /** أو أي مسار آخر.
-         */
-
         const redirectTo =
             window.location.origin + "/";
 
@@ -423,7 +407,7 @@ async function resetPassword() {
         } = await db.auth.resetPasswordForEmail(
             email,
             {
-                redirectTo: redirectTo
+                redirectTo
             }
         );
 
@@ -447,6 +431,7 @@ async function resetPassword() {
             "تم إرسال رابط استرجاع كلمة المرور إلى بريدك الإلكتروني."
         );
 
+
     } catch (error) {
 
         console.error(
@@ -458,6 +443,7 @@ async function resetPassword() {
             error.message ||
             "حدث خطأ أثناء إرسال رابط الاسترجاع."
         );
+
 
     } finally {
 
@@ -586,7 +572,7 @@ function showPasswordUpdateScreen() {
                 const {
                     error
                 } = await db.auth.updateUser({
-                    password: password
+                    password
                 });
 
 
@@ -631,6 +617,7 @@ function showPasswordUpdateScreen() {
                     error.message ||
                     "حدث خطأ أثناء تغيير كلمة المرور.";
 
+
             } finally {
 
                 updateButton.disabled = false;
@@ -638,7 +625,6 @@ function showPasswordUpdateScreen() {
                 updateButton.textContent =
                     "حفظ كلمة المرور";
             }
-
         }
     );
 }
@@ -665,8 +651,13 @@ async function startApplication(user) {
             error
         } = await db
             .from("profiles")
-            .select("*")
-            .eq("id", user.id)
+            .select(
+                "id, display_name, role"
+            )
+            .eq(
+                "id",
+                user.id
+            )
             .single();
 
 
@@ -731,10 +722,6 @@ async function loadCustomers() {
     }
 
 
-    /*
-     * العميل لا يحتاج إلى رؤية قائمة العملاء.
-     */
-
     if (currentProfile.role !== "admin") {
 
         customersList.innerHTML = `
@@ -752,9 +739,16 @@ async function loadCustomers() {
         error
     } = await db
         .from("profiles")
-        .select("id, display_name, role")
-        .eq("role", "customer")
-        .order("display_name");
+        .select(
+            "id, display_name, role"
+        )
+        .eq(
+            "role",
+            "customer"
+        )
+        .order(
+            "display_name"
+        );
 
 
     if (error) {
@@ -823,7 +817,6 @@ async function loadCustomers() {
                     </small>
 
                 </div>
-
             `;
 
 
@@ -834,7 +827,6 @@ async function loadCustomers() {
                     openPrivateConversation(
                         customer
                     );
-
                 }
             );
 
@@ -842,7 +834,6 @@ async function loadCustomers() {
             customersList.appendChild(
                 button
             );
-
         }
     );
 }
@@ -867,7 +858,10 @@ async function openGroupConversation() {
         } = await db
             .from("conversations")
             .select("*")
-            .eq("type", "group")
+            .eq(
+                "type",
+                "group"
+            )
             .limit(1)
             .maybeSingle();
 
@@ -908,6 +902,7 @@ async function openGroupConversation() {
             groupButton
         );
 
+
     } catch (error) {
 
         console.error(
@@ -916,7 +911,8 @@ async function openGroupConversation() {
         );
 
         showChatError(
-            error.message
+            error.message ||
+            "حدث خطأ أثناء فتح المجموعة."
         );
     }
 }
@@ -926,7 +922,9 @@ async function openGroupConversation() {
    OPEN PRIVATE CONVERSATION
 ========================================================= */
 
-async function openPrivateConversation(customer) {
+async function openPrivateConversation(
+    customer
+) {
 
     if (!currentUser || !customer) {
         return;
@@ -938,18 +936,20 @@ async function openPrivateConversation(customer) {
         let conversation = null;
 
 
-        /*
-         * البحث عن المحادثة الخاصة الموجودة.
-         */
-
         const {
             data: existingConversation,
             error: searchError
         } = await db
             .from("conversations")
             .select("*")
-            .eq("type", "private")
-            .eq("customer_id", customer.id)
+            .eq(
+                "type",
+                "private"
+            )
+            .eq(
+                "customer_id",
+                customer.id
+            )
             .maybeSingle();
 
 
@@ -972,11 +972,6 @@ async function openPrivateConversation(customer) {
             existingConversation;
 
 
-        /*
-         * إذا كان المستخدم Admin ولا توجد محادثة،
-         * نحاول إنشاءها.
-         */
-
         if (
             !conversation &&
             currentProfile &&
@@ -990,7 +985,8 @@ async function openPrivateConversation(customer) {
                 .from("conversations")
                 .insert({
                     type: "private",
-                    customer_id: customer.id
+                    customer_id:
+                        customer.id
                 })
                 .select()
                 .single();
@@ -1014,10 +1010,6 @@ async function openPrivateConversation(customer) {
             conversation =
                 createdConversation;
 
-
-            /*
-             * إضافة العميل والـ Admin إلى المحادثة.
-             */
 
             const members = [
                 {
@@ -1081,14 +1073,9 @@ async function openPrivateConversation(customer) {
             conversation,
             customer.display_name ||
             "محادثة خاصة",
-
             "محادثة خاصة"
         );
 
-
-        /*
-         * إزالة active من المجموعة
-         */
 
         document
             .querySelectorAll(
@@ -1096,11 +1083,13 @@ async function openPrivateConversation(customer) {
             )
             .forEach(
                 function (button) {
+
                     button.classList.remove(
                         "active"
                     );
                 }
             );
+
 
     } catch (error) {
 
@@ -1110,7 +1099,8 @@ async function openPrivateConversation(customer) {
         );
 
         showChatError(
-            error.message
+            error.message ||
+            "حدث خطأ أثناء فتح المحادثة الخاصة."
         );
     }
 }
@@ -1147,7 +1137,6 @@ async function selectConversation(
 
 
     subscribeToMessages();
-
 }
 
 
@@ -1166,7 +1155,7 @@ async function loadMessages() {
 
 
     const {
-        data,
+        data: messages,
         error
     } = await db
         .from("messages")
@@ -1198,7 +1187,7 @@ async function loadMessages() {
     }
 
 
-    if (!data || data.length === 0) {
+    if (!messages || messages.length === 0) {
 
         messagesContainer.innerHTML = `
             <div class="empty-messages">
@@ -1210,12 +1199,64 @@ async function loadMessages() {
     }
 
 
+    /*
+     * جلب جميع أسماء مرسلي الرسائل دفعة واحدة
+     */
+
+    const senderIds = [
+        ...new Set(
+            messages
+                .map(
+                    message =>
+                        message.sender_id
+                )
+                .filter(Boolean)
+        )
+    ];
+
+
+    if (senderIds.length > 0) {
+
+        const {
+            data: profiles,
+            error: profilesError
+        } = await db
+            .from("profiles")
+            .select(
+                "id, display_name, role"
+            )
+            .in(
+                "id",
+                senderIds
+            );
+
+
+        if (profilesError) {
+
+            console.error(
+                "Profiles error:",
+                profilesError
+            );
+
+        } else if (profiles) {
+
+            profiles.forEach(
+                function (profile) {
+
+                    profileCache.set(
+                        profile.id,
+                        profile
+                    );
+                }
+            );
+        }
+    }
+
+
     messagesContainer.innerHTML = "";
 
 
-    for (
-        const message of data
-    ) {
+    for (const message of messages) {
 
         await renderMessage(
             message
@@ -1231,7 +1272,9 @@ async function loadMessages() {
    RENDER MESSAGE
 ========================================================= */
 
-async function renderMessage(message) {
+async function renderMessage(
+    message
+) {
 
     const messageElement =
         document.createElement("div");
@@ -1248,49 +1291,15 @@ async function renderMessage(message) {
             : "message";
 
 
-    let senderName = "مستخدم";
-
-
-    if (
-        profileCache.has(
+    const senderProfile =
+        profileCache.get(
             message.sender_id
-        )
-    ) {
-
-        senderName =
-            profileCache.get(
-                message.sender_id
-            ).display_name ||
-            "مستخدم";
-
-    } else {
-
-        const {
-            data
-        } = await db
-            .from("profiles")
-            .select(
-                "id, display_name, role"
-            )
-            .eq(
-                "id",
-                message.sender_id
-            )
-            .maybeSingle();
+        );
 
 
-        if (data) {
-
-            profileCache.set(
-                data.id,
-                data
-            );
-
-            senderName =
-                data.display_name ||
-                "مستخدم";
-        }
-    }
+    const senderName =
+        senderProfile?.display_name ||
+        "مستخدم";
 
 
     let content = "";
@@ -1308,6 +1317,7 @@ async function renderMessage(message) {
                 )}
             </div>
         `;
+
 
     } else if (
         message.message_type ===
@@ -1330,13 +1340,17 @@ async function renderMessage(message) {
 
             content = `
                 <a
-                    href="${imageUrl}"
+                    href="${escapeHtml(
+                        imageUrl
+                    )}"
                     target="_blank"
-                    rel="noopener"
+                    rel="noopener noreferrer"
                 >
                     <img
                         class="message-image"
-                        src="${imageUrl}"
+                        src="${escapeHtml(
+                            imageUrl
+                        )}"
                         alt="صورة"
                         loading="lazy"
                     >
@@ -1351,6 +1365,7 @@ async function renderMessage(message) {
                 </div>
             `;
         }
+
 
     } else if (
         message.message_type ===
@@ -1375,7 +1390,9 @@ async function renderMessage(message) {
                 <audio
                     class="message-audio"
                     controls
-                    src="${audioUrl}"
+                    src="${escapeHtml(
+                        audioUrl
+                    )}"
                 ></audio>
             `;
 
@@ -1387,6 +1404,7 @@ async function renderMessage(message) {
                 </div>
             `;
         }
+
 
     } else {
 
@@ -1410,17 +1428,11 @@ async function renderMessage(message) {
 
         <div class="message-bubble">
 
-            ${
-                !ownMessage
-                    ? `
-                        <div class="message-sender">
-                            ${escapeHtml(
-                                senderName
-                            )}
-                        </div>
-                    `
-                    : ""
-            }
+            <div class="message-sender">
+                ${escapeHtml(
+                    senderName
+                )}
+            </div>
 
             ${content}
 
@@ -1472,10 +1484,6 @@ async function sendMessage(event) {
     }
 
 
-    /*
-     * إذا كانت هناك صورة مختارة
-     */
-
     if (selectedImage) {
 
         await uploadImage(
@@ -1485,10 +1493,6 @@ async function sendMessage(event) {
         return;
     }
 
-
-    /*
-     * إرسال النص
-     */
 
     await sendTextMessage(
         text
@@ -1500,9 +1504,11 @@ async function sendMessage(event) {
    SEND TEXT
 ========================================================= */
 
-async function sendTextMessage(text) {
+async function sendTextMessage(
+    text
+) {
 
-    if (!text) {
+    if (!text || !currentConversation) {
         return;
     }
 
@@ -1551,7 +1557,9 @@ async function sendTextMessage(text) {
    IMAGE SELECTION
 ========================================================= */
 
-function handleImageSelection(event) {
+function handleImageSelection(
+    event
+) {
 
     const file =
         event.target.files &&
@@ -1578,10 +1586,6 @@ function handleImageSelection(event) {
         return;
     }
 
-
-    /*
-     * حد أقصى 10MB
-     */
 
     if (
         file.size >
@@ -1612,7 +1616,9 @@ function handleImageSelection(event) {
 
             <span>
                 🖼️
-                ${escapeHtml(file.name)}
+                ${escapeHtml(
+                    file.name
+                )}
             </span>
 
             <button
@@ -1623,7 +1629,6 @@ function handleImageSelection(event) {
             </button>
 
         </div>
-
     `;
 
 
@@ -1642,7 +1647,9 @@ function handleImageSelection(event) {
    UPLOAD IMAGE
 ========================================================= */
 
-async function uploadImage(file) {
+async function uploadImage(
+    file
+) {
 
     if (!currentConversation) {
         return;
@@ -1740,7 +1747,8 @@ async function uploadImage(file) {
         );
 
         showChatError(
-            error.message
+            error.message ||
+            "حدث خطأ أثناء رفع الصورة."
         );
     }
 }
@@ -1770,7 +1778,10 @@ async function toggleRecording() {
 
 async function startRecording() {
 
-    if (!navigator.mediaDevices) {
+    if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ) {
 
         showChatError(
             "المتصفح لا يدعم تسجيل الصوت."
@@ -1804,6 +1815,7 @@ async function startRecording() {
                     event.data &&
                     event.data.size > 0
                 ) {
+
                     audioChunks.push(
                         event.data
                     );
@@ -1818,6 +1830,7 @@ async function startRecording() {
                     .getTracks()
                     .forEach(
                         function (track) {
+
                             track.stop();
                         }
                     );
@@ -1837,6 +1850,7 @@ async function startRecording() {
                 if (
                     audioBlob.size === 0
                 ) {
+
                     return;
                 }
 
@@ -1855,10 +1869,8 @@ async function startRecording() {
         recordButton.textContent =
             "⏹️";
 
-
         recordButton.title =
             "إيقاف التسجيل";
-
 
         recordButton.classList.add(
             "recording"
@@ -1904,10 +1916,8 @@ function stopRecording() {
     recordButton.textContent =
         "🎤";
 
-
     recordButton.title =
         "تسجيل صوتي";
-
 
     recordButton.classList.remove(
         "recording"
@@ -1919,7 +1929,9 @@ function stopRecording() {
    UPLOAD AUDIO
 ========================================================= */
 
-async function uploadAudio(blob) {
+async function uploadAudio(
+    blob
+) {
 
     if (!currentConversation) {
 
@@ -1933,12 +1945,8 @@ async function uploadAudio(blob) {
 
     try {
 
-        const extension =
-            "webm";
-
-
         const filePath =
-            `audio/${currentConversation.id}/${currentUser.id}/${crypto.randomUUID()}.${extension}`;
+            `audio/${currentConversation.id}/${currentUser.id}/${crypto.randomUUID()}.webm`;
 
 
         const {
@@ -2016,7 +2024,8 @@ async function uploadAudio(blob) {
         );
 
         showChatError(
-            error.message
+            error.message ||
+            "حدث خطأ أثناء رفع التسجيل الصوتي."
         );
     }
 }
@@ -2072,10 +2081,6 @@ function subscribeToMessages() {
     }
 
 
-    /*
-     * إزالة الاشتراك السابق
-     */
-
     if (realtimeChannel) {
 
         db.removeChannel(
@@ -2095,34 +2100,22 @@ function subscribeToMessages() {
                 "postgres_changes",
                 {
                     event: "INSERT",
-
                     schema: "public",
-
                     table: "messages",
-
                     filter:
                         `conversation_id=eq.${currentConversation.id}`
                 },
-
                 async function (payload) {
-
-                    /*
-                     * التأكد من أن الرسالة تخص
-                     * المحادثة الحالية.
-                     */
 
                     if (
                         !currentConversation ||
                         payload.new.conversation_id !==
                         currentConversation.id
                     ) {
+
                         return;
                     }
 
-
-                    /*
-                     * إزالة رسالة "لا توجد رسائل"
-                     */
 
                     const empty =
                         messagesContainer.querySelector(
@@ -2132,6 +2125,42 @@ function subscribeToMessages() {
 
                     if (empty) {
                         empty.remove();
+                    }
+
+
+                    /*
+                     * تحميل اسم المرسل الجديد
+                     * إذا لم يكن موجودًا في الذاكرة
+                     */
+
+                    if (
+                        payload.new.sender_id &&
+                        !profileCache.has(
+                            payload.new.sender_id
+                        )
+                    ) {
+
+                        const {
+                            data: profile
+                        } = await db
+                            .from("profiles")
+                            .select(
+                                "id, display_name, role"
+                            )
+                            .eq(
+                                "id",
+                                payload.new.sender_id
+                            )
+                            .maybeSingle();
+
+
+                        if (profile) {
+
+                            profileCache.set(
+                                profile.id,
+                                profile
+                            );
+                        }
                     }
 
 
@@ -2173,7 +2202,8 @@ async function logout() {
         );
 
         showError(
-            error.message
+            error.message ||
+            "حدث خطأ أثناء تسجيل الخروج."
         );
     }
 }
@@ -2215,7 +2245,9 @@ function clearLoginError() {
 }
 
 
-function showError(message) {
+function showError(
+    message
+) {
 
     loginError.textContent =
         message || "حدث خطأ.";
@@ -2225,7 +2257,9 @@ function showError(message) {
 }
 
 
-function showSuccess(message) {
+function showSuccess(
+    message
+) {
 
     loginError.textContent =
         message || "";
@@ -2235,18 +2269,15 @@ function showSuccess(message) {
 }
 
 
-function showChatError(message) {
+function showChatError(
+    message
+) {
 
     console.error(
         "Chat error:",
         message
     );
 
-
-    /*
-     * إظهار الخطأ داخل منطقة الرسائل
-     * حتى لا يفشل التطبيق بصمت.
-     */
 
     const element =
         document.createElement("div");
@@ -2283,7 +2314,6 @@ function setButtonLoading(
 
     button.disabled =
         loading;
-
 
     button.textContent =
         text;
@@ -2339,7 +2369,9 @@ function clearFilePreview() {
    HELPERS
 ========================================================= */
 
-function escapeHtml(value) {
+function escapeHtml(
+    value
+) {
 
     const div =
         document.createElement(
