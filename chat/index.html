@@ -1,222 +1,221 @@
 <!DOCTYPE html>
-
 <html lang="ar" dir="rtl">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-```
-<title>مركز التواصل</title>
+    <title>مركز التواصل</title>
 
-<link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
-```
-
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
 </head>
 
 <body>
 
-```
-<!-- =========================
-     LOGIN
-========================== -->
+    <!-- =========================
+         LOGIN SCREEN
+    ========================== -->
 
-<div id="loginScreen" class="login-screen">
+    <div id="loginScreen" class="login-screen">
 
-    <div class="login-box">
+        <div class="login-box">
 
-        <div class="logo">💬</div>
+            <div class="logo">💬</div>
 
-        <h1>مركز التواصل</h1>
+            <h1>مركز التواصل</h1>
 
-        <p>تسجيل الدخول</p>
+            <p>تسجيل الدخول</p>
 
-        <input
-            id="email"
-            type="email"
-            placeholder="البريد الإلكتروني"
-            autocomplete="email"
-        >
+            <input
+                id="email"
+                type="email"
+                placeholder="البريد الإلكتروني"
+                autocomplete="email"
+            >
 
-        <input
-            id="password"
-            type="password"
-            placeholder="كلمة المرور"
-            autocomplete="current-password"
-        >
+            <input
+                id="password"
+                type="password"
+                placeholder="كلمة المرور"
+                autocomplete="current-password"
+            >
 
-        <button id="loginButton" type="button">
-            دخول
-        </button>
+            <button
+                id="loginButton"
+                type="button"
+            >
+                دخول
+            </button>
 
-        <button
-            id="forgotPasswordButton"
-            type="button"
-            class="forgot-password"
-        >
-            نسيت كلمة المرور؟
-        </button>
+            <button
+                id="forgotPasswordButton"
+                type="button"
+                class="forgot-password"
+            >
+                نسيت كلمة المرور؟
+            </button>
 
-        <div id="loginError"></div>
+            <div id="loginError"></div>
+
+        </div>
 
     </div>
 
-</div>
 
+    <!-- =========================
+         MAIN APPLICATION
+    ========================== -->
 
-<!-- =========================
-     MAIN APPLICATION
-========================== -->
+    <div id="app" class="app hidden">
 
-<div id="app" class="app hidden">
+        <!-- SIDEBAR -->
 
-    <!-- SIDEBAR -->
+        <aside class="sidebar">
 
-    <aside class="sidebar">
-
-        <div class="brand">
-            <span>💬</span>
-            <strong>مركز التواصل</strong>
-        </div>
-
-
-        <!-- GROUP -->
-
-        <button
-            id="groupButton"
-            class="conversation-button active"
-            type="button"
-        >
-
-            <span>👥</span>
-
-            <div>
-                <strong>المجموعة</strong>
-                <small>المحادثة الجماعية</small>
+            <div class="brand">
+                <span>💬</span>
+                <strong>مركز التواصل</strong>
             </div>
 
-        </button>
 
+            <!-- GROUP -->
 
-        <div class="section-title">
-            المحادثات الخاصة
-        </div>
-
-
-        <div id="customersList"></div>
-
-
-        <button
-            id="logoutButton"
-            class="logout"
-            type="button"
-        >
-            تسجيل الخروج
-        </button>
-
-    </aside>
-
-
-    <!-- CHAT -->
-
-    <main class="chat">
-
-        <header class="chat-header">
-
-            <div>
-
-                <h2 id="conversationTitle">
-                    المجموعة
-                </h2>
-
-                <small id="conversationSubtitle">
-                    المحادثة الجماعية
-                </small>
-
-            </div>
-
-        </header>
-
-
-        <!-- MESSAGES -->
-
-        <section
-            id="messages"
-            class="messages"
-        ></section>
-
-
-        <!-- FILE PREVIEW -->
-
-        <div
-            id="filePreview"
-            class="file-preview hidden"
-        ></div>
-
-
-        <!-- COMPOSER -->
-
-        <form
-            id="messageForm"
-            class="composer"
-        >
-
-            <label
-                class="action-button"
-                title="إرسال صورة"
+            <button
+                id="groupButton"
+                class="conversation-button active"
+                type="button"
             >
 
-                📷
+                <span>👥</span>
 
-                <input
-                    id="imageInput"
-                    type="file"
-                    accept="image/*"
-                    hidden
+                <div>
+                    <strong>المجموعة</strong>
+                    <small>المحادثة الجماعية</small>
+                </div>
+
+            </button>
+
+
+            <div class="section-title">
+                المحادثات الخاصة
+            </div>
+
+
+            <div id="customersList"></div>
+
+
+            <button
+                id="logoutButton"
+                class="logout"
+                type="button"
+            >
+                تسجيل الخروج
+            </button>
+
+        </aside>
+
+
+        <!-- CHAT -->
+
+        <main class="chat">
+
+            <header class="chat-header">
+
+                <div>
+
+                    <h2 id="conversationTitle">
+                        المجموعة
+                    </h2>
+
+                    <small id="conversationSubtitle">
+                        المحادثة الجماعية
+                    </small>
+
+                </div>
+
+            </header>
+
+
+            <!-- MESSAGES -->
+
+            <section
+                id="messages"
+                class="messages"
+            ></section>
+
+
+            <!-- FILE PREVIEW -->
+
+            <div
+                id="filePreview"
+                class="file-preview hidden"
+            ></div>
+
+
+            <!-- MESSAGE COMPOSER -->
+
+            <form
+                id="messageForm"
+                class="composer"
+            >
+
+                <label
+                    class="action-button"
+                    title="إرسال صورة"
                 >
 
-            </label>
+                    📷
+
+                    <input
+                        id="imageInput"
+                        type="file"
+                        accept="image/*"
+                        hidden
+                    >
+
+                </label>
 
 
-            <button
-                type="button"
-                id="recordButton"
-                class="action-button"
-                title="تسجيل صوتي"
-            >
-                🎤
-            </button>
+                <button
+                    id="recordButton"
+                    type="button"
+                    class="action-button"
+                    title="تسجيل صوتي"
+                >
+                    🎤
+                </button>
 
 
-            <input
-                id="messageInput"
-                type="text"
-                placeholder="اكتب رسالة..."
-                autocomplete="off"
-            >
+                <input
+                    id="messageInput"
+                    type="text"
+                    placeholder="اكتب رسالة..."
+                    autocomplete="off"
+                >
 
 
-            <button
-                type="submit"
-                class="send-button"
-            >
-                ➤
-            </button>
+                <button
+                    type="submit"
+                    class="send-button"
+                >
+                    ➤
+                </button>
 
-        </form>
+            </form>
 
-    </main>
+        </main>
 
-</div>
+    </div>
 
 
-<!-- APPLICATION -->
+    <!-- =========================
+         APPLICATION
+    ========================== -->
 
-<script src="app.js?v=10"></script>
-```
+    <script src="app.js?v=11"></script>
 
 </body>
 
