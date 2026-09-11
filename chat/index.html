@@ -4,11 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>مركز التواصل</title>
-
+    
+    <!-- خطوط جوجل (Tajawal) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="style.css">
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
 </head>
@@ -18,205 +21,97 @@
     <!-- =========================
          LOGIN SCREEN
     ========================== -->
-
     <div id="loginScreen" class="login-screen">
-
         <div class="login-box">
-
             <div class="logo">💬</div>
-
             <h1>مركز التواصل</h1>
+            <p>سجل دخولك للبدء بالمحادثة</p>
 
-            <p>تسجيل الدخول</p>
+            <input id="email" type="email" placeholder="البريد الإلكتروني" autocomplete="email">
+            <input id="password" type="password" placeholder="كلمة المرور" autocomplete="current-password">
 
-            <input
-                id="email"
-                type="email"
-                placeholder="البريد الإلكتروني"
-                autocomplete="email"
-            >
+            <button id="loginButton" type="button">تسجيل الدخول</button>
+            <button id="forgotPasswordButton" type="button" class="forgot-password">نسيت كلمة المرور؟</button>
 
-            <input
-                id="password"
-                type="password"
-                placeholder="كلمة المرور"
-                autocomplete="current-password"
-            >
-
-            <button
-                id="loginButton"
-                type="button"
-            >
-                دخول
-            </button>
-
-            <button
-                id="forgotPasswordButton"
-                type="button"
-                class="forgot-password"
-            >
-                نسيت كلمة المرور؟
-            </button>
-
-            <div id="loginError"></div>
-
+            <div id="loginError" class="error"></div>
         </div>
-
     </div>
 
 
     <!-- =========================
          MAIN APPLICATION
     ========================== -->
-
     <div id="app" class="app hidden">
 
         <!-- SIDEBAR -->
-
         <aside class="sidebar">
-
-            <div class="brand">
+            <div class="sidebar-header">
                 <span>💬</span>
                 <strong>مركز التواصل</strong>
             </div>
 
-
             <!-- GROUP -->
-
-            <button
-                id="groupButton"
-                class="conversation-button active"
-                type="button"
-            >
-
+            <button id="groupButton" class="conversation-button active" type="button">
                 <span>👥</span>
-
                 <div>
-                    <strong>المجموعة</strong>
+                    <strong>المجموعة العامة</strong>
                     <small>المحادثة الجماعية</small>
                 </div>
-
             </button>
 
+            <div class="conversation-section-title">المحادثات الخاصة</div>
 
-            <div class="section-title">
-                المحادثات الخاصة
+            <div id="customersList">
+                <!-- سيتم إدراج المحادثات هنا -->
             </div>
 
-
-            <div id="customersList"></div>
-
-
-            <button
-                id="logoutButton"
-                class="logout"
-                type="button"
-            >
-                تسجيل الخروج
-            </button>
-
+            <button id="logoutButton" class="logout" type="button">تسجيل الخروج</button>
         </aside>
 
 
         <!-- CHAT -->
-
         <main class="chat">
-
             <header class="chat-header">
-
                 <div>
-
-                    <h2 id="conversationTitle">
-                        المجموعة
-                    </h2>
-
-                    <small id="conversationSubtitle">
-                        المحادثة الجماعية
-                    </small>
-
+                    <h2 id="conversationTitle">المجموعة العامة</h2>
+                    <p id="conversationSubtitle">المحادثة الجماعية</p>
                 </div>
-
             </header>
 
-
             <!-- MESSAGES -->
-
-            <section
-                id="messages"
-                class="messages"
-            ></section>
-
+            <section id="messages" class="messages">
+                <!-- مثال لرسالة (يمكن حذفه، سيأتي من جافاسكريبت) -->
+                <div class="empty-messages">
+                    <div class="empty-icon">👋</div>
+                    مرحباً بك في مركز التواصل
+                    <small>ابدأ بإرسال رسالة الآن</small>
+                </div>
+            </section>
 
             <!-- FILE PREVIEW -->
-
-            <div
-                id="filePreview"
-                class="file-preview hidden"
-            ></div>
-
+            <div id="filePreview" class="file-preview hidden"></div>
 
             <!-- MESSAGE COMPOSER -->
-
-            <form
-                id="messageForm"
-                class="composer"
-            >
-
-                <label
-                    class="action-button"
-                    title="إرسال صورة"
-                >
-
+            <form id="messageForm" class="composer">
+                <label id="imageButton" class="action-button" title="إرسال صورة">
                     📷
-
-                    <input
-                        id="imageInput"
-                        type="file"
-                        accept="image/*"
-                        hidden
-                    >
-
+                    <input id="imageInput" type="file" accept="image/*" hidden>
                 </label>
 
-
-                <button
-                    id="recordButton"
-                    type="button"
-                    class="action-button"
-                    title="تسجيل صوتي"
-                >
+                <button id="recordButton" type="button" class="action-button" title="تسجيل صوتي">
                     🎤
                 </button>
 
+                <input id="messageInput" type="text" placeholder="اكتب رسالتك هنا..." autocomplete="off">
 
-                <input
-                    id="messageInput"
-                    type="text"
-                    placeholder="اكتب رسالة..."
-                    autocomplete="off"
-                >
-
-
-                <button
-                    type="submit"
-                    class="send-button"
-                >
-                    ➤
-                </button>
-
+                <button type="submit" class="send-button">➤</button>
             </form>
-
         </main>
 
     </div>
 
-
-    <!-- =========================
-         APPLICATION
-    ========================== -->
-
+    <!-- APPLICATION SCRIPT -->
     <script src="app.js?v=11"></script>
-
 </body>
 
 </html>
