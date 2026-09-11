@@ -19,7 +19,7 @@ const db = createClient(
 
 
 /* =========================================================
-   DOM ELEMENTS
+   DOM
 ========================================================= */
 
 const loginScreen = document.getElementById("loginScreen");
@@ -86,6 +86,17 @@ let selectedImage = null;
 
 const profileCache = new Map();
 
+const reactionCache = new Map();
+
+const REACTIONS = [
+    "❤️",
+    "👍",
+    "😂",
+    "😮",
+    "😢",
+    "😡"
+];
+
 
 /* =========================================================
    START
@@ -105,42 +116,42 @@ async function initialize() {
 
     try {
 
-        loginButton.addEventListener(
+        loginButton?.addEventListener(
             "click",
             login
         );
 
-        forgotPasswordButton.addEventListener(
+        forgotPasswordButton?.addEventListener(
             "click",
             resetPassword
         );
 
-        logoutButton.addEventListener(
+        logoutButton?.addEventListener(
             "click",
             logout
         );
 
-        groupButton.addEventListener(
+        groupButton?.addEventListener(
             "click",
             openGroupConversation
         );
 
-        messageForm.addEventListener(
+        messageForm?.addEventListener(
             "submit",
             sendMessage
         );
 
-        imageInput.addEventListener(
+        imageInput?.addEventListener(
             "change",
             handleImageSelection
         );
 
-        recordButton.addEventListener(
+        recordButton?.addEventListener(
             "click",
             toggleRecording
         );
 
-        messageInput.addEventListener(
+        messageInput?.addEventListener(
             "keydown",
             function (event) {
 
@@ -160,7 +171,10 @@ async function initialize() {
         db.auth.onAuthStateChange(
             async function (event, session) {
 
-                if (event === "PASSWORD_RECOVERY") {
+                if (
+                    event ===
+                    "PASSWORD_RECOVERY"
+                ) {
 
                     showPasswordUpdateScreen();
 
@@ -168,11 +182,12 @@ async function initialize() {
                 }
 
 
-                if (event === "SIGNED_IN") {
+                if (
+                    event === "SIGNED_IN"
+                ) {
 
                     if (
-                        session &&
-                        session.user &&
+                        session?.user &&
                         !currentUser
                     ) {
 
@@ -185,13 +200,16 @@ async function initialize() {
                 }
 
 
-                if (event === "SIGNED_OUT") {
+                if (
+                    event === "SIGNED_OUT"
+                ) {
 
                     currentUser = null;
                     currentProfile = null;
                     currentConversation = null;
 
                     profileCache.clear();
+                    reactionCache.clear();
 
                     if (realtimeChannel) {
 
@@ -457,7 +475,7 @@ async function resetPassword() {
 
 
 /* =========================================================
-   PASSWORD UPDATE SCREEN
+   PASSWORD UPDATE
 ========================================================= */
 
 function showPasswordUpdateScreen() {
@@ -578,11 +596,6 @@ function showPasswordUpdateScreen() {
 
                 if (error) {
 
-                    console.error(
-                        "Password update error:",
-                        error
-                    );
-
                     updateError.textContent =
                         getAuthErrorMessage(error);
 
@@ -609,7 +622,7 @@ function showPasswordUpdateScreen() {
             } catch (error) {
 
                 console.error(
-                    "Unexpected password update error:",
+                    "Password update error:",
                     error
                 );
 
@@ -686,9 +699,7 @@ async function startApplication(user) {
 
         showApplication();
 
-
         await loadCustomers();
-
 
         await openGroupConversation();
 
@@ -722,7 +733,10 @@ async function loadCustomers() {
     }
 
 
-    if (currentProfile.role !== "admin") {
+    if (
+        currentProfile.role !==
+        "admin"
+    ) {
 
         customersList.innerHTML = `
             <div class="customer-empty">
@@ -768,7 +782,7 @@ async function loadCustomers() {
     }
 
 
-    if (!data || data.length === 0) {
+    if (!data?.length) {
 
         customersList.innerHTML = `
             <div class="customer-empty">
@@ -801,9 +815,11 @@ async function loadCustomers() {
 
             button.innerHTML = `
 
-                <span>👤</span>
+                <span class="customer-icon">
+                    👤
+                </span>
 
-                <div>
+                <div class="customer-info">
 
                     <strong>
                         ${escapeHtml(
@@ -817,6 +833,7 @@ async function loadCustomers() {
                     </small>
 
                 </div>
+
             `;
 
 
@@ -919,7 +936,7 @@ async function openGroupConversation() {
 
 
 /* =========================================================
-   OPEN PRIVATE CONVERSATION
+   OPEN PRIVATE
 ========================================================= */
 
 async function openPrivateConversation(
@@ -974,8 +991,8 @@ async function openPrivateConversation(
 
         if (
             !conversation &&
-            currentProfile &&
-            currentProfile.role === "admin"
+            currentProfile?.role ===
+            "admin"
         ) {
 
             const {
@@ -1133,6 +1150,9 @@ async function selectConversation(
     clearFilePreview();
 
 
+    reactionCache.clear();
+
+
     await loadMessages();
 
 
@@ -1187,11 +1207,19 @@ async function loadMessages() {
     }
 
 
-    if (!messages || messages.length === 0) {
+    if (!messages?.length) {
 
         messagesContainer.innerHTML = `
             <div class="empty-messages">
-                لا توجد رسائل بعد
+                <div class="empty-icon">
+                    💬
+                </div>
+                <div>
+                    لا توجد رسائل بعد
+                </div>
+                <small>
+                    ابدأ المحادثة الآن
+                </small>
             </div>
         `;
 
@@ -1200,7 +1228,7 @@ async function loadMessages() {
 
 
     /*
-     * جلب جميع أسماء مرسلي الرسائل دفعة واحدة
+     * تحميل أسماء المرسلين
      */
 
     const senderIds = [
@@ -1215,7 +1243,7 @@ async function loadMessages() {
     ];
 
 
-    if (senderIds.length > 0) {
+    if (senderIds.length) {
 
         const {
             data: profiles,
@@ -1238,9 +1266,9 @@ async function loadMessages() {
                 profilesError
             );
 
-        } else if (profiles) {
+        } else {
 
-            profiles.forEach(
+            profiles?.forEach(
                 function (profile) {
 
                     profileCache.set(
@@ -1251,6 +1279,21 @@ async function loadMessages() {
             );
         }
     }
+
+
+    /*
+     * تحميل جميع التفاعلات دفعة واحدة
+     */
+
+    const messageIds =
+        messages.map(
+            message => message.id
+        );
+
+
+    await loadReactions(
+        messageIds
+    );
 
 
     messagesContainer.innerHTML = "";
@@ -1269,12 +1312,94 @@ async function loadMessages() {
 
 
 /* =========================================================
+   LOAD REACTIONS
+========================================================= */
+
+async function loadReactions(
+    messageIds
+) {
+
+    if (!messageIds?.length) {
+        return;
+    }
+
+
+    const {
+        data,
+        error
+    } = await db
+        .from("message_reactions")
+        .select(
+            "id, message_id, user_id, reaction, created_at"
+        )
+        .in(
+            "message_id",
+            messageIds
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Reactions error:",
+            error
+        );
+
+        return;
+    }
+
+
+    messageIds.forEach(
+        function (messageId) {
+
+            reactionCache.set(
+                messageId,
+                []
+            );
+        }
+    );
+
+
+    data?.forEach(
+        function (reaction) {
+
+            if (
+                !reactionCache.has(
+                    reaction.message_id
+                )
+            ) {
+
+                reactionCache.set(
+                    reaction.message_id,
+                    []
+                );
+            }
+
+
+            reactionCache
+                .get(
+                    reaction.message_id
+                )
+                .push(
+                    reaction
+                );
+        }
+    );
+}
+
+
+/* =========================================================
    RENDER MESSAGE
 ========================================================= */
 
 async function renderMessage(
     message
 ) {
+
+    if (!message?.id) {
+        return;
+    }
+
 
     const messageElement =
         document.createElement("div");
@@ -1289,6 +1414,10 @@ async function renderMessage(
         ownMessage
             ? "message own"
             : "message";
+
+
+    messageElement.dataset.messageId =
+        message.id;
 
 
     const senderProfile =
@@ -1340,6 +1469,7 @@ async function renderMessage(
 
             content = `
                 <a
+                    class="image-message-link"
                     href="${escapeHtml(
                         imageUrl
                     )}"
@@ -1426,28 +1556,450 @@ async function renderMessage(
 
     messageElement.innerHTML = `
 
-        <div class="message-bubble">
+        <div class="message-wrapper">
 
-            <div class="message-sender">
-                ${escapeHtml(
-                    senderName
-                )}
+            <div class="message-bubble">
+
+                <div class="message-sender">
+                    ${escapeHtml(
+                        senderName
+                    )}
+                </div>
+
+                ${content}
+
+                <div class="message-footer">
+
+                    <span class="message-time">
+                        ${date}
+                    </span>
+
+                    ${
+                        ownMessage
+                            ? `
+                                <span
+                                    class="message-status"
+                                    title="تم الإرسال"
+                                >
+                                    ✓✓
+                                </span>
+                            `
+                            : ""
+                    }
+
+                </div>
+
             </div>
 
-            ${content}
+            <div
+                class="reaction-picker"
+                data-message-id="${escapeHtml(
+                    message.id
+                )}"
+            >
 
-            <div class="message-time">
-                ${date}
+                ${REACTIONS.map(
+                    function (reaction) {
+
+                        return `
+                            <button
+                                type="button"
+                                class="reaction-button"
+                                data-reaction="${reaction}"
+                                title="${reaction}"
+                            >
+                                ${reaction}
+                            </button>
+                        `;
+                    }
+                ).join("")}
+
             </div>
+
+            <div
+                class="message-reactions"
+                data-reactions-for="${escapeHtml(
+                    message.id
+                )}"
+            ></div>
 
         </div>
-
     `;
 
 
     messagesContainer.appendChild(
         messageElement
     );
+
+
+    setupReactionButtons(
+        messageElement
+    );
+
+
+    renderReactionSummary(
+        message.id
+    );
+}
+
+
+/* =========================================================
+   REACTION BUTTONS
+========================================================= */
+
+function setupReactionButtons(
+    messageElement
+) {
+
+    const buttons =
+        messageElement.querySelectorAll(
+            ".reaction-button"
+        );
+
+
+    buttons.forEach(
+        function (button) {
+
+            button.addEventListener(
+                "click",
+                async function (event) {
+
+                    event.stopPropagation();
+
+                    const messageId =
+                        messageElement.dataset.messageId;
+
+                    const reaction =
+                        button.dataset.reaction;
+
+                    await toggleReaction(
+                        messageId,
+                        reaction
+                    );
+                }
+            );
+        }
+    );
+}
+
+
+/* =========================================================
+   TOGGLE REACTION
+========================================================= */
+
+async function toggleReaction(
+    messageId,
+    reaction
+) {
+
+    if (
+        !currentUser ||
+        !messageId ||
+        !REACTIONS.includes(
+            reaction
+        )
+    ) {
+
+        return;
+    }
+
+
+    try {
+
+        const {
+            data: existing,
+            error: findError
+        } = await db
+            .from("message_reactions")
+            .select(
+                "id"
+            )
+            .eq(
+                "message_id",
+                messageId
+            )
+            .eq(
+                "user_id",
+                currentUser.id
+            )
+            .eq(
+                "reaction",
+                reaction
+            )
+            .maybeSingle();
+
+
+        if (findError) {
+
+            console.error(
+                "Find reaction error:",
+                findError
+            );
+
+            return;
+        }
+
+
+        if (existing) {
+
+            const {
+                error
+            } = await db
+                .from("message_reactions")
+                .delete()
+                .eq(
+                    "id",
+                    existing.id
+                );
+
+
+            if (error) {
+
+                console.error(
+                    "Delete reaction error:",
+                    error
+                );
+
+                showChatError(
+                    "تعذر إزالة التفاعل."
+                );
+
+                return;
+            }
+
+
+        } else {
+
+            const {
+                error
+            } = await db
+                .from("message_reactions")
+                .insert({
+                    message_id:
+                        messageId,
+
+                    user_id:
+                        currentUser.id,
+
+                    reaction
+                });
+
+
+            if (error) {
+
+                console.error(
+                    "Insert reaction error:",
+                    error
+                );
+
+                showChatError(
+                    "تعذر إضافة التفاعل."
+                );
+
+                return;
+            }
+        }
+
+
+        await refreshMessageReactions(
+            messageId
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Reaction error:",
+            error
+        );
+
+        showChatError(
+            error.message ||
+            "حدث خطأ أثناء التفاعل."
+        );
+    }
+}
+
+
+/* =========================================================
+   REFRESH REACTIONS
+========================================================= */
+
+async function refreshMessageReactions(
+    messageId
+) {
+
+    const {
+        data,
+        error
+    } = await db
+        .from("message_reactions")
+        .select(
+            "id, message_id, user_id, reaction, created_at"
+        )
+        .eq(
+            "message_id",
+            messageId
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Refresh reactions error:",
+            error
+        );
+
+        return;
+    }
+
+
+    reactionCache.set(
+        messageId,
+        data || []
+    );
+
+
+    renderReactionSummary(
+        messageId
+    );
+}
+
+
+/* =========================================================
+   RENDER REACTION SUMMARY
+========================================================= */
+
+function renderReactionSummary(
+    messageId
+) {
+
+    const container =
+        messagesContainer.querySelector(
+            `[data-reactions-for="${cssEscape(
+                messageId
+            )}"]`
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    const reactions =
+        reactionCache.get(
+            messageId
+        ) || [];
+
+
+    if (!reactions.length) {
+
+        container.innerHTML = "";
+
+        return;
+    }
+
+
+    const counts = new Map();
+
+    const mine = new Set();
+
+
+    reactions.forEach(
+        function (item) {
+
+            const current =
+                counts.get(
+                    item.reaction
+                ) || 0;
+
+            counts.set(
+                item.reaction,
+                current + 1
+            );
+
+
+            if (
+                item.user_id ===
+                currentUser?.id
+            ) {
+
+                mine.add(
+                    item.reaction
+                );
+            }
+        }
+    );
+
+
+    const ordered =
+        REACTIONS.filter(
+            reaction =>
+                counts.has(
+                    reaction
+                )
+        );
+
+
+    container.innerHTML =
+        ordered.map(
+            function (reaction) {
+
+                const count =
+                    counts.get(
+                        reaction
+                    );
+
+                const active =
+                    mine.has(
+                        reaction
+                    );
+
+
+                return `
+                    <button
+                        type="button"
+                        class="reaction-summary ${
+                            active
+                                ? "mine"
+                                : ""
+                        }"
+                        data-summary-reaction="${reaction}"
+                        title="إزالة/إضافة ${reaction}"
+                    >
+                        <span>
+                            ${reaction}
+                        </span>
+
+                        <b>
+                            ${count}
+                        </b>
+                    </button>
+                `;
+            }
+        ).join("");
+
+
+    container
+        .querySelectorAll(
+            ".reaction-summary"
+        )
+        .forEach(
+            function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        toggleReaction(
+                            messageId,
+                            button.dataset.summaryReaction
+                        );
+                    }
+                );
+            }
+        );
 }
 
 
@@ -1455,7 +2007,9 @@ async function renderMessage(
    SEND MESSAGE
 ========================================================= */
 
-async function sendMessage(event) {
+async function sendMessage(
+    event
+) {
 
     event.preventDefault();
 
@@ -1479,7 +2033,11 @@ async function sendMessage(event) {
         messageInput.value.trim();
 
 
-    if (!text && !selectedImage) {
+    if (
+        !text &&
+        !selectedImage
+    ) {
+
         return;
     }
 
@@ -1508,7 +2066,11 @@ async function sendTextMessage(
     text
 ) {
 
-    if (!text || !currentConversation) {
+    if (
+        !text ||
+        !currentConversation
+    ) {
+
         return;
     }
 
@@ -1554,7 +2116,7 @@ async function sendTextMessage(
 
 
 /* =========================================================
-   IMAGE SELECTION
+   IMAGE
 ========================================================= */
 
 function handleImageSelection(
@@ -1772,10 +2334,6 @@ async function toggleRecording() {
 }
 
 
-/* =========================================================
-   START RECORDING
-========================================================= */
-
 async function startRecording() {
 
     if (
@@ -1891,15 +2449,12 @@ async function startRecording() {
 }
 
 
-/* =========================================================
-   STOP RECORDING
-========================================================= */
-
 function stopRecording() {
 
     if (
         !mediaRecorder ||
-        mediaRecorder.state === "inactive"
+        mediaRecorder.state ===
+        "inactive"
     ) {
 
         recording = false;
@@ -2091,11 +2646,20 @@ function subscribeToMessages() {
     }
 
 
+    const conversationId =
+        currentConversation.id;
+
+
     realtimeChannel =
         db
             .channel(
-                `messages-${currentConversation.id}`
+                `chat-${conversationId}`
             )
+
+            /* -----------------------------------------
+               NEW MESSAGE
+            ----------------------------------------- */
+
             .on(
                 "postgres_changes",
                 {
@@ -2103,8 +2667,9 @@ function subscribeToMessages() {
                     schema: "public",
                     table: "messages",
                     filter:
-                        `conversation_id=eq.${currentConversation.id}`
+                        `conversation_id=eq.${conversationId}`
                 },
+
                 async function (payload) {
 
                     if (
@@ -2127,11 +2692,6 @@ function subscribeToMessages() {
                         empty.remove();
                     }
 
-
-                    /*
-                     * تحميل اسم المرسل الجديد
-                     * إذا لم يكن موجودًا في الذاكرة
-                     */
 
                     if (
                         payload.new.sender_id &&
@@ -2164,6 +2724,12 @@ function subscribeToMessages() {
                     }
 
 
+                    reactionCache.set(
+                        payload.new.id,
+                        []
+                    );
+
+
                     await renderMessage(
                         payload.new
                     );
@@ -2172,6 +2738,50 @@ function subscribeToMessages() {
                     scrollMessagesToBottom();
                 }
             )
+
+            /* -----------------------------------------
+               NEW / DELETE REACTION
+            ----------------------------------------- */
+
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "message_reactions"
+                },
+
+                async function (payload) {
+
+                    const messageId =
+                        payload.new?.message_id ||
+                        payload.old?.message_id;
+
+
+                    if (!messageId) {
+                        return;
+                    }
+
+
+                    const messageElement =
+                        messagesContainer.querySelector(
+                            `[data-message-id="${cssEscape(
+                                messageId
+                            )}"]`
+                        );
+
+
+                    if (!messageElement) {
+                        return;
+                    }
+
+
+                    await refreshMessageReactions(
+                        messageId
+                    );
+                }
+            )
+
             .subscribe(
                 function (status) {
 
@@ -2239,6 +2849,10 @@ function showLoginScreen() {
 
 function clearLoginError() {
 
+    if (!loginError) {
+        return;
+    }
+
     loginError.textContent = "";
 
     loginError.className = "";
@@ -2248,6 +2862,10 @@ function clearLoginError() {
 function showError(
     message
 ) {
+
+    if (!loginError) {
+        return;
+    }
 
     loginError.textContent =
         message || "حدث خطأ.";
@@ -2260,6 +2878,10 @@ function showError(
 function showSuccess(
     message
 ) {
+
+    if (!loginError) {
+        return;
+    }
 
     loginError.textContent =
         message || "";
@@ -2277,6 +2899,11 @@ function showChatError(
         "Chat error:",
         message
     );
+
+
+    if (!messagesContainer) {
+        return;
+    }
 
 
     const element =
@@ -2355,13 +2982,20 @@ function clearFilePreview() {
 
     selectedImage = null;
 
-    imageInput.value = "";
 
-    filePreview.innerHTML = "";
+    if (imageInput) {
+        imageInput.value = "";
+    }
 
-    filePreview.classList.add(
-        "hidden"
-    );
+
+    if (filePreview) {
+
+        filePreview.innerHTML = "";
+
+        filePreview.classList.add(
+            "hidden"
+        );
+    }
 }
 
 
@@ -2386,6 +3020,30 @@ function escapeHtml(
 
 
     return div.innerHTML;
+}
+
+
+function cssEscape(
+    value
+) {
+
+    if (
+        window.CSS &&
+        typeof window.CSS.escape ===
+        "function"
+    ) {
+
+        return window.CSS.escape(
+            String(value)
+        );
+    }
+
+
+    return String(value)
+        .replace(
+            /["\\]/g,
+            "\\$&"
+        );
 }
 
 
@@ -2439,13 +3097,18 @@ function formatDate(
 
 function scrollMessagesToBottom() {
 
+    if (!messagesContainer) {
+        return;
+    }
+
+
     messagesContainer.scrollTop =
         messagesContainer.scrollHeight;
 }
 
 
 /* =========================================================
-   AUTH ERROR TRANSLATION
+   AUTH ERROR
 ========================================================= */
 
 function getAuthErrorMessage(
