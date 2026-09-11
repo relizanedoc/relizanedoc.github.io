@@ -1,16 +1,28 @@
+"use strict";
+
 /* =========================================================
-SUPABASE
+   SUPABASE
 ========================================================= */
 
-const { createClient } = supabase;
+const { createClient } = window.supabase;
+
+if (
+    !window.SUPABASE_URL ||
+    !window.SUPABASE_ANON_KEY
+) {
+    throw new Error(
+        "SUPABASE_URL أو SUPABASE_ANON_KEY غير موجود في config.js"
+    );
+}
 
 const db = createClient(
-window.SUPABASE_URL,
-window.SUPABASE_ANON_KEY
+    window.SUPABASE_URL,
+    window.SUPABASE_ANON_KEY
 );
 
+
 /* =========================================================
-DOM
+   DOM ELEMENTS
 ========================================================= */
 
 const loginScreen = document.getElementById("loginScreen");
@@ -21,45 +33,46 @@ const passwordInput = document.getElementById("password");
 
 const loginButton = document.getElementById("loginButton");
 const forgotPasswordButton =
-document.getElementById("forgotPasswordButton");
+    document.getElementById("forgotPasswordButton");
 
 const loginError = document.getElementById("loginError");
 
-const logoutButton =
-document.getElementById("logoutButton");
-
 const groupButton =
-document.getElementById("groupButton");
+    document.getElementById("groupButton");
 
 const customersList =
-document.getElementById("customersList");
+    document.getElementById("customersList");
+
+const logoutButton =
+    document.getElementById("logoutButton");
 
 const conversationTitle =
-document.getElementById("conversationTitle");
+    document.getElementById("conversationTitle");
 
 const conversationSubtitle =
-document.getElementById("conversationSubtitle");
+    document.getElementById("conversationSubtitle");
 
 const messagesContainer =
-document.getElementById("messages");
-
-const messageForm =
-document.getElementById("messageForm");
-
-const messageInput =
-document.getElementById("messageInput");
-
-const imageInput =
-document.getElementById("imageInput");
-
-const recordButton =
-document.getElementById("recordButton");
+    document.getElementById("messages");
 
 const filePreview =
-document.getElementById("filePreview");
+    document.getElementById("filePreview");
+
+const messageForm =
+    document.getElementById("messageForm");
+
+const messageInput =
+    document.getElementById("messageInput");
+
+const imageInput =
+    document.getElementById("imageInput");
+
+const recordButton =
+    document.getElementById("recordButton");
+
 
 /* =========================================================
-STATE
+   STATE
 ========================================================= */
 
 let currentUser = null;
@@ -71,407 +84,413 @@ let realtimeChannel = null;
 
 let mediaRecorder = null;
 let audioChunks = [];
-let isRecording = false;
+
+let recording = false;
+
+let selectedImage = null;
+
+const profileCache = new Map();
+
 
 /* =========================================================
-INITIALIZATION
+   START
 ========================================================= */
 
-document.addEventListener("DOMContentLoaded", initialize);
+document.addEventListener(
+    "DOMContentLoaded",
+    initialize
+);
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
 
 async function initialize() {
 
-```
-loginButton.addEventListener("click", login);
+    try {
 
-forgotPasswordButton.addEventListener(
-    "click",
-    resetPassword
-);
+        loginButton.addEventListener(
+            "click",
+            login
+        );
 
-logoutButton.addEventListener(
-    "click",
-    logout
-);
+        forgotPasswordButton.addEventListener(
+            "click",
+            resetPassword
+        );
 
-groupButton.addEventListener(
-    "click",
-    openGroupConversation
-);
+        logoutButton.addEventListener(
+            "click",
+            logout
+        );
 
-messageForm.addEventListener(
-    "submit",
-    sendTextMessage
-);
+        groupButton.addEventListener(
+            "click",
+            openGroupConversation
+        );
 
-imageInput.addEventListener(
-    "change",
-    handleImageSelection
-);
+        messageForm.addEventListener(
+            "submit",
+            sendMessage
+        );
 
-recordButton.addEventListener(
-    "click",
-    toggleRecording
-);
+        imageInput.addEventListener(
+            "change",
+            handleImageSelection
+        );
 
-
-passwordInput.addEventListener(
-    "keydown",
-    event => {
-
-        if (event.key === "Enter") {
-            login();
-        }
-
-    }
-);
-
-
-emailInput.addEventListener(
-    "keydown",
-    event => {
-
-        if (event.key === "Enter") {
-            passwordInput.focus();
-        }
-
-    }
-);
-
-
-/*
-   IMPORTANT:
-   Detect password recovery before normal startup.
-*/
-
-db.auth.onAuthStateChange(
-    async (event, session) => {
-
-        console.log(
-            "Auth event:",
-            event
+        recordButton.addEventListener(
+            "click",
+            toggleRecording
         );
 
 
-        if (event === "PASSWORD_RECOVERY") {
+        messageInput.addEventListener(
+            "keydown",
+            function (event) {
 
-            showPasswordUpdateScreen();
+                if (
+                    event.key === "Enter" &&
+                    !event.shiftKey
+                ) {
+                    event.preventDefault();
 
-            return;
-        }
-
-
-        if (
-            event === "SIGNED_IN" &&
-            session
-        ) {
-
-            /*
-               If this is a normal login,
-               start the application.
-            */
-
-            if (!currentUser) {
-
-                await startApplication(
-                    session.user
-                );
+                    messageForm.requestSubmit();
+                }
 
             }
+        );
+
+
+        /*
+         * مراقبة حالة تسجيل الدخول
+         */
+
+        db.auth.onAuthStateChange(
+            async function (event, session) {
+
+                if (event === "PASSWORD_RECOVERY") {
+
+                    showPasswordUpdateScreen();
+
+                    return;
+                }
+
+
+                if (event === "SIGNED_IN") {
+
+                    if (
+                        session &&
+                        session.user &&
+                        !currentUser
+                    ) {
+                        await startApplication(
+                            session.user
+                        );
+                    }
+
+                    return;
+                }
+
+
+                if (event === "SIGNED_OUT") {
+
+                    currentUser = null;
+                    currentProfile = null;
+                    currentConversation = null;
+
+                    if (realtimeChannel) {
+
+                        await db.removeChannel(
+                            realtimeChannel
+                        );
+
+                        realtimeChannel = null;
+                    }
+
+                    showLoginScreen();
+                }
+
+            }
+        );
+
+
+        /*
+         * الحصول على الجلسة الحالية
+         */
+
+        const {
+            data,
+            error
+        } = await db.auth.getSession();
+
+
+        if (error) {
+
+            console.error(
+                "getSession error:",
+                error
+            );
+
+            showLoginScreen();
 
             return;
         }
 
 
-        if (event === "SIGNED_OUT") {
+        if (data.session) {
 
-            currentUser = null;
-            currentProfile = null;
+            await startApplication(
+                data.session.user
+            );
+
+        } else {
 
             showLoginScreen();
 
         }
 
+    } catch (error) {
+
+        console.error(
+            "Initialization error:",
+            error
+        );
+
+        showError(
+            error.message ||
+            "حدث خطأ أثناء تشغيل التطبيق."
+        );
     }
-);
-
-
-/*
-   Check existing session.
-*/
-
-const {
-    data,
-    error
-} = await db.auth.getSession();
-
-
-if (error) {
-
-    console.error(
-        "Session error:",
-        error
-    );
-
-    return;
 }
 
 
-if (data.session) {
+/* =========================================================
+   LOGIN
+========================================================= */
 
-    /*
-       Do not automatically open the app
-       when the URL is a password recovery URL.
-    */
+async function login() {
 
-    const hash =
-        window.location.hash || "";
+    clearLoginError();
 
-    if (
-        hash.includes("access_token=") &&
-        hash.includes("type=recovery")
-    ) {
+    const email =
+        emailInput.value.trim();
 
-        showPasswordUpdateScreen();
+    const password =
+        passwordInput.value;
+
+
+    if (!email) {
+
+        showError(
+            "أدخل البريد الإلكتروني."
+        );
+
+        emailInput.focus();
 
         return;
     }
 
 
-    await startApplication(
-        data.session.user
+    if (!password) {
+
+        showError(
+            "أدخل كلمة المرور."
+        );
+
+        passwordInput.focus();
+
+        return;
+    }
+
+
+    setButtonLoading(
+        loginButton,
+        true,
+        "جارٍ تسجيل الدخول..."
     );
 
-} else {
 
-    showLoginScreen();
+    try {
 
+        const {
+            data,
+            error
+        } = await db.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+
+        if (error) {
+
+            console.error(
+                "Login error:",
+                error
+            );
+
+            showError(
+                getAuthErrorMessage(error)
+            );
+
+            return;
+        }
+
+
+        if (!data.session) {
+
+            showError(
+                "تعذر إنشاء جلسة تسجيل الدخول."
+            );
+
+            return;
+        }
+
+
+        await startApplication(
+            data.user
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Unexpected login error:",
+            error
+        );
+
+        showError(
+            error.message ||
+            "حدث خطأ أثناء تسجيل الدخول."
+        );
+
+    } finally {
+
+        setButtonLoading(
+            loginButton,
+            false,
+            "دخول"
+        );
+    }
 }
-```
 
-}
 
 /* =========================================================
-LOGIN SCREEN
-========================================================= */
-
-function showLoginScreen() {
-
-```
-loginScreen.classList.remove("hidden");
-
-app.classList.add("hidden");
-
-loginError.textContent = "";
-```
-
-}
-
-function showApplication() {
-
-```
-loginScreen.classList.add("hidden");
-
-app.classList.remove("hidden");
-```
-
-}
-
-/* =========================================================
-LOGIN
-========================================================= */
-
-async function login() {
-
-```
-loginError.textContent = "";
-
-const email =
-    emailInput.value.trim();
-
-const password =
-    passwordInput.value;
-
-
-if (!email || !password) {
-
-    loginError.textContent =
-        "أدخل البريد الإلكتروني وكلمة المرور.";
-
-    return;
-}
-
-
-loginButton.disabled = true;
-
-loginButton.textContent =
-    "جارٍ الدخول...";
-
-
-const {
-    data,
-    error
-} = await db.auth.signInWithPassword({
-
-    email,
-    password
-
-});
-
-
-loginButton.disabled = false;
-
-loginButton.textContent =
-    "دخول";
-
-
-if (error) {
-
-    console.error(
-        "Login error:",
-        error
-    );
-
-    loginError.textContent =
-        error.message ||
-        "بيانات الدخول غير صحيحة.";
-
-    return;
-}
-
-
-if (data.user) {
-
-    await startApplication(
-        data.user
-    );
-
-}
-```
-
-}
-
-/* =========================================================
-PASSWORD RESET REQUEST
+   PASSWORD RESET
 ========================================================= */
 
 async function resetPassword() {
 
-```
-loginError.textContent = "";
+    clearLoginError();
 
-const email =
-    emailInput.value.trim();
-
-
-if (!email) {
-
-    loginError.textContent =
-        "أدخل بريدك الإلكتروني أولاً.";
-
-    emailInput.focus();
-
-    return;
-}
+    const email =
+        emailInput.value.trim();
 
 
-forgotPasswordButton.disabled = true;
+    if (!email) {
 
-forgotPasswordButton.textContent =
-    "جارٍ الإرسال...";
+        showError(
+            "أدخل بريدك الإلكتروني أولاً."
+        );
 
+        emailInput.focus();
 
-/*
-   IMPORTANT:
-   This MUST match the URL configured
-   in Supabase Authentication > URL Configuration.
-*/
-
-const redirectTo =
-    window.location.origin + "/";
+        return;
+    }
 
 
-const {
-    error
-} =
-    await db.auth.resetPasswordForEmail(
-        email,
-        {
-            redirectTo
+    setButtonLoading(
+        forgotPasswordButton,
+        true,
+        "جارٍ الإرسال..."
+    );
+
+
+    try {
+
+        /*
+         * مهم:
+         * يجب أن يكون redirectTo هو عنوان الموقع نفسه
+         * وليس /** أو أي مسار آخر.
+         */
+
+        const redirectTo =
+            window.location.origin + "/";
+
+
+        const {
+            error
+        } = await db.auth.resetPasswordForEmail(
+            email,
+            {
+                redirectTo: redirectTo
+            }
+        );
+
+
+        if (error) {
+
+            console.error(
+                "Password reset error:",
+                error
+            );
+
+            showError(
+                getAuthErrorMessage(error)
+            );
+
+            return;
         }
-    );
 
 
-forgotPasswordButton.disabled = false;
+        showSuccess(
+            "تم إرسال رابط استرجاع كلمة المرور إلى بريدك الإلكتروني."
+        );
 
-forgotPasswordButton.textContent =
-    "نسيت كلمة المرور؟";
+    } catch (error) {
 
+        console.error(
+            "Unexpected password reset error:",
+            error
+        );
 
-if (error) {
+        showError(
+            error.message ||
+            "حدث خطأ أثناء إرسال رابط الاسترجاع."
+        );
 
-    console.error(
-        "Password reset error:",
-        error
-    );
+    } finally {
 
-    loginError.textContent =
-        error.message;
-
-    return;
+        setButtonLoading(
+            forgotPasswordButton,
+            false,
+            "نسيت كلمة المرور؟"
+        );
+    }
 }
 
-
-loginError.textContent =
-    "تم إرسال رابط استرجاع كلمة المرور إلى بريدك الإلكتروني.";
-```
-
-}
 
 /* =========================================================
-PASSWORD UPDATE SCREEN
+   PASSWORD UPDATE SCREEN
 ========================================================= */
 
 function showPasswordUpdateScreen() {
 
-```
-loginScreen.classList.add("hidden");
-
-app.classList.add("hidden");
+    loginScreen.classList.remove("hidden");
+    app.classList.add("hidden");
 
 
-const oldScreen =
-    document.getElementById(
-        "passwordUpdateScreen"
-    );
+    const box =
+        loginScreen.querySelector(".login-box");
 
 
-if (oldScreen) {
-    oldScreen.remove();
-}
-
-
-const screen =
-    document.createElement("div");
-
-screen.id =
-    "passwordUpdateScreen";
-
-screen.className =
-    "login-screen";
-
-
-screen.innerHTML = `
-
-    <div class="login-box">
+    box.innerHTML = `
 
         <div class="logo">🔐</div>
 
         <h1>تغيير كلمة المرور</h1>
 
-        <p>
-            أدخل كلمة المرور الجديدة
-        </p>
+        <p>أدخل كلمة المرور الجديدة</p>
 
         <input
             id="newPassword"
@@ -496,526 +515,660 @@ screen.innerHTML = `
 
         <div id="passwordUpdateError"></div>
 
-    </div>
-
-`;
+    `;
 
 
-document.body.appendChild(screen);
+    const newPassword =
+        document.getElementById("newPassword");
 
+    const confirmPassword =
+        document.getElementById("confirmPassword");
 
-const updateButton =
-    document.getElementById(
-        "updatePasswordButton"
-    );
+    const updateButton =
+        document.getElementById(
+            "updatePasswordButton"
+        );
 
-
-updateButton.addEventListener(
-    "click",
-    updatePassword
-);
-```
-
-}
-
-async function updatePassword() {
-
-```
-const newPassword =
-    document.getElementById(
-        "newPassword"
-    ).value;
-
-const confirmPassword =
-    document.getElementById(
-        "confirmPassword"
-    ).value;
-
-const errorBox =
-    document.getElementById(
-        "passwordUpdateError"
-    );
-
-
-errorBox.textContent = "";
-
-
-if (!newPassword || !confirmPassword) {
-
-    errorBox.textContent =
-        "أدخل كلمة المرور الجديدة.";
-
-    return;
-}
-
-
-if (newPassword.length < 6) {
-
-    errorBox.textContent =
-        "كلمة المرور يجب أن تكون 6 أحرف على الأقل.";
-
-    return;
-}
-
-
-if (newPassword !== confirmPassword) {
-
-    errorBox.textContent =
-        "كلمتا المرور غير متطابقتين.";
-
-    return;
-}
-
-
-const updateButton =
-    document.getElementById(
-        "updatePasswordButton"
-    );
-
-
-updateButton.disabled = true;
-
-updateButton.textContent =
-    "جارٍ الحفظ...";
-
-
-const {
-    error
-} =
-    await db.auth.updateUser({
-
-        password:
-            newPassword
-
-    });
-
-
-if (error) {
-
-    console.error(
-        "Password update error:",
-        error
-    );
-
-    errorBox.textContent =
-        error.message;
-
-    updateButton.disabled = false;
-
-    updateButton.textContent =
-        "حفظ كلمة المرور";
-
-    return;
-}
-
-
-/*
-   Password changed successfully.
-*/
-
-errorBox.textContent =
-    "تم تغيير كلمة المرور بنجاح.";
-
-
-setTimeout(
-    async () => {
-
-        const screen =
-            document.getElementById(
-                "passwordUpdateScreen"
-            );
-
-        if (screen) {
-            screen.remove();
-        }
-
-
-        /*
-           Clean recovery hash.
-        */
-
-        history.replaceState(
-            null,
-            "",
-            window.location.pathname
+    const updateError =
+        document.getElementById(
+            "passwordUpdateError"
         );
 
 
-        const {
-            data
-        } =
-            await db.auth.getSession();
+    updateButton.addEventListener(
+        "click",
+        async function () {
+
+            updateError.textContent = "";
+
+            const password =
+                newPassword.value;
+
+            const confirmation =
+                confirmPassword.value;
 
 
-        if (data.session) {
+            if (!password) {
 
-            await startApplication(
-                data.session.user
-            );
+                updateError.textContent =
+                    "أدخل كلمة المرور الجديدة.";
 
-        } else {
+                return;
+            }
 
-            showLoginScreen();
+
+            if (password.length < 6) {
+
+                updateError.textContent =
+                    "كلمة المرور يجب أن تكون 6 أحرف على الأقل.";
+
+                return;
+            }
+
+
+            if (password !== confirmation) {
+
+                updateError.textContent =
+                    "كلمتا المرور غير متطابقتين.";
+
+                return;
+            }
+
+
+            updateButton.disabled = true;
+
+            updateButton.textContent =
+                "جارٍ الحفظ...";
+
+
+            try {
+
+                const {
+                    error
+                } = await db.auth.updateUser({
+                    password: password
+                });
+
+
+                if (error) {
+
+                    console.error(
+                        "Password update error:",
+                        error
+                    );
+
+                    updateError.textContent =
+                        getAuthErrorMessage(error);
+
+                    return;
+                }
+
+
+                updateError.textContent =
+                    "تم تغيير كلمة المرور بنجاح.";
+
+
+                setTimeout(
+                    async function () {
+
+                        await db.auth.signOut();
+
+                        window.location.reload();
+
+                    },
+                    1500
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Unexpected password update error:",
+                    error
+                );
+
+                updateError.textContent =
+                    error.message ||
+                    "حدث خطأ أثناء تغيير كلمة المرور.";
+
+            } finally {
+
+                updateButton.disabled = false;
+
+                updateButton.textContent =
+                    "حفظ كلمة المرور";
+            }
 
         }
-
-    },
-    1200
-);
-```
-
+    );
 }
 
+
 /* =========================================================
-START APPLICATION
+   START APPLICATION
 ========================================================= */
 
 async function startApplication(user) {
 
-```
-currentUser = user;
+    if (!user) {
+        return;
+    }
 
 
-const {
-    data,
-    error
-} =
-    await db
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+    currentUser = user;
 
 
-if (error) {
+    try {
 
-    console.error(
-        "Profile error:",
-        error
-    );
+        const {
+            data,
+            error
+        } = await db
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
 
 
-    loginError.textContent =
-        "تعذر تحميل بيانات المستخدم.";
+        if (error) {
+
+            console.error(
+                "Profile error:",
+                error
+            );
+
+            showError(
+                "تم تسجيل الدخول ولكن لم يتم العثور على ملف المستخدم في profiles."
+            );
+
+            return;
+        }
 
 
-    await db.auth.signOut();
+        currentProfile = data;
 
-    return;
+        profileCache.set(
+            data.id,
+            data
+        );
+
+
+        showApplication();
+
+
+        await loadCustomers();
+
+
+        await openGroupConversation();
+
+
+    } catch (error) {
+
+        console.error(
+            "Application startup error:",
+            error
+        );
+
+        showError(
+            error.message ||
+            "حدث خطأ أثناء تشغيل التطبيق."
+        );
+    }
 }
 
-
-currentProfile =
-    data;
-
-
-showApplication();
-
-
-await loadCustomers();
-
-
-await openGroupConversation();
-
-
-subscribeToRealtime();
-```
-
-}
 
 /* =========================================================
-LOAD CUSTOMERS
+   LOAD CUSTOMERS
 ========================================================= */
 
 async function loadCustomers() {
 
-```
-customersList.innerHTML = "";
+    customersList.innerHTML = "";
 
 
-const {
-    data,
-    error
-} =
-    await db
-        .from("profiles")
-        .select("*")
-        .eq("role", "customer")
-        .order(
-            "display_name",
-            {
-                ascending: true
-            }
-        );
+    if (!currentProfile) {
+        return;
+    }
 
 
-if (error) {
+    /*
+     * العميل لا يحتاج إلى رؤية قائمة العملاء.
+     */
 
-    console.error(
-        "Customers error:",
+    if (currentProfile.role !== "admin") {
+
+        customersList.innerHTML = `
+            <div class="customer-empty">
+                محادثتك الخاصة مع الإدارة
+            </div>
+        `;
+
+        return;
+    }
+
+
+    const {
+        data,
         error
-    );
+    } = await db
+        .from("profiles")
+        .select("id, display_name, role")
+        .eq("role", "customer")
+        .order("display_name");
 
-    return;
-}
 
+    if (error) {
 
-for (const customer of data) {
-
-    const button =
-        document.createElement(
-            "button"
+        console.error(
+            "Customers error:",
+            error
         );
 
+        customersList.innerHTML = `
+            <div class="customer-empty">
+                تعذر تحميل العملاء
+            </div>
+        `;
 
-    button.type = "button";
-
-    button.className =
-        "conversation-button";
-
-
-    button.innerHTML = `
-
-        <span>👤</span>
-
-        <div>
-
-            <strong>
-                ${escapeHtml(
-                    customer.display_name ||
-                    "عميل"
-                )}
-            </strong>
-
-            <small>
-                محادثة خاصة
-            </small>
-
-        </div>
-
-    `;
+        return;
+    }
 
 
-    button.addEventListener(
-        "click",
-        () => {
+    if (!data || data.length === 0) {
 
-            openPrivateConversation(
+        customersList.innerHTML = `
+            <div class="customer-empty">
+                لا يوجد عملاء
+            </div>
+        `;
+
+        return;
+    }
+
+
+    data.forEach(
+        function (customer) {
+
+            profileCache.set(
+                customer.id,
                 customer
+            );
+
+
+            const button =
+                document.createElement("button");
+
+
+            button.type = "button";
+
+            button.className =
+                "conversation-button customer-button";
+
+
+            button.innerHTML = `
+
+                <span>👤</span>
+
+                <div>
+
+                    <strong>
+                        ${escapeHtml(
+                            customer.display_name ||
+                            "عميل"
+                        )}
+                    </strong>
+
+                    <small>
+                        محادثة خاصة
+                    </small>
+
+                </div>
+
+            `;
+
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    openPrivateConversation(
+                        customer
+                    );
+
+                }
+            );
+
+
+            customersList.appendChild(
+                button
             );
 
         }
     );
-
-
-    customersList.appendChild(
-        button
-    );
-
 }
-```
 
-}
 
 /* =========================================================
-GROUP CONVERSATION
+   OPEN GROUP
 ========================================================= */
 
 async function openGroupConversation() {
 
-```
-setActiveConversationButton(
-    groupButton
-);
-
-
-conversationTitle.textContent =
-    "المجموعة";
-
-conversationSubtitle.textContent =
-    "المحادثة الجماعية";
-
-
-let {
-    data,
-    error
-} =
-    await db
-        .from("conversations")
-        .select("*")
-        .eq("type", "group")
-        .limit(1)
-        .maybeSingle();
-
-
-if (error) {
-
-    console.error(
-        "Group conversation error:",
-        error
-    );
-
-    return;
-}
-
-
-/*
-   If group doesn't exist,
-   create it.
-*/
-
-if (!data) {
-
-    const result =
-        await db
-            .from("conversations")
-            .insert({
-
-                type: "group",
-
-                customer_id: null
-
-            })
-            .select()
-            .single();
-
-
-    if (result.error) {
-
-        console.error(
-            "Create group error:",
-            result.error
-        );
-
+    if (!currentUser) {
         return;
     }
 
 
-    data =
-        result.data;
+    try {
+
+        const {
+            data,
+            error
+        } = await db
+            .from("conversations")
+            .select("*")
+            .eq("type", "group")
+            .limit(1)
+            .maybeSingle();
+
+
+        if (error) {
+
+            console.error(
+                "Group conversation error:",
+                error
+            );
+
+            showChatError(
+                "تعذر الوصول إلى المحادثة الجماعية."
+            );
+
+            return;
+        }
+
+
+        if (!data) {
+
+            showChatError(
+                "لم يتم إنشاء المحادثة الجماعية في قاعدة البيانات بعد."
+            );
+
+            return;
+        }
+
+
+        await selectConversation(
+            data,
+            "المجموعة",
+            "المحادثة الجماعية"
+        );
+
+
+        setActiveButton(
+            groupButton
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Open group error:",
+            error
+        );
+
+        showChatError(
+            error.message
+        );
+    }
 }
 
-
-currentConversation =
-    data;
-
-
-await loadMessages();
-```
-
-}
 
 /* =========================================================
-PRIVATE CONVERSATION
+   OPEN PRIVATE CONVERSATION
 ========================================================= */
 
-async function openPrivateConversation(
-customer
-) {
+async function openPrivateConversation(customer) {
 
-```
-conversationTitle.textContent =
-    customer.display_name ||
-    "محادثة خاصة";
-
-
-conversationSubtitle.textContent =
-    "محادثة خاصة";
-
-
-let {
-    data,
-    error
-} =
-    await db
-        .from("conversations")
-        .select("*")
-        .eq("type", "private")
-        .eq(
-            "customer_id",
-            customer.id
-        )
-        .maybeSingle();
-
-
-if (error) {
-
-    console.error(
-        "Private conversation error:",
-        error
-    );
-
-    return;
-}
-
-
-/*
-   Create private conversation
-   if it doesn't exist.
-*/
-
-if (!data) {
-
-    const result =
-        await db
-            .from("conversations")
-            .insert({
-
-                type: "private",
-
-                customer_id:
-                    customer.id
-
-            })
-            .select()
-            .single();
-
-
-    if (result.error) {
-
-        console.error(
-            "Create private conversation error:",
-            result.error
-        );
-
+    if (!currentUser || !customer) {
         return;
     }
 
 
-    data =
-        result.data;
+    try {
+
+        let conversation = null;
+
+
+        /*
+         * البحث عن المحادثة الخاصة الموجودة.
+         */
+
+        const {
+            data: existingConversation,
+            error: searchError
+        } = await db
+            .from("conversations")
+            .select("*")
+            .eq("type", "private")
+            .eq("customer_id", customer.id)
+            .maybeSingle();
+
+
+        if (searchError) {
+
+            console.error(
+                "Private conversation search error:",
+                searchError
+            );
+
+            showChatError(
+                "تعذر البحث عن المحادثة الخاصة."
+            );
+
+            return;
+        }
+
+
+        conversation =
+            existingConversation;
+
+
+        /*
+         * إذا كان المستخدم Admin ولا توجد محادثة،
+         * نحاول إنشاءها.
+         */
+
+        if (
+            !conversation &&
+            currentProfile &&
+            currentProfile.role === "admin"
+        ) {
+
+            const {
+                data: createdConversation,
+                error: createError
+            } = await db
+                .from("conversations")
+                .insert({
+                    type: "private",
+                    customer_id: customer.id
+                })
+                .select()
+                .single();
+
+
+            if (createError) {
+
+                console.error(
+                    "Create private conversation error:",
+                    createError
+                );
+
+                showChatError(
+                    "تعذر إنشاء المحادثة الخاصة. تأكد من سياسات RLS."
+                );
+
+                return;
+            }
+
+
+            conversation =
+                createdConversation;
+
+
+            /*
+             * إضافة العميل والـ Admin إلى المحادثة.
+             */
+
+            const members = [
+                {
+                    conversation_id:
+                        conversation.id,
+
+                    user_id:
+                        customer.id
+                },
+
+                {
+                    conversation_id:
+                        conversation.id,
+
+                    user_id:
+                        currentUser.id
+                }
+            ];
+
+
+            const {
+                error: membersError
+            } = await db
+                .from("conversation_members")
+                .upsert(
+                    members,
+                    {
+                        onConflict:
+                            "conversation_id,user_id"
+                    }
+                );
+
+
+            if (membersError) {
+
+                console.error(
+                    "Members error:",
+                    membersError
+                );
+
+                showChatError(
+                    "تم إنشاء المحادثة ولكن تعذر إضافة الأعضاء."
+                );
+
+                return;
+            }
+        }
+
+
+        if (!conversation) {
+
+            showChatError(
+                "لا توجد محادثة خاصة لهذا العميل."
+            );
+
+            return;
+        }
+
+
+        await selectConversation(
+            conversation,
+            customer.display_name ||
+            "محادثة خاصة",
+
+            "محادثة خاصة"
+        );
+
+
+        /*
+         * إزالة active من المجموعة
+         */
+
+        document
+            .querySelectorAll(
+                ".conversation-button"
+            )
+            .forEach(
+                function (button) {
+                    button.classList.remove(
+                        "active"
+                    );
+                }
+            );
+
+    } catch (error) {
+
+        console.error(
+            "Private conversation error:",
+            error
+        );
+
+        showChatError(
+            error.message
+        );
+    }
 }
 
-
-currentConversation =
-    data;
-
-
-await loadMessages();
-```
-
-}
 
 /* =========================================================
-LOAD MESSAGES
+   SELECT CONVERSATION
+========================================================= */
+
+async function selectConversation(
+    conversation,
+    title,
+    subtitle
+) {
+
+    currentConversation =
+        conversation;
+
+
+    conversationTitle.textContent =
+        title;
+
+    conversationSubtitle.textContent =
+        subtitle;
+
+
+    messagesContainer.innerHTML = "";
+
+
+    clearFilePreview();
+
+
+    await loadMessages();
+
+
+    subscribeToMessages();
+
+}
+
+
+/* =========================================================
+   LOAD MESSAGES
 ========================================================= */
 
 async function loadMessages() {
 
-```
-messagesContainer.innerHTML = "";
+    if (!currentConversation) {
+        return;
+    }
 
 
-if (!currentConversation) {
-    return;
-}
+    messagesContainer.innerHTML = "";
 
 
-const {
-    data,
-    error
-} =
-    await db
+    const {
+        data,
+        error
+    } = await db
         .from("messages")
         .select("*")
         .eq(
@@ -1030,209 +1183,335 @@ const {
         );
 
 
-if (error) {
+    if (error) {
 
-    console.error(
-        "Messages error:",
+        console.error(
+            "Messages error:",
+            error
+        );
+
+        showChatError(
+            "تعذر تحميل الرسائل."
+        );
+
+        return;
+    }
+
+
+    if (!data || data.length === 0) {
+
+        messagesContainer.innerHTML = `
+            <div class="empty-messages">
+                لا توجد رسائل بعد
+            </div>
+        `;
+
+        return;
+    }
+
+
+    messagesContainer.innerHTML = "";
+
+
+    for (
+        const message of data
+    ) {
+
+        await renderMessage(
+            message
+        );
+    }
+
+
+    scrollMessagesToBottom();
+}
+
+
+/* =========================================================
+   RENDER MESSAGE
+========================================================= */
+
+async function renderMessage(message) {
+
+    const messageElement =
+        document.createElement("div");
+
+
+    const ownMessage =
+        message.sender_id ===
+        currentUser.id;
+
+
+    messageElement.className =
+        ownMessage
+            ? "message own"
+            : "message";
+
+
+    let senderName = "مستخدم";
+
+
+    if (
+        profileCache.has(
+            message.sender_id
+        )
+    ) {
+
+        senderName =
+            profileCache.get(
+                message.sender_id
+            ).display_name ||
+            "مستخدم";
+
+    } else {
+
+        const {
+            data
+        } = await db
+            .from("profiles")
+            .select(
+                "id, display_name, role"
+            )
+            .eq(
+                "id",
+                message.sender_id
+            )
+            .maybeSingle();
+
+
+        if (data) {
+
+            profileCache.set(
+                data.id,
+                data
+            );
+
+            senderName =
+                data.display_name ||
+                "مستخدم";
+        }
+    }
+
+
+    let content = "";
+
+
+    if (
+        message.message_type ===
+        "text"
+    ) {
+
+        content = `
+            <div class="message-text">
+                ${escapeHtml(
+                    message.content || ""
+                )}
+            </div>
+        `;
+
+    } else if (
+        message.message_type ===
+        "image"
+    ) {
+
+        let imageUrl = null;
+
+
+        if (message.file_path) {
+
+            imageUrl =
+                await createSignedUrl(
+                    message.file_path
+                );
+        }
+
+
+        if (imageUrl) {
+
+            content = `
+                <a
+                    href="${imageUrl}"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    <img
+                        class="message-image"
+                        src="${imageUrl}"
+                        alt="صورة"
+                        loading="lazy"
+                    >
+                </a>
+            `;
+
+        } else {
+
+            content = `
+                <div class="message-text">
+                    تعذر تحميل الصورة
+                </div>
+            `;
+        }
+
+    } else if (
+        message.message_type ===
+        "audio"
+    ) {
+
+        let audioUrl = null;
+
+
+        if (message.file_path) {
+
+            audioUrl =
+                await createSignedUrl(
+                    message.file_path
+                );
+        }
+
+
+        if (audioUrl) {
+
+            content = `
+                <audio
+                    class="message-audio"
+                    controls
+                    src="${audioUrl}"
+                ></audio>
+            `;
+
+        } else {
+
+            content = `
+                <div class="message-text">
+                    تعذر تحميل التسجيل الصوتي
+                </div>
+            `;
+        }
+
+    } else {
+
+        content = `
+            <div class="message-text">
+                ${escapeHtml(
+                    message.content || ""
+                )}
+            </div>
+        `;
+    }
+
+
+    const date =
+        formatDate(
+            message.created_at
+        );
+
+
+    messageElement.innerHTML = `
+
+        <div class="message-bubble">
+
+            ${
+                !ownMessage
+                    ? `
+                        <div class="message-sender">
+                            ${escapeHtml(
+                                senderName
+                            )}
+                        </div>
+                    `
+                    : ""
+            }
+
+            ${content}
+
+            <div class="message-time">
+                ${date}
+            </div>
+
+        </div>
+
+    `;
+
+
+    messagesContainer.appendChild(
+        messageElement
+    );
+}
+
+
+/* =========================================================
+   SEND MESSAGE
+========================================================= */
+
+async function sendMessage(event) {
+
+    event.preventDefault();
+
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    if (!currentConversation) {
+
+        showChatError(
+            "اختر محادثة أولاً."
+        );
+
+        return;
+    }
+
+
+    const text =
+        messageInput.value.trim();
+
+
+    if (!text && !selectedImage) {
+        return;
+    }
+
+
+    /*
+     * إذا كانت هناك صورة مختارة
+     */
+
+    if (selectedImage) {
+
+        await uploadImage(
+            selectedImage
+        );
+
+        return;
+    }
+
+
+    /*
+     * إرسال النص
+     */
+
+    await sendTextMessage(
+        text
+    );
+}
+
+
+/* =========================================================
+   SEND TEXT
+========================================================= */
+
+async function sendTextMessage(text) {
+
+    if (!text) {
+        return;
+    }
+
+
+    const {
         error
-    );
-
-    return;
-}
-
-
-for (const message of data) {
-
-    await renderMessage(
-        message
-    );
-
-}
-
-
-scrollMessagesToBottom();
-```
-
-}
-
-/* =========================================================
-RENDER MESSAGE
-========================================================= */
-
-async function renderMessage(
-message
-) {
-
-```
-const wrapper =
-    document.createElement(
-        "div"
-    );
-
-
-const mine =
-    message.sender_id ===
-    currentUser.id;
-
-
-wrapper.className =
-    mine
-        ? "message mine"
-        : "message";
-
-
-const bubble =
-    document.createElement(
-        "div"
-    );
-
-
-bubble.className =
-    "message-bubble";
-
-
-if (message.message_type === "text") {
-
-    bubble.textContent =
-        message.content || "";
-
-}
-
-
-else if (
-    message.message_type === "image"
-) {
-
-    if (message.file_path) {
-
-        const url =
-            await getSignedUrl(
-                message.file_path
-            );
-
-
-        if (url) {
-
-            const image =
-                document.createElement(
-                    "img"
-                );
-
-            image.src = url;
-
-            image.alt = "صورة";
-
-            image.className =
-                "message-image";
-
-
-            image.addEventListener(
-                "click",
-                () => {
-
-                    window.open(
-                        url,
-                        "_blank"
-                    );
-
-                }
-            );
-
-
-            bubble.appendChild(
-                image
-            );
-
-        }
-
-    }
-
-}
-
-
-else if (
-    message.message_type === "audio"
-) {
-
-    if (message.file_path) {
-
-        const url =
-            await getSignedUrl(
-                message.file_path
-            );
-
-
-        if (url) {
-
-            const audio =
-                document.createElement(
-                    "audio"
-                );
-
-            audio.controls = true;
-
-            audio.src = url;
-
-
-            bubble.appendChild(
-                audio
-            );
-
-        }
-
-    }
-
-}
-
-
-wrapper.appendChild(
-    bubble
-);
-
-
-messagesContainer.appendChild(
-    wrapper
-);
-```
-
-}
-
-/* =========================================================
-SEND TEXT
-========================================================= */
-
-async function sendTextMessage(
-event
-) {
-
-```
-event.preventDefault();
-
-
-const text =
-    messageInput.value.trim();
-
-
-if (!text) {
-    return;
-}
-
-
-if (!currentConversation) {
-    return;
-}
-
-
-messageInput.disabled = true;
-
-
-const {
-    error
-} =
-    await db
+    } = await db
         .from("messages")
         .insert({
-
             conversation_id:
                 currentConversation.id,
 
@@ -1243,769 +1522,963 @@ const {
                 "text",
 
             content:
-                text,
-
-            file_path:
-                null
-
+                text
         });
 
 
-messageInput.disabled = false;
+    if (error) {
+
+        console.error(
+            "Send text error:",
+            error
+        );
+
+        showChatError(
+            "تعذر إرسال الرسالة."
+        );
+
+        return;
+    }
 
 
-if (error) {
+    messageInput.value = "";
 
-    console.error(
-        "Send message error:",
-        error
-    );
-
-    alert(
-        error.message
-    );
-
-    return;
+    messageInput.focus();
 }
 
-
-messageInput.value = "";
-```
-
-}
 
 /* =========================================================
-IMAGE
+   IMAGE SELECTION
 ========================================================= */
 
-async function handleImageSelection(
-event
-) {
+function handleImageSelection(event) {
 
-```
-const file =
-    event.target.files[0];
+    const file =
+        event.target.files &&
+        event.target.files[0];
 
 
-if (!file) {
-    return;
-}
+    if (!file) {
+        return;
+    }
 
 
-if (!currentConversation) {
+    if (
+        !file.type.startsWith(
+            "image/"
+        )
+    ) {
 
-    alert(
-        "اختر محادثة أولاً."
+        showChatError(
+            "الملف المختار ليس صورة."
+        );
+
+        imageInput.value = "";
+
+        return;
+    }
+
+
+    /*
+     * حد أقصى 10MB
+     */
+
+    if (
+        file.size >
+        10 * 1024 * 1024
+    ) {
+
+        showChatError(
+            "حجم الصورة يجب ألا يتجاوز 10 ميغابايت."
+        );
+
+        imageInput.value = "";
+
+        return;
+    }
+
+
+    selectedImage = file;
+
+
+    filePreview.classList.remove(
+        "hidden"
     );
 
-    return;
+
+    filePreview.innerHTML = `
+
+        <div class="selected-file">
+
+            <span>
+                🖼️
+                ${escapeHtml(file.name)}
+            </span>
+
+            <button
+                type="button"
+                id="removeFileButton"
+            >
+                ✕
+            </button>
+
+        </div>
+
+    `;
+
+
+    document
+        .getElementById(
+            "removeFileButton"
+        )
+        .addEventListener(
+            "click",
+            clearFilePreview
+        );
 }
 
-
-if (!file.type.startsWith("image/")) {
-
-    alert(
-        "الملف ليس صورة."
-    );
-
-    return;
-}
-
-
-showFilePreview(
-    `📷 ${file.name}`
-);
-
-
-const filePath =
-    await uploadFile(
-        file,
-        "images"
-    );
-
-
-if (!filePath) {
-
-    clearFilePreview();
-
-    imageInput.value = "";
-
-    return;
-}
-
-
-const {
-    error
-} =
-    await db
-        .from("messages")
-        .insert({
-
-            conversation_id:
-                currentConversation.id,
-
-            sender_id:
-                currentUser.id,
-
-            message_type:
-                "image",
-
-            content:
-                null,
-
-            file_path:
-                filePath
-
-        });
-
-
-if (error) {
-
-    console.error(
-        "Image message error:",
-        error
-    );
-
-    alert(
-        error.message
-    );
-
-}
-
-
-clearFilePreview();
-
-imageInput.value = "";
-```
-
-}
 
 /* =========================================================
-AUDIO RECORDING
+   UPLOAD IMAGE
+========================================================= */
+
+async function uploadImage(file) {
+
+    if (!currentConversation) {
+        return;
+    }
+
+
+    const extension =
+        getFileExtension(
+            file.name
+        );
+
+
+    const filePath =
+        `images/${currentConversation.id}/${currentUser.id}/${crypto.randomUUID()}.${extension}`;
+
+
+    try {
+
+        const {
+            error: uploadError
+        } = await db.storage
+            .from("chat-files")
+            .upload(
+                filePath,
+                file,
+                {
+                    cacheControl: "3600",
+                    upsert: false,
+                    contentType:
+                        file.type
+                }
+            );
+
+
+        if (uploadError) {
+
+            console.error(
+                "Image upload error:",
+                uploadError
+            );
+
+            showChatError(
+                "تعذر رفع الصورة."
+            );
+
+            return;
+        }
+
+
+        const {
+            error: messageError
+        } = await db
+            .from("messages")
+            .insert({
+                conversation_id:
+                    currentConversation.id,
+
+                sender_id:
+                    currentUser.id,
+
+                message_type:
+                    "image",
+
+                content:
+                    file.name,
+
+                file_path:
+                    filePath
+            });
+
+
+        if (messageError) {
+
+            console.error(
+                "Image message error:",
+                messageError
+            );
+
+            showChatError(
+                "تم رفع الصورة ولكن تعذر إرسالها."
+            );
+
+            return;
+        }
+
+
+        clearFilePreview();
+
+
+    } catch (error) {
+
+        console.error(
+            "Unexpected image error:",
+            error
+        );
+
+        showChatError(
+            error.message
+        );
+    }
+}
+
+
+/* =========================================================
+   RECORD AUDIO
 ========================================================= */
 
 async function toggleRecording() {
 
-```
-if (isRecording) {
+    if (recording) {
 
-    stopRecording();
+        stopRecording();
 
-} else {
+        return;
+    }
+
 
     await startRecording();
-
 }
-```
 
-}
+
+/* =========================================================
+   START RECORDING
+========================================================= */
 
 async function startRecording() {
 
-```
-if (!currentConversation) {
+    if (!navigator.mediaDevices) {
 
-    alert(
-        "اختر محادثة أولاً."
-    );
+        showChatError(
+            "المتصفح لا يدعم تسجيل الصوت."
+        );
 
-    return;
-}
-
-
-if (
-    !navigator.mediaDevices ||
-    !navigator.mediaDevices.getUserMedia
-) {
-
-    alert(
-        "المتصفح لا يدعم التسجيل الصوتي."
-    );
-
-    return;
-}
+        return;
+    }
 
 
-try {
+    try {
 
-    const stream =
-        await navigator.mediaDevices.getUserMedia(
-            {
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
                 audio: true
-            }
-        );
+            });
 
 
-    audioChunks = [];
+        audioChunks = [];
 
 
-    mediaRecorder =
-        new MediaRecorder(
-            stream
-        );
-
-
-    mediaRecorder.ondataavailable =
-        event => {
-
-            if (
-                event.data.size > 0
-            ) {
-
-                audioChunks.push(
-                    event.data
-                );
-
-            }
-
-        };
-
-
-    mediaRecorder.onstop =
-        async () => {
-
-            stream
-                .getTracks()
-                .forEach(
-                    track =>
-                        track.stop()
-                );
-
-
-            const blob =
-                new Blob(
-                    audioChunks,
-                    {
-                        type:
-                            mediaRecorder.mimeType ||
-                            "audio/webm"
-                    }
-                );
-
-
-            await sendAudio(
-                blob
+        mediaRecorder =
+            new MediaRecorder(
+                stream
             );
 
-        };
+
+        mediaRecorder.ondataavailable =
+            function (event) {
+
+                if (
+                    event.data &&
+                    event.data.size > 0
+                ) {
+                    audioChunks.push(
+                        event.data
+                    );
+                }
+            };
 
 
-    mediaRecorder.start();
+        mediaRecorder.onstop =
+            async function () {
 
-    isRecording = true;
-
-
-    recordButton.textContent =
-        "⏹️";
-
-
-    recordButton.classList.add(
-        "recording"
-    );
+                stream
+                    .getTracks()
+                    .forEach(
+                        function (track) {
+                            track.stop();
+                        }
+                    );
 
 
-    recordButton.title =
-        "إيقاف التسجيل";
+                const audioBlob =
+                    new Blob(
+                        audioChunks,
+                        {
+                            type:
+                                mediaRecorder.mimeType ||
+                                "audio/webm"
+                        }
+                    );
 
 
-} catch (error) {
+                if (
+                    audioBlob.size === 0
+                ) {
+                    return;
+                }
 
-    console.error(
-        "Microphone error:",
-        error
-    );
 
-    alert(
-        "تعذر الوصول إلى الميكروفون."
-    );
+                await uploadAudio(
+                    audioBlob
+                );
+            };
 
+
+        mediaRecorder.start();
+
+        recording = true;
+
+
+        recordButton.textContent =
+            "⏹️";
+
+
+        recordButton.title =
+            "إيقاف التسجيل";
+
+
+        recordButton.classList.add(
+            "recording"
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Microphone error:",
+            error
+        );
+
+        showChatError(
+            "تعذر الوصول إلى الميكروفون. اسمح للموقع باستخدام الميكروفون."
+        );
+    }
 }
-```
 
-}
+
+/* =========================================================
+   STOP RECORDING
+========================================================= */
 
 function stopRecording() {
 
-```
-if (
-    mediaRecorder &&
-    isRecording
-) {
+    if (
+        !mediaRecorder ||
+        mediaRecorder.state === "inactive"
+    ) {
+
+        recording = false;
+
+        return;
+    }
+
 
     mediaRecorder.stop();
 
-    isRecording = false;
+    recording = false;
 
 
     recordButton.textContent =
         "🎤";
 
 
-    recordButton.classList.remove(
-        "recording"
-    );
-
-
     recordButton.title =
         "تسجيل صوتي";
 
-}
-```
 
+    recordButton.classList.remove(
+        "recording"
+    );
 }
+
 
 /* =========================================================
-SEND AUDIO
+   UPLOAD AUDIO
 ========================================================= */
 
-async function sendAudio(blob) {
+async function uploadAudio(blob) {
 
-```
-showFilePreview(
-    "🎤 جارٍ إرسال التسجيل..."
-);
+    if (!currentConversation) {
 
-
-const extension =
-    getAudioExtension(
-        blob.type
-    );
-
-
-const file =
-    new File(
-        [
-            blob
-        ],
-        `voice-${Date.now()}.${extension}`,
-        {
-            type:
-                blob.type ||
-                "audio/webm"
-        }
-    );
-
-
-const filePath =
-    await uploadFile(
-        file,
-        "audio"
-    );
-
-
-if (!filePath) {
-
-    clearFilePreview();
-
-    return;
-}
-
-
-const {
-    error
-} =
-    await db
-        .from("messages")
-        .insert({
-
-            conversation_id:
-                currentConversation.id,
-
-            sender_id:
-                currentUser.id,
-
-            message_type:
-                "audio",
-
-            content:
-                null,
-
-            file_path:
-                filePath
-
-        });
-
-
-if (error) {
-
-    console.error(
-        "Audio message error:",
-        error
-    );
-
-    alert(
-        error.message
-    );
-
-}
-
-
-clearFilePreview();
-```
-
-}
-
-function getAudioExtension(
-mimeType
-) {
-
-```
-if (
-    mimeType.includes(
-        "mp4"
-    )
-) {
-    return "mp4";
-}
-
-if (
-    mimeType.includes(
-        "ogg"
-    )
-) {
-    return "ogg";
-}
-
-if (
-    mimeType.includes(
-        "mpeg"
-    )
-) {
-    return "mp3";
-}
-
-return "webm";
-```
-
-}
-
-/* =========================================================
-STORAGE UPLOAD
-========================================================= */
-
-async function uploadFile(
-file,
-folder
-) {
-
-```
-if (!currentUser) {
-    return null;
-}
-
-
-const extension =
-    getFileExtension(
-        file.name
-    );
-
-
-const fileName =
-    `${crypto.randomUUID()}.${extension}`;
-
-
-const filePath =
-    `${currentUser.id}/${folder}/${fileName}`;
-
-
-const {
-    error
-} =
-    await db
-        .storage
-        .from("chat-files")
-        .upload(
-            filePath,
-            file,
-            {
-                upsert: false,
-
-                contentType:
-                    file.type
-
-            }
+        showChatError(
+            "اختر محادثة أولاً."
         );
 
+        return;
+    }
 
-if (error) {
 
-    console.error(
-        "Upload error:",
-        error
-    );
+    try {
 
-    alert(
-        error.message
-    );
+        const extension =
+            "webm";
 
-    return null;
+
+        const filePath =
+            `audio/${currentConversation.id}/${currentUser.id}/${crypto.randomUUID()}.${extension}`;
+
+
+        const {
+            error: uploadError
+        } = await db.storage
+            .from("chat-files")
+            .upload(
+                filePath,
+                blob,
+                {
+                    cacheControl: "3600",
+                    upsert: false,
+                    contentType:
+                        blob.type ||
+                        "audio/webm"
+                }
+            );
+
+
+        if (uploadError) {
+
+            console.error(
+                "Audio upload error:",
+                uploadError
+            );
+
+            showChatError(
+                "تعذر رفع التسجيل الصوتي."
+            );
+
+            return;
+        }
+
+
+        const {
+            error: messageError
+        } = await db
+            .from("messages")
+            .insert({
+                conversation_id:
+                    currentConversation.id,
+
+                sender_id:
+                    currentUser.id,
+
+                message_type:
+                    "audio",
+
+                content:
+                    "رسالة صوتية",
+
+                file_path:
+                    filePath
+            });
+
+
+        if (messageError) {
+
+            console.error(
+                "Audio message error:",
+                messageError
+            );
+
+            showChatError(
+                "تم رفع التسجيل ولكن تعذر إرساله."
+            );
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Unexpected audio error:",
+            error
+        );
+
+        showChatError(
+            error.message
+        );
+    }
 }
 
-
-return filePath;
-```
-
-}
-
-function getFileExtension(
-filename
-) {
-
-```
-const parts =
-    filename.split(".");
-
-
-if (parts.length < 2) {
-    return "bin";
-}
-
-
-return parts
-    .pop()
-    .toLowerCase();
-```
-
-}
 
 /* =========================================================
-SIGNED URL
+   SIGNED URL
 ========================================================= */
 
-async function getSignedUrl(
-path
+async function createSignedUrl(
+    filePath
 ) {
 
-```
-const {
-    data,
-    error
-} =
-    await db
-        .storage
+    if (!filePath) {
+        return null;
+    }
+
+
+    const {
+        data,
+        error
+    } = await db.storage
         .from("chat-files")
         .createSignedUrl(
-            path,
-            3600
+            filePath,
+            60 * 60
         );
 
 
-if (error) {
+    if (error) {
 
-    console.error(
-        "Signed URL error:",
-        error
-    );
+        console.error(
+            "Signed URL error:",
+            error
+        );
 
-    return null;
+        return null;
+    }
+
+
+    return data?.signedUrl || null;
 }
 
-
-return data.signedUrl;
-```
-
-}
 
 /* =========================================================
-REALTIME
+   REALTIME
 ========================================================= */
 
-function subscribeToRealtime() {
+function subscribeToMessages() {
 
-```
-if (realtimeChannel) {
-
-    db.removeChannel(
-        realtimeChannel
-    );
-
-}
+    if (!currentConversation) {
+        return;
+    }
 
 
-realtimeChannel =
-    db
-        .channel(
-            "messages-realtime"
-        )
-        .on(
-            "postgres_changes",
-            {
-                event: "INSERT",
+    /*
+     * إزالة الاشتراك السابق
+     */
 
-                schema: "public",
+    if (realtimeChannel) {
 
-                table: "messages"
-            },
-            async payload => {
+        db.removeChannel(
+            realtimeChannel
+        );
 
-                const message =
-                    payload.new;
+        realtimeChannel = null;
+    }
 
 
-                /*
-                   Only show the message if it
-                   belongs to the currently open
-                   conversation.
-                */
+    realtimeChannel =
+        db
+            .channel(
+                `messages-${currentConversation.id}`
+            )
+            .on(
+                "postgres_changes",
+                {
+                    event: "INSERT",
 
-                if (
-                    currentConversation &&
-                    message.conversation_id ===
-                    currentConversation.id
-                ) {
+                    schema: "public",
+
+                    table: "messages",
+
+                    filter:
+                        `conversation_id=eq.${currentConversation.id}`
+                },
+
+                async function (payload) {
+
+                    /*
+                     * التأكد من أن الرسالة تخص
+                     * المحادثة الحالية.
+                     */
+
+                    if (
+                        !currentConversation ||
+                        payload.new.conversation_id !==
+                        currentConversation.id
+                    ) {
+                        return;
+                    }
+
+
+                    /*
+                     * إزالة رسالة "لا توجد رسائل"
+                     */
+
+                    const empty =
+                        messagesContainer.querySelector(
+                            ".empty-messages"
+                        );
+
+
+                    if (empty) {
+                        empty.remove();
+                    }
+
 
                     await renderMessage(
-                        message
+                        payload.new
                     );
 
+
                     scrollMessagesToBottom();
-
                 }
+            )
+            .subscribe(
+                function (status) {
 
-            }
-        )
-        .subscribe(
-            status => {
-
-                console.log(
-                    "Realtime:",
-                    status
-                );
-
-            }
-        );
-```
-
+                    console.log(
+                        "Realtime status:",
+                        status
+                    );
+                }
+            );
 }
 
+
 /* =========================================================
-LOGOUT
+   LOGOUT
 ========================================================= */
 
 async function logout() {
 
-```
-if (realtimeChannel) {
+    try {
 
-    await db.removeChannel(
-        realtimeChannel
-    );
+        await db.auth.signOut();
 
-    realtimeChannel = null;
+    } catch (error) {
 
+        console.error(
+            "Logout error:",
+            error
+        );
+
+        showError(
+            error.message
+        );
+    }
 }
 
-
-await db.auth.signOut();
-
-currentUser = null;
-
-currentProfile = null;
-
-currentConversation = null;
-
-showLoginScreen();
-```
-
-}
 
 /* =========================================================
-UI HELPERS
+   UI
 ========================================================= */
 
-function setActiveConversationButton(
-activeButton
-) {
+function showApplication() {
 
-```
-document
-    .querySelectorAll(
-        ".conversation-button"
-    )
-    .forEach(
-        button => {
+    loginScreen.classList.add(
+        "hidden"
+    );
 
-            button.classList.remove(
-                "active"
-            );
+    app.classList.remove(
+        "hidden"
+    );
+}
 
-        }
+
+function showLoginScreen() {
+
+    loginScreen.classList.remove(
+        "hidden"
+    );
+
+    app.classList.add(
+        "hidden"
+    );
+}
+
+
+function clearLoginError() {
+
+    loginError.textContent = "";
+
+    loginError.className = "";
+}
+
+
+function showError(message) {
+
+    loginError.textContent =
+        message || "حدث خطأ.";
+
+    loginError.className =
+        "error";
+}
+
+
+function showSuccess(message) {
+
+    loginError.textContent =
+        message || "";
+
+    loginError.className =
+        "success";
+}
+
+
+function showChatError(message) {
+
+    console.error(
+        "Chat error:",
+        message
     );
 
 
-if (activeButton) {
+    /*
+     * إظهار الخطأ داخل منطقة الرسائل
+     * حتى لا يفشل التطبيق بصمت.
+     */
 
-    activeButton.classList.add(
-        "active"
+    const element =
+        document.createElement("div");
+
+
+    element.className =
+        "chat-error";
+
+
+    element.textContent =
+        message ||
+        "حدث خطأ.";
+
+
+    messagesContainer.appendChild(
+        element
     );
 
-}
-```
 
+    scrollMessagesToBottom();
 }
 
-function showFilePreview(
-text
+
+function setButtonLoading(
+    button,
+    loading,
+    text
 ) {
 
-```
-filePreview.textContent =
-    text;
+    if (!button) {
+        return;
+    }
 
-filePreview.classList.remove(
-    "hidden"
-);
-```
 
+    button.disabled =
+        loading;
+
+
+    button.textContent =
+        text;
 }
+
+
+function setActiveButton(
+    button
+) {
+
+    document
+        .querySelectorAll(
+            ".conversation-button"
+        )
+        .forEach(
+            function (element) {
+
+                element.classList.remove(
+                    "active"
+                );
+            }
+        );
+
+
+    if (button) {
+
+        button.classList.add(
+            "active"
+        );
+    }
+}
+
+
+/* =========================================================
+   FILE PREVIEW
+========================================================= */
 
 function clearFilePreview() {
 
-```
-filePreview.textContent = "";
+    selectedImage = null;
 
-filePreview.classList.add(
-    "hidden"
-);
-```
+    imageInput.value = "";
 
+    filePreview.innerHTML = "";
+
+    filePreview.classList.add(
+        "hidden"
+    );
 }
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function escapeHtml(value) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        value == null
+            ? ""
+            : String(value);
+
+
+    return div.innerHTML;
+}
+
+
+function getFileExtension(
+    filename
+) {
+
+    const parts =
+        filename.split(".");
+
+
+    if (parts.length < 2) {
+        return "bin";
+    }
+
+
+    return parts
+        .pop()
+        .toLowerCase()
+        .replace(
+            /[^a-z0-9]/g,
+            ""
+        ) || "bin";
+}
+
+
+function formatDate(
+    dateString
+) {
+
+    if (!dateString) {
+        return "";
+    }
+
+
+    const date =
+        new Date(dateString);
+
+
+    return date.toLocaleString(
+        "ar-DZ",
+        {
+            day: "2-digit",
+            month: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+        }
+    );
+}
+
 
 function scrollMessagesToBottom() {
 
-```
-messagesContainer.scrollTop =
-    messagesContainer.scrollHeight;
-```
-
+    messagesContainer.scrollTop =
+        messagesContainer.scrollHeight;
 }
 
-function escapeHtml(
-value
+
+/* =========================================================
+   AUTH ERROR TRANSLATION
+========================================================= */
+
+function getAuthErrorMessage(
+    error
 ) {
 
-```
-return String(value)
-    .replace(
-        /&/g,
-        "&amp;"
-    )
-    .replace(
-        /</g,
-        "&lt;"
-    )
-    .replace(
-        />/g,
-        "&gt;"
-    )
-    .replace(
-        /"/g,
-        "&quot;"
-    )
-    .replace(
-        /'/g,
-        "&#039;"
-    );
-```
+    const message =
+        (
+            error?.message ||
+            ""
+        ).toLowerCase();
 
+
+    if (
+        message.includes(
+            "invalid login credentials"
+        )
+    ) {
+
+        return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+    }
+
+
+    if (
+        message.includes(
+            "email rate limit exceeded"
+        )
+    ) {
+
+        return "تم تجاوز حد إرسال رسائل الاسترجاع مؤقتًا من Supabase. انتظر قليلًا قبل طلب رسالة جديدة.";
+    }
+
+
+    if (
+        message.includes(
+            "rate limit"
+        )
+    ) {
+
+        return "تم تجاوز الحد المسموح مؤقتًا. حاول مرة أخرى لاحقًا.";
+    }
+
+
+    if (
+        message.includes(
+            "user not found"
+        )
+    ) {
+
+        return "لا يوجد حساب بهذا البريد الإلكتروني.";
+    }
+
+
+    if (
+        message.includes(
+            "password should be at least"
+        )
+    ) {
+
+        return "كلمة المرور قصيرة جدًا.";
+    }
+
+
+    return (
+        error?.message ||
+        "حدث خطأ غير معروف."
+    );
 }
