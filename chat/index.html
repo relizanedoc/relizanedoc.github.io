@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>مركز التواصل</title>
+
+<link
+    rel="stylesheet"
+    href="style.css"
+>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="config.js"></script>
+
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<div id="loginScreen" class="login-screen">
+
+    <div class="login-box">
+
+        <div class="logo">
+            💬
+        </div>
+
+        <h1>
+            مركز التواصل
+        </h1>
+
+        <p>
+            تسجيل الدخول
+        </p>
+
+        <input
+            id="email"
+            type="email"
+            placeholder="البريد الإلكتروني"
+        >
+
+        <input
+            id="password"
+            type="password"
+            placeholder="كلمة المرور"
+        >
+
+        <button id="loginButton">
+            دخول
+        </button>
+
+        <div id="loginError"></div>
+
+    </div>
+
+</div>
+
+
+<!-- APP -->
+
+<div id="app" class="app hidden">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <span>💬</span>
+
+            <strong>
+                مركز التواصل
+            </strong>
+
+        </div>
+
+
+        <button
+            id="groupButton"
+            class="conversation-button active"
+        >
+
+            <span>👥</span>
+
+            <div>
+
+                <strong>
+                    المجموعة
+                </strong>
+
+                <small>
+                    المحادثة الجماعية
+                </small>
+
+            </div>
+
+        </button>
+
+
+        <div class="section-title">
+
+            المحادثات الخاصة
+
+        </div>
+
+
+        <div id="customersList">
+
+        </div>
+
+
+        <button
+            id="logoutButton"
+            class="logout"
+        >
+
+            تسجيل الخروج
+
+        </button>
+
+    </aside>
+
+
+    <!-- CHAT -->
+
+    <main class="chat">
+
+        <header class="chat-header">
+
+            <div>
+
+                <h2 id="conversationTitle">
+                    المجموعة
+                </h2>
+
+                <small id="conversationSubtitle">
+                    المحادثة الجماعية
+                </small>
+
+            </div>
+
+        </header>
+
+
+        <section
+            id="messages"
+            class="messages"
+        >
+
+        </section>
+
+
+        <div
+            id="filePreview"
+            class="file-preview hidden"
+        >
+
+        </div>
+
+
+        <form
+            id="messageForm"
+            class="composer"
+        >
+
+            <label
+                class="action-button"
+                title="إرسال صورة"
+            >
+
+                📷
+
+                <input
+                    id="imageInput"
+                    type="file"
+                    accept="image/*"
+                    hidden
+                >
+
+            </label>
+
+
+            <button
+                type="button"
+                id="recordButton"
+                class="action-button"
+                title="تسجيل صوتي"
+            >
+
+                🎤
+
+            </button>
+
+
+            <input
+                id="messageInput"
+                type="text"
+                placeholder="اكتب رسالة..."
+                autocomplete="off"
+            >
+
+
+            <button
+                type="submit"
+                class="send-button"
+            >
+
+                ➤
+
+            </button>
+
+        </form>
+
+    </main>
+
+</div>
+
+
+<script src="app.js"></script>
+
+</body>
+
+</html>
