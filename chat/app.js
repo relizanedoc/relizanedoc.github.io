@@ -174,12 +174,15 @@ async function login() {
     });
 
 
-    if (error) {
+   if (error) {
 
-        loginError.textContent =
-            "بيانات الدخول غير صحيحة.";
+    console.error("Supabase Login Error:", error);
 
-    }
+    loginError.textContent =
+        error.message;
+
+    return;
+}
 
 }
 
