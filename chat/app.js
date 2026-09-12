@@ -1276,13 +1276,12 @@ async function loadReactions(
 }
 
 /* =========================================================
-   RENDER MESSAGE
+   RENDER MESSAGE (محدثة لدعم زر الحذف)
 ========================================================= */
 
 async function renderMessage(message) {
     if (!message?.id) return;
 
-    // منع تكرار الرسالة في الواجهة إذا كانت موجودة مسبقاً
     let messageElement = messagesContainer.querySelector(`[data-message-id="${cssEscape(message.id)}"]`);
     if (!messageElement) {
         messageElement = document.createElement("div");
@@ -1290,6 +1289,9 @@ async function renderMessage(message) {
     }
 
     const ownMessage = message.sender_id === currentUser.id;
+    const isAdmin = currentProfile?.role === "admin";
+    const canDelete = ownMessage || isAdmin; // السماح بالحذف إذا كانت رسالتك أو كنت أدمن
+
     messageElement.className = ownMessage ? "message own" : "message";
     messageElement.dataset.messageId = message.id;
 
@@ -1298,20 +1300,19 @@ async function renderMessage(message) {
 
     let content = "";
 
-    // بناء المحتوى بناءً على نوع الرسالة
     if (message.message_type === "image") {
         let imageUrl = message.file_path ? await createSignedUrl(message.file_path) : null;
         if (imageUrl) {
-            content = `<a href="${escapeHtml(imageUrl)}" target="_blank" rel="noopener"><img class="message-image" src="${escapeHtml(imageUrl)}" alt="صورة مرفقة" loading="lazy"></a>`;
+            content = `<a class="image-message-link" href="${escapeHtml(imageUrl)}" target="_blank" rel="noopener noreferrer"><img class="message-image" src="${escapeHtml(imageUrl)}" alt="صورة" loading="lazy"></a>`;
         } else {
-            content = `<div class="message-text">⚠ تعذر تحميل الصورة</div>`;
+            content = `<div class="message-text">تعذر تحميل الصورة</div>`;
         }
     } else if (message.message_type === "audio") {
         let audioUrl = message.file_path ? await createSignedUrl(message.file_path) : null;
         if (audioUrl) {
             content = `<audio class="message-audio" controls src="${escapeHtml(audioUrl)}"></audio>`;
         } else {
-            content = `<div class="message-text">⚠ تعذر تحميل التسجيل</div>`;
+            content = `<div class="message-text">تعذر تحميل التسجيل الصوتي</div>`;
         }
     } else {
         content = `<div class="message-text">${escapeHtml(message.content || "")}</div>`;
@@ -1319,32 +1320,76 @@ async function renderMessage(message) {
 
     const date = formatDate(message.created_at);
 
-    // الهيكل الجديد المطابق لـ CSS
     messageElement.innerHTML = `
         <div class="message-wrapper">
+            
+            ${canDelete ? `<button type="button" class="delete-message-btn" title="حذف للجميع">🗑️</button>` : ""}
+
             <div class="message-bubble">
-                <div class="message-sender">${escapeHtml(senderName)}</div>
+                ${!ownMessage ? `<div class="message-sender">${escapeHtml(senderName)}</div>` : ""}
                 ${content}
                 <div class="message-footer">
                     <span class="message-time">${date}</span>
                     ${ownMessage ? `<span class="message-status">✓✓</span>` : ""}
                 </div>
             </div>
-
+            
             <div class="message-reactions" data-reactions-for="${escapeHtml(message.id)}"></div>
             
             <div class="reaction-picker" data-message-id="${escapeHtml(message.id)}">
                 ${REACTIONS.map(reaction => `
-                    <button type="button" class="reaction-button" data-reaction="${reaction}">${reaction}</button>
+                    <button type="button" class="reaction-button" data-reaction="${reaction}" title="${reaction}">${reaction}</button>
                 `).join("")}
             </div>
         </div>
     `;
 
+    // تفعيل زر الحذف
+    if (canDelete) {
+        const deleteBtn = messageElement.querySelector(".delete-message-btn");
+        deleteBtn.addEventListener("click", function() {
+            deleteMessage(message.id, messageElement);
+        });
+    }
+
     setupReactionButtons(messageElement);
     renderReactionSummary(message.id);
 }
 
+/* =========================================================
+   DELETE MESSAGE (دالة جديدة)
+========================================================= */
+async function deleteMessage(messageId, element) {
+    // رسالة تأكيد مثل التلغرام
+    if (!confirm("هل أنت متأكد أنك تريد حذف هذه الرسالة للجميع؟")) {
+        return;
+    }
+
+    // إضافة تأثير الاختفاء البصري فوراً (تجربة مستخدم سريعة)
+    element.classList.add("deleting");
+
+    try {
+        const { error } = await db
+            .from("messages")
+            .delete()
+            .eq("id", messageId);
+
+        if (error) {
+            console.error("Delete message error:", error);
+            showChatError("تعذر حذف الرسالة.");
+            element.classList.remove("deleting"); // إعادة الرسالة إذا فشل الحذف
+            return;
+        }
+
+        // إذا نجح الحذف، نزيل العنصر نهائياً من الشاشة
+        element.remove();
+
+    } catch (error) {
+        console.error("Unexpected delete error:", error);
+        showChatError("حدث خطأ أثناء محاولة الحذف.");
+        element.classList.remove("deleting");
+    }
+}
 /* =========================================================
    REACTION BUTTONS
 ========================================================= */
