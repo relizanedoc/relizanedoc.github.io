@@ -17,7 +17,6 @@ const db = createClient(
     window.SUPABASE_ANON_KEY
 );
 
-
 /* =========================================================
    DOM
 ========================================================= */
@@ -67,7 +66,6 @@ const imageInput =
 const recordButton =
     document.getElementById("recordButton");
 
-
 /* =========================================================
    STATE
 ========================================================= */
@@ -97,7 +95,6 @@ const REACTIONS = [
     "😡"
 ];
 
-
 /* =========================================================
    START
 ========================================================= */
@@ -106,7 +103,6 @@ document.addEventListener(
     "DOMContentLoaded",
     initialize
 );
-
 
 /* =========================================================
    INITIALIZE
@@ -167,7 +163,6 @@ async function initialize() {
             }
         );
 
-
         db.auth.onAuthStateChange(
             async function (event, session) {
 
@@ -180,7 +175,6 @@ async function initialize() {
 
                     return;
                 }
-
 
                 if (
                     event === "SIGNED_IN"
@@ -198,7 +192,6 @@ async function initialize() {
 
                     return;
                 }
-
 
                 if (
                     event === "SIGNED_OUT"
@@ -225,12 +218,10 @@ async function initialize() {
             }
         );
 
-
         const {
             data,
             error
         } = await db.auth.getSession();
-
 
         if (error) {
 
@@ -244,7 +235,6 @@ async function initialize() {
             return;
         }
 
-
         if (data.session) {
 
             await startApplication(
@@ -255,7 +245,6 @@ async function initialize() {
 
             showLoginScreen();
         }
-
 
     } catch (error) {
 
@@ -271,7 +260,6 @@ async function initialize() {
     }
 }
 
-
 /* =========================================================
    LOGIN
 ========================================================= */
@@ -286,7 +274,6 @@ async function login() {
     const password =
         passwordInput.value;
 
-
     if (!email) {
 
         showError(
@@ -297,7 +284,6 @@ async function login() {
 
         return;
     }
-
 
     if (!password) {
 
@@ -310,13 +296,11 @@ async function login() {
         return;
     }
 
-
     setButtonLoading(
         loginButton,
         true,
         "جارٍ تسجيل الدخول..."
     );
-
 
     try {
 
@@ -327,7 +311,6 @@ async function login() {
             email,
             password
         });
-
 
         if (error) {
 
@@ -343,7 +326,6 @@ async function login() {
             return;
         }
 
-
         if (!data.session) {
 
             showError(
@@ -353,11 +335,9 @@ async function login() {
             return;
         }
 
-
         await startApplication(
             data.user
         );
-
 
     } catch (error) {
 
@@ -371,17 +351,15 @@ async function login() {
             "حدث خطأ أثناء تسجيل الدخول."
         );
 
-
     } finally {
 
         setButtonLoading(
             loginButton,
             false,
-            "دخول"
+            "تسجيل الدخول"
         );
     }
 }
-
 
 /* =========================================================
    PASSWORD RESET
@@ -394,7 +372,6 @@ async function resetPassword() {
     const email =
         emailInput.value.trim();
 
-
     if (!email) {
 
         showError(
@@ -406,19 +383,16 @@ async function resetPassword() {
         return;
     }
 
-
     setButtonLoading(
         forgotPasswordButton,
         true,
         "جارٍ الإرسال..."
     );
 
-
     try {
 
         const redirectTo =
             window.location.origin + "/";
-
 
         const {
             error
@@ -428,7 +402,6 @@ async function resetPassword() {
                 redirectTo
             }
         );
-
 
         if (error) {
 
@@ -444,11 +417,9 @@ async function resetPassword() {
             return;
         }
 
-
         showSuccess(
             "تم إرسال رابط استرجاع كلمة المرور إلى بريدك الإلكتروني."
         );
-
 
     } catch (error) {
 
@@ -462,7 +433,6 @@ async function resetPassword() {
             "حدث خطأ أثناء إرسال رابط الاسترجاع."
         );
 
-
     } finally {
 
         setButtonLoading(
@@ -473,7 +443,6 @@ async function resetPassword() {
     }
 }
 
-
 /* =========================================================
    PASSWORD UPDATE
 ========================================================= */
@@ -483,10 +452,8 @@ function showPasswordUpdateScreen() {
     loginScreen.classList.remove("hidden");
     app.classList.add("hidden");
 
-
     const box =
         loginScreen.querySelector(".login-box");
-
 
     box.innerHTML = `
 
@@ -521,7 +488,6 @@ function showPasswordUpdateScreen() {
 
     `;
 
-
     const newPassword =
         document.getElementById("newPassword");
 
@@ -538,7 +504,6 @@ function showPasswordUpdateScreen() {
             "passwordUpdateError"
         );
 
-
     updateButton.addEventListener(
         "click",
         async function () {
@@ -551,7 +516,6 @@ function showPasswordUpdateScreen() {
             const confirmation =
                 confirmPassword.value;
 
-
             if (!password) {
 
                 updateError.textContent =
@@ -559,7 +523,6 @@ function showPasswordUpdateScreen() {
 
                 return;
             }
-
 
             if (password.length < 6) {
 
@@ -569,7 +532,6 @@ function showPasswordUpdateScreen() {
                 return;
             }
 
-
             if (password !== confirmation) {
 
                 updateError.textContent =
@@ -578,12 +540,10 @@ function showPasswordUpdateScreen() {
                 return;
             }
 
-
             updateButton.disabled = true;
 
             updateButton.textContent =
                 "جارٍ الحفظ...";
-
 
             try {
 
@@ -593,7 +553,6 @@ function showPasswordUpdateScreen() {
                     password
                 });
 
-
                 if (error) {
 
                     updateError.textContent =
@@ -602,10 +561,8 @@ function showPasswordUpdateScreen() {
                     return;
                 }
 
-
                 updateError.textContent =
                     "تم تغيير كلمة المرور بنجاح.";
-
 
                 setTimeout(
                     async function () {
@@ -618,7 +575,6 @@ function showPasswordUpdateScreen() {
                     1500
                 );
 
-
             } catch (error) {
 
                 console.error(
@@ -629,7 +585,6 @@ function showPasswordUpdateScreen() {
                 updateError.textContent =
                     error.message ||
                     "حدث خطأ أثناء تغيير كلمة المرور.";
-
 
             } finally {
 
@@ -642,7 +597,6 @@ function showPasswordUpdateScreen() {
     );
 }
 
-
 /* =========================================================
    START APPLICATION
 ========================================================= */
@@ -653,9 +607,7 @@ async function startApplication(user) {
         return;
     }
 
-
     currentUser = user;
-
 
     try {
 
@@ -673,7 +625,6 @@ async function startApplication(user) {
             )
             .single();
 
-
         if (error) {
 
             console.error(
@@ -688,7 +639,6 @@ async function startApplication(user) {
             return;
         }
 
-
         currentProfile = data;
 
         profileCache.set(
@@ -696,13 +646,11 @@ async function startApplication(user) {
             data
         );
 
-
         showApplication();
 
         await loadCustomers();
 
         await openGroupConversation();
-
 
     } catch (error) {
 
@@ -718,7 +666,6 @@ async function startApplication(user) {
     }
 }
 
-
 /* =========================================================
    LOAD CUSTOMERS
 ========================================================= */
@@ -727,11 +674,9 @@ async function loadCustomers() {
 
     customersList.innerHTML = "";
 
-
     if (!currentProfile) {
         return;
     }
-
 
     if (
         currentProfile.role !==
@@ -746,7 +691,6 @@ async function loadCustomers() {
 
         return;
     }
-
 
     const {
         data,
@@ -764,7 +708,6 @@ async function loadCustomers() {
             "display_name"
         );
 
-
     if (error) {
 
         console.error(
@@ -781,7 +724,6 @@ async function loadCustomers() {
         return;
     }
 
-
     if (!data?.length) {
 
         customersList.innerHTML = `
@@ -793,7 +735,6 @@ async function loadCustomers() {
         return;
     }
 
-
     data.forEach(
         function (customer) {
 
@@ -802,16 +743,13 @@ async function loadCustomers() {
                 customer
             );
 
-
             const button =
                 document.createElement("button");
-
 
             button.type = "button";
 
             button.className =
                 "conversation-button customer-button";
-
 
             button.innerHTML = `
 
@@ -836,7 +774,6 @@ async function loadCustomers() {
 
             `;
 
-
             button.addEventListener(
                 "click",
                 function () {
@@ -847,14 +784,12 @@ async function loadCustomers() {
                 }
             );
 
-
             customersList.appendChild(
                 button
             );
         }
     );
 }
-
 
 /* =========================================================
    OPEN GROUP
@@ -865,7 +800,6 @@ async function openGroupConversation() {
     if (!currentUser) {
         return;
     }
-
 
     try {
 
@@ -882,7 +816,6 @@ async function openGroupConversation() {
             .limit(1)
             .maybeSingle();
 
-
         if (error) {
 
             console.error(
@@ -897,7 +830,6 @@ async function openGroupConversation() {
             return;
         }
 
-
         if (!data) {
 
             showChatError(
@@ -907,18 +839,15 @@ async function openGroupConversation() {
             return;
         }
 
-
         await selectConversation(
             data,
             "المجموعة",
             "المحادثة الجماعية"
         );
 
-
         setActiveButton(
             groupButton
         );
-
 
     } catch (error) {
 
@@ -934,7 +863,6 @@ async function openGroupConversation() {
     }
 }
 
-
 /* =========================================================
    OPEN PRIVATE
 ========================================================= */
@@ -947,11 +875,9 @@ async function openPrivateConversation(
         return;
     }
 
-
     try {
 
         let conversation = null;
-
 
         const {
             data: existingConversation,
@@ -969,7 +895,6 @@ async function openPrivateConversation(
             )
             .maybeSingle();
 
-
         if (searchError) {
 
             console.error(
@@ -984,10 +909,8 @@ async function openPrivateConversation(
             return;
         }
 
-
         conversation =
             existingConversation;
-
 
         if (
             !conversation &&
@@ -1008,7 +931,6 @@ async function openPrivateConversation(
                 .select()
                 .single();
 
-
             if (createError) {
 
                 console.error(
@@ -1023,10 +945,8 @@ async function openPrivateConversation(
                 return;
             }
 
-
             conversation =
                 createdConversation;
-
 
             const members = [
                 {
@@ -1046,7 +966,6 @@ async function openPrivateConversation(
                 }
             ];
 
-
             const {
                 error: membersError
             } = await db
@@ -1058,7 +977,6 @@ async function openPrivateConversation(
                             "conversation_id,user_id"
                     }
                 );
-
 
             if (membersError) {
 
@@ -1075,7 +993,6 @@ async function openPrivateConversation(
             }
         }
 
-
         if (!conversation) {
 
             showChatError(
@@ -1085,14 +1002,12 @@ async function openPrivateConversation(
             return;
         }
 
-
         await selectConversation(
             conversation,
             customer.display_name ||
             "محادثة خاصة",
             "محادثة خاصة"
         );
-
 
         document
             .querySelectorAll(
@@ -1106,7 +1021,6 @@ async function openPrivateConversation(
                     );
                 }
             );
-
 
     } catch (error) {
 
@@ -1122,7 +1036,6 @@ async function openPrivateConversation(
     }
 }
 
-
 /* =========================================================
    SELECT CONVERSATION
 ========================================================= */
@@ -1136,29 +1049,22 @@ async function selectConversation(
     currentConversation =
         conversation;
 
-
     conversationTitle.textContent =
         title;
 
     conversationSubtitle.textContent =
         subtitle;
 
-
     messagesContainer.innerHTML = "";
-
 
     clearFilePreview();
 
-
     reactionCache.clear();
-
 
     await loadMessages();
 
-
     subscribeToMessages();
 }
-
 
 /* =========================================================
    LOAD MESSAGES
@@ -1170,9 +1076,7 @@ async function loadMessages() {
         return;
     }
 
-
     messagesContainer.innerHTML = "";
-
 
     const {
         data: messages,
@@ -1191,7 +1095,6 @@ async function loadMessages() {
             }
         );
 
-
     if (error) {
 
         console.error(
@@ -1205,7 +1108,6 @@ async function loadMessages() {
 
         return;
     }
-
 
     if (!messages?.length) {
 
@@ -1226,7 +1128,6 @@ async function loadMessages() {
         return;
     }
 
-
     /*
      * تحميل أسماء المرسلين
      */
@@ -1242,7 +1143,6 @@ async function loadMessages() {
         )
     ];
 
-
     if (senderIds.length) {
 
         const {
@@ -1257,7 +1157,6 @@ async function loadMessages() {
                 "id",
                 senderIds
             );
-
 
         if (profilesError) {
 
@@ -1280,7 +1179,6 @@ async function loadMessages() {
         }
     }
 
-
     /*
      * تحميل جميع التفاعلات دفعة واحدة
      */
@@ -1290,14 +1188,11 @@ async function loadMessages() {
             message => message.id
         );
 
-
     await loadReactions(
         messageIds
     );
 
-
     messagesContainer.innerHTML = "";
-
 
     for (const message of messages) {
 
@@ -1306,10 +1201,8 @@ async function loadMessages() {
         );
     }
 
-
     scrollMessagesToBottom();
 }
-
 
 /* =========================================================
    LOAD REACTIONS
@@ -1322,7 +1215,6 @@ async function loadReactions(
     if (!messageIds?.length) {
         return;
     }
-
 
     const {
         data,
@@ -1337,7 +1229,6 @@ async function loadReactions(
             messageIds
         );
 
-
     if (error) {
 
         console.error(
@@ -1348,7 +1239,6 @@ async function loadReactions(
         return;
     }
 
-
     messageIds.forEach(
         function (messageId) {
 
@@ -1358,7 +1248,6 @@ async function loadReactions(
             );
         }
     );
-
 
     data?.forEach(
         function (reaction) {
@@ -1375,7 +1264,6 @@ async function loadReactions(
                 );
             }
 
-
             reactionCache
                 .get(
                     reaction.message_id
@@ -1386,7 +1274,6 @@ async function loadReactions(
         }
     );
 }
-
 
 /* =========================================================
    RENDER MESSAGE
@@ -1400,39 +1287,31 @@ async function renderMessage(
         return;
     }
 
-
     const messageElement =
         document.createElement("div");
-
 
     const ownMessage =
         message.sender_id ===
         currentUser.id;
-
 
     messageElement.className =
         ownMessage
             ? "message own"
             : "message";
 
-
     messageElement.dataset.messageId =
         message.id;
-
 
     const senderProfile =
         profileCache.get(
             message.sender_id
         );
 
-
     const senderName =
         senderProfile?.display_name ||
         "مستخدم";
 
-
     let content = "";
-
 
     if (
         message.message_type ===
@@ -1447,14 +1326,12 @@ async function renderMessage(
             </div>
         `;
 
-
     } else if (
         message.message_type ===
         "image"
     ) {
 
         let imageUrl = null;
-
 
         if (message.file_path) {
 
@@ -1463,7 +1340,6 @@ async function renderMessage(
                     message.file_path
                 );
         }
-
 
         if (imageUrl) {
 
@@ -1496,14 +1372,12 @@ async function renderMessage(
             `;
         }
 
-
     } else if (
         message.message_type ===
         "audio"
     ) {
 
         let audioUrl = null;
-
 
         if (message.file_path) {
 
@@ -1512,7 +1386,6 @@ async function renderMessage(
                     message.file_path
                 );
         }
-
 
         if (audioUrl) {
 
@@ -1535,7 +1408,6 @@ async function renderMessage(
             `;
         }
 
-
     } else {
 
         content = `
@@ -1547,12 +1419,10 @@ async function renderMessage(
         `;
     }
 
-
     const date =
         formatDate(
             message.created_at
         );
-
 
     messageElement.innerHTML = `
 
@@ -1560,11 +1430,12 @@ async function renderMessage(
 
             <div class="message-bubble">
 
+                ${!ownMessage ? `
                 <div class="message-sender">
                     ${escapeHtml(
                         senderName
                     )}
-                </div>
+                </div>` : ''}
 
                 ${content}
 
@@ -1626,22 +1497,18 @@ async function renderMessage(
         </div>
     `;
 
-
     messagesContainer.appendChild(
         messageElement
     );
-
 
     setupReactionButtons(
         messageElement
     );
 
-
     renderReactionSummary(
         message.id
     );
 }
-
 
 /* =========================================================
    REACTION BUTTONS
@@ -1655,7 +1522,6 @@ function setupReactionButtons(
         messageElement.querySelectorAll(
             ".reaction-button"
         );
-
 
     buttons.forEach(
         function (button) {
@@ -1682,7 +1548,6 @@ function setupReactionButtons(
     );
 }
 
-
 /* =========================================================
    TOGGLE REACTION
 ========================================================= */
@@ -1702,7 +1567,6 @@ async function toggleReaction(
 
         return;
     }
-
 
     try {
 
@@ -1728,7 +1592,6 @@ async function toggleReaction(
             )
             .maybeSingle();
 
-
         if (findError) {
 
             console.error(
@@ -1738,7 +1601,6 @@ async function toggleReaction(
 
             return;
         }
-
 
         if (existing) {
 
@@ -1751,7 +1613,6 @@ async function toggleReaction(
                     "id",
                     existing.id
                 );
-
 
             if (error) {
 
@@ -1766,7 +1627,6 @@ async function toggleReaction(
 
                 return;
             }
-
 
         } else {
 
@@ -1784,7 +1644,6 @@ async function toggleReaction(
                     reaction
                 });
 
-
             if (error) {
 
                 console.error(
@@ -1800,11 +1659,9 @@ async function toggleReaction(
             }
         }
 
-
         await refreshMessageReactions(
             messageId
         );
-
 
     } catch (error) {
 
@@ -1819,7 +1676,6 @@ async function toggleReaction(
         );
     }
 }
-
 
 /* =========================================================
    REFRESH REACTIONS
@@ -1842,7 +1698,6 @@ async function refreshMessageReactions(
             messageId
         );
 
-
     if (error) {
 
         console.error(
@@ -1853,18 +1708,15 @@ async function refreshMessageReactions(
         return;
     }
 
-
     reactionCache.set(
         messageId,
         data || []
     );
 
-
     renderReactionSummary(
         messageId
     );
 }
-
 
 /* =========================================================
    RENDER REACTION SUMMARY
@@ -1881,17 +1733,14 @@ function renderReactionSummary(
             )}"]`
         );
 
-
     if (!container) {
         return;
     }
-
 
     const reactions =
         reactionCache.get(
             messageId
         ) || [];
-
 
     if (!reactions.length) {
 
@@ -1900,11 +1749,9 @@ function renderReactionSummary(
         return;
     }
 
-
     const counts = new Map();
 
     const mine = new Set();
-
 
     reactions.forEach(
         function (item) {
@@ -1919,7 +1766,6 @@ function renderReactionSummary(
                 current + 1
             );
 
-
             if (
                 item.user_id ===
                 currentUser?.id
@@ -1932,7 +1778,6 @@ function renderReactionSummary(
         }
     );
 
-
     const ordered =
         REACTIONS.filter(
             reaction =>
@@ -1940,7 +1785,6 @@ function renderReactionSummary(
                     reaction
                 )
         );
-
 
     container.innerHTML =
         ordered.map(
@@ -1955,7 +1799,6 @@ function renderReactionSummary(
                     mine.has(
                         reaction
                     );
-
 
                 return `
                     <button
@@ -1980,7 +1823,6 @@ function renderReactionSummary(
             }
         ).join("");
 
-
     container
         .querySelectorAll(
             ".reaction-summary"
@@ -2002,7 +1844,6 @@ function renderReactionSummary(
         );
 }
 
-
 /* =========================================================
    SEND MESSAGE
 ========================================================= */
@@ -2013,11 +1854,9 @@ async function sendMessage(
 
     event.preventDefault();
 
-
     if (!currentUser) {
         return;
     }
-
 
     if (!currentConversation) {
 
@@ -2028,10 +1867,8 @@ async function sendMessage(
         return;
     }
 
-
     const text =
         messageInput.value.trim();
-
 
     if (
         !text &&
@@ -2040,7 +1877,6 @@ async function sendMessage(
 
         return;
     }
-
 
     if (selectedImage) {
 
@@ -2051,12 +1887,10 @@ async function sendMessage(
         return;
     }
 
-
     await sendTextMessage(
         text
     );
 }
-
 
 /* =========================================================
    SEND TEXT
@@ -2073,7 +1907,6 @@ async function sendTextMessage(
 
         return;
     }
-
 
     const {
         error
@@ -2093,7 +1926,6 @@ async function sendTextMessage(
                 text
         });
 
-
     if (error) {
 
         console.error(
@@ -2108,12 +1940,10 @@ async function sendTextMessage(
         return;
     }
 
-
     messageInput.value = "";
 
     messageInput.focus();
 }
-
 
 /* =========================================================
    IMAGE
@@ -2127,11 +1957,9 @@ function handleImageSelection(
         event.target.files &&
         event.target.files[0];
 
-
     if (!file) {
         return;
     }
-
 
     if (
         !file.type.startsWith(
@@ -2148,7 +1976,6 @@ function handleImageSelection(
         return;
     }
 
-
     if (
         file.size >
         10 * 1024 * 1024
@@ -2163,14 +1990,11 @@ function handleImageSelection(
         return;
     }
 
-
     selectedImage = file;
-
 
     filePreview.classList.remove(
         "hidden"
     );
-
 
     filePreview.innerHTML = `
 
@@ -2193,7 +2017,6 @@ function handleImageSelection(
         </div>
     `;
 
-
     document
         .getElementById(
             "removeFileButton"
@@ -2203,7 +2026,6 @@ function handleImageSelection(
             clearFilePreview
         );
 }
-
 
 /* =========================================================
    UPLOAD IMAGE
@@ -2217,16 +2039,13 @@ async function uploadImage(
         return;
     }
 
-
     const extension =
         getFileExtension(
             file.name
         );
 
-
     const filePath =
         `images/${currentConversation.id}/${currentUser.id}/${crypto.randomUUID()}.${extension}`;
-
 
     try {
 
@@ -2245,7 +2064,6 @@ async function uploadImage(
                 }
             );
 
-
         if (uploadError) {
 
             console.error(
@@ -2259,7 +2077,6 @@ async function uploadImage(
 
             return;
         }
-
 
         const {
             error: messageError
@@ -2282,7 +2099,6 @@ async function uploadImage(
                     filePath
             });
 
-
         if (messageError) {
 
             console.error(
@@ -2297,9 +2113,7 @@ async function uploadImage(
             return;
         }
 
-
         clearFilePreview();
-
 
     } catch (error) {
 
@@ -2315,7 +2129,6 @@ async function uploadImage(
     }
 }
 
-
 /* =========================================================
    RECORD AUDIO
 ========================================================= */
@@ -2329,10 +2142,8 @@ async function toggleRecording() {
         return;
     }
 
-
     await startRecording();
 }
-
 
 async function startRecording() {
 
@@ -2348,7 +2159,6 @@ async function startRecording() {
         return;
     }
 
-
     try {
 
         const stream =
@@ -2356,15 +2166,12 @@ async function startRecording() {
                 audio: true
             });
 
-
         audioChunks = [];
-
 
         mediaRecorder =
             new MediaRecorder(
                 stream
             );
-
 
         mediaRecorder.ondataavailable =
             function (event) {
@@ -2380,7 +2187,6 @@ async function startRecording() {
                 }
             };
 
-
         mediaRecorder.onstop =
             async function () {
 
@@ -2393,7 +2199,6 @@ async function startRecording() {
                         }
                     );
 
-
                 const audioBlob =
                     new Blob(
                         audioChunks,
@@ -2404,7 +2209,6 @@ async function startRecording() {
                         }
                     );
 
-
                 if (
                     audioBlob.size === 0
                 ) {
@@ -2412,17 +2216,14 @@ async function startRecording() {
                     return;
                 }
 
-
                 await uploadAudio(
                     audioBlob
                 );
             };
 
-
         mediaRecorder.start();
 
         recording = true;
-
 
         recordButton.textContent =
             "⏹️";
@@ -2433,7 +2234,6 @@ async function startRecording() {
         recordButton.classList.add(
             "recording"
         );
-
 
     } catch (error) {
 
@@ -2448,7 +2248,6 @@ async function startRecording() {
     }
 }
 
-
 function stopRecording() {
 
     if (
@@ -2462,11 +2261,9 @@ function stopRecording() {
         return;
     }
 
-
     mediaRecorder.stop();
 
     recording = false;
-
 
     recordButton.textContent =
         "🎤";
@@ -2478,7 +2275,6 @@ function stopRecording() {
         "recording"
     );
 }
-
 
 /* =========================================================
    UPLOAD AUDIO
@@ -2497,12 +2293,10 @@ async function uploadAudio(
         return;
     }
 
-
     try {
 
         const filePath =
             `audio/${currentConversation.id}/${currentUser.id}/${crypto.randomUUID()}.webm`;
-
 
         const {
             error: uploadError
@@ -2520,7 +2314,6 @@ async function uploadAudio(
                 }
             );
 
-
         if (uploadError) {
 
             console.error(
@@ -2534,7 +2327,6 @@ async function uploadAudio(
 
             return;
         }
-
 
         const {
             error: messageError
@@ -2557,7 +2349,6 @@ async function uploadAudio(
                     filePath
             });
 
-
         if (messageError) {
 
             console.error(
@@ -2569,7 +2360,6 @@ async function uploadAudio(
                 "تم رفع التسجيل ولكن تعذر إرساله."
             );
         }
-
 
     } catch (error) {
 
@@ -2585,7 +2375,6 @@ async function uploadAudio(
     }
 }
 
-
 /* =========================================================
    SIGNED URL
 ========================================================= */
@@ -2598,7 +2387,6 @@ async function createSignedUrl(
         return null;
     }
 
-
     const {
         data,
         error
@@ -2608,7 +2396,6 @@ async function createSignedUrl(
             filePath,
             60 * 60
         );
-
 
     if (error) {
 
@@ -2620,10 +2407,8 @@ async function createSignedUrl(
         return null;
     }
 
-
     return data?.signedUrl || null;
 }
-
 
 /* =========================================================
    REALTIME
@@ -2635,7 +2420,6 @@ function subscribeToMessages() {
         return;
     }
 
-
     if (realtimeChannel) {
 
         db.removeChannel(
@@ -2645,10 +2429,8 @@ function subscribeToMessages() {
         realtimeChannel = null;
     }
 
-
     const conversationId =
         currentConversation.id;
-
 
     realtimeChannel =
         db
@@ -2681,17 +2463,14 @@ function subscribeToMessages() {
                         return;
                     }
 
-
                     const empty =
                         messagesContainer.querySelector(
                             ".empty-messages"
                         );
 
-
                     if (empty) {
                         empty.remove();
                     }
-
 
                     if (
                         payload.new.sender_id &&
@@ -2713,7 +2492,6 @@ function subscribeToMessages() {
                             )
                             .maybeSingle();
 
-
                         if (profile) {
 
                             profileCache.set(
@@ -2723,17 +2501,14 @@ function subscribeToMessages() {
                         }
                     }
 
-
                     reactionCache.set(
                         payload.new.id,
                         []
                     );
 
-
                     await renderMessage(
                         payload.new
                     );
-
 
                     scrollMessagesToBottom();
                 }
@@ -2757,11 +2532,9 @@ function subscribeToMessages() {
                         payload.new?.message_id ||
                         payload.old?.message_id;
 
-
                     if (!messageId) {
                         return;
                     }
-
 
                     const messageElement =
                         messagesContainer.querySelector(
@@ -2770,11 +2543,9 @@ function subscribeToMessages() {
                             )}"]`
                         );
 
-
                     if (!messageElement) {
                         return;
                     }
-
 
                     await refreshMessageReactions(
                         messageId
@@ -2792,7 +2563,6 @@ function subscribeToMessages() {
                 }
             );
 }
-
 
 /* =========================================================
    LOGOUT
@@ -2818,7 +2588,6 @@ async function logout() {
     }
 }
 
-
 /* =========================================================
    UI
 ========================================================= */
@@ -2834,7 +2603,6 @@ function showApplication() {
     );
 }
 
-
 function showLoginScreen() {
 
     loginScreen.classList.remove(
@@ -2846,7 +2614,6 @@ function showLoginScreen() {
     );
 }
 
-
 function clearLoginError() {
 
     if (!loginError) {
@@ -2857,7 +2624,6 @@ function clearLoginError() {
 
     loginError.className = "";
 }
-
 
 function showError(
     message
@@ -2874,7 +2640,6 @@ function showError(
         "error";
 }
 
-
 function showSuccess(
     message
 ) {
@@ -2890,7 +2655,6 @@ function showSuccess(
         "success";
 }
 
-
 function showChatError(
     message
 ) {
@@ -2900,33 +2664,26 @@ function showChatError(
         message
     );
 
-
     if (!messagesContainer) {
         return;
     }
 
-
     const element =
         document.createElement("div");
 
-
     element.className =
         "chat-error";
-
 
     element.textContent =
         message ||
         "حدث خطأ.";
 
-
     messagesContainer.appendChild(
         element
     );
 
-
     scrollMessagesToBottom();
 }
-
 
 function setButtonLoading(
     button,
@@ -2938,14 +2695,12 @@ function setButtonLoading(
         return;
     }
 
-
     button.disabled =
         loading;
 
     button.textContent =
         text;
 }
-
 
 function setActiveButton(
     button
@@ -2964,7 +2719,6 @@ function setActiveButton(
             }
         );
 
-
     if (button) {
 
         button.classList.add(
@@ -2972,7 +2726,6 @@ function setActiveButton(
         );
     }
 }
-
 
 /* =========================================================
    FILE PREVIEW
@@ -2982,11 +2735,9 @@ function clearFilePreview() {
 
     selectedImage = null;
 
-
     if (imageInput) {
         imageInput.value = "";
     }
-
 
     if (filePreview) {
 
@@ -2997,7 +2748,6 @@ function clearFilePreview() {
         );
     }
 }
-
 
 /* =========================================================
    HELPERS
@@ -3012,16 +2762,13 @@ function escapeHtml(
             "div"
         );
 
-
     div.textContent =
         value == null
             ? ""
             : String(value);
 
-
     return div.innerHTML;
 }
-
 
 function cssEscape(
     value
@@ -3038,14 +2785,12 @@ function cssEscape(
         );
     }
 
-
     return String(value)
         .replace(
             /["\\]/g,
             "\\$&"
         );
 }
-
 
 function getFileExtension(
     filename
@@ -3054,11 +2799,9 @@ function getFileExtension(
     const parts =
         filename.split(".");
 
-
     if (parts.length < 2) {
         return "bin";
     }
-
 
     return parts
         .pop()
@@ -3069,7 +2812,6 @@ function getFileExtension(
         ) || "bin";
 }
 
-
 function formatDate(
     dateString
 ) {
@@ -3078,10 +2820,8 @@ function formatDate(
         return "";
     }
 
-
     const date =
         new Date(dateString);
-
 
     return date.toLocaleString(
         "ar-DZ",
@@ -3094,18 +2834,15 @@ function formatDate(
     );
 }
 
-
 function scrollMessagesToBottom() {
 
     if (!messagesContainer) {
         return;
     }
 
-
     messagesContainer.scrollTop =
         messagesContainer.scrollHeight;
 }
-
 
 /* =========================================================
    AUTH ERROR
@@ -3121,7 +2858,6 @@ function getAuthErrorMessage(
             ""
         ).toLowerCase();
 
-
     if (
         message.includes(
             "invalid login credentials"
@@ -3130,7 +2866,6 @@ function getAuthErrorMessage(
 
         return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
     }
-
 
     if (
         message.includes(
@@ -3141,7 +2876,6 @@ function getAuthErrorMessage(
         return "تم تجاوز حد إرسال رسائل الاسترجاع مؤقتًا من Supabase. انتظر قليلًا قبل طلب رسالة جديدة.";
     }
 
-
     if (
         message.includes(
             "rate limit"
@@ -3150,7 +2884,6 @@ function getAuthErrorMessage(
 
         return "تم تجاوز الحد المسموح مؤقتًا. حاول مرة أخرى لاحقًا.";
     }
-
 
     if (
         message.includes(
@@ -3161,7 +2894,6 @@ function getAuthErrorMessage(
         return "لا يوجد حساب بهذا البريد الإلكتروني.";
     }
 
-
     if (
         message.includes(
             "password should be at least"
@@ -3171,9 +2903,13 @@ function getAuthErrorMessage(
         return "كلمة المرور قصيرة جدًا.";
     }
 
-
     return (
         error?.message ||
         "حدث خطأ غير معروف."
     );
 }
+
+window.SUPABASE_URL = "https://kdbxfsifrzoohgihqqqz.supabase.co";
+
+window.SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkYnhmc2lmcnpvb2hnaWhxcXF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxMTQzNTcsImV4cCI6MjEwNDY5MDM1N30.FqQnBYtv4nkW4OC8UAt9nJBzysaFoXuoPZA-yTso9kk";
