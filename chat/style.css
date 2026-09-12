@@ -1597,3 +1597,42 @@ button {
         transition-duration: 0.01ms !important;
     }
 }
+/* =========================================================
+   DELETE MESSAGE BUTTON (Telegram Style)
+========================================================= */
+.delete-message-btn {
+    position: absolute;
+    top: -10px;
+    background: #ffffff;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 20;
+    font-size: 13px;
+}
+
+/* موضع الزر حسب نوع الرسالة */
+.message.own .delete-message-btn { right: -10px; }
+.message:not(.own) .delete-message-btn { left: -10px; }
+
+/* إظهار الزر عند تمرير الماوس */
+.message:hover .delete-message-btn { opacity: 1; visibility: visible; }
+.delete-message-btn:hover { background: #fee2e2; transform: scale(1.15); }
+
+/* تأثير اختفاء الرسالة عند الحذف */
+.message.deleting {
+    opacity: 0.3;
+    transform: scale(0.95);
+    pointer-events: none;
+    transition: all 0.3s;
+}
