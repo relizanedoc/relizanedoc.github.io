@@ -2335,79 +2335,55 @@ function subscribeToMessages() {
                 `chat-${conversationId}`
             )
 
-            /* -----------------------------------------
-               NEW MESSAGE
+           /* -----------------------------------------
+               NEW / DELETE MESSAGE (محدثة)
             ----------------------------------------- */
-
             .on(
                 "postgres_changes",
                 {
-                    event: "INSERT",
+                    event: "*", // استماع لكل الأحداث (INSERT و DELETE)
                     schema: "public",
-                    table: "messages",
-                    filter:
-                        `conversation_id=eq.${conversationId}`
+                    table: "messages"
                 },
-
                 async function (payload) {
-
-                    if (
-                        !currentConversation ||
-                        payload.new.conversation_id !==
-                        currentConversation.id
-                    ) {
-
+                    
+                    // -- حالة حذف رسالة --
+                    if (payload.eventType === "DELETE") {
+                        const deletedId = payload.old.id;
+                        const msgElement = messagesContainer.querySelector(`[data-message-id="${cssEscape(deletedId)}"]`);
+                        if (msgElement) {
+                            msgElement.classList.add("deleting");
+                            setTimeout(() => msgElement.remove(), 300); // حذفها مع حركة انسيابية
+                        }
                         return;
                     }
 
-                    const empty =
-                        messagesContainer.querySelector(
-                            ".empty-messages"
-                        );
-
-                    if (empty) {
-                        empty.remove();
-                    }
-
-                    if (
-                        payload.new.sender_id &&
-                        !profileCache.has(
-                            payload.new.sender_id
-                        )
-                    ) {
-
-                        const {
-                            data: profile
-                        } = await db
-                            .from("profiles")
-                            .select(
-                                "id, display_name, role"
-                            )
-                            .eq(
-                                "id",
-                                payload.new.sender_id
-                            )
-                            .maybeSingle();
-
-                        if (profile) {
-
-                            profileCache.set(
-                                profile.id,
-                                profile
-                            );
+                    // -- حالة رسالة جديدة --
+                    if (payload.eventType === "INSERT") {
+                        if (
+                            !currentConversation ||
+                            payload.new.conversation_id !== currentConversation.id
+                        ) {
+                            return;
                         }
+
+                        const empty = messagesContainer.querySelector(".empty-messages");
+                        if (empty) empty.remove();
+
+                        if (payload.new.sender_id && !profileCache.has(payload.new.sender_id)) {
+                            const { data: profile } = await db
+                                .from("profiles")
+                                .select("id, display_name, role")
+                                .eq("id", payload.new.sender_id)
+                                .maybeSingle();
+
+                            if (profile) profileCache.set(profile.id, profile);
+                        }
+
+                        reactionCache.set(payload.new.id, []);
+                        await renderMessage(payload.new);
+                        scrollMessagesToBottom();
                     }
-
-                    reactionCache.set(
-                        payload.new.id,
-                        []
-                    );
-
-                    await renderMessage(
-                        payload.new
-                    );
-
-                    scrollMessagesToBottom();
                 }
             )
 
