@@ -29,7 +29,7 @@ body {
     --sidebar-hover: #243047;
 
     --page: #f3f6fa;
-    --chat-bg: #f7f9fc;
+    --chat-bg: #efeae2; /* تعديل: لون خلفية الواتساب المريح */
 
     --white: #ffffff;
     --text: #172033;
@@ -668,23 +668,18 @@ button {
     min-height: 0;
 
     overflow-y: auto;
+    overflow-x: hidden; /* تم الإصلاح: إخفاء التمرير الأفقي */
 
     display: flex;
     flex-direction: column;
 
-    gap: 6px;
+    gap: 8px; /* تم الإصلاح: مسافة متناسقة بين الرسائل */
 
-    padding: 22px 32px 25px;
+    padding: 22px 5% 25px; /* تم الإصلاح: مسافات جانبية آمنة */
 
     scroll-behavior: smooth;
 
-    background:
-        radial-gradient(
-            circle at 50% 0,
-            rgba(219, 234, 254, 0.45),
-            transparent 43%
-        ),
-        #f7f9fc;
+    background: var(--chat-bg);
 }
 
 
@@ -706,7 +701,7 @@ button {
 }
 
 .message.own {
-    justify-content: flex-end;
+    justify-content: flex-end; /* تم الإصلاح: رسائلك في اليسار */
 }
 
 @keyframes messageIn {
@@ -729,7 +724,7 @@ button {
 .message-wrapper {
     position: relative;
 
-    max-width: min(68%, 690px);
+    max-width: 75%; /* تم الإصلاح: حجم الرسالة منطقي كواتساب */
 
     display: flex;
     flex-direction: column;
@@ -751,18 +746,18 @@ button {
 
     min-width: 90px;
 
-    padding: 9px 13px 7px;
+    padding: 8px 12px 10px 12px;
 
-    border: 1px solid #e5e9ef;
-
-    border-radius: 17px;
+    border-radius: 12px;
 
     background: #ffffff;
 
     color: #172033;
 
     box-shadow:
-        0 2px 7px rgba(15, 23, 42, 0.045);
+        0 1px 2px rgba(11,20,26,0.15); /* ظل خفيف وواقعي */
+        
+    border-top-right-radius: 0; /* شكل الذيل للرسائل المستلمة */
 
     transition:
         box-shadow 0.18s,
@@ -771,24 +766,14 @@ button {
 
 .message:hover .message-bubble {
     box-shadow:
-        0 5px 16px rgba(15, 23, 42, 0.08);
+        0 3px 10px rgba(15, 23, 42, 0.08);
 }
 
 .message.own .message-bubble {
-    background:
-        linear-gradient(
-            145deg,
-            #eaf3ff,
-            #e3efff
-        );
+    background: #d9fdd3; /* تم الإصلاح: لون رسائلك الأخضر */
 
-    border-color: #d4e5fb;
-
-    border-bottom-right-radius: 5px;
-}
-
-.message:not(.own) .message-bubble {
-    border-bottom-left-radius: 5px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 12px;
 }
 
 
@@ -799,16 +784,16 @@ button {
 .message-sender {
     margin-bottom: 4px;
 
-    color: #2563eb;
+    color: #106f3e;
 
-    font-size: 11px;
+    font-size: 12.5px;
     font-weight: 800;
 
     line-height: 1.35;
 }
 
 .message.own .message-sender {
-    color: #4673b7;
+    display: none; /* إخفاء اسمك من رسائلك لتقليل الازدحام */
 }
 
 
@@ -821,12 +806,14 @@ button {
 
     word-break: break-word;
 
-    line-height: 1.7;
+    line-height: 1.6;
 
     color: #172033;
 
-    font-size: 14px;
+    font-size: 14.5px;
     font-weight: 500;
+    
+    padding-bottom: 14px; /* مساحة مخصصة للوقت */
 }
 
 
@@ -835,29 +822,38 @@ button {
 ========================================================= */
 
 .message-footer {
+    position: absolute;
+    
+    bottom: 4px;
+    left: 10px;
+
     display: flex;
     align-items: center;
     justify-content: flex-start;
 
-    gap: 5px;
+    gap: 4px;
 
     margin-top: 3px;
 
-    direction: ltr;
+    direction: ltr; /* الترتيب الصحيح للوقت والصح */
+}
+
+.message.own .message-footer {
+    left: 8px;
 }
 
 .message-time {
-    color: #96a0af;
+    color: #667781;
 
-    font-size: 9px;
+    font-size: 10.5px;
 
     direction: rtl;
 }
 
 .message-status {
-    color: #4b82d9;
+    color: #53bdeb; /* لون الصح الأزرق */
 
-    font-size: 10px;
+    font-size: 13px;
 
     letter-spacing: -2px;
 }
@@ -882,13 +878,15 @@ button {
 
     width: auto;
     max-width: 100%;
-    max-height: 420px;
+    max-height: 350px;
 
     object-fit: cover;
 
-    border-radius: 13px;
+    border-radius: 8px;
 
     cursor: pointer;
+    
+    margin-bottom: 12px;
 
     transition:
         transform 0.25s ease;
@@ -904,11 +902,11 @@ button {
 ========================================================= */
 
 .message-audio {
-    width: min(330px, 100%);
+    width: min(250px, 100%);
 
-    height: 42px;
+    height: 40px;
 
-    margin: 3px 0;
+    margin: 3px 0 10px 0;
 }
 
 
@@ -919,21 +917,21 @@ button {
 .reaction-picker {
     position: absolute;
 
-    top: -47px;
-    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
 
     display: flex;
     align-items: center;
 
-    gap: 1px;
+    gap: 2px;
 
-    padding: 5px 6px;
+    padding: 6px 8px;
 
     background: rgba(255, 255, 255, 0.98);
 
     border: 1px solid #e1e7ef;
 
-    border-radius: 18px;
+    border-radius: 20px;
 
     box-shadow:
         0 9px 27px rgba(15, 23, 42, 0.14);
@@ -941,26 +939,24 @@ button {
     opacity: 0;
     visibility: hidden;
 
-    transform:
-        translateY(5px)
-        scale(0.95);
-
     transition:
-        opacity 0.16s ease,
-        visibility 0.16s ease,
-        transform 0.16s ease;
+        opacity 0.2s ease,
+        visibility 0.2s ease;
 
     z-index: 30;
 }
 
-.message:hover .reaction-picker,
-.reaction-picker:hover {
+.message:not(.own) .reaction-picker {
+    left: -170px;
+}
+
+.message.own .reaction-picker {
+    right: -170px;
+}
+
+.message:hover .reaction-picker {
     opacity: 1;
     visibility: visible;
-
-    transform:
-        translateY(0)
-        scale(1);
 }
 
 .reaction-button {
@@ -977,17 +973,14 @@ button {
 
     background: transparent;
 
-    font-size: 17px;
+    font-size: 18px;
 
     transition:
-        background 0.15s,
         transform 0.15s;
 }
 
 .reaction-button:hover {
-    background: #f1f5f9;
-
-    transform: scale(1.2);
+    transform: scale(1.3);
 }
 
 
@@ -998,18 +991,14 @@ button {
 .message-reactions {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
 
-    gap: 3px;
+    gap: 4px;
 
-    margin-top: -6px;
-    margin-right: 9px;
+    margin-top: -10px; /* سحب التفاعل ليظهر على حافة الرسالة */
+    padding: 0 10px;
 
     z-index: 5;
-}
-
-.message.own .message-reactions {
-    margin-right: 0;
-    margin-left: 9px;
 }
 
 .reaction-summary {
@@ -1020,7 +1009,7 @@ button {
     align-items: center;
     justify-content: center;
 
-    gap: 3px;
+    gap: 4px;
 
     padding: 0 7px;
 
@@ -1031,34 +1020,31 @@ button {
     background: #ffffff;
 
     box-shadow:
-        0 2px 6px rgba(15, 23, 42, 0.07);
+        0 1px 3px rgba(15, 23, 42, 0.07);
 
-    font-size: 13px;
+    font-size: 12px;
 
     cursor: pointer;
 
     transition:
-        transform 0.15s,
         background 0.15s,
         border-color 0.15s;
 }
 
 .reaction-summary:hover {
-    transform: translateY(-1px);
-
     background: #f8fafc;
 }
 
 .reaction-summary.mine {
-    background: #edf5ff;
+    background: #e7f3ff;
 
-    border-color: #a9c8f7;
+    border-color: #b0d4fa;
 }
 
 .reaction-summary b {
     color: #667386;
 
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
 }
 
@@ -1391,7 +1377,7 @@ button {
     }
 
     .message-wrapper {
-        max-width: 78%;
+        max-width: 85%;
     }
 }
 
@@ -1469,26 +1455,31 @@ button {
     }
 
     .message-wrapper {
-        max-width: 88%;
+        max-width: 95%;
+    }
+    
+    .reaction-picker {
+        top: 100%;
+        transform: none;
+        
+        left: 0 !important;
+        right: 0 !important;
+        
+        margin-top: 5px;
     }
 
     .message-bubble {
-        padding: 8px 11px 7px;
+        padding: 8px 11px 12px;
     }
 
     .message-text {
-        font-size: 13px;
+        font-size: 13.5px;
 
         line-height: 1.65;
     }
 
     .message-sender {
-        font-size: 10px;
-    }
-
-    .reaction-picker {
-        right: auto;
-        left: 0;
+        font-size: 11.5px;
     }
 
     #messageForm {
@@ -1566,13 +1557,7 @@ button {
     }
 
     .message-wrapper {
-        max-width: 91%;
-    }
-
-    .message-bubble {
-        max-width: 100%;
-
-        border-radius: 15px;
+        max-width: 98%;
     }
 
     #messageForm {
