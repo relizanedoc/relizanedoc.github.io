@@ -1570,13 +1570,14 @@ async function toggleReaction(
 
     try {
 
+        // 1. نبحث عن "أي" تفاعل لهذا المستخدم على هذه الرسالة (بغض النظر عن نوع الإيموجي)
         const {
             data: existing,
             error: findError
         } = await db
             .from("message_reactions")
             .select(
-                "id"
+                "id, reaction"
             )
             .eq(
                 "message_id",
@@ -1585,10 +1586,6 @@ async function toggleReaction(
             .eq(
                 "user_id",
                 currentUser.id
-            )
-            .eq(
-                "reaction",
-                reaction
             )
             .maybeSingle();
 
@@ -1604,32 +1601,51 @@ async function toggleReaction(
 
         if (existing) {
 
-            const {
-                error
-            } = await db
-                .from("message_reactions")
-                .delete()
-                .eq(
-                    "id",
-                    existing.id
-                );
+            // 2. إذا كان المستخدم قد تفاعل مسبقاً بنفس الإيموجي الذي ضغط عليه الآن -> نقوم بحذفه (إلغاء التفاعل)
+            if (existing.reaction === reaction) {
 
-            if (error) {
-
-                console.error(
-                    "Delete reaction error:",
+                const {
                     error
-                );
+                } = await db
+                    .from("message_reactions")
+                    .delete()
+                    .eq(
+                        "id",
+                        existing.id
+                    );
 
-                showChatError(
-                    "تعذر إزالة التفاعل."
-                );
+                if (error) {
+                    console.error("Delete reaction error:", error);
+                    showChatError("تعذر إزالة التفاعل.");
+                    return;
+                }
 
-                return;
+            } else {
+
+                // 3. إذا ضغط على إيموجي مختلف -> نقوم بتحديث التفاعل القديم واستبداله بالجديد
+                const {
+                    error
+                } = await db
+                    .from("message_reactions")
+                    .update({
+                        reaction: reaction
+                    })
+                    .eq(
+                        "id",
+                        existing.id
+                    );
+
+                if (error) {
+                    console.error("Update reaction error:", error);
+                    showChatError("تعذر تغيير التفاعل.");
+                    return;
+                }
+
             }
 
         } else {
 
+            // 4. إذا لم يكن للمستخدم أي تفاعل سابق على هذه الرسالة -> نضيف تفاعلاً جديداً
             const {
                 error
             } = await db
@@ -1659,6 +1675,7 @@ async function toggleReaction(
             }
         }
 
+        // تحديث واجهة التفاعلات بعد الانتهاء
         await refreshMessageReactions(
             messageId
         );
