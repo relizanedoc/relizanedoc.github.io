@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0f172a">
     <title>مركز التواصل</title>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
@@ -20,23 +18,16 @@
             <div class="logo" aria-hidden="true">💬</div>
             <h1 id="loginTitle">مركز التواصل</h1>
             <p>سجّل دخولك للبدء بالمحادثة</p>
-
             <div class="field">
                 <label for="email">البريد الإلكتروني</label>
-                <input id="email" type="email" placeholder="example@email.com"
-                       autocomplete="email" inputmode="email">
+                <input id="email" type="email" placeholder="example@email.com" autocomplete="email" inputmode="email" dir="ltr">
             </div>
-
             <div class="field">
                 <label for="password">كلمة المرور</label>
-                <input id="password" type="password" placeholder="أدخل كلمة المرور"
-                       autocomplete="current-password">
+                <input id="password" type="password" placeholder="أدخل كلمة المرور" autocomplete="current-password" dir="ltr">
             </div>
-
             <button id="loginButton" type="button" class="primary-button">تسجيل الدخول</button>
-            <button id="forgotPasswordButton" type="button" class="forgot-password">
-                نسيت كلمة المرور؟
-            </button>
+            <button id="forgotPasswordButton" type="button" class="forgot-password">نسيت كلمة المرور؟</button>
             <div id="loginError" class="error" role="alert" aria-live="polite"></div>
         </div>
     </div>
@@ -50,7 +41,6 @@
                     <small>مساحتك للتواصل</small>
                 </div>
             </div>
-
             <div class="sidebar-content">
                 <button id="groupButton" class="conversation-button active" type="button">
                     <span class="conversation-icon" aria-hidden="true">👥</span>
@@ -60,22 +50,17 @@
                     </span>
                     <span class="active-dot" aria-hidden="true"></span>
                 </button>
-
                 <div class="conversation-section-title">المحادثات الخاصة</div>
                 <div id="customersList" class="customers-list"></div>
             </div>
-
             <button id="logoutButton" class="logout" type="button">
-                <span aria-hidden="true">↪</span>
-                <span>تسجيل الخروج</span>
+                <span aria-hidden="true">↪</span><span>تسجيل الخروج</span>
             </button>
         </aside>
 
         <main class="chat">
             <section class="language-banner" aria-label="تعلم اللغة الإسبانية">
-                <div class="language-banner-flag" aria-hidden="true">
-                    <span></span><span></span><span></span>
-                </div>
+                <div class="language-banner-flag" aria-hidden="true"><span></span><span></span><span></span></div>
                 <div class="language-banner-content">
                     <strong>¡Aprende español!</strong>
                     <span>تعلّم اللغة الإسبانية خطوة بخطوة</span>
@@ -89,10 +74,7 @@
                     <h2 id="conversationTitle">المجموعة العامة</h2>
                     <p id="conversationSubtitle">المحادثة الجماعية</p>
                 </div>
-                <div class="chat-header-status">
-                    <span class="status-dot"></span>
-                    متصل
-                </div>
+                <div class="chat-header-status"><span class="status-dot"></span>متصل</div>
             </header>
 
             <section id="messages" class="messages" aria-live="polite">
@@ -104,24 +86,16 @@
             </section>
 
             <div id="filePreview" class="file-preview hidden"></div>
-
             <form id="messageForm" class="composer">
                 <label id="imageButton" class="action-button" title="إرسال صورة" aria-label="إرسال صورة">
-                    📷
-                    <input id="imageInput" type="file" accept="image/*" hidden>
+                    📷<input id="imageInput" type="file" accept="image/*" hidden>
                 </label>
-
-                <button id="recordButton" type="button" class="action-button"
-                        title="تسجيل صوتي" aria-label="تسجيل صوتي">🎤</button>
-
-                <input id="messageInput" type="text" placeholder="اكتب رسالتك هنا..."
-                       autocomplete="off" maxlength="5000" aria-label="نص الرسالة">
-
+                <button id="recordButton" type="button" class="action-button" title="تسجيل صوتي" aria-label="تسجيل صوتي">🎤</button>
+                <input id="messageInput" type="text" placeholder="اكتب رسالتك هنا..." autocomplete="off" maxlength="5000" aria-label="نص الرسالة">
                 <button type="submit" class="send-button" aria-label="إرسال الرسالة">➤</button>
             </form>
         </main>
     </div>
-
-    <script src="app.js?v=12"></script>
+    <script src="app.js?v=13"></script>
 </body>
 </html>
