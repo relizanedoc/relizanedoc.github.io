@@ -1122,74 +1122,138 @@ label:focus-visible {
 }
 
 /* =========================================================
-   REACTION PICKER — safe positioning
+   PROFESSIONAL REACTION PICKER
 ========================================================= */
 
-/* لا تخرج قائمة الإيموجي خارج حدود المحادثة */
+.message-wrapper {
+    position: relative;
+}
+
+/* شريط التفاعلات */
 .reaction-picker {
-    top: auto;
+    position: absolute;
+    z-index: 100;
+
     bottom: calc(100% + 8px);
-    left: auto !important;
-    right: auto !important;
-    max-width: min(100%, 250px);
-    flex-wrap: wrap;
-    transform: translateY(5px);
+
+    display: flex;
+    align-items: center;
+    gap: 2px;
+
+    width: max-content;
+    max-width: min(270px, calc(100vw - 30px));
+
+    padding: 6px 8px;
+
+    direction: ltr;
+
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 18px;
+
+    box-shadow:
+        0 10px 30px rgba(15, 23, 42, 0.14),
+        0 2px 8px rgba(15, 23, 42, 0.08);
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transform: translateY(6px) scale(.96);
+
+    transition:
+        opacity .18s ease,
+        visibility .18s ease,
+        transform .18s ease;
 }
 
-.message:not(.own) .reaction-picker {
-    left: 0 !important;
-    right: auto !important;
-}
-
+/* الرسائل الخاصة بك */
 .message.own .reaction-picker {
-    right: 0 !important;
-    left: auto !important;
+    right: 0;
+    left: auto;
 }
 
+/* رسائل الآخرين */
+.message:not(.own) .reaction-picker {
+    left: 0;
+    right: auto;
+}
+
+/* إظهار التفاعلات */
 .message:hover .reaction-picker,
-.reaction-picker:focus-within {
-    transform: translateY(0);
+.message:focus-within .reaction-picker,
+.reaction-picker:hover {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
 }
 
-/* على الشاشات الصغيرة: تظهر أسفل الفقاعة دون قصّ */
+/* زر الإيموجي */
+.reaction-button {
+    width: 34px;
+    height: 34px;
+
+    display: grid;
+    place-items: center;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: transparent;
+
+    font-family:
+        "Apple Color Emoji",
+        "Segoe UI Emoji",
+        "Noto Color Emoji",
+        sans-serif;
+
+    font-size: 20px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        background .15s ease,
+        transform .15s ease;
+}
+
+/* Hover */
+.reaction-button:hover {
+    background: #f1f5f9;
+    transform: translateY(-3px) scale(1.12);
+}
+
+/* ضغط */
+.reaction-button:active {
+    transform: scale(.92);
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
 @media (max-width: 650px) {
-    .language-banner {
-        min-height: 66px;
-        padding: 10px 14px;
-        gap: 10px;
-    }
-
-    .language-banner-flag {
-        width: 48px;
-        height: 32px;
-        flex-basis: 48px;
-    }
-
-    .language-banner-content strong {
-        font-size: 14px;
-    }
-
-    .language-banner-content span {
-        font-size: 10px;
-    }
-
-    .language-banner-decoration {
-        font-size: 23px;
-    }
 
     .reaction-picker {
-        top: calc(100% + 7px);
-        bottom: auto;
-        max-width: 220px;
-        transform: translateY(-4px);
+        bottom: calc(100% + 7px);
+
+        max-width: calc(100vw - 24px);
+
+        padding: 5px 6px;
+
+        border-radius: 16px;
     }
 
-    .message:hover .reaction-picker,
-    .reaction-picker:focus-within {
-        transform: translateY(0);
+    .reaction-button {
+        width: 31px;
+        height: 31px;
+        font-size: 18px;
+        border-radius: 9px;
     }
 }
-
 /* =========================================================
    DELETE BUTTON — never clipped at viewport edges
 ========================================================= */
