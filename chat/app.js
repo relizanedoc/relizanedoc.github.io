@@ -1,25 +1,24 @@
 "use strict";
 
 /* =========================================================
-   SUPABASE
-========================================================= */
+   مركز التواصل
+   app.js
+   ========================================================= */
+
+/* =========================
+   1. SUPABASE
+   ========================= */
 
 const { createClient } = window.supabase;
-
-if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
-    throw new Error(
-        "SUPABASE_URL أو SUPABASE_ANON_KEY غير موجود في config.js"
-    );
-}
 
 const db = createClient(
     window.SUPABASE_URL,
     window.SUPABASE_ANON_KEY
 );
 
-/* =========================================================
-   DOM
-========================================================= */
+/* =========================
+   2. DOM ELEMENTS
+   ========================= */
 
 const loginScreen = document.getElementById("loginScreen");
 const app = document.getElementById("app");
@@ -28,47 +27,27 @@ const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 
 const loginButton = document.getElementById("loginButton");
-const forgotPasswordButton =
-    document.getElementById("forgotPasswordButton");
-
+const forgotPasswordButton = document.getElementById("forgotPasswordButton");
 const loginError = document.getElementById("loginError");
 
-const groupButton =
-    document.getElementById("groupButton");
+const groupButton = document.getElementById("groupButton");
+const customersList = document.getElementById("customersList");
+const logoutButton = document.getElementById("logoutButton");
 
-const customersList =
-    document.getElementById("customersList");
+const conversationTitle = document.getElementById("conversationTitle");
+const conversationSubtitle = document.getElementById("conversationSubtitle");
 
-const logoutButton =
-    document.getElementById("logoutButton");
+const messagesContainer = document.getElementById("messages");
 
-const conversationTitle =
-    document.getElementById("conversationTitle");
+const filePreview = document.getElementById("filePreview");
+const messageForm = document.getElementById("messageForm");
+const messageInput = document.getElementById("messageInput");
+const imageInput = document.getElementById("imageInput");
+const recordButton = document.getElementById("recordButton");
 
-const conversationSubtitle =
-    document.getElementById("conversationSubtitle");
-
-const messagesContainer =
-    document.getElementById("messages");
-
-const filePreview =
-    document.getElementById("filePreview");
-
-const messageForm =
-    document.getElementById("messageForm");
-
-const messageInput =
-    document.getElementById("messageInput");
-
-const imageInput =
-    document.getElementById("imageInput");
-
-const recordButton =
-    document.getElementById("recordButton");
-
-/* =========================================================
-   STATE
-========================================================= */
+/* =========================
+   3. APPLICATION STATE
+   ========================= */
 
 let currentUser = null;
 let currentProfile = null;
@@ -78,12 +57,12 @@ let realtimeChannel = null;
 
 let mediaRecorder = null;
 let audioChunks = [];
-let recording = false;
+let isRecording = false;
 
 let selectedImage = null;
+let contextMenu = null;
 
 const profileCache = new Map();
-
 const reactionCache = new Map();
 
 const REACTIONS = [
@@ -95,27 +74,15 @@ const REACTIONS = [
     "😡"
 ];
 
-/* =========================================================
-   START
-========================================================= */
+/* =========================
+   4. INITIALIZATION
+   ========================= */
 
-document.addEventListener(
-    "DOMContentLoaded",
-    initialize
-);
-
-/* =========================================================
-   INITIALIZE
-========================================================= */
+document.addEventListener("DOMContentLoaded", initialize);
 
 async function initialize() {
-
     try {
-
-        loginButton?.addEventListener(
-            "click",
-            login
-        );
+        loginButton?.addEventListener("click", login);
 
         forgotPasswordButton?.addEventListener(
             "click",
@@ -149,74 +116,67 @@ async function initialize() {
 
         messageInput?.addEventListener(
             "keydown",
-            function (event) {
-
+            event => {
                 if (
                     event.key === "Enter" &&
                     !event.shiftKey
                 ) {
-
                     event.preventDefault();
 
-                    messageForm.requestSubmit();
+                    if (typeof messageForm.requestSubmit === "function") {
+                        messageForm.requestSubmit();
+                    } else {
+                        sendMessage(event);
+                    }
                 }
             }
         );
 
-        db.auth.onAuthStateChange(
-            async function (event, session) {
+        document.addEventListener("click", event => {
+            if (
+                contextMenu &&
+                !contextMenu.contains(event.target)
+            ) {
+                closeContextMenu();
+            }
+        });
 
-                if (
-                    event ===
-                    "PASSWORD_RECOVERY"
-                ) {
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape") {
+                closeContextMenu();
+            }
+        });
 
+        window.addEventListener("resize", () => {
+            closeContextMenu();
+        });
+
+        db.auth.onAuthStateChange(async (event, session) => {
+            try {
+                if (event === "PASSWORD_RECOVERY") {
                     showPasswordUpdateScreen();
-
                     return;
                 }
 
                 if (
-                    event === "SIGNED_IN"
+                    event === "SIGNED_IN" &&
+                    session?.user &&
+                    !currentUser
                 ) {
-
-                    if (
-                        session?.user &&
-                        !currentUser
-                    ) {
-
-                        await startApplication(
-                            session.user
-                        );
-                    }
-
+                    await startApplication(session.user);
                     return;
                 }
 
-                if (
-                    event === "SIGNED_OUT"
-                ) {
-
-                    currentUser = null;
-                    currentProfile = null;
-                    currentConversation = null;
-
-                    profileCache.clear();
-                    reactionCache.clear();
-
-                    if (realtimeChannel) {
-
-                        await db.removeChannel(
-                            realtimeChannel
-                        );
-
-                        realtimeChannel = null;
-                    }
-
-                    showLoginScreen();
+                if (event === "SIGNED_OUT") {
+                    await resetApplication();
                 }
+            } catch (error) {
+                console.error(
+                    "Auth state error:",
+                    error
+                );
             }
-        );
+        });
 
         const {
             data,
@@ -224,86 +184,66 @@ async function initialize() {
         } = await db.auth.getSession();
 
         if (error) {
-
-            console.error(
-                "getSession error:",
-                error
+            console.error(error);
+            showLoginError(
+                authMessage(error)
             );
-
-            showLoginScreen();
-
             return;
         }
 
-        if (data.session) {
-
+        if (data?.session?.user) {
             await startApplication(
                 data.session.user
             );
-
         } else {
-
             showLoginScreen();
         }
 
     } catch (error) {
-
         console.error(
             "Initialization error:",
             error
         );
 
-        showError(
-            error.message ||
+        showLoginError(
             "حدث خطأ أثناء تشغيل التطبيق."
         );
     }
 }
 
-/* =========================================================
-   LOGIN
-========================================================= */
+/* =========================
+   5. LOGIN
+   ========================= */
 
 async function login() {
-
     clearLoginError();
 
-    const email =
-        emailInput.value.trim();
-
-    const password =
-        passwordInput.value;
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
 
     if (!email) {
-
-        showError(
+        showLoginError(
             "أدخل البريد الإلكتروني."
         );
-
         emailInput.focus();
-
         return;
     }
 
     if (!password) {
-
-        showError(
+        showLoginError(
             "أدخل كلمة المرور."
         );
-
         passwordInput.focus();
-
         return;
     }
 
-    setButtonLoading(
+    setButton(
         loginButton,
         true,
         "جارٍ تسجيل الدخول..."
     );
 
     try {
-
         const {
             data,
             error
@@ -313,26 +253,13 @@ async function login() {
         });
 
         if (error) {
-
-            console.error(
-                "Login error:",
-                error
-            );
-
-            showError(
-                getAuthErrorMessage(error)
-            );
-
-            return;
+            throw error;
         }
 
-        if (!data.session) {
-
-            showError(
-                "تعذر إنشاء جلسة تسجيل الدخول."
+        if (!data?.user) {
+            throw new Error(
+                "تعذر الحصول على بيانات المستخدم."
             );
-
-            return;
         }
 
         await startApplication(
@@ -340,20 +267,16 @@ async function login() {
         );
 
     } catch (error) {
-
         console.error(
-            "Unexpected login error:",
+            "Login error:",
             error
         );
 
-        showError(
-            error.message ||
-            "حدث خطأ أثناء تسجيل الدخول."
+        showLoginError(
+            authMessage(error)
         );
-
     } finally {
-
-        setButtonLoading(
+        setButton(
             loginButton,
             false,
             "تسجيل الدخول"
@@ -361,81 +284,59 @@ async function login() {
     }
 }
 
-/* =========================================================
-   PASSWORD RESET
-========================================================= */
+/* =========================
+   6. PASSWORD RESET
+   ========================= */
 
 async function resetPassword() {
-
     clearLoginError();
 
-    const email =
-        emailInput.value.trim();
+    const email = emailInput.value.trim();
 
     if (!email) {
-
-        showError(
+        showLoginError(
             "أدخل بريدك الإلكتروني أولاً."
         );
-
         emailInput.focus();
-
         return;
     }
 
-    setButtonLoading(
+    setButton(
         forgotPasswordButton,
         true,
         "جارٍ الإرسال..."
     );
 
     try {
-
-        const redirectTo =
-            window.location.origin + "/";
-
         const {
             error
         } = await db.auth.resetPasswordForEmail(
             email,
             {
-                redirectTo
+                redirectTo:
+                    window.location.origin + "/"
             }
         );
 
         if (error) {
-
-            console.error(
-                "Password reset error:",
-                error
-            );
-
-            showError(
-                getAuthErrorMessage(error)
-            );
-
-            return;
+            throw error;
         }
 
-        showSuccess(
+        showLoginSuccess(
             "تم إرسال رابط استرجاع كلمة المرور إلى بريدك الإلكتروني."
         );
 
     } catch (error) {
-
         console.error(
-            "Unexpected password reset error:",
+            "Password reset error:",
             error
         );
 
-        showError(
-            error.message ||
-            "حدث خطأ أثناء إرسال رابط الاسترجاع."
+        showLoginError(
+            authMessage(error)
         );
-
     } finally {
-
-        setButtonLoading(
+        setButton(
             forgotPasswordButton,
             false,
             "نسيت كلمة المرور؟"
@@ -443,49 +344,66 @@ async function resetPassword() {
     }
 }
 
-/* =========================================================
-   PASSWORD UPDATE
-========================================================= */
-
 function showPasswordUpdateScreen() {
-
     loginScreen.classList.remove("hidden");
     app.classList.add("hidden");
 
     const box =
         loginScreen.querySelector(".login-box");
 
-    box.innerHTML = `
+    if (!box) {
+        return;
+    }
 
-        <div class="logo">🔐</div>
+    box.innerHTML = `
+        <div class="logo" aria-hidden="true">🔐</div>
 
         <h1>تغيير كلمة المرور</h1>
 
-        <p>أدخل كلمة المرور الجديدة</p>
+        <p>
+            أدخل كلمة المرور الجديدة لحسابك
+        </p>
 
-        <input
-            id="newPassword"
-            type="password"
-            placeholder="كلمة المرور الجديدة"
-            autocomplete="new-password"
-        >
+        <div class="field">
+            <label for="newPassword">
+                كلمة المرور الجديدة
+            </label>
 
-        <input
-            id="confirmPassword"
-            type="password"
-            placeholder="تأكيد كلمة المرور"
-            autocomplete="new-password"
-        >
+            <input
+                id="newPassword"
+                type="password"
+                autocomplete="new-password"
+                placeholder="أدخل كلمة المرور الجديدة"
+            >
+        </div>
+
+        <div class="field">
+            <label for="confirmPassword">
+                تأكيد كلمة المرور
+            </label>
+
+            <input
+                id="confirmPassword"
+                type="password"
+                autocomplete="new-password"
+                placeholder="أعد كتابة كلمة المرور"
+            >
+        </div>
 
         <button
             id="updatePasswordButton"
             type="button"
+            class="primary-button"
         >
             حفظ كلمة المرور
         </button>
 
-        <div id="passwordUpdateError"></div>
-
+        <div
+            id="passwordUpdateError"
+            class="error"
+            role="alert"
+            aria-live="polite"
+        ></div>
     `;
 
     const newPassword =
@@ -499,54 +417,42 @@ function showPasswordUpdateScreen() {
             "updatePasswordButton"
         );
 
-    const updateError =
+    const errorBox =
         document.getElementById(
             "passwordUpdateError"
         );
 
-    updateButton.addEventListener(
+    updateButton?.addEventListener(
         "click",
-        async function () {
-
-            updateError.textContent = "";
-
+        async () => {
             const password =
                 newPassword.value;
 
             const confirmation =
                 confirmPassword.value;
 
-            if (!password) {
-
-                updateError.textContent =
-                    "أدخل كلمة المرور الجديدة.";
-
-                return;
-            }
+            errorBox.textContent = "";
+            errorBox.className = "error";
 
             if (password.length < 6) {
-
-                updateError.textContent =
+                errorBox.textContent =
                     "كلمة المرور يجب أن تكون 6 أحرف على الأقل.";
-
                 return;
             }
 
             if (password !== confirmation) {
-
-                updateError.textContent =
+                errorBox.textContent =
                     "كلمتا المرور غير متطابقتين.";
-
                 return;
             }
 
-            updateButton.disabled = true;
-
-            updateButton.textContent =
-                "جارٍ الحفظ...";
+            setButton(
+                updateButton,
+                true,
+                "جارٍ الحفظ..."
+            );
 
             try {
-
                 const {
                     error
                 } = await db.auth.updateUser({
@@ -554,135 +460,108 @@ function showPasswordUpdateScreen() {
                 });
 
                 if (error) {
-
-                    updateError.textContent =
-                        getAuthErrorMessage(error);
-
-                    return;
+                    throw error;
                 }
 
-                updateError.textContent =
+                errorBox.className =
+                    "success";
+
+                errorBox.textContent =
                     "تم تغيير كلمة المرور بنجاح.";
 
                 setTimeout(
-                    async function () {
-
+                    async () => {
                         await db.auth.signOut();
-
-                        window.location.reload();
-
                     },
-                    1500
+                    1200
                 );
 
             } catch (error) {
-
                 console.error(
-                    "Password update error:",
+                    "Update password error:",
                     error
                 );
 
-                updateError.textContent =
-                    error.message ||
-                    "حدث خطأ أثناء تغيير كلمة المرور.";
+                errorBox.className =
+                    "error";
+
+                errorBox.textContent =
+                    authMessage(error);
 
             } finally {
-
-                updateButton.disabled = false;
-
-                updateButton.textContent =
-                    "حفظ كلمة المرور";
+                setButton(
+                    updateButton,
+                    false,
+                    "حفظ كلمة المرور"
+                );
             }
         }
     );
 }
 
-/* =========================================================
-   START APPLICATION
-========================================================= */
+/* =========================
+   7. START APPLICATION
+   ========================= */
 
 async function startApplication(user) {
-
     if (!user) {
         return;
     }
 
     currentUser = user;
 
-    try {
+    const {
+        data,
+        error
+    } = await db
+        .from("profiles")
+        .select(
+            "id,display_name,role"
+        )
+        .eq("id", user.id)
+        .single();
 
-        const {
-            data,
-            error
-        } = await db
-            .from("profiles")
-            .select(
-                "id, display_name, role"
-            )
-            .eq(
-                "id",
-                user.id
-            )
-            .single();
-
-        if (error) {
-
-            console.error(
-                "Profile error:",
-                error
-            );
-
-            showError(
-                "تم تسجيل الدخول ولكن لم يتم العثور على ملف المستخدم في profiles."
-            );
-
-            return;
-        }
-
-        currentProfile = data;
-
-        profileCache.set(
-            data.id,
-            data
-        );
-
-        showApplication();
-
-        await loadCustomers();
-
-        await openGroupConversation();
-
-    } catch (error) {
-
+    if (error || !data) {
         console.error(
-            "Application startup error:",
+            "Profile error:",
             error
         );
 
-        showError(
-            error.message ||
-            "حدث خطأ أثناء تشغيل التطبيق."
+        showLoginError(
+            "تم تسجيل الدخول ولكن لم يتم العثور على ملف المستخدم في profiles."
         );
-    }
-}
 
-/* =========================================================
-   LOAD CUSTOMERS
-========================================================= */
-
-async function loadCustomers() {
-
-    customersList.innerHTML = "";
-
-    if (!currentProfile) {
         return;
     }
 
-    if (
-        currentProfile.role !==
-        "admin"
-    ) {
+    currentProfile = data;
 
+    profileCache.set(
+        data.id,
+        data
+    );
+
+    loginScreen.classList.add(
+        "hidden"
+    );
+
+    app.classList.remove(
+        "hidden"
+    );
+
+    await loadCustomers();
+
+    await openGroupConversation();
+}
+
+/* =========================
+   8. CUSTOMERS
+   ========================= */
+
+async function loadCustomers() {
+    customersList.innerHTML = "";
+
+    if (currentProfile?.role !== "admin") {
         customersList.innerHTML = `
             <div class="customer-empty">
                 محادثتك الخاصة مع الإدارة
@@ -698,18 +577,17 @@ async function loadCustomers() {
     } = await db
         .from("profiles")
         .select(
-            "id, display_name, role"
+            "id,display_name,role"
         )
-        .eq(
-            "role",
-            "customer"
-        )
+        .eq("role", "customer")
         .order(
-            "display_name"
+            "display_name",
+            {
+                ascending: true
+            }
         );
 
     if (error) {
-
         console.error(
             "Customers error:",
             error
@@ -725,7 +603,6 @@ async function loadCustomers() {
     }
 
     if (!data?.length) {
-
         customersList.innerHTML = `
             <div class="customer-empty">
                 لا يوجد عملاء
@@ -735,348 +612,351 @@ async function loadCustomers() {
         return;
     }
 
-    data.forEach(
-        function (customer) {
+    data.forEach(customer => {
+        profileCache.set(
+            customer.id,
+            customer
+        );
 
-            profileCache.set(
-                customer.id,
-                customer
-            );
+        const button =
+            document.createElement("button");
 
-            const button =
-                document.createElement("button");
+        button.type = "button";
 
-            button.type = "button";
+        button.className =
+            "conversation-button customer-button";
 
-            button.className =
-                "conversation-button customer-button";
+        button.innerHTML = `
+            <span
+                class="customer-icon"
+                aria-hidden="true"
+            >
+                👤
+            </span>
 
-            button.innerHTML = `
+            <span class="conversation-copy">
+                <strong>
+                    ${escapeHtml(
+                        customer.display_name ||
+                        "عميل"
+                    )}
+                </strong>
 
-                <span class="customer-icon">
-                    👤
-                </span>
+                <small>
+                    محادثة خاصة
+                </small>
+            </span>
+        `;
 
-                <div class="customer-info">
+        button.addEventListener(
+            "click",
+            () =>
+                openPrivateConversation(
+                    customer
+                )
+        );
 
-                    <strong>
-                        ${escapeHtml(
-                            customer.display_name ||
-                            "عميل"
-                        )}
-                    </strong>
-
-                    <small>
-                        محادثة خاصة
-                    </small>
-
-                </div>
-
-            `;
-
-            button.addEventListener(
-                "click",
-                function () {
-
-                    openPrivateConversation(
-                        customer
-                    );
-                }
-            );
-
-            customersList.appendChild(
-                button
-            );
-        }
-    );
+        customersList.appendChild(
+            button
+        );
+    });
 }
 
-/* =========================================================
-   OPEN GROUP
-========================================================= */
+/* =========================
+   9. GROUP CONVERSATION
+   ========================= */
 
 async function openGroupConversation() {
-
     if (!currentUser) {
         return;
     }
 
-    try {
+    closeContextMenu();
 
-        const {
-            data,
-            error
-        } = await db
-            .from("conversations")
-            .select("*")
-            .eq(
-                "type",
-                "group"
-            )
-            .limit(1)
-            .maybeSingle();
+    let {
+        data,
+        error
+    } = await db
+        .from("conversations")
+        .select("*")
+        .eq("type", "group")
+        .limit(1)
+        .maybeSingle();
 
-        if (error) {
-
-            console.error(
-                "Group conversation error:",
-                error
-            );
-
-            showChatError(
-                "تعذر الوصول إلى المحادثة الجماعية."
-            );
-
-            return;
-        }
-
-        if (!data) {
-
-            showChatError(
-                "لم يتم إنشاء المحادثة الجماعية في قاعدة البيانات بعد."
-            );
-
-            return;
-        }
-
-        await selectConversation(
-            data,
-            "المجموعة",
-            "المحادثة الجماعية"
-        );
-
-        setActiveButton(
-            groupButton
-        );
-
-    } catch (error) {
-
+    if (error) {
         console.error(
-            "Open group error:",
+            "Group conversation error:",
             error
         );
 
         showChatError(
-            error.message ||
-            "حدث خطأ أثناء فتح المجموعة."
+            "تعذر الوصول إلى المحادثة الجماعية."
         );
-    }
-}
 
-/* =========================================================
-   OPEN PRIVATE
-========================================================= */
-
-async function openPrivateConversation(
-    customer
-) {
-
-    if (!currentUser || !customer) {
         return;
     }
 
-    try {
+    /*
+     * إذا لم تكن المجموعة موجودة، يحاول
+     * المسؤول إنشاءها تلقائيًا.
+     */
+    if (!data && currentProfile?.role === "admin") {
+        const created =
+            await db
+                .from("conversations")
+                .insert({
+                    type: "group",
+                    customer_id: null
+                })
+                .select("*")
+                .single();
 
-        let conversation = null;
-
-        const {
-            data: existingConversation,
-            error: searchError
-        } = await db
-            .from("conversations")
-            .select("*")
-            .eq(
-                "type",
-                "private"
-            )
-            .eq(
-                "customer_id",
-                customer.id
-            )
-            .maybeSingle();
-
-        if (searchError) {
-
+        if (created.error) {
             console.error(
-                "Private conversation search error:",
-                searchError
+                "Create group error:",
+                created.error
             );
 
             showChatError(
-                "تعذر البحث عن المحادثة الخاصة."
+                "لم يتم إنشاء المحادثة الجماعية. تأكد من سياسات RLS لجدول conversations."
             );
 
             return;
         }
 
-        conversation =
-            existingConversation;
+        data = created.data;
+    }
 
-        if (
-            !conversation &&
-            currentProfile?.role ===
-            "admin"
-        ) {
+    if (!data) {
+        showChatError(
+            "لم يتم إنشاء المحادثة الجماعية في قاعدة البيانات بعد."
+        );
 
-            const {
-                data: createdConversation,
-                error: createError
-            } = await db
+        return;
+    }
+
+    await selectConversation(
+        data,
+        "المجموعة العامة",
+        "المحادثة الجماعية"
+    );
+
+    setActive(
+        groupButton
+    );
+}
+
+/* =========================
+   10. PRIVATE CONVERSATION
+   ========================= */
+
+async function openPrivateConversation(
+    customer
+) {
+    if (!customer?.id) {
+        return;
+    }
+
+    closeContextMenu();
+
+    let {
+        data,
+        error
+    } = await db
+        .from("conversations")
+        .select("*")
+        .eq("type", "private")
+        .eq(
+            "customer_id",
+            customer.id
+        )
+        .maybeSingle();
+
+    if (error) {
+        console.error(
+            "Private conversation lookup:",
+            error
+        );
+
+        showChatError(
+            "تعذر البحث عن المحادثة الخاصة."
+        );
+
+        return;
+    }
+
+    /*
+     * المسؤول يستطيع إنشاء محادثة خاصة
+     * للعميل إذا لم تكن موجودة.
+     */
+    if (
+        !data &&
+        currentProfile?.role === "admin"
+    ) {
+        const created =
+            await db
                 .from("conversations")
                 .insert({
                     type: "private",
-                    customer_id:
-                        customer.id
+                    customer_id: customer.id
                 })
-                .select()
+                .select("*")
                 .single();
 
-            if (createError) {
+        if (created.error) {
+            console.error(
+                "Create private conversation:",
+                created.error
+            );
 
-                console.error(
-                    "Create private conversation error:",
-                    createError
-                );
+            showChatError(
+                "تعذر إنشاء المحادثة الخاصة. تأكد من سياسات RLS."
+            );
 
-                showChatError(
-                    "تعذر إنشاء المحادثة الخاصة. تأكد من سياسات RLS."
-                );
+            return;
+        }
 
-                return;
-            }
+        data = created.data;
 
-            conversation =
-                createdConversation;
-
-            const members = [
-                {
-                    conversation_id:
-                        conversation.id,
-
-                    user_id:
-                        customer.id
-                },
-
-                {
-                    conversation_id:
-                        conversation.id,
-
-                    user_id:
-                        currentUser.id
-                }
-            ];
-
-            const {
-                error: membersError
-            } = await db
+        /*
+         * إضافة الطرفين إلى conversation_members.
+         */
+        const members =
+            await db
                 .from("conversation_members")
                 .upsert(
-                    members,
+                    [
+                        {
+                            conversation_id:
+                                data.id,
+                            user_id:
+                                customer.id
+                        },
+                        {
+                            conversation_id:
+                                data.id,
+                            user_id:
+                                currentUser.id
+                        }
+                    ],
                     {
                         onConflict:
                             "conversation_id,user_id"
                     }
                 );
 
-            if (membersError) {
-
-                console.error(
-                    "Members error:",
-                    membersError
-                );
-
-                showChatError(
-                    "تم إنشاء المحادثة ولكن تعذر إضافة الأعضاء."
-                );
-
-                return;
-            }
-        }
-
-        if (!conversation) {
-
-            showChatError(
-                "لا توجد محادثة خاصة لهذا العميل."
+        if (members.error) {
+            console.error(
+                "conversation_members error:",
+                members.error
             );
-
-            return;
         }
-
-        await selectConversation(
-            conversation,
-            customer.display_name ||
-            "محادثة خاصة",
-            "محادثة خاصة"
-        );
-
-        document
-            .querySelectorAll(
-                ".conversation-button"
-            )
-            .forEach(
-                function (button) {
-
-                    button.classList.remove(
-                        "active"
-                    );
-                }
-            );
-
-    } catch (error) {
-
-        console.error(
-            "Private conversation error:",
-            error
-        );
-
-        showChatError(
-            error.message ||
-            "حدث خطأ أثناء فتح المحادثة الخاصة."
-        );
     }
+
+    if (!data) {
+        showChatError(
+            "لا توجد محادثة خاصة لهذا العميل."
+        );
+
+        return;
+    }
+
+    await selectConversation(
+        data,
+        customer.display_name ||
+            "محادثة خاصة",
+        "محادثة خاصة"
+    );
+
+    document
+        .querySelectorAll(
+            ".conversation-button"
+        )
+        .forEach(button =>
+            button.classList.remove(
+                "active"
+            )
+        );
+
+    const customerButtons =
+        document.querySelectorAll(
+            ".customer-button"
+        );
+
+    customerButtons.forEach(button => {
+        const strong =
+            button.querySelector(
+                "strong"
+            );
+
+        if (
+            strong &&
+            strong.textContent.trim() ===
+                (
+                    customer.display_name ||
+                    "عميل"
+                ).trim()
+        ) {
+            button.classList.add(
+                "active"
+            );
+        }
+    });
 }
 
-/* =========================================================
-   SELECT CONVERSATION
-========================================================= */
+/* =========================
+   11. SELECT CONVERSATION
+   ========================= */
 
 async function selectConversation(
     conversation,
     title,
     subtitle
 ) {
+    if (!conversation?.id) {
+        return;
+    }
 
     currentConversation =
         conversation;
 
     conversationTitle.textContent =
-        title;
+        title || "محادثة";
 
     conversationSubtitle.textContent =
-        subtitle;
-
-    messagesContainer.innerHTML = "";
-
-    clearFilePreview();
+        subtitle || "";
 
     reactionCache.clear();
 
+    closeContextMenu();
+
+    clearFilePreview();
+
+    messagesContainer.innerHTML = `
+        <div class="empty-messages">
+            <div class="empty-icon">
+                ⏳
+            </div>
+
+            <strong>
+                جارٍ تحميل الرسائل...
+            </strong>
+        </div>
+    `;
+
     await loadMessages();
 
-    subscribeToMessages();
+    subscribeRealtime();
 }
 
-/* =========================================================
-   LOAD MESSAGES
-========================================================= */
+/* =========================
+   12. LOAD MESSAGES
+   ========================= */
 
 async function loadMessages() {
-
-    if (!currentConversation) {
+    if (!currentConversation?.id) {
         return;
     }
-
-    messagesContainer.innerHTML = "";
 
     const {
         data: messages,
@@ -1096,11 +976,12 @@ async function loadMessages() {
         );
 
     if (error) {
-
         console.error(
             "Messages error:",
             error
         );
+
+        messagesContainer.innerHTML = "";
 
         showChatError(
             "تعذر تحميل الرسائل."
@@ -1110,17 +991,18 @@ async function loadMessages() {
     }
 
     if (!messages?.length) {
-
         messagesContainer.innerHTML = `
             <div class="empty-messages">
                 <div class="empty-icon">
                     💬
                 </div>
-                <div>
+
+                <strong>
                     لا توجد رسائل بعد
-                </div>
+                </strong>
+
                 <small>
-                    ابدأ المحادثة الآن
+                    ابدأ بإرسال رسالة الآن
                 </small>
             </div>
         `;
@@ -1129,9 +1011,8 @@ async function loadMessages() {
     }
 
     /*
-     * تحميل أسماء المرسلين
+     * تحميل أسماء مرسلي الرسائل.
      */
-
     const senderIds = [
         ...new Set(
             messages
@@ -1144,74 +1025,56 @@ async function loadMessages() {
     ];
 
     if (senderIds.length) {
-
         const {
             data: profiles,
             error: profilesError
         } = await db
             .from("profiles")
             .select(
-                "id, display_name, role"
+                "id,display_name,role"
             )
             .in(
                 "id",
                 senderIds
             );
 
-        if (profilesError) {
-
-            console.error(
-                "Profiles error:",
-                profilesError
-            );
-
-        } else {
-
-            profiles?.forEach(
-                function (profile) {
-
-                    profileCache.set(
-                        profile.id,
-                        profile
-                    );
-                }
-            );
+        if (!profilesError) {
+            profiles?.forEach(profile => {
+                profileCache.set(
+                    profile.id,
+                    profile
+                );
+            });
         }
     }
 
     /*
-     * تحميل جميع التفاعلات دفعة واحدة
+     * تحميل التفاعلات.
      */
-
-    const messageIds =
+    await loadReactions(
         messages.map(
             message => message.id
-        );
-
-    await loadReactions(
-        messageIds
+        )
     );
 
     messagesContainer.innerHTML = "";
 
     for (const message of messages) {
-
         await renderMessage(
             message
         );
     }
 
-    scrollMessagesToBottom();
+    scrollBottom();
 }
 
-/* =========================================================
-   LOAD REACTIONS
-========================================================= */
+/* =========================
+   13. LOAD REACTIONS
+   ========================= */
 
 async function loadReactions(
     messageIds
 ) {
-
     if (!messageIds?.length) {
         return;
     }
@@ -1222,7 +1085,7 @@ async function loadReactions(
     } = await db
         .from("message_reactions")
         .select(
-            "id, message_id, user_id, reaction, created_at"
+            "id,message_id,user_id,reaction,created_at"
         )
         .in(
             "message_id",
@@ -1230,357 +1093,966 @@ async function loadReactions(
         );
 
     if (error) {
-
         console.error(
-            "Reactions error:",
+            "Reaction load error:",
             error
         );
 
         return;
     }
 
-    messageIds.forEach(
-        function (messageId) {
+    messageIds.forEach(id => {
+        reactionCache.set(
+            id,
+            []
+        );
+    });
 
+    data?.forEach(reaction => {
+        if (
+            !reactionCache.has(
+                reaction.message_id
+            )
+        ) {
             reactionCache.set(
-                messageId,
+                reaction.message_id,
                 []
+            );
+        }
+
+        reactionCache
+            .get(reaction.message_id)
+            .push(reaction);
+    });
+}
+
+/* =========================
+   14. RENDER MESSAGE
+   ========================= */
+
+async function renderMessage(
+    message
+) {
+    if (!message?.id) {
+        return;
+    }
+
+    const existing =
+        messagesContainer.querySelector(
+            `[data-message-id="${cssEscape(
+                message.id
+            )}"]`
+        );
+
+    if (existing) {
+        existing.remove();
+    }
+
+    const element =
+        document.createElement("div");
+
+    const own =
+        message.sender_id ===
+        currentUser?.id;
+
+    const canDelete =
+        own ||
+        currentProfile?.role ===
+            "admin";
+
+    element.className =
+        own
+            ? "message own"
+            : "message";
+
+    element.dataset.messageId =
+        message.id;
+
+    const sender =
+        profileCache.get(
+            message.sender_id
+        )?.display_name ||
+        "مستخدم";
+
+    let content = "";
+
+    /*
+     * صورة
+     */
+    if (
+        message.message_type ===
+        "image"
+    ) {
+        const url =
+            await signedUrl(
+                message.file_path
+            );
+
+        if (url) {
+            content = `
+                <a
+                    class="image-message-link"
+                    href="${escapeHtml(url)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <img
+                        class="message-image"
+                        src="${escapeHtml(url)}"
+                        alt="صورة مرسلة"
+                        loading="lazy"
+                    >
+                </a>
+            `;
+        } else {
+            content = `
+                <div class="message-text">
+                    تعذر تحميل الصورة
+                </div>
+            `;
+        }
+    }
+
+    /*
+     * تسجيل صوتي
+     */
+    else if (
+        message.message_type ===
+        "audio"
+    ) {
+        const url =
+            await signedUrl(
+                message.file_path
+            );
+
+        if (url) {
+            content = `
+                <audio
+                    class="message-audio"
+                    controls
+                    preload="metadata"
+                    src="${escapeHtml(url)}"
+                ></audio>
+            `;
+        } else {
+            content = `
+                <div class="message-text">
+                    تعذر تحميل التسجيل الصوتي
+                </div>
+            `;
+        }
+    }
+
+    /*
+     * رسالة نصية
+     */
+    else {
+        content = `
+            <div class="message-text">
+                ${escapeHtml(
+                    message.content || ""
+                )}
+            </div>
+        `;
+    }
+
+    /*
+     * مؤشر التفاعل الصغير.
+     *
+     * لا تظهر مجموعة الإيموجي كاملة
+     * إلا عند الضغط على هذا الزر أو
+     * اختيار "إضافة تفاعل" من القائمة.
+     */
+    const reactionTrigger = `
+        <button
+            type="button"
+            class="reaction-trigger"
+            title="إضافة تفاعل"
+            aria-label="إضافة تفاعل"
+        >
+            ❤️
+        </button>
+    `;
+
+    /*
+     * قائمة التفاعلات الستة.
+     */
+    const reactionPicker = `
+        <div
+            class="reaction-picker"
+            data-message-id="${escapeHtml(
+                message.id
+            )}"
+            aria-label="اختيار تفاعل"
+        >
+            ${REACTIONS.map(
+                reaction => `
+                    <button
+                        type="button"
+                        class="reaction-button"
+                        data-reaction="${reaction}"
+                        title="${reaction}"
+                        aria-label="${reaction}"
+                    >
+                        ${reaction}
+                    </button>
+                `
+            ).join("")}
+        </div>
+    `;
+
+    element.innerHTML = `
+        <div class="message-wrapper">
+
+            ${reactionPicker}
+
+            ${reactionTrigger}
+
+            ${
+                canDelete
+                    ? `
+                        <button
+                            type="button"
+                            class="delete-message-btn"
+                            title="حذف الرسالة"
+                            aria-label="حذف الرسالة"
+                        >
+                            🗑️
+                        </button>
+                    `
+                    : ""
+            }
+
+            <div
+                class="message-bubble"
+                tabindex="0"
+                role="button"
+                aria-label="خيارات الرسالة"
+            >
+
+                ${
+                    !own
+                        ? `
+                            <div class="message-sender">
+                                ${escapeHtml(
+                                    sender
+                                )}
+                            </div>
+                        `
+                        : ""
+                }
+
+                ${content}
+
+                <div class="message-footer">
+                    <span class="message-time">
+                        ${formatDate(
+                            message.created_at
+                        )}
+                    </span>
+
+                    ${
+                        own
+                            ? `
+                                <span
+                                    class="message-status"
+                                    title="تم الإرسال"
+                                >
+                                    ✓✓
+                                </span>
+                            `
+                            : ""
+                    }
+                </div>
+            </div>
+
+            <div
+                class="message-reactions"
+                data-reactions-for="${escapeHtml(
+                    message.id
+                )}"
+            ></div>
+
+        </div>
+    `;
+
+    messagesContainer.appendChild(
+        element
+    );
+
+    const bubble =
+        element.querySelector(
+            ".message-bubble"
+        );
+
+    const picker =
+        element.querySelector(
+            ".reaction-picker"
+        );
+
+    const trigger =
+        element.querySelector(
+            ".reaction-trigger"
+        );
+
+    /*
+     * الضغط على الرسالة يفتح القائمة.
+     */
+    bubble?.addEventListener(
+        "click",
+        event => {
+            if (
+                event.target.closest(
+                    "a, audio, button"
+                )
+            ) {
+                return;
+            }
+
+            openMessageMenu(
+                message,
+                element,
+                event
             );
         }
     );
 
-    data?.forEach(
-        function (reaction) {
+    /*
+     * النقر بالزر الأيمن.
+     */
+    bubble?.addEventListener(
+        "contextmenu",
+        event => {
+            event.preventDefault();
 
-            if (
-                !reactionCache.has(
-                    reaction.message_id
-                )
-            ) {
-
-                reactionCache.set(
-                    reaction.message_id,
-                    []
-                );
-            }
-
-            reactionCache
-                .get(
-                    reaction.message_id
-                )
-                .push(
-                    reaction
-                );
+            openMessageMenu(
+                message,
+                element,
+                event
+            );
         }
     );
-}
 
-/* =========================================================
-   RENDER MESSAGE (محدثة لدعم زر الحذف)
-========================================================= */
+    /*
+     * فتح التفاعلات عند الضغط
+     * على القلب الصغير.
+     */
+    trigger?.addEventListener(
+        "click",
+        event => {
+            event.preventDefault();
+            event.stopPropagation();
 
-async function renderMessage(message) {
-    if (!message?.id) return;
+            closeAllReactionPickers(
+                picker
+            );
 
-    let messageElement = messagesContainer.querySelector(`[data-message-id="${cssEscape(message.id)}"]`);
-    if (!messageElement) {
-        messageElement = document.createElement("div");
-        messagesContainer.appendChild(messageElement);
-    }
-
-    const ownMessage = message.sender_id === currentUser.id;
-    const isAdmin = currentProfile?.role === "admin";
-    const canDelete = ownMessage || isAdmin; // السماح بالحذف إذا كانت رسالتك أو كنت أدمن
-
-    messageElement.className = ownMessage ? "message own" : "message";
-    messageElement.dataset.messageId = message.id;
-
-    const senderProfile = profileCache.get(message.sender_id);
-    const senderName = senderProfile?.display_name || "مستخدم";
-
-    let content = "";
-
-    if (message.message_type === "image") {
-        let imageUrl = message.file_path ? await createSignedUrl(message.file_path) : null;
-        if (imageUrl) {
-            content = `<a class="image-message-link" href="${escapeHtml(imageUrl)}" target="_blank" rel="noopener noreferrer"><img class="message-image" src="${escapeHtml(imageUrl)}" alt="صورة" loading="lazy"></a>`;
-        } else {
-            content = `<div class="message-text">تعذر تحميل الصورة</div>`;
+            picker?.classList.toggle(
+                "force-show"
+            );
         }
-    } else if (message.message_type === "audio") {
-        let audioUrl = message.file_path ? await createSignedUrl(message.file_path) : null;
-        if (audioUrl) {
-            content = `<audio class="message-audio" controls src="${escapeHtml(audioUrl)}"></audio>`;
-        } else {
-            content = `<div class="message-text">تعذر تحميل التسجيل الصوتي</div>`;
-        }
-    } else {
-        content = `<div class="message-text">${escapeHtml(message.content || "")}</div>`;
-    }
+    );
 
-    const date = formatDate(message.created_at);
-
-    messageElement.innerHTML = `
-        <div class="message-wrapper">
-            
-            ${canDelete ? `<button type="button" class="delete-message-btn" title="حذف للجميع">🗑️</button>` : ""}
-
-            <div class="message-bubble">
-                ${!ownMessage ? `<div class="message-sender">${escapeHtml(senderName)}</div>` : ""}
-                ${content}
-                <div class="message-footer">
-                    <span class="message-time">${date}</span>
-                    ${ownMessage ? `<span class="message-status">✓✓</span>` : ""}
-                </div>
-            </div>
-            
-            <div class="message-reactions" data-reactions-for="${escapeHtml(message.id)}"></div>
-            
-            <div class="reaction-picker" data-message-id="${escapeHtml(message.id)}">
-                ${REACTIONS.map(reaction => `
-                    <button type="button" class="reaction-button" data-reaction="${reaction}" title="${reaction}">${reaction}</button>
-                `).join("")}
-            </div>
-        </div>
-    `;
-
-    // تفعيل زر الحذف
-    if (canDelete) {
-        const deleteBtn = messageElement.querySelector(".delete-message-btn");
-        deleteBtn.addEventListener("click", function() {
-            deleteMessage(message.id, messageElement);
-        });
-    }
-
-    setupReactionButtons(messageElement);
-    renderReactionSummary(message.id);
-}
-
-/* =========================================================
-   DELETE MESSAGE (دالة جديدة)
-========================================================= */
-async function deleteMessage(messageId, element) {
-    // رسالة تأكيد مثل التلغرام
-    if (!confirm("هل أنت متأكد أنك تريد حذف هذه الرسالة للجميع؟")) {
-        return;
-    }
-
-    // إضافة تأثير الاختفاء البصري فوراً (تجربة مستخدم سريعة)
-    element.classList.add("deleting");
-
-    try {
-        const { error } = await db
-            .from("messages")
-            .delete()
-            .eq("id", messageId);
-
-        if (error) {
-            console.error("Delete message error:", error);
-            showChatError("تعذر حذف الرسالة.");
-            element.classList.remove("deleting"); // إعادة الرسالة إذا فشل الحذف
-            return;
-        }
-
-        // إذا نجح الحذف، نزيل العنصر نهائياً من الشاشة
-        element.remove();
-
-    } catch (error) {
-        console.error("Unexpected delete error:", error);
-        showChatError("حدث خطأ أثناء محاولة الحذف.");
-        element.classList.remove("deleting");
-    }
-}
-/* =========================================================
-   REACTION BUTTONS
-========================================================= */
-
-function setupReactionButtons(
-    messageElement
-) {
-
-    const buttons =
-        messageElement.querySelectorAll(
+    /*
+     * أزرار التفاعلات الستة.
+     */
+    element
+        .querySelectorAll(
             ".reaction-button"
-        );
-
-    buttons.forEach(
-        function (button) {
-
+        )
+        .forEach(button => {
             button.addEventListener(
                 "click",
-                async function (event) {
-
+                async event => {
+                    event.preventDefault();
                     event.stopPropagation();
 
-                    const messageId =
-                        messageElement.dataset.messageId;
-
                     const reaction =
-                        button.dataset.reaction;
+                        button.dataset
+                            .reaction;
+
+                    picker?.classList.remove(
+                        "force-show"
+                    );
 
                     await toggleReaction(
-                        messageId,
+                        message.id,
                         reaction
                     );
                 }
             );
-        }
+        });
+
+    /*
+     * حذف الرسالة.
+     */
+    element
+        .querySelector(
+            ".delete-message-btn"
+        )
+        ?.addEventListener(
+            "click",
+            async event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                await deleteMessage(
+                    message.id,
+                    element
+                );
+            }
+        );
+
+    /*
+     * تحديث ملخص التفاعلات.
+     */
+    renderReactionSummary(
+        message.id
     );
 }
 
-/* =========================================================
-   TOGGLE REACTION
-========================================================= */
+/* =========================
+   15. MESSAGE MENU
+   ========================= */
+
+function openMessageMenu(
+    message,
+    element,
+    event
+) {
+    closeContextMenu();
+
+    contextMenu =
+        document.createElement("div");
+
+    contextMenu.className =
+        "message-context-menu";
+
+    const canDelete =
+        message.sender_id ===
+            currentUser?.id ||
+        currentProfile?.role ===
+            "admin";
+
+    contextMenu.innerHTML = `
+        <button
+            type="button"
+            class="context-item"
+            data-action="copy"
+        >
+            <span class="context-icon">
+                📋
+            </span>
+
+            <span>
+                نسخ الرسالة
+            </span>
+        </button>
+
+        <button
+            type="button"
+            class="context-item"
+            data-action="reaction"
+        >
+            <span class="context-icon">
+                ❤️
+            </span>
+
+            <span>
+                إضافة تفاعل
+            </span>
+        </button>
+
+        ${
+            canDelete
+                ? `
+                    <button
+                        type="button"
+                        class="context-item danger"
+                        data-action="delete"
+                    >
+                        <span class="context-icon">
+                            🗑️
+                        </span>
+
+                        <span>
+                            حذف الرسالة
+                        </span>
+                    </button>
+                `
+                : ""
+        }
+    `;
+
+    document.body.appendChild(
+        contextMenu
+    );
+
+    contextMenu
+        .querySelector(
+            '[data-action="copy"]'
+        )
+        ?.addEventListener(
+            "click",
+            async () => {
+                await copyMessage(
+                    message
+                );
+
+                closeContextMenu();
+            }
+        );
+
+    contextMenu
+        .querySelector(
+            '[data-action="reaction"]'
+        )
+        ?.addEventListener(
+            "click",
+            () => {
+                closeContextMenu();
+
+                const picker =
+                    element.querySelector(
+                        ".reaction-picker"
+                    );
+
+                closeAllReactionPickers();
+
+                picker?.classList.add(
+                    "force-show"
+                );
+
+                setTimeout(() => {
+                    picker?.classList.remove(
+                        "force-show"
+                    );
+                }, 2500);
+            }
+        );
+
+    contextMenu
+        .querySelector(
+            '[data-action="delete"]'
+        )
+        ?.addEventListener(
+            "click",
+            async () => {
+                closeContextMenu();
+
+                await deleteMessage(
+                    message.id,
+                    element
+                );
+            }
+        );
+
+    const clientX =
+        Number.isFinite(event?.clientX)
+            ? event.clientX
+            : window.innerWidth / 2;
+
+    const clientY =
+        Number.isFinite(event?.clientY)
+            ? event.clientY
+            : window.innerHeight / 2;
+
+    positionMenu(
+        clientX,
+        clientY
+    );
+}
+
+function positionMenu(
+    x,
+    y
+) {
+    if (!contextMenu) {
+        return;
+    }
+
+    const rect =
+        contextMenu.getBoundingClientRect();
+
+    const margin = 8;
+
+    const left = Math.max(
+        margin,
+        Math.min(
+            x,
+            window.innerWidth -
+                rect.width -
+                margin
+        )
+    );
+
+    const top = Math.max(
+        margin,
+        Math.min(
+            y,
+            window.innerHeight -
+                rect.height -
+                margin
+        )
+    );
+
+    contextMenu.style.left =
+        `${left}px`;
+
+    contextMenu.style.top =
+        `${top}px`;
+}
+
+function closeContextMenu() {
+    if (contextMenu) {
+        contextMenu.remove();
+        contextMenu = null;
+    }
+}
+
+/* =========================
+   16. REACTION PICKERS
+   ========================= */
+
+function closeAllReactionPickers(
+    except = null
+) {
+    document
+        .querySelectorAll(
+            ".reaction-picker.force-show"
+        )
+        .forEach(picker => {
+            if (picker !== except) {
+                picker.classList.remove(
+                    "force-show"
+                );
+            }
+        });
+}
+
+/* =========================
+   17. COPY MESSAGE
+   ========================= */
+
+async function copyMessage(
+    message
+) {
+    if (
+        message.message_type !==
+            "text" ||
+        !message.content
+    ) {
+        showChatError(
+            "نسخ النص متاح للرسائل النصية فقط."
+        );
+
+        return;
+    }
+
+    try {
+        if (
+            navigator.clipboard &&
+            typeof navigator.clipboard.writeText ===
+                "function"
+        ) {
+            await navigator.clipboard.writeText(
+                message.content
+            );
+
+            return;
+        }
+
+        throw new Error(
+            "Clipboard API unavailable"
+        );
+
+    } catch (error) {
+        try {
+            const textarea =
+                document.createElement(
+                    "textarea"
+                );
+
+            textarea.value =
+                message.content;
+
+            textarea.style.position =
+                "fixed";
+
+            textarea.style.left =
+                "-9999px";
+
+            textarea.style.top =
+                "0";
+
+            textarea.style.opacity =
+                "0";
+
+            document.body.appendChild(
+                textarea
+            );
+
+            textarea.focus();
+            textarea.select();
+
+            document.execCommand(
+                "copy"
+            );
+
+            textarea.remove();
+
+        } catch (fallbackError) {
+            console.error(
+                "Copy error:",
+                fallbackError
+            );
+
+            showChatError(
+                "تعذر نسخ الرسالة."
+            );
+        }
+    }
+}
+
+/* =========================
+   18. DELETE MESSAGE
+   ========================= */
+
+async function deleteMessage(
+    id,
+    element
+) {
+    if (!id || !currentUser) {
+        return;
+    }
+
+    const messageElement =
+        element ||
+        messagesContainer.querySelector(
+            `[data-message-id="${cssEscape(id)}"]`
+        );
+
+    if (
+        messageElement &&
+        messageElement.classList.contains(
+            "deleting"
+        )
+    ) {
+        return;
+    }
+
+    const confirmed =
+        window.confirm(
+            "هل أنت متأكد أنك تريد حذف هذه الرسالة للجميع؟"
+        );
+
+    if (!confirmed) {
+        return;
+    }
+
+    messageElement?.classList.add(
+        "deleting"
+    );
+
+    const {
+        error
+    } = await db
+        .from("messages")
+        .delete()
+        .eq(
+            "id",
+            id
+        );
+
+    if (error) {
+        console.error(
+            "Delete message error:",
+            error
+        );
+
+        messageElement?.classList.remove(
+            "deleting"
+        );
+
+        showChatError(
+            "تعذر حذف الرسالة. تأكد من سياسات RLS."
+        );
+
+        return;
+    }
+
+    reactionCache.delete(
+        id
+    );
+
+    messageElement?.remove();
+
+    /*
+     * إذا أصبحت المحادثة فارغة،
+     * عرض الحالة الفارغة.
+     */
+    if (
+        !messagesContainer.querySelector(
+            ".message"
+        )
+    ) {
+        messagesContainer.innerHTML = `
+            <div class="empty-messages">
+                <div class="empty-icon">
+                    💬
+                </div>
+
+                <strong>
+                    لا توجد رسائل بعد
+                </strong>
+
+                <small>
+                    ابدأ بإرسال رسالة الآن
+                </small>
+            </div>
+        `;
+    }
+}
+
+/* =========================
+   19. REACTIONS
+   ========================= */
 
 async function toggleReaction(
     messageId,
     reaction
 ) {
-
     if (
-        !currentUser ||
         !messageId ||
+        !currentUser ||
         !REACTIONS.includes(
             reaction
         )
     ) {
+        return;
+    }
+
+    const {
+        data: existing,
+        error: existingError
+    } = await db
+        .from("message_reactions")
+        .select(
+            "id,reaction"
+        )
+        .eq(
+            "message_id",
+            messageId
+        )
+        .eq(
+            "user_id",
+            currentUser.id
+        )
+        .maybeSingle();
+
+    if (existingError) {
+        console.error(
+            "Reaction lookup:",
+            existingError
+        );
+
+        showChatError(
+            "تعذر قراءة التفاعل."
+        );
 
         return;
     }
 
-    try {
+    /*
+     * إذا كان المستخدم لديه تفاعل:
+     * - نفس التفاعل = إزالته
+     * - تفاعل مختلف = تغييره
+     */
+    if (existing) {
+        let result;
 
-        // 1. نبحث عن "أي" تفاعل لهذا المستخدم على هذه الرسالة (بغض النظر عن نوع الإيموجي)
-        const {
-            data: existing,
-            error: findError
-        } = await db
-            .from("message_reactions")
-            .select(
-                "id, reaction"
-            )
-            .eq(
-                "message_id",
-                messageId
-            )
-            .eq(
-                "user_id",
-                currentUser.id
-            )
-            .maybeSingle();
-
-        if (findError) {
-
-            console.error(
-                "Find reaction error:",
-                findError
-            );
-
-            return;
-        }
-
-        if (existing) {
-
-            // 2. إذا كان المستخدم قد تفاعل مسبقاً بنفس الإيموجي الذي ضغط عليه الآن -> نقوم بحذفه (إلغاء التفاعل)
-            if (existing.reaction === reaction) {
-
-                const {
-                    error
-                } = await db
-                    .from("message_reactions")
+        if (
+            existing.reaction ===
+            reaction
+        ) {
+            result =
+                await db
+                    .from(
+                        "message_reactions"
+                    )
                     .delete()
                     .eq(
                         "id",
                         existing.id
                     );
-
-                if (error) {
-                    console.error("Delete reaction error:", error);
-                    showChatError("تعذر إزالة التفاعل.");
-                    return;
-                }
-
-            } else {
-
-                // 3. إذا ضغط على إيموجي مختلف -> نقوم بتحديث التفاعل القديم واستبداله بالجديد
-                const {
-                    error
-                } = await db
-                    .from("message_reactions")
+        } else {
+            result =
+                await db
+                    .from(
+                        "message_reactions"
+                    )
                     .update({
-                        reaction: reaction
+                        reaction
                     })
                     .eq(
                         "id",
                         existing.id
                     );
-
-                if (error) {
-                    console.error("Update reaction error:", error);
-                    showChatError("تعذر تغيير التفاعل.");
-                    return;
-                }
-
-            }
-
-        } else {
-
-            // 4. إذا لم يكن للمستخدم أي تفاعل سابق على هذه الرسالة -> نضيف تفاعلاً جديداً
-            const {
-                error
-            } = await db
-                .from("message_reactions")
-                .insert({
-                    message_id:
-                        messageId,
-
-                    user_id:
-                        currentUser.id,
-
-                    reaction
-                });
-
-            if (error) {
-
-                console.error(
-                    "Insert reaction error:",
-                    error
-                );
-
-                showChatError(
-                    "تعذر إضافة التفاعل."
-                );
-
-                return;
-            }
         }
 
-        // تحديث واجهة التفاعلات بعد الانتهاء
-        await refreshMessageReactions(
-            messageId
-        );
+        if (result.error) {
+            console.error(
+                "Reaction update:",
+                result.error
+            );
 
-    } catch (error) {
+            showChatError(
+                "تعذر تحديث التفاعل."
+            );
 
-        console.error(
-            "Reaction error:",
+            return;
+        }
+
+    } else {
+        const {
             error
-        );
+        } = await db
+            .from(
+                "message_reactions"
+            )
+            .insert({
+                message_id:
+                    messageId,
+                user_id:
+                    currentUser.id,
+                reaction
+            });
 
-        showChatError(
-            error.message ||
-            "حدث خطأ أثناء التفاعل."
-        );
+        if (error) {
+            console.error(
+                "Reaction insert:",
+                error
+            );
+
+            showChatError(
+                "تعذر إضافة التفاعل."
+            );
+
+            return;
+        }
     }
+
+    await refreshReactions(
+        messageId
+    );
 }
 
-/* =========================================================
-   REFRESH REACTIONS
-========================================================= */
-
-async function refreshMessageReactions(
+async function refreshReactions(
     messageId
 ) {
+    if (!messageId) {
+        return;
+    }
 
     const {
         data,
@@ -1588,7 +2060,7 @@ async function refreshMessageReactions(
     } = await db
         .from("message_reactions")
         .select(
-            "id, message_id, user_id, reaction, created_at"
+            "id,message_id,user_id,reaction,created_at"
         )
         .eq(
             "message_id",
@@ -1596,9 +2068,8 @@ async function refreshMessageReactions(
         );
 
     if (error) {
-
         console.error(
-            "Refresh reactions error:",
+            "Refresh reactions:",
             error
         );
 
@@ -1615,148 +2086,120 @@ async function refreshMessageReactions(
     );
 }
 
-/* =========================================================
-   RENDER REACTION SUMMARY
-========================================================= */
-
 function renderReactionSummary(
     messageId
 ) {
-
-    const container =
+    const box =
         messagesContainer.querySelector(
             `[data-reactions-for="${cssEscape(
                 messageId
             )}"]`
         );
 
-    if (!container) {
+    if (!box) {
         return;
     }
 
-    const reactions =
+    const list =
         reactionCache.get(
             messageId
         ) || [];
 
-    if (!reactions.length) {
+    const counts =
+        new Map();
 
-        container.innerHTML = "";
+    const mine =
+        new Set();
 
-        return;
-    }
+    list.forEach(item => {
+        const current =
+            counts.get(
+                item.reaction
+            ) || 0;
 
-    const counts = new Map();
-
-    const mine = new Set();
-
-    reactions.forEach(
-        function (item) {
-
-            const current =
-                counts.get(
-                    item.reaction
-                ) || 0;
-
-            counts.set(
-                item.reaction,
-                current + 1
-            );
-
-            if (
-                item.user_id ===
-                currentUser?.id
-            ) {
-
-                mine.add(
-                    item.reaction
-                );
-            }
-        }
-    );
-
-    const ordered =
-        REACTIONS.filter(
-            reaction =>
-                counts.has(
-                    reaction
-                )
+        counts.set(
+            item.reaction,
+            current + 1
         );
 
-    container.innerHTML =
-        ordered.map(
-            function (reaction) {
+        if (
+            item.user_id ===
+            currentUser?.id
+        ) {
+            mine.add(
+                item.reaction
+            );
+        }
+    });
 
-                const count =
-                    counts.get(
+    box.innerHTML =
+        REACTIONS
+            .filter(
+                reaction =>
+                    counts.has(
                         reaction
-                    );
-
-                const active =
-                    mine.has(
-                        reaction
-                    );
-
-                return `
+                    )
+            )
+            .map(
+                reaction => `
                     <button
                         type="button"
                         class="reaction-summary ${
-                            active
+                            mine.has(
+                                reaction
+                            )
                                 ? "mine"
                                 : ""
                         }"
                         data-summary-reaction="${reaction}"
-                        title="إزالة/إضافة ${reaction}"
+                        title="تفاعل ${reaction}"
+                        aria-label="تفاعل ${reaction}"
                     >
                         <span>
                             ${reaction}
                         </span>
 
                         <b>
-                            ${count}
+                            ${counts.get(
+                                reaction
+                            )}
                         </b>
                     </button>
-                `;
-            }
-        ).join("");
+                `
+            )
+            .join("");
 
-    container
-        .querySelectorAll(
-            ".reaction-summary"
-        )
-        .forEach(
-            function (button) {
+    box.querySelectorAll(
+        ".reaction-summary"
+    ).forEach(button => {
+        button.addEventListener(
+            "click",
+            async event => {
+                event.preventDefault();
+                event.stopPropagation();
 
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        toggleReaction(
-                            messageId,
-                            button.dataset.summaryReaction
-                        );
-                    }
+                await toggleReaction(
+                    messageId,
+                    button.dataset
+                        .summaryReaction
                 );
             }
         );
+    });
 }
 
-/* =========================================================
-   SEND MESSAGE
-========================================================= */
+/* =========================
+   20. SEND MESSAGE
+   ========================= */
 
 async function sendMessage(
     event
 ) {
+    event?.preventDefault();
 
-    event.preventDefault();
-
-    if (!currentUser) {
-        return;
-    }
-
-    if (!currentConversation) {
-
+    if (
+        !currentConversation?.id
+    ) {
         showChatError(
             "اختر محادثة أولاً."
         );
@@ -1767,16 +2210,11 @@ async function sendMessage(
     const text =
         messageInput.value.trim();
 
-    if (
-        !text &&
-        !selectedImage
-    ) {
-
-        return;
-    }
-
+    /*
+     * إذا كانت هناك صورة مختارة،
+     * إرسال الصورة بدل النص.
+     */
     if (selectedImage) {
-
         await uploadImage(
             selectedImage
         );
@@ -1784,24 +2222,7 @@ async function sendMessage(
         return;
     }
 
-    await sendTextMessage(
-        text
-    );
-}
-
-/* =========================================================
-   SEND TEXT
-========================================================= */
-
-async function sendTextMessage(
-    text
-) {
-
-    if (
-        !text ||
-        !currentConversation
-    ) {
-
+    if (!text) {
         return;
     }
 
@@ -1812,21 +2233,17 @@ async function sendTextMessage(
         .insert({
             conversation_id:
                 currentConversation.id,
-
             sender_id:
                 currentUser.id,
-
             message_type:
                 "text",
-
             content:
                 text
         });
 
     if (error) {
-
         console.error(
-            "Send text error:",
+            "Send message error:",
             error
         );
 
@@ -1842,17 +2259,15 @@ async function sendTextMessage(
     messageInput.focus();
 }
 
-/* =========================================================
-   IMAGE
-========================================================= */
+/* =========================
+   21. IMAGE SELECTION
+   ========================= */
 
 function handleImageSelection(
     event
 ) {
-
     const file =
-        event.target.files &&
-        event.target.files[0];
+        event.target.files?.[0];
 
     if (!file) {
         return;
@@ -1863,26 +2278,27 @@ function handleImageSelection(
             "image/"
         )
     ) {
+        clearFilePreview();
 
         showChatError(
             "الملف المختار ليس صورة."
         );
 
-        imageInput.value = "";
-
         return;
     }
 
+    /*
+     * الحد الأقصى 10 MB.
+     */
     if (
         file.size >
         10 * 1024 * 1024
     ) {
+        clearFilePreview();
 
         showChatError(
             "حجم الصورة يجب ألا يتجاوز 10 ميغابايت."
         );
-
-        imageInput.value = "";
 
         return;
     }
@@ -1894,9 +2310,7 @@ function handleImageSelection(
     );
 
     filePreview.innerHTML = `
-
         <div class="selected-file">
-
             <span>
                 🖼️
                 ${escapeHtml(
@@ -1907,10 +2321,11 @@ function handleImageSelection(
             <button
                 type="button"
                 id="removeFileButton"
+                title="إلغاء الصورة"
+                aria-label="إلغاء الصورة"
             >
                 ✕
             </button>
-
         </div>
     `;
 
@@ -1918,137 +2333,116 @@ function handleImageSelection(
         .getElementById(
             "removeFileButton"
         )
-        .addEventListener(
+        ?.addEventListener(
             "click",
             clearFilePreview
         );
 }
 
-/* =========================================================
-   UPLOAD IMAGE
-========================================================= */
+/* =========================
+   22. UPLOAD IMAGE
+   ========================= */
 
 async function uploadImage(
     file
 ) {
-
-    if (!currentConversation) {
+    if (
+        !file ||
+        !currentConversation?.id ||
+        !currentUser?.id
+    ) {
         return;
     }
 
     const extension =
-        getFileExtension(
+        ext(
             file.name
         );
 
-    const filePath =
+    const path =
         `images/${currentConversation.id}/${currentUser.id}/${crypto.randomUUID()}.${extension}`;
 
-    try {
-
-        const {
-            error: uploadError
-        } = await db.storage
+    const upload =
+        await db.storage
             .from("chat-files")
             .upload(
-                filePath,
+                path,
                 file,
                 {
-                    cacheControl: "3600",
-                    upsert: false,
+                    cacheControl:
+                        "3600",
+                    upsert:
+                        false,
                     contentType:
                         file.type
                 }
             );
 
-        if (uploadError) {
-
-            console.error(
-                "Image upload error:",
-                uploadError
-            );
-
-            showChatError(
-                "تعذر رفع الصورة."
-            );
-
-            return;
-        }
-
-        const {
-            error: messageError
-        } = await db
-            .from("messages")
-            .insert({
-                conversation_id:
-                    currentConversation.id,
-
-                sender_id:
-                    currentUser.id,
-
-                message_type:
-                    "image",
-
-                content:
-                    file.name,
-
-                file_path:
-                    filePath
-            });
-
-        if (messageError) {
-
-            console.error(
-                "Image message error:",
-                messageError
-            );
-
-            showChatError(
-                "تم رفع الصورة ولكن تعذر إرسالها."
-            );
-
-            return;
-        }
-
-        clearFilePreview();
-
-    } catch (error) {
-
+    if (upload.error) {
         console.error(
-            "Unexpected image error:",
-            error
+            "Image upload:",
+            upload.error
         );
 
         showChatError(
-            error.message ||
-            "حدث خطأ أثناء رفع الصورة."
+            "تعذر رفع الصورة."
         );
-    }
-}
-
-/* =========================================================
-   RECORD AUDIO
-========================================================= */
-
-async function toggleRecording() {
-
-    if (recording) {
-
-        stopRecording();
 
         return;
     }
 
-    await startRecording();
+    const {
+        error
+    } = await db
+        .from("messages")
+        .insert({
+            conversation_id:
+                currentConversation.id,
+            sender_id:
+                currentUser.id,
+            message_type:
+                "image",
+            content:
+                file.name,
+            file_path:
+                path
+        });
+
+    if (error) {
+        console.error(
+            "Image message insert:",
+            error
+        );
+
+        showChatError(
+            "تم رفع الصورة ولكن تعذر إرسالها."
+        );
+
+        return;
+    }
+
+    clearFilePreview();
+
+    messageInput.focus();
+}
+
+/* =========================
+   23. AUDIO RECORDING
+   ========================= */
+
+async function toggleRecording() {
+    if (isRecording) {
+        stopRecording();
+    } else {
+        await startRecording();
+    }
 }
 
 async function startRecording() {
-
     if (
         !navigator.mediaDevices ||
         !navigator.mediaDevices.getUserMedia
     ) {
-
         showChatError(
             "المتصفح لا يدعم تسجيل الصوت."
         );
@@ -2056,133 +2450,7 @@ async function startRecording() {
         return;
     }
 
-    try {
-
-        const stream =
-            await navigator.mediaDevices.getUserMedia({
-                audio: true
-            });
-
-        audioChunks = [];
-
-        mediaRecorder =
-            new MediaRecorder(
-                stream
-            );
-
-        mediaRecorder.ondataavailable =
-            function (event) {
-
-                if (
-                    event.data &&
-                    event.data.size > 0
-                ) {
-
-                    audioChunks.push(
-                        event.data
-                    );
-                }
-            };
-
-        mediaRecorder.onstop =
-            async function () {
-
-                stream
-                    .getTracks()
-                    .forEach(
-                        function (track) {
-
-                            track.stop();
-                        }
-                    );
-
-                const audioBlob =
-                    new Blob(
-                        audioChunks,
-                        {
-                            type:
-                                mediaRecorder.mimeType ||
-                                "audio/webm"
-                        }
-                    );
-
-                if (
-                    audioBlob.size === 0
-                ) {
-
-                    return;
-                }
-
-                await uploadAudio(
-                    audioBlob
-                );
-            };
-
-        mediaRecorder.start();
-
-        recording = true;
-
-        recordButton.textContent =
-            "⏹️";
-
-        recordButton.title =
-            "إيقاف التسجيل";
-
-        recordButton.classList.add(
-            "recording"
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Microphone error:",
-            error
-        );
-
-        showChatError(
-            "تعذر الوصول إلى الميكروفون. اسمح للموقع باستخدام الميكروفون."
-        );
-    }
-}
-
-function stopRecording() {
-
-    if (
-        !mediaRecorder ||
-        mediaRecorder.state ===
-        "inactive"
-    ) {
-
-        recording = false;
-
-        return;
-    }
-
-    mediaRecorder.stop();
-
-    recording = false;
-
-    recordButton.textContent =
-        "🎤";
-
-    recordButton.title =
-        "تسجيل صوتي";
-
-    recordButton.classList.remove(
-        "recording"
-    );
-}
-
-/* =========================================================
-   UPLOAD AUDIO
-========================================================= */
-
-async function uploadAudio(
-    blob
-) {
-
-    if (!currentConversation) {
-
+    if (!currentConversation?.id) {
         showChatError(
             "اختر محادثة أولاً."
         );
@@ -2191,96 +2459,273 @@ async function uploadAudio(
     }
 
     try {
+        const stream =
+            await navigator.mediaDevices.getUserMedia(
+                {
+                    audio: true
+                }
+            );
 
-        const filePath =
-            `audio/${currentConversation.id}/${currentUser.id}/${crypto.randomUUID()}.webm`;
+        audioChunks = [];
 
-        const {
-            error: uploadError
-        } = await db.storage
+        let mimeType = "";
+
+        if (
+            typeof MediaRecorder !==
+            "undefined"
+        ) {
+            const supportedTypes = [
+                "audio/webm;codecs=opus",
+                "audio/webm",
+                "audio/ogg;codecs=opus",
+                "audio/ogg",
+                "audio/mp4"
+            ];
+
+            mimeType =
+                supportedTypes.find(
+                    type =>
+                        typeof MediaRecorder.isTypeSupported ===
+                            "function" &&
+                        MediaRecorder.isTypeSupported(
+                            type
+                        )
+                ) || "";
+        }
+
+        mediaRecorder =
+            mimeType
+                ? new MediaRecorder(
+                      stream,
+                      {
+                          mimeType
+                      }
+                  )
+                : new MediaRecorder(
+                      stream
+                  );
+
+        mediaRecorder.ondataavailable =
+            event => {
+                if (
+                    event.data &&
+                    event.data.size >
+                        0
+                ) {
+                    audioChunks.push(
+                        event.data
+                    );
+                }
+            };
+
+        mediaRecorder.onstop =
+            async () => {
+                try {
+                    stream
+                        .getTracks()
+                        .forEach(
+                            track =>
+                                track.stop()
+                        );
+
+                    const type =
+                        mediaRecorder
+                            ?.mimeType ||
+                        "audio/webm";
+
+                    const blob =
+                        new Blob(
+                            audioChunks,
+                            {
+                                type
+                            }
+                        );
+
+                    if (
+                        blob.size >
+                        0
+                    ) {
+                        await uploadAudio(
+                            blob
+                        );
+                    }
+                } catch (error) {
+                    console.error(
+                        "Audio processing:",
+                        error
+                    );
+
+                    showChatError(
+                        "تعذر معالجة التسجيل الصوتي."
+                    );
+                } finally {
+                    audioChunks = [];
+                    mediaRecorder = null;
+                }
+            };
+
+        mediaRecorder.start();
+
+        isRecording = true;
+
+        recordButton.textContent =
+            "⏹️";
+
+        recordButton.classList.add(
+            "recording"
+        );
+
+        recordButton.title =
+            "إيقاف التسجيل";
+
+        recordButton.setAttribute(
+            "aria-label",
+            "إيقاف التسجيل"
+        );
+
+    } catch (error) {
+        console.error(
+            "Microphone error:",
+            error
+        );
+
+        showChatError(
+            "تعذر الوصول إلى الميكروفون. تأكد من السماح للموقع باستخدامه."
+        );
+    }
+}
+
+function stopRecording() {
+    if (
+        mediaRecorder &&
+        mediaRecorder.state !==
+            "inactive"
+    ) {
+        mediaRecorder.stop();
+    }
+
+    isRecording = false;
+
+    recordButton.textContent =
+        "🎤";
+
+    recordButton.classList.remove(
+        "recording"
+    );
+
+    recordButton.title =
+        "تسجيل صوتي";
+
+    recordButton.setAttribute(
+        "aria-label",
+        "تسجيل صوتي"
+    );
+}
+
+/* =========================
+   24. UPLOAD AUDIO
+   ========================= */
+
+async function uploadAudio(
+    blob
+) {
+    if (
+        !blob ||
+        !currentConversation?.id ||
+        !currentUser?.id
+    ) {
+        return;
+    }
+
+    /*
+     * الامتداد الافتراضي WebM.
+     */
+    let extension = "webm";
+
+    const mime =
+        blob.type?.toLowerCase() ||
+        "";
+
+    if (
+        mime.includes("ogg")
+    ) {
+        extension = "ogg";
+    } else if (
+        mime.includes("mp4")
+    ) {
+        extension = "m4a";
+    }
+
+    const path =
+        `audio/${currentConversation.id}/${currentUser.id}/${crypto.randomUUID()}.${extension}`;
+
+    const upload =
+        await db.storage
             .from("chat-files")
             .upload(
-                filePath,
+                path,
                 blob,
                 {
-                    cacheControl: "3600",
-                    upsert: false,
+                    cacheControl:
+                        "3600",
+                    upsert:
+                        false,
                     contentType:
                         blob.type ||
                         "audio/webm"
                 }
             );
 
-        if (uploadError) {
-
-            console.error(
-                "Audio upload error:",
-                uploadError
-            );
-
-            showChatError(
-                "تعذر رفع التسجيل الصوتي."
-            );
-
-            return;
-        }
-
-        const {
-            error: messageError
-        } = await db
-            .from("messages")
-            .insert({
-                conversation_id:
-                    currentConversation.id,
-
-                sender_id:
-                    currentUser.id,
-
-                message_type:
-                    "audio",
-
-                content:
-                    "رسالة صوتية",
-
-                file_path:
-                    filePath
-            });
-
-        if (messageError) {
-
-            console.error(
-                "Audio message error:",
-                messageError
-            );
-
-            showChatError(
-                "تم رفع التسجيل ولكن تعذر إرساله."
-            );
-        }
-
-    } catch (error) {
-
+    if (upload.error) {
         console.error(
-            "Unexpected audio error:",
+            "Audio upload:",
+            upload.error
+        );
+
+        showChatError(
+            "تعذر رفع التسجيل الصوتي."
+        );
+
+        return;
+    }
+
+    const {
+        error
+    } = await db
+        .from("messages")
+        .insert({
+            conversation_id:
+                currentConversation.id,
+            sender_id:
+                currentUser.id,
+            message_type:
+                "audio",
+            content:
+                "رسالة صوتية",
+            file_path:
+                path
+        });
+
+    if (error) {
+        console.error(
+            "Audio message insert:",
             error
         );
 
         showChatError(
-            error.message ||
-            "حدث خطأ أثناء رفع التسجيل الصوتي."
+            "تم رفع التسجيل ولكن تعذر إرساله."
         );
     }
 }
 
-/* =========================================================
-   SIGNED URL
-========================================================= */
+/* =========================
+   25. SIGNED URL
+   ========================= */
 
-async function createSignedUrl(
-    filePath
+async function signedUrl(
+    path
 ) {
-
-    if (!filePath) {
+    if (!path) {
         return null;
     }
 
@@ -2290,12 +2735,11 @@ async function createSignedUrl(
     } = await db.storage
         .from("chat-files")
         .createSignedUrl(
-            filePath,
-            60 * 60
+            path,
+            3600
         );
 
     if (error) {
-
         console.error(
             "Signed URL error:",
             error
@@ -2304,21 +2748,24 @@ async function createSignedUrl(
         return null;
     }
 
-    return data?.signedUrl || null;
+    return (
+        data?.signedUrl ||
+        null
+    );
 }
 
-/* =========================================================
-   REALTIME
-========================================================= */
+/* =========================
+   26. REALTIME
+   ========================= */
 
-function subscribeToMessages() {
-
-    if (!currentConversation) {
+function subscribeRealtime() {
+    if (
+        !currentConversation?.id
+    ) {
         return;
     }
 
     if (realtimeChannel) {
-
         db.removeChannel(
             realtimeChannel
         );
@@ -2330,154 +2777,287 @@ function subscribeToMessages() {
         currentConversation.id;
 
     realtimeChannel =
-        db
-            .channel(
-                `chat-${conversationId}`
-            )
+        db.channel(
+            `chat-${conversationId}-${Date.now()}`
+        );
 
-           /* -----------------------------------------
-               NEW / DELETE MESSAGE (محدثة)
-            ----------------------------------------- */
-            .on(
-                "postgres_changes",
-                {
-                    event: "*", // استماع لكل الأحداث (INSERT و DELETE)
-                    schema: "public",
-                    table: "messages"
-                },
-                async function (payload) {
-                    
-                    // -- حالة حذف رسالة --
-                    if (payload.eventType === "DELETE") {
-                        const deletedId = payload.old.id;
-                        const msgElement = messagesContainer.querySelector(`[data-message-id="${cssEscape(deletedId)}"]`);
-                        if (msgElement) {
-                            msgElement.classList.add("deleting");
-                            setTimeout(() => msgElement.remove(), 300); // حذفها مع حركة انسيابية
-                        }
-                        return;
+    /*
+     * الرسائل.
+     */
+    realtimeChannel.on(
+        "postgres_changes",
+        {
+            event: "*",
+            schema: "public",
+            table: "messages",
+            filter:
+                `conversation_id=eq.${conversationId}`
+        },
+        async payload => {
+            try {
+                /*
+                 * حذف.
+                 */
+                if (
+                    payload.eventType ===
+                    "DELETE"
+                ) {
+                    const id =
+                        payload.old?.id;
+
+                    if (id) {
+                        messagesContainer
+                            .querySelector(
+                                `[data-message-id="${cssEscape(
+                                    id
+                                )}"]`
+                            )
+                            ?.remove();
+
+                        reactionCache.delete(
+                            id
+                        );
                     }
 
-                    // -- حالة رسالة جديدة --
-                    if (payload.eventType === "INSERT") {
-                        if (
-                            !currentConversation ||
-                            payload.new.conversation_id !== currentConversation.id
-                        ) {
-                            return;
-                        }
-
-                        const empty = messagesContainer.querySelector(".empty-messages");
-                        if (empty) empty.remove();
-
-                        if (payload.new.sender_id && !profileCache.has(payload.new.sender_id)) {
-                            const { data: profile } = await db
-                                .from("profiles")
-                                .select("id, display_name, role")
-                                .eq("id", payload.new.sender_id)
-                                .maybeSingle();
-
-                            if (profile) profileCache.set(profile.id, profile);
-                        }
-
-                        reactionCache.set(payload.new.id, []);
-                        await renderMessage(payload.new);
-                        scrollMessagesToBottom();
-                    }
+                    return;
                 }
-            )
 
-            /* -----------------------------------------
-               NEW / DELETE REACTION
-            ----------------------------------------- */
+                /*
+                 * إدخال رسالة جديدة.
+                 */
+                if (
+                    payload.eventType ===
+                    "INSERT"
+                ) {
+                    const message =
+                        payload.new;
 
-            .on(
-                "postgres_changes",
-                {
-                    event: "*",
-                    schema: "public",
-                    table: "message_reactions"
-                },
-
-                async function (payload) {
-
-                    const messageId =
-                        payload.new?.message_id ||
-                        payload.old?.message_id;
-
-                    if (!messageId) {
+                    if (!message?.id) {
                         return;
                     }
 
-                    const messageElement =
+                    /*
+                     * منع تكرار الرسالة.
+                     */
+                    if (
                         messagesContainer.querySelector(
                             `[data-message-id="${cssEscape(
-                                messageId
+                                message.id
                             )}"]`
-                        );
-
-                    if (!messageElement) {
+                        )
+                    ) {
                         return;
                     }
 
-                    await refreshMessageReactions(
-                        messageId
-                    );
-                }
-            )
+                    messagesContainer
+                        .querySelector(
+                            ".empty-messages"
+                        )
+                        ?.remove();
 
-            .subscribe(
-                function (status) {
+                    /*
+                     * تحميل ملف المرسل
+                     * إذا لم يكن موجودًا.
+                     */
+                    if (
+                        message.sender_id &&
+                        !profileCache.has(
+                            message.sender_id
+                        )
+                    ) {
+                        const {
+                            data
+                        } = await db
+                            .from(
+                                "profiles"
+                            )
+                            .select(
+                                "id,display_name,role"
+                            )
+                            .eq(
+                                "id",
+                                message.sender_id
+                            )
+                            .maybeSingle();
 
-                    console.log(
-                        "Realtime status:",
-                        status
+                        if (data) {
+                            profileCache.set(
+                                data.id,
+                                data
+                            );
+                        }
+                    }
+
+                    reactionCache.set(
+                        message.id,
+                        []
                     );
+
+                    await renderMessage(
+                        message
+                    );
+
+                    scrollBottom();
                 }
-            );
+
+            } catch (error) {
+                console.error(
+                    "Realtime message error:",
+                    error
+                );
+            }
+        }
+    );
+
+    /*
+     * التفاعلات.
+     */
+    realtimeChannel.on(
+        "postgres_changes",
+        {
+            event: "*",
+            schema: "public",
+            table: "message_reactions"
+        },
+        async payload => {
+            try {
+                const messageId =
+                    payload.new?.message_id ||
+                    payload.old?.message_id;
+
+                if (!messageId) {
+                    return;
+                }
+
+                const messageExists =
+                    messagesContainer.querySelector(
+                        `[data-message-id="${cssEscape(
+                            messageId
+                        )}"]`
+                    );
+
+                if (!messageExists) {
+                    return;
+                }
+
+                await refreshReactions(
+                    messageId
+                );
+
+            } catch (error) {
+                console.error(
+                    "Realtime reaction error:",
+                    error
+                );
+            }
+        }
+    );
+
+    realtimeChannel.subscribe(
+        status => {
+            if (
+                status ===
+                "CHANNEL_ERROR"
+            ) {
+                console.error(
+                    "Realtime channel error."
+                );
+            }
+        }
+    );
 }
 
-/* =========================================================
-   LOGOUT
-========================================================= */
+/* =========================
+   27. LOGOUT
+   ========================= */
 
 async function logout() {
-
     try {
+        if (isRecording) {
+            stopRecording();
+        }
 
-        await db.auth.signOut();
+        const {
+            error
+        } = await db.auth.signOut();
+
+        if (error) {
+            throw error;
+        }
 
     } catch (error) {
-
         console.error(
             "Logout error:",
             error
         );
 
-        showError(
-            error.message ||
-            "حدث خطأ أثناء تسجيل الخروج."
+        showLoginError(
+            authMessage(error)
         );
     }
 }
 
-/* =========================================================
-   UI
-========================================================= */
+/* =========================
+   28. RESET APPLICATION
+   ========================= */
 
-function showApplication() {
+async function resetApplication() {
+    currentUser = null;
+    currentProfile = null;
+    currentConversation = null;
 
-    loginScreen.classList.add(
+    profileCache.clear();
+    reactionCache.clear();
+
+    closeContextMenu();
+
+    if (realtimeChannel) {
+        try {
+            await db.removeChannel(
+                realtimeChannel
+            );
+        } catch (error) {
+            console.error(
+                "Remove channel error:",
+                error
+            );
+        }
+
+        realtimeChannel = null;
+    }
+
+    if (isRecording) {
+        stopRecording();
+    }
+
+    clearFilePreview();
+
+    messagesContainer.innerHTML = `
+        <div class="empty-messages">
+            <div class="empty-icon">
+                👋
+            </div>
+
+            <strong>
+                مرحبًا بك في مركز التواصل
+            </strong>
+
+            <small>
+                ابدأ بإرسال رسالة الآن
+            </small>
+        </div>
+    `;
+
+    app.classList.add(
         "hidden"
     );
 
-    app.classList.remove(
+    loginScreen.classList.remove(
         "hidden"
     );
 }
 
 function showLoginScreen() {
-
     loginScreen.classList.remove(
         "hidden"
     );
@@ -2487,40 +3067,29 @@ function showLoginScreen() {
     );
 }
 
+/* =========================
+   29. UI HELPERS
+   ========================= */
+
 function clearLoginError() {
-
-    if (!loginError) {
-        return;
-    }
-
     loginError.textContent = "";
-
-    loginError.className = "";
+    loginError.className =
+        "error";
 }
 
-function showError(
+function showLoginError(
     message
 ) {
-
-    if (!loginError) {
-        return;
-    }
-
     loginError.textContent =
-        message || "حدث خطأ.";
+        message || "";
 
     loginError.className =
         "error";
 }
 
-function showSuccess(
+function showLoginSuccess(
     message
 ) {
-
-    if (!loginError) {
-        return;
-    }
-
     loginError.textContent =
         message || "";
 
@@ -2531,81 +3100,80 @@ function showSuccess(
 function showChatError(
     message
 ) {
-
-    console.error(
-        "Chat error:",
-        message
-    );
-
     if (!messagesContainer) {
         return;
     }
 
-    const element =
-        document.createElement("div");
+    /*
+     * إزالة أخطاء قديمة لتجنب
+     * تكدس التنبيهات.
+     */
+    messagesContainer
+        .querySelectorAll(
+            ".chat-error"
+        )
+        .forEach(
+            element =>
+                element.remove()
+        );
 
-    element.className =
+    const error =
+        document.createElement(
+            "div"
+        );
+
+    error.className =
         "chat-error";
 
-    element.textContent =
-        message ||
-        "حدث خطأ.";
+    error.textContent =
+        message || "حدث خطأ.";
 
     messagesContainer.appendChild(
-        element
+        error
     );
 
-    scrollMessagesToBottom();
+    scrollBottom();
+
+    setTimeout(() => {
+        error.remove();
+    }, 4500);
 }
 
-function setButtonLoading(
+function setButton(
     button,
     loading,
     text
 ) {
-
     if (!button) {
         return;
     }
 
     button.disabled =
-        loading;
+        Boolean(loading);
 
     button.textContent =
         text;
 }
 
-function setActiveButton(
+function setActive(
     button
 ) {
-
     document
         .querySelectorAll(
             ".conversation-button"
         )
-        .forEach(
-            function (element) {
-
-                element.classList.remove(
-                    "active"
-                );
-            }
+        .forEach(item =>
+            item.classList.remove(
+                "active"
+            )
         );
 
-    if (button) {
-
-        button.classList.add(
-            "active"
-        );
-    }
+    button?.classList.add(
+        "active"
+    );
 }
 
-/* =========================================================
-   FILE PREVIEW
-========================================================= */
-
 function clearFilePreview() {
-
     selectedImage = null;
 
     if (imageInput) {
@@ -2613,8 +3181,8 @@ function clearFilePreview() {
     }
 
     if (filePreview) {
-
-        filePreview.innerHTML = "";
+        filePreview.innerHTML =
+            "";
 
         filePreview.classList.add(
             "hidden"
@@ -2622,79 +3190,95 @@ function clearFilePreview() {
     }
 }
 
-/* =========================================================
-   HELPERS
-========================================================= */
+function scrollBottom() {
+    requestAnimationFrame(() => {
+        if (!messagesContainer) {
+            return;
+        }
+
+        messagesContainer.scrollTop =
+            messagesContainer.scrollHeight;
+    });
+}
+
+/* =========================
+   30. SECURITY / UTILITY
+   ========================= */
 
 function escapeHtml(
     value
 ) {
-
-    const div =
+    const element =
         document.createElement(
             "div"
         );
 
-    div.textContent =
+    element.textContent =
         value == null
             ? ""
             : String(value);
 
-    return div.innerHTML;
+    return element.innerHTML;
 }
 
 function cssEscape(
     value
 ) {
+    const stringValue =
+        String(value);
 
     if (
         window.CSS &&
         typeof window.CSS.escape ===
-        "function"
+            "function"
     ) {
-
         return window.CSS.escape(
-            String(value)
+            stringValue
         );
     }
 
-    return String(value)
-        .replace(
-            /["\\]/g,
-            "\\$&"
-        );
+    return stringValue.replace(
+        /["\\]/g,
+        "\\$&"
+    );
 }
 
-function getFileExtension(
+function ext(
     filename
 ) {
+    const extension =
+        String(filename || "")
+            .split(".")
+            .pop()
+            .toLowerCase()
+            .replace(
+                /[^a-z0-9]/g,
+                ""
+            );
 
-    const parts =
-        filename.split(".");
-
-    if (parts.length < 2) {
-        return "bin";
-    }
-
-    return parts
-        .pop()
-        .toLowerCase()
-        .replace(
-            /[^a-z0-9]/g,
-            ""
-        ) || "bin";
+    return (
+        extension ||
+        "bin"
+    );
 }
 
 function formatDate(
-    dateString
+    value
 ) {
-
-    if (!dateString) {
+    if (!value) {
         return "";
     }
 
     const date =
-        new Date(dateString);
+        new Date(value);
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+        return "";
+    }
 
     return date.toLocaleString(
         "ar-DZ",
@@ -2707,24 +3291,13 @@ function formatDate(
     );
 }
 
-function scrollMessagesToBottom() {
+/* =========================
+   31. AUTH ERROR MESSAGES
+   ========================= */
 
-    if (!messagesContainer) {
-        return;
-    }
-
-    messagesContainer.scrollTop =
-        messagesContainer.scrollHeight;
-}
-
-/* =========================================================
-   AUTH ERROR
-========================================================= */
-
-function getAuthErrorMessage(
+function authMessage(
     error
 ) {
-
     const message =
         (
             error?.message ||
@@ -2736,8 +3309,9 @@ function getAuthErrorMessage(
             "invalid login credentials"
         )
     ) {
-
-        return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+        return (
+            "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+        );
     }
 
     if (
@@ -2745,26 +3319,19 @@ function getAuthErrorMessage(
             "email rate limit exceeded"
         )
     ) {
-
-        return "تم تجاوز حد إرسال رسائل الاسترجاع مؤقتًا من Supabase. انتظر قليلًا قبل طلب رسالة جديدة.";
+        return (
+            "تم تجاوز حد إرسال رسائل الاسترجاع مؤقتًا. انتظر قليلًا ثم حاول مرة أخرى."
+        );
     }
 
     if (
         message.includes(
-            "rate limit"
+            "email not confirmed"
         )
     ) {
-
-        return "تم تجاوز الحد المسموح مؤقتًا. حاول مرة أخرى لاحقًا.";
-    }
-
-    if (
-        message.includes(
-            "user not found"
-        )
-    ) {
-
-        return "لا يوجد حساب بهذا البريد الإلكتروني.";
+        return (
+            "يجب تأكيد البريد الإلكتروني قبل تسجيل الدخول."
+        );
     }
 
     if (
@@ -2772,8 +3339,9 @@ function getAuthErrorMessage(
             "password should be at least"
         )
     ) {
-
-        return "كلمة المرور قصيرة جدًا.";
+        return (
+            "كلمة المرور قصيرة جدًا."
+        );
     }
 
     return (
@@ -2781,8 +3349,3 @@ function getAuthErrorMessage(
         "حدث خطأ غير معروف."
     );
 }
-
-window.SUPABASE_URL = "https://kdbxfsifrzoohgihqqqz.supabase.co";
-
-window.SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkYnhmc2lmcnpvb2hnaWhxcXF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkxMTQzNTcsImV4cCI6MjEwNDY5MDM1N30.FqQnBYtv4nkW4OC8UAt9nJBzysaFoXuoPZA-yTso9kk";
