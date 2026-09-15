@@ -53,6 +53,8 @@ let currentUser = null;
 let currentProfile = null;
 let currentConversation = null;
 
+let replyingToMessage = null;
+
 let realtimeChannel = null;
 
 let mediaRecorder = null;
@@ -75,14 +77,141 @@ const REACTIONS = [
 ];
 
 /* =========================
-   4. INITIALIZATION
+   4. REPLY ELEMENTS
    ========================= */
 
-document.addEventListener("DOMContentLoaded", initialize);
+let replyPreview = null;
+let replyPreviewSender = null;
+let replyPreviewContent = null;
+let cancelReplyButton = null;
+
+/*
+ * إنشاء واجهة الرد تلقائيًا إذا لم تكن
+ * موجودة في index.html.
+ */
+function ensureReplyPreview() {
+    replyPreview =
+        document.getElementById("replyPreview");
+
+    replyPreviewSender =
+        document.getElementById(
+            "replyPreviewSender"
+        );
+
+    replyPreviewContent =
+        document.getElementById(
+            "replyPreviewContent"
+        );
+
+    cancelReplyButton =
+        document.getElementById(
+            "cancelReplyButton"
+        );
+
+    /*
+     * إذا كانت عناصر الرد موجودة بالفعل
+     * في index.html نستخدمها مباشرة.
+     */
+    if (
+        replyPreview &&
+        replyPreviewSender &&
+        replyPreviewContent &&
+        cancelReplyButton
+    ) {
+        return;
+    }
+
+    /*
+     * إذا لم تكن موجودة، ننشئها تلقائيًا
+     * قبل نموذج إرسال الرسالة.
+     */
+    if (!messageForm) {
+        return;
+    }
+
+    replyPreview =
+        document.createElement("div");
+
+    replyPreview.id =
+        "replyPreview";
+
+    replyPreview.className =
+        "reply-preview hidden";
+
+    replyPreview.innerHTML = `
+        <div class="reply-preview-content">
+
+            <span
+                class="reply-preview-icon"
+                aria-hidden="true"
+            >
+                ↩
+            </span>
+
+            <div class="reply-preview-text">
+
+                <strong
+                    id="replyPreviewSender"
+                >
+                    الرد على
+                </strong>
+
+                <span
+                    id="replyPreviewContent"
+                ></span>
+
+            </div>
+        </div>
+
+        <button
+            id="cancelReplyButton"
+            type="button"
+            class="cancel-reply"
+            aria-label="إلغاء الرد"
+            title="إلغاء الرد"
+        >
+            ×
+        </button>
+    `;
+
+    messageForm.parentNode.insertBefore(
+        replyPreview,
+        messageForm
+    );
+
+    replyPreviewSender =
+        replyPreview.querySelector(
+            "#replyPreviewSender"
+        );
+
+    replyPreviewContent =
+        replyPreview.querySelector(
+            "#replyPreviewContent"
+        );
+
+    cancelReplyButton =
+        replyPreview.querySelector(
+            "#cancelReplyButton"
+        );
+}
+
+/* =========================
+   5. INITIALIZATION
+   ========================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    initialize
+);
 
 async function initialize() {
     try {
-        loginButton?.addEventListener("click", login);
+        ensureReplyPreview();
+
+        loginButton?.addEventListener(
+            "click",
+            login
+        );
 
         forgotPasswordButton?.addEventListener(
             "click",
@@ -114,6 +243,16 @@ async function initialize() {
             toggleRecording
         );
 
+        cancelReplyButton?.addEventListener(
+            "click",
+            event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                cancelReply();
+            }
+        );
+
         messageInput?.addEventListener(
             "keydown",
             event => {
@@ -123,7 +262,10 @@ async function initialize() {
                 ) {
                     event.preventDefault();
 
-                    if (typeof messageForm.requestSubmit === "function") {
+                    if (
+                        typeof messageForm?.requestSubmit ===
+                        "function"
+                    ) {
                         messageForm.requestSubmit();
                     } else {
                         sendMessage(event);
@@ -132,51 +274,78 @@ async function initialize() {
             }
         );
 
-        document.addEventListener("click", event => {
-            if (
-                contextMenu &&
-                !contextMenu.contains(event.target)
-            ) {
-                closeContextMenu();
-            }
-        });
-
-        document.addEventListener("keydown", event => {
-            if (event.key === "Escape") {
-                closeContextMenu();
-            }
-        });
-
-        window.addEventListener("resize", () => {
-            closeContextMenu();
-        });
-
-        db.auth.onAuthStateChange(async (event, session) => {
-            try {
-                if (event === "PASSWORD_RECOVERY") {
-                    showPasswordUpdateScreen();
-                    return;
-                }
-
+        document.addEventListener(
+            "click",
+            event => {
                 if (
-                    event === "SIGNED_IN" &&
-                    session?.user &&
-                    !currentUser
+                    contextMenu &&
+                    !contextMenu.contains(
+                        event.target
+                    )
                 ) {
-                    await startApplication(session.user);
-                    return;
+                    closeContextMenu();
                 }
-
-                if (event === "SIGNED_OUT") {
-                    await resetApplication();
-                }
-            } catch (error) {
-                console.error(
-                    "Auth state error:",
-                    error
-                );
             }
-        });
+        );
+
+        document.addEventListener(
+            "keydown",
+            event => {
+                if (event.key === "Escape") {
+                    closeContextMenu();
+                }
+            }
+        );
+
+        window.addEventListener(
+            "resize",
+            () => {
+                closeContextMenu();
+                closeAllReactionPickers();
+            }
+        );
+
+        db.auth.onAuthStateChange(
+            async (
+                event,
+                session
+            ) => {
+                try {
+                    if (
+                        event ===
+                        "PASSWORD_RECOVERY"
+                    ) {
+                        showPasswordUpdateScreen();
+                        return;
+                    }
+
+                    if (
+                        event ===
+                            "SIGNED_IN" &&
+                        session?.user &&
+                        !currentUser
+                    ) {
+                        await startApplication(
+                            session.user
+                        );
+
+                        return;
+                    }
+
+                    if (
+                        event ===
+                        "SIGNED_OUT"
+                    ) {
+                        await resetApplication();
+                    }
+                } catch (error) {
+                    console.error(
+                        "Auth state error:",
+                        error
+                    );
+                }
+            }
+        );
 
         const {
             data,
@@ -185,9 +354,11 @@ async function initialize() {
 
         if (error) {
             console.error(error);
+
             showLoginError(
                 authMessage(error)
             );
+
             return;
         }
 
@@ -212,20 +383,25 @@ async function initialize() {
 }
 
 /* =========================
-   5. LOGIN
+   6. LOGIN
    ========================= */
 
 async function login() {
     clearLoginError();
 
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
+    const email =
+        emailInput?.value.trim() || "";
+
+    const password =
+        passwordInput?.value || "";
 
     if (!email) {
         showLoginError(
             "أدخل البريد الإلكتروني."
         );
-        emailInput.focus();
+
+        emailInput?.focus();
+
         return;
     }
 
@@ -233,7 +409,9 @@ async function login() {
         showLoginError(
             "أدخل كلمة المرور."
         );
-        passwordInput.focus();
+
+        passwordInput?.focus();
+
         return;
     }
 
@@ -275,6 +453,7 @@ async function login() {
         showLoginError(
             authMessage(error)
         );
+
     } finally {
         setButton(
             loginButton,
@@ -285,19 +464,22 @@ async function login() {
 }
 
 /* =========================
-   6. PASSWORD RESET
+   7. PASSWORD RESET
    ========================= */
 
 async function resetPassword() {
     clearLoginError();
 
-    const email = emailInput.value.trim();
+    const email =
+        emailInput?.value.trim() || "";
 
     if (!email) {
         showLoginError(
             "أدخل بريدك الإلكتروني أولاً."
         );
-        emailInput.focus();
+
+        emailInput?.focus();
+
         return;
     }
 
@@ -310,13 +492,15 @@ async function resetPassword() {
     try {
         const {
             error
-        } = await db.auth.resetPasswordForEmail(
-            email,
-            {
-                redirectTo:
-                    window.location.origin + "/"
-            }
-        );
+        } =
+            await db.auth.resetPasswordForEmail(
+                email,
+                {
+                    redirectTo:
+                        window.location.origin +
+                        "/"
+                }
+            );
 
         if (error) {
             throw error;
@@ -335,6 +519,7 @@ async function resetPassword() {
         showLoginError(
             authMessage(error)
         );
+
     } finally {
         setButton(
             forgotPasswordButton,
@@ -345,20 +530,34 @@ async function resetPassword() {
 }
 
 function showPasswordUpdateScreen() {
-    loginScreen.classList.remove("hidden");
-    app.classList.add("hidden");
+    loginScreen?.classList.remove(
+        "hidden"
+    );
+
+    app?.classList.add(
+        "hidden"
+    );
 
     const box =
-        loginScreen.querySelector(".login-box");
+        loginScreen?.querySelector(
+            ".login-box"
+        );
 
     if (!box) {
         return;
     }
 
     box.innerHTML = `
-        <div class="logo" aria-hidden="true">🔐</div>
+        <div
+            class="logo"
+            aria-hidden="true"
+        >
+            🔐
+        </div>
 
-        <h1>تغيير كلمة المرور</h1>
+        <h1>
+            تغيير كلمة المرور
+        </h1>
 
         <p>
             أدخل كلمة المرور الجديدة لحسابك
@@ -407,10 +606,14 @@ function showPasswordUpdateScreen() {
     `;
 
     const newPassword =
-        document.getElementById("newPassword");
+        document.getElementById(
+            "newPassword"
+        );
 
     const confirmPassword =
-        document.getElementById("confirmPassword");
+        document.getElementById(
+            "confirmPassword"
+        );
 
     const updateButton =
         document.getElementById(
@@ -426,23 +629,35 @@ function showPasswordUpdateScreen() {
         "click",
         async () => {
             const password =
-                newPassword.value;
+                newPassword?.value || "";
 
             const confirmation =
-                confirmPassword.value;
+                confirmPassword?.value || "";
 
-            errorBox.textContent = "";
-            errorBox.className = "error";
+            if (errorBox) {
+                errorBox.textContent = "";
+                errorBox.className =
+                    "error";
+            }
 
             if (password.length < 6) {
-                errorBox.textContent =
-                    "كلمة المرور يجب أن تكون 6 أحرف على الأقل.";
+                if (errorBox) {
+                    errorBox.textContent =
+                        "كلمة المرور يجب أن تكون 6 أحرف على الأقل.";
+                }
+
                 return;
             }
 
-            if (password !== confirmation) {
-                errorBox.textContent =
-                    "كلمتا المرور غير متطابقتين.";
+            if (
+                password !==
+                confirmation
+            ) {
+                if (errorBox) {
+                    errorBox.textContent =
+                        "كلمتا المرور غير متطابقتين.";
+                }
+
                 return;
             }
 
@@ -455,19 +670,22 @@ function showPasswordUpdateScreen() {
             try {
                 const {
                     error
-                } = await db.auth.updateUser({
-                    password
-                });
+                } =
+                    await db.auth.updateUser({
+                        password
+                    });
 
                 if (error) {
                     throw error;
                 }
 
-                errorBox.className =
-                    "success";
+                if (errorBox) {
+                    errorBox.className =
+                        "success";
 
-                errorBox.textContent =
-                    "تم تغيير كلمة المرور بنجاح.";
+                    errorBox.textContent =
+                        "تم تغيير كلمة المرور بنجاح.";
+                }
 
                 setTimeout(
                     async () => {
@@ -482,11 +700,13 @@ function showPasswordUpdateScreen() {
                     error
                 );
 
-                errorBox.className =
-                    "error";
+                if (errorBox) {
+                    errorBox.className =
+                        "error";
 
-                errorBox.textContent =
-                    authMessage(error);
+                    errorBox.textContent =
+                        authMessage(error);
+                }
 
             } finally {
                 setButton(
@@ -500,10 +720,12 @@ function showPasswordUpdateScreen() {
 }
 
 /* =========================
-   7. START APPLICATION
+   8. START APPLICATION
    ========================= */
 
-async function startApplication(user) {
+async function startApplication(
+    user
+) {
     if (!user) {
         return;
     }
@@ -541,11 +763,11 @@ async function startApplication(user) {
         data
     );
 
-    loginScreen.classList.add(
+    loginScreen?.classList.add(
         "hidden"
     );
 
-    app.classList.remove(
+    app?.classList.remove(
         "hidden"
     );
 
@@ -555,13 +777,20 @@ async function startApplication(user) {
 }
 
 /* =========================
-   8. CUSTOMERS
+   9. CUSTOMERS
    ========================= */
 
 async function loadCustomers() {
+    if (!customersList) {
+        return;
+    }
+
     customersList.innerHTML = "";
 
-    if (currentProfile?.role !== "admin") {
+    if (
+        currentProfile?.role !==
+        "admin"
+    ) {
         customersList.innerHTML = `
             <div class="customer-empty">
                 محادثتك الخاصة مع الإدارة
@@ -579,7 +808,10 @@ async function loadCustomers() {
         .select(
             "id,display_name,role"
         )
-        .eq("role", "customer")
+        .eq(
+            "role",
+            "customer"
+        )
         .order(
             "display_name",
             {
@@ -612,58 +844,64 @@ async function loadCustomers() {
         return;
     }
 
-    data.forEach(customer => {
-        profileCache.set(
-            customer.id,
-            customer
-        );
+    data.forEach(
+        customer => {
+            profileCache.set(
+                customer.id,
+                customer
+            );
 
-        const button =
-            document.createElement("button");
+            const button =
+                document.createElement(
+                    "button"
+                );
 
-        button.type = "button";
+            button.type = "button";
 
-        button.className =
-            "conversation-button customer-button";
+            button.className =
+                "conversation-button customer-button";
 
-        button.innerHTML = `
-            <span
-                class="customer-icon"
-                aria-hidden="true"
-            >
-                👤
-            </span>
+            button.innerHTML = `
+                <span
+                    class="customer-icon"
+                    aria-hidden="true"
+                >
+                    👤
+                </span>
 
-            <span class="conversation-copy">
-                <strong>
-                    ${escapeHtml(
-                        customer.display_name ||
-                        "عميل"
-                    )}
-                </strong>
+                <span class="conversation-copy">
 
-                <small>
-                    محادثة خاصة
-                </small>
-            </span>
-        `;
+                    <strong>
+                        ${escapeHtml(
+                            customer.display_name ||
+                            "عميل"
+                        )}
+                    </strong>
 
-        button.addEventListener(
-            "click",
-            () =>
-                openPrivateConversation(
-                    customer
-                )
-        );
+                    <small>
+                        محادثة خاصة
+                    </small>
 
-        customersList.appendChild(
-            button
-        );
-    });
+                </span>
+            `;
+
+            button.addEventListener(
+                "click",
+                () =>
+                    openPrivateConversation(
+                        customer
+                    )
+            );
+
+            customersList.appendChild(
+                button
+            );
+        }
+    );
 }
 
 /* =========================
-   9. GROUP CONVERSATION
+   10. GROUP CONVERSATION
    ========================= */
 
 async function openGroupConversation() {
@@ -673,13 +911,18 @@ async function openGroupConversation() {
 
     closeContextMenu();
 
+    cancelReply();
+
     let {
         data,
         error
     } = await db
         .from("conversations")
         .select("*")
-        .eq("type", "group")
+        .eq(
+            "type",
+            "group"
+        )
         .limit(1)
         .maybeSingle();
 
@@ -696,11 +939,11 @@ async function openGroupConversation() {
         return;
     }
 
-    /*
-     * إذا لم تكن المجموعة موجودة، يحاول
-     * المسؤول إنشاءها تلقائيًا.
-     */
-    if (!data && currentProfile?.role === "admin") {
+    if (
+        !data &&
+        currentProfile?.role ===
+            "admin"
+    ) {
         const created =
             await db
                 .from("conversations")
@@ -724,7 +967,8 @@ async function openGroupConversation() {
             return;
         }
 
-        data = created.data;
+        data =
+            created.data;
     }
 
     if (!data) {
@@ -747,7 +991,7 @@ async function openGroupConversation() {
 }
 
 /* =========================
-   10. PRIVATE CONVERSATION
+   11. PRIVATE CONVERSATION
    ========================= */
 
 async function openPrivateConversation(
@@ -759,13 +1003,18 @@ async function openPrivateConversation(
 
     closeContextMenu();
 
+    cancelReply();
+
     let {
         data,
         error
     } = await db
         .from("conversations")
         .select("*")
-        .eq("type", "private")
+        .eq(
+            "type",
+            "private"
+        )
         .eq(
             "customer_id",
             customer.id
@@ -785,20 +1034,18 @@ async function openPrivateConversation(
         return;
     }
 
-    /*
-     * المسؤول يستطيع إنشاء محادثة خاصة
-     * للعميل إذا لم تكن موجودة.
-     */
     if (
         !data &&
-        currentProfile?.role === "admin"
+        currentProfile?.role ===
+            "admin"
     ) {
         const created =
             await db
                 .from("conversations")
                 .insert({
                     type: "private",
-                    customer_id: customer.id
+                    customer_id:
+                        customer.id
                 })
                 .select("*")
                 .single();
@@ -816,14 +1063,31 @@ async function openPrivateConversation(
             return;
         }
 
-        data = created.data;
+        data =
+            created.data;
+    }
 
-        /*
-         * إضافة الطرفين إلى conversation_members.
-         */
+    if (!data) {
+        showChatError(
+            "لا توجد محادثة خاصة لهذا العميل."
+        );
+
+        return;
+    }
+
+    /*
+     * التأكد من وجود الطرفين
+     * في conversation_members.
+     */
+    if (
+        currentProfile?.role ===
+        "admin"
+    ) {
         const members =
             await db
-                .from("conversation_members")
+                .from(
+                    "conversation_members"
+                )
                 .upsert(
                     [
                         {
@@ -853,14 +1117,6 @@ async function openPrivateConversation(
         }
     }
 
-    if (!data) {
-        showChatError(
-            "لا توجد محادثة خاصة لهذا العميل."
-        );
-
-        return;
-    }
-
     await selectConversation(
         data,
         customer.display_name ||
@@ -872,10 +1128,11 @@ async function openPrivateConversation(
         .querySelectorAll(
             ".conversation-button"
         )
-        .forEach(button =>
-            button.classList.remove(
-                "active"
-            )
+        .forEach(
+            button =>
+                button.classList.remove(
+                    "active"
+                )
         );
 
     const customerButtons =
@@ -883,29 +1140,31 @@ async function openPrivateConversation(
             ".customer-button"
         );
 
-    customerButtons.forEach(button => {
-        const strong =
-            button.querySelector(
-                "strong"
-            );
+    customerButtons.forEach(
+        button => {
+            const strong =
+                button.querySelector(
+                    "strong"
+                );
 
-        if (
-            strong &&
-            strong.textContent.trim() ===
-                (
-                    customer.display_name ||
-                    "عميل"
-                ).trim()
-        ) {
-            button.classList.add(
-                "active"
-            );
+            if (
+                strong &&
+                strong.textContent.trim() ===
+                    (
+                        customer.display_name ||
+                        "عميل"
+                    ).trim()
+            ) {
+                button.classList.add(
+                    "active"
+                );
+            }
         }
-    });
+    );
 }
 
 /* =========================
-   11. SELECT CONVERSATION
+   12. SELECT CONVERSATION
    ========================= */
 
 async function selectConversation(
@@ -930,10 +1189,13 @@ async function selectConversation(
 
     closeContextMenu();
 
+    cancelReply();
+
     clearFilePreview();
 
     messagesContainer.innerHTML = `
         <div class="empty-messages">
+
             <div class="empty-icon">
                 ⏳
             </div>
@@ -941,6 +1203,7 @@ async function selectConversation(
             <strong>
                 جارٍ تحميل الرسائل...
             </strong>
+
         </div>
     `;
 
@@ -950,7 +1213,7 @@ async function selectConversation(
 }
 
 /* =========================
-   12. LOAD MESSAGES
+   13. LOAD MESSAGES
    ========================= */
 
 async function loadMessages() {
@@ -993,6 +1256,7 @@ async function loadMessages() {
     if (!messages?.length) {
         messagesContainer.innerHTML = `
             <div class="empty-messages">
+
                 <div class="empty-icon">
                     💬
                 </div>
@@ -1004,6 +1268,7 @@ async function loadMessages() {
                 <small>
                     ابدأ بإرسال رسالة الآن
                 </small>
+
             </div>
         `;
 
@@ -1039,14 +1304,23 @@ async function loadMessages() {
             );
 
         if (!profilesError) {
-            profiles?.forEach(profile => {
-                profileCache.set(
-                    profile.id,
-                    profile
-                );
-            });
+            profiles?.forEach(
+                profile => {
+                    profileCache.set(
+                        profile.id,
+                        profile
+                    );
+                }
+            );
         }
     }
+
+    /*
+     * تحميل الرسائل التي نرد عليها.
+     */
+    await loadReplyMessages(
+        messages
+    );
 
     /*
      * تحميل التفاعلات.
@@ -1059,7 +1333,9 @@ async function loadMessages() {
 
     messagesContainer.innerHTML = "";
 
-    for (const message of messages) {
+    for (
+        const message of messages
+    ) {
         await renderMessage(
             message
         );
@@ -1069,7 +1345,191 @@ async function loadMessages() {
 }
 
 /* =========================
-   13. LOAD REACTIONS
+   14. LOAD REPLY MESSAGES
+   ========================= */
+
+async function loadReplyMessages(
+    messages
+) {
+    if (!messages?.length) {
+        return;
+    }
+
+    const replyIds = [
+        ...new Set(
+            messages
+                .map(
+                    message =>
+                        message.reply_to_message_id
+                )
+                .filter(Boolean)
+        )
+    ];
+
+    if (!replyIds.length) {
+        return;
+    }
+
+    const {
+        data: replies,
+        error
+    } = await db
+        .from("messages")
+        .select("*")
+        .in(
+            "id",
+            replyIds
+        );
+
+    if (error) {
+        console.error(
+            "Reply messages error:",
+            error
+        );
+
+        return;
+    }
+
+    if (!replies?.length) {
+        return;
+    }
+
+    const replySenderIds = [
+        ...new Set(
+            replies
+                .map(
+                    message =>
+                        message.sender_id
+                )
+                .filter(Boolean)
+        )
+    ];
+
+    if (
+        replySenderIds.length
+    ) {
+        const {
+            data: profiles,
+            error: profileError
+        } = await db
+            .from("profiles")
+            .select(
+                "id,display_name,role"
+            )
+            .in(
+                "id",
+                replySenderIds
+            );
+
+        if (!profileError) {
+            profiles?.forEach(
+                profile => {
+                    profileCache.set(
+                        profile.id,
+                        profile
+                    );
+                }
+            );
+        }
+    }
+
+    const replyMap =
+        new Map(
+            replies.map(
+                reply => [
+                    reply.id,
+                    reply
+                ]
+            )
+        );
+
+    messages.forEach(
+        message => {
+            if (
+                message.reply_to_message_id
+            ) {
+                message.reply_to =
+                    replyMap.get(
+                        message.reply_to_message_id
+                    ) || null;
+            }
+        }
+    );
+}
+
+/* =========================
+   15. LOAD REPLY FOR REALTIME
+   ========================= */
+
+async function hydrateReplyMessage(
+    message
+) {
+    if (
+        !message?.reply_to_message_id
+    ) {
+        return message;
+    }
+
+    const {
+        data: reply,
+        error
+    } = await db
+        .from("messages")
+        .select("*")
+        .eq(
+            "id",
+            message.reply_to_message_id
+        )
+        .maybeSingle();
+
+    if (error) {
+        console.error(
+            "Hydrate reply error:",
+            error
+        );
+
+        return message;
+    }
+
+    if (!reply) {
+        return message;
+    }
+
+    if (
+        reply.sender_id &&
+        !profileCache.has(
+            reply.sender_id
+        )
+    ) {
+        const {
+            data: profile
+        } = await db
+            .from("profiles")
+            .select(
+                "id,display_name,role"
+            )
+            .eq(
+                "id",
+                reply.sender_id
+            )
+            .maybeSingle();
+
+        if (profile) {
+            profileCache.set(
+                profile.id,
+                profile
+            );
+        }
+    }
+
+    message.reply_to =
+        reply;
+
+    return message;
+}
+
+/* =========================
+   16. LOAD REACTIONS
    ========================= */
 
 async function loadReactions(
@@ -1101,33 +1561,41 @@ async function loadReactions(
         return;
     }
 
-    messageIds.forEach(id => {
-        reactionCache.set(
-            id,
-            []
-        );
-    });
-
-    data?.forEach(reaction => {
-        if (
-            !reactionCache.has(
-                reaction.message_id
-            )
-        ) {
+    messageIds.forEach(
+        id => {
             reactionCache.set(
-                reaction.message_id,
+                id,
                 []
             );
         }
+    );
 
-        reactionCache
-            .get(reaction.message_id)
-            .push(reaction);
-    });
+    data?.forEach(
+        reaction => {
+            if (
+                !reactionCache.has(
+                    reaction.message_id
+                )
+            ) {
+                reactionCache.set(
+                    reaction.message_id,
+                    []
+                );
+            }
+
+            reactionCache
+                .get(
+                    reaction.message_id
+                )
+                .push(
+                    reaction
+                );
+        }
+    );
 }
 
 /* =========================
-   14. RENDER MESSAGE
+   17. RENDER MESSAGE
    ========================= */
 
 async function renderMessage(
@@ -1149,7 +1617,9 @@ async function renderMessage(
     }
 
     const element =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     const own =
         message.sender_id ===
@@ -1192,13 +1662,17 @@ async function renderMessage(
             content = `
                 <a
                     class="image-message-link"
-                    href="${escapeHtml(url)}"
+                    href="${escapeHtml(
+                        url
+                    )}"
                     target="_blank"
                     rel="noopener noreferrer"
                 >
                     <img
                         class="message-image"
-                        src="${escapeHtml(url)}"
+                        src="${escapeHtml(
+                            url
+                        )}"
                         alt="صورة مرسلة"
                         loading="lazy"
                     >
@@ -1231,7 +1705,9 @@ async function renderMessage(
                     class="message-audio"
                     controls
                     preload="metadata"
-                    src="${escapeHtml(url)}"
+                    src="${escapeHtml(
+                        url
+                    )}"
                 ></audio>
             `;
         } else {
@@ -1257,11 +1733,65 @@ async function renderMessage(
     }
 
     /*
+     * الرد على رسالة سابقة.
+     */
+    let replyContent = "";
+
+    if (message.reply_to) {
+        const replySender =
+            profileCache.get(
+                message.reply_to.sender_id
+            )?.display_name ||
+            "مستخدم";
+
+        let previewText = "";
+
+        if (
+            message.reply_to.message_type ===
+            "image"
+        ) {
+            previewText =
+                "📷 صورة";
+        } else if (
+            message.reply_to.message_type ===
+            "audio"
+        ) {
+            previewText =
+                "🎤 رسالة صوتية";
+        } else {
+            previewText =
+                message.reply_to.content ||
+                "رسالة";
+        }
+
+        replyContent = `
+            <div
+                class="message-reply"
+                data-reply-target="${escapeHtml(
+                    message.reply_to.id
+                )}"
+                title="الانتقال إلى الرسالة الأصلية"
+            >
+                <div class="message-reply-name">
+                    ${escapeHtml(
+                        replySender
+                    )}
+                </div>
+
+                <div class="message-reply-content">
+                    ${escapeHtml(
+                        previewText
+                    )}
+                </div>
+            </div>
+        `;
+    }
+
+    /*
      * مؤشر التفاعل الصغير.
      *
      * لا تظهر مجموعة الإيموجي كاملة
-     * إلا عند الضغط على هذا الزر أو
-     * اختيار "إضافة تفاعل" من القائمة.
+     * إلا عند الضغط عليه.
      */
     const reactionTrigger = `
         <button
@@ -1342,9 +1872,12 @@ async function renderMessage(
                         : ""
                 }
 
+                ${replyContent}
+
                 ${content}
 
                 <div class="message-footer">
+
                     <span class="message-time">
                         ${formatDate(
                             message.created_at
@@ -1363,6 +1896,7 @@ async function renderMessage(
                             `
                             : ""
                     }
+
                 </div>
             </div>
 
@@ -1395,6 +1929,30 @@ async function renderMessage(
             ".reaction-trigger"
         );
 
+    const replyElement =
+        element.querySelector(
+            ".message-reply"
+        );
+
+    /*
+     * الضغط على الرد ينقل للرسالة الأصلية.
+     */
+    replyElement?.addEventListener(
+        "click",
+        event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const targetId =
+                replyElement.dataset
+                    .replyTarget;
+
+            scrollToMessage(
+                targetId
+            );
+        }
+    );
+
     /*
      * الضغط على الرسالة يفتح القائمة.
      */
@@ -1403,7 +1961,7 @@ async function renderMessage(
         event => {
             if (
                 event.target.closest(
-                    "a, audio, button"
+                    "a, audio, button, .message-reply"
                 )
             ) {
                 return;
@@ -1418,7 +1976,7 @@ async function renderMessage(
     );
 
     /*
-     * النقر بالزر الأيمن.
+     * الزر الأيمن.
      */
     bubble?.addEventListener(
         "contextmenu",
@@ -1460,28 +2018,30 @@ async function renderMessage(
         .querySelectorAll(
             ".reaction-button"
         )
-        .forEach(button => {
-            button.addEventListener(
-                "click",
-                async event => {
-                    event.preventDefault();
-                    event.stopPropagation();
+        .forEach(
+            button => {
+                button.addEventListener(
+                    "click",
+                    async event => {
+                        event.preventDefault();
+                        event.stopPropagation();
 
-                    const reaction =
-                        button.dataset
-                            .reaction;
+                        const reaction =
+                            button.dataset
+                                .reaction;
 
-                    picker?.classList.remove(
-                        "force-show"
-                    );
+                        picker?.classList.remove(
+                            "force-show"
+                        );
 
-                    await toggleReaction(
-                        message.id,
-                        reaction
-                    );
-                }
-            );
-        });
+                        await toggleReaction(
+                            message.id,
+                            reaction
+                        );
+                    }
+                );
+            }
+        );
 
     /*
      * حذف الرسالة.
@@ -1512,7 +2072,7 @@ async function renderMessage(
 }
 
 /* =========================
-   15. MESSAGE MENU
+   18. MESSAGE MENU
    ========================= */
 
 function openMessageMenu(
@@ -1523,7 +2083,9 @@ function openMessageMenu(
     closeContextMenu();
 
     contextMenu =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     contextMenu.className =
         "message-context-menu";
@@ -1546,6 +2108,20 @@ function openMessageMenu(
 
             <span>
                 نسخ الرسالة
+            </span>
+        </button>
+
+        <button
+            type="button"
+            class="context-item"
+            data-action="reply"
+        >
+            <span class="context-icon">
+                ↩️
+            </span>
+
+            <span>
+                إضافة رد
             </span>
         </button>
 
@@ -1588,13 +2164,19 @@ function openMessageMenu(
         contextMenu
     );
 
+    /*
+     * نسخ.
+     */
     contextMenu
         .querySelector(
             '[data-action="copy"]'
         )
         ?.addEventListener(
             "click",
-            async () => {
+            async event => {
+                event.preventDefault();
+                event.stopPropagation();
+
                 await copyMessage(
                     message
                 );
@@ -1603,13 +2185,40 @@ function openMessageMenu(
             }
         );
 
+    /*
+     * إضافة رد.
+     */
+    contextMenu
+        .querySelector(
+            '[data-action="reply"]'
+        )
+        ?.addEventListener(
+            "click",
+            event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                closeContextMenu();
+
+                startReply(
+                    message
+                );
+            }
+        );
+
+    /*
+     * إضافة تفاعل.
+     */
     contextMenu
         .querySelector(
             '[data-action="reaction"]'
         )
         ?.addEventListener(
             "click",
-            () => {
+            event => {
+                event.preventDefault();
+                event.stopPropagation();
+
                 closeContextMenu();
 
                 const picker =
@@ -1623,21 +2232,30 @@ function openMessageMenu(
                     "force-show"
                 );
 
-                setTimeout(() => {
-                    picker?.classList.remove(
-                        "force-show"
-                    );
-                }, 2500);
+                setTimeout(
+                    () => {
+                        picker?.classList.remove(
+                            "force-show"
+                        );
+                    },
+                    2500
+                );
             }
         );
 
+    /*
+     * حذف.
+     */
     contextMenu
         .querySelector(
             '[data-action="delete"]'
         )
         ?.addEventListener(
             "click",
-            async () => {
+            async event => {
+                event.preventDefault();
+                event.stopPropagation();
+
                 closeContextMenu();
 
                 await deleteMessage(
@@ -1648,12 +2266,16 @@ function openMessageMenu(
         );
 
     const clientX =
-        Number.isFinite(event?.clientX)
+        Number.isFinite(
+            event?.clientX
+        )
             ? event.clientX
             : window.innerWidth / 2;
 
     const clientY =
-        Number.isFinite(event?.clientY)
+        Number.isFinite(
+            event?.clientY
+        )
             ? event.clientY
             : window.innerHeight / 2;
 
@@ -1676,25 +2298,27 @@ function positionMenu(
 
     const margin = 8;
 
-    const left = Math.max(
-        margin,
-        Math.min(
-            x,
-            window.innerWidth -
-                rect.width -
-                margin
-        )
-    );
+    const left =
+        Math.max(
+            margin,
+            Math.min(
+                x,
+                window.innerWidth -
+                    rect.width -
+                    margin
+            )
+        );
 
-    const top = Math.max(
-        margin,
-        Math.min(
-            y,
-            window.innerHeight -
-                rect.height -
-                margin
-        )
-    );
+    const top =
+        Math.max(
+            margin,
+            Math.min(
+                y,
+                window.innerHeight -
+                    rect.height -
+                    margin
+            )
+        );
 
     contextMenu.style.left =
         `${left}px`;
@@ -1711,7 +2335,148 @@ function closeContextMenu() {
 }
 
 /* =========================
-   16. REACTION PICKERS
+   19. REPLY SYSTEM
+   ========================= */
+
+function startReply(
+    message
+) {
+    if (!message?.id) {
+        return;
+    }
+
+    ensureReplyPreview();
+
+    replyingToMessage =
+        message;
+
+    const senderName =
+        profileCache.get(
+            message.sender_id
+        )?.display_name ||
+        (
+            message.sender_id ===
+            currentUser?.id
+                ? "أنت"
+                : "مستخدم"
+        );
+
+    let previewText = "";
+
+    if (
+        message.message_type ===
+        "image"
+    ) {
+        previewText =
+            "📷 صورة";
+    } else if (
+        message.message_type ===
+        "audio"
+    ) {
+        previewText =
+            "🎤 رسالة صوتية";
+    } else {
+        previewText =
+            message.content ||
+            "رسالة";
+    }
+
+    if (replyPreviewSender) {
+        replyPreviewSender.textContent =
+            `الرد على ${senderName}`;
+    }
+
+    if (replyPreviewContent) {
+        replyPreviewContent.textContent =
+            previewText;
+    }
+
+    replyPreview?.classList.remove(
+        "hidden"
+    );
+
+    /*
+     * تمييز الرسالة الأصلية مؤقتًا.
+     */
+    scrollToMessage(
+        message.id,
+        false
+    );
+
+    messageInput?.focus();
+}
+
+function cancelReply() {
+    replyingToMessage =
+        null;
+
+    if (replyPreview) {
+        replyPreview.classList.add(
+            "hidden"
+        );
+    }
+
+    if (replyPreviewSender) {
+        replyPreviewSender.textContent =
+            "الرد على";
+    }
+
+    if (replyPreviewContent) {
+        replyPreviewContent.textContent =
+            "";
+    }
+}
+
+function scrollToMessage(
+    messageId,
+    highlight = true
+) {
+    if (!messageId) {
+        return;
+    }
+
+    const element =
+        messagesContainer.querySelector(
+            `[data-message-id="${cssEscape(
+                messageId
+            )}"]`
+        );
+
+    if (!element) {
+        return;
+    }
+
+    element.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+
+    if (!highlight) {
+        return;
+    }
+
+    element.classList.remove(
+        "message-highlight"
+    );
+
+    void element.offsetWidth;
+
+    element.classList.add(
+        "message-highlight"
+    );
+
+    setTimeout(
+        () => {
+            element.classList.remove(
+                "message-highlight"
+            );
+        },
+        1500
+    );
+}
+
+/* =========================
+   20. REACTION PICKERS
    ========================= */
 
 function closeAllReactionPickers(
@@ -1721,25 +2486,34 @@ function closeAllReactionPickers(
         .querySelectorAll(
             ".reaction-picker.force-show"
         )
-        .forEach(picker => {
-            if (picker !== except) {
-                picker.classList.remove(
-                    "force-show"
-                );
+        .forEach(
+            picker => {
+                if (
+                    picker !==
+                    except
+                ) {
+                    picker.classList.remove(
+                        "force-show"
+                    );
+                }
             }
-        });
+        );
 }
 
 /* =========================
-   17. COPY MESSAGE
+   21. COPY MESSAGE
    ========================= */
 
 async function copyMessage(
     message
 ) {
+    const isText =
+        !message.message_type ||
+        message.message_type ===
+            "text";
+
     if (
-        message.message_type !==
-            "text" ||
+        !isText ||
         !message.content
     ) {
         showChatError(
@@ -1752,7 +2526,8 @@ async function copyMessage(
     try {
         if (
             navigator.clipboard &&
-            typeof navigator.clipboard.writeText ===
+            typeof navigator.clipboard
+                .writeText ===
                 "function"
         ) {
             await navigator.clipboard.writeText(
@@ -1815,21 +2590,26 @@ async function copyMessage(
 }
 
 /* =========================
-   18. DELETE MESSAGE
+   22. DELETE MESSAGE
    ========================= */
 
 async function deleteMessage(
     id,
     element
 ) {
-    if (!id || !currentUser) {
+    if (
+        !id ||
+        !currentUser
+    ) {
         return;
     }
 
     const messageElement =
         element ||
         messagesContainer.querySelector(
-            `[data-message-id="${cssEscape(id)}"]`
+            `[data-message-id="${cssEscape(
+                id
+            )}"]`
         );
 
     if (
@@ -1887,10 +2667,6 @@ async function deleteMessage(
 
     messageElement?.remove();
 
-    /*
-     * إذا أصبحت المحادثة فارغة،
-     * عرض الحالة الفارغة.
-     */
     if (
         !messagesContainer.querySelector(
             ".message"
@@ -1898,6 +2674,7 @@ async function deleteMessage(
     ) {
         messagesContainer.innerHTML = `
             <div class="empty-messages">
+
                 <div class="empty-icon">
                     💬
                 </div>
@@ -1909,13 +2686,14 @@ async function deleteMessage(
                 <small>
                     ابدأ بإرسال رسالة الآن
                 </small>
+
             </div>
         `;
     }
 }
 
 /* =========================
-   19. REACTIONS
+   23. REACTIONS
    ========================= */
 
 async function toggleReaction(
@@ -1936,7 +2714,9 @@ async function toggleReaction(
         data: existing,
         error: existingError
     } = await db
-        .from("message_reactions")
+        .from(
+            "message_reactions"
+        )
         .select(
             "id,reaction"
         )
@@ -1963,11 +2743,6 @@ async function toggleReaction(
         return;
     }
 
-    /*
-     * إذا كان المستخدم لديه تفاعل:
-     * - نفس التفاعل = إزالته
-     * - تفاعل مختلف = تغييره
-     */
     if (existing) {
         let result;
 
@@ -2058,7 +2833,9 @@ async function refreshReactions(
         data,
         error
     } = await db
-        .from("message_reactions")
+        .from(
+            "message_reactions"
+        )
         .select(
             "id,message_id,user_id,reaction,created_at"
         )
@@ -2111,26 +2888,28 @@ function renderReactionSummary(
     const mine =
         new Set();
 
-    list.forEach(item => {
-        const current =
-            counts.get(
-                item.reaction
-            ) || 0;
+    list.forEach(
+        item => {
+            const current =
+                counts.get(
+                    item.reaction
+                ) || 0;
 
-        counts.set(
-            item.reaction,
-            current + 1
-        );
-
-        if (
-            item.user_id ===
-            currentUser?.id
-        ) {
-            mine.add(
-                item.reaction
+            counts.set(
+                item.reaction,
+                current + 1
             );
+
+            if (
+                item.user_id ===
+                currentUser?.id
+            ) {
+                mine.add(
+                    item.reaction
+                );
+            }
         }
-    });
+    );
 
     box.innerHTML =
         REACTIONS
@@ -2171,25 +2950,27 @@ function renderReactionSummary(
 
     box.querySelectorAll(
         ".reaction-summary"
-    ).forEach(button => {
-        button.addEventListener(
-            "click",
-            async event => {
-                event.preventDefault();
-                event.stopPropagation();
+    ).forEach(
+        button => {
+            button.addEventListener(
+                "click",
+                async event => {
+                    event.preventDefault();
+                    event.stopPropagation();
 
-                await toggleReaction(
-                    messageId,
-                    button.dataset
-                        .summaryReaction
-                );
-            }
-        );
-    });
+                    await toggleReaction(
+                        messageId,
+                        button.dataset
+                            .summaryReaction
+                    );
+                }
+            );
+        }
+    );
 }
 
 /* =========================
-   20. SEND MESSAGE
+   24. SEND MESSAGE
    ========================= */
 
 async function sendMessage(
@@ -2208,11 +2989,12 @@ async function sendMessage(
     }
 
     const text =
-        messageInput.value.trim();
+        messageInput?.value.trim() ||
+        "";
 
     /*
      * إذا كانت هناك صورة مختارة،
-     * إرسال الصورة بدل النص.
+     * إرسال الصورة مع الرد إن وجد.
      */
     if (selectedImage) {
         await uploadImage(
@@ -2226,6 +3008,10 @@ async function sendMessage(
         return;
     }
 
+    const replyId =
+        replyingToMessage?.id ||
+        null;
+
     const {
         error
     } = await db
@@ -2238,7 +3024,9 @@ async function sendMessage(
             message_type:
                 "text",
             content:
-                text
+                text,
+            reply_to_message_id:
+                replyId
         });
 
     if (error) {
@@ -2256,11 +3044,13 @@ async function sendMessage(
 
     messageInput.value = "";
 
+    cancelReply();
+
     messageInput.focus();
 }
 
 /* =========================
-   21. IMAGE SELECTION
+   25. IMAGE SELECTION
    ========================= */
 
 function handleImageSelection(
@@ -2303,7 +3093,8 @@ function handleImageSelection(
         return;
     }
 
-    selectedImage = file;
+    selectedImage =
+        file;
 
     filePreview.classList.remove(
         "hidden"
@@ -2311,6 +3102,7 @@ function handleImageSelection(
 
     filePreview.innerHTML = `
         <div class="selected-file">
+
             <span>
                 🖼️
                 ${escapeHtml(
@@ -2326,6 +3118,7 @@ function handleImageSelection(
             >
                 ✕
             </button>
+
         </div>
     `;
 
@@ -2340,7 +3133,7 @@ function handleImageSelection(
 }
 
 /* =========================
-   22. UPLOAD IMAGE
+   26. UPLOAD IMAGE
    ========================= */
 
 async function uploadImage(
@@ -2360,7 +3153,7 @@ async function uploadImage(
         );
 
     const path =
-        `images/${currentConversation.id}/${currentUser.id}/${crypto.randomUUID()}.${extension}`;
+        `images/${currentConversation.id}/${currentUser.id}/${createUniqueId()}.${extension}`;
 
     const upload =
         await db.storage
@@ -2391,6 +3184,10 @@ async function uploadImage(
         return;
     }
 
+    const replyId =
+        replyingToMessage?.id ||
+        null;
+
     const {
         error
     } = await db
@@ -2405,7 +3202,9 @@ async function uploadImage(
             content:
                 file.name,
             file_path:
-                path
+                path,
+            reply_to_message_id:
+                replyId
         });
 
     if (error) {
@@ -2423,11 +3222,13 @@ async function uploadImage(
 
     clearFilePreview();
 
-    messageInput.focus();
+    cancelReply();
+
+    messageInput?.focus();
 }
 
 /* =========================
-   23. AUDIO RECORDING
+   27. AUDIO RECORDING
    ========================= */
 
 async function toggleRecording() {
@@ -2441,7 +3242,8 @@ async function toggleRecording() {
 async function startRecording() {
     if (
         !navigator.mediaDevices ||
-        !navigator.mediaDevices.getUserMedia
+        !navigator.mediaDevices
+            .getUserMedia
     ) {
         showChatError(
             "المتصفح لا يدعم تسجيل الصوت."
@@ -2450,7 +3252,9 @@ async function startRecording() {
         return;
     }
 
-    if (!currentConversation?.id) {
+    if (
+        !currentConversation?.id
+    ) {
         showChatError(
             "اختر محادثة أولاً."
         );
@@ -2549,6 +3353,7 @@ async function startRecording() {
                             blob
                         );
                     }
+
                 } catch (error) {
                     console.error(
                         "Audio processing:",
@@ -2558,6 +3363,7 @@ async function startRecording() {
                     showChatError(
                         "تعذر معالجة التسجيل الصوتي."
                     );
+
                 } finally {
                     audioChunks = [];
                     mediaRecorder = null;
@@ -2623,7 +3429,7 @@ function stopRecording() {
 }
 
 /* =========================
-   24. UPLOAD AUDIO
+   28. UPLOAD AUDIO
    ========================= */
 
 async function uploadAudio(
@@ -2637,10 +3443,8 @@ async function uploadAudio(
         return;
     }
 
-    /*
-     * الامتداد الافتراضي WebM.
-     */
-    let extension = "webm";
+    let extension =
+        "webm";
 
     const mime =
         blob.type?.toLowerCase() ||
@@ -2649,15 +3453,17 @@ async function uploadAudio(
     if (
         mime.includes("ogg")
     ) {
-        extension = "ogg";
+        extension =
+            "ogg";
     } else if (
         mime.includes("mp4")
     ) {
-        extension = "m4a";
+        extension =
+            "m4a";
     }
 
     const path =
-        `audio/${currentConversation.id}/${currentUser.id}/${crypto.randomUUID()}.${extension}`;
+        `audio/${currentConversation.id}/${currentUser.id}/${createUniqueId()}.${extension}`;
 
     const upload =
         await db.storage
@@ -2689,6 +3495,10 @@ async function uploadAudio(
         return;
     }
 
+    const replyId =
+        replyingToMessage?.id ||
+        null;
+
     const {
         error
     } = await db
@@ -2703,7 +3513,9 @@ async function uploadAudio(
             content:
                 "رسالة صوتية",
             file_path:
-                path
+                path,
+            reply_to_message_id:
+                replyId
         });
 
     if (error) {
@@ -2715,11 +3527,15 @@ async function uploadAudio(
         showChatError(
             "تم رفع التسجيل ولكن تعذر إرساله."
         );
+
+        return;
     }
+
+    cancelReply();
 }
 
 /* =========================
-   25. SIGNED URL
+   29. SIGNED URL
    ========================= */
 
 async function signedUrl(
@@ -2755,7 +3571,7 @@ async function signedUrl(
 }
 
 /* =========================
-   26. REALTIME
+   30. REALTIME
    ========================= */
 
 function subscribeRealtime() {
@@ -2770,7 +3586,8 @@ function subscribeRealtime() {
             realtimeChannel
         );
 
-        realtimeChannel = null;
+        realtimeChannel =
+            null;
     }
 
     const conversationId =
@@ -2823,13 +3640,47 @@ function subscribeRealtime() {
                 }
 
                 /*
+                 * تحديث رسالة موجودة.
+                 */
+                if (
+                    payload.eventType ===
+                    "UPDATE"
+                ) {
+                    const message =
+                        payload.new;
+
+                    if (!message?.id) {
+                        return;
+                    }
+
+                    const existing =
+                        messagesContainer.querySelector(
+                            `[data-message-id="${cssEscape(
+                                message.id
+                            )}"]`
+                        );
+
+                    if (existing) {
+                        await hydrateReplyMessage(
+                            message
+                        );
+
+                        await renderMessage(
+                            message
+                        );
+                    }
+
+                    return;
+                }
+
+                /*
                  * إدخال رسالة جديدة.
                  */
                 if (
                     payload.eventType ===
                     "INSERT"
                 ) {
-                    const message =
+                    let message =
                         payload.new;
 
                     if (!message?.id) {
@@ -2887,6 +3738,15 @@ function subscribeRealtime() {
                             );
                         }
                     }
+
+                    /*
+                     * تحميل الرسالة التي
+                     * تم الرد عليها.
+                     */
+                    message =
+                        await hydrateReplyMessage(
+                            message
+                        );
 
                     reactionCache.set(
                         message.id,
@@ -2968,7 +3828,7 @@ function subscribeRealtime() {
 }
 
 /* =========================
-   27. LOGOUT
+   31. LOGOUT
    ========================= */
 
 async function logout() {
@@ -2998,7 +3858,7 @@ async function logout() {
 }
 
 /* =========================
-   28. RESET APPLICATION
+   32. RESET APPLICATION
    ========================= */
 
 async function resetApplication() {
@@ -3006,10 +3866,15 @@ async function resetApplication() {
     currentProfile = null;
     currentConversation = null;
 
+    replyingToMessage =
+        null;
+
     profileCache.clear();
     reactionCache.clear();
 
     closeContextMenu();
+
+    closeAllReactionPickers();
 
     if (realtimeChannel) {
         try {
@@ -3023,7 +3888,8 @@ async function resetApplication() {
             );
         }
 
-        realtimeChannel = null;
+        realtimeChannel =
+            null;
     }
 
     if (isRecording) {
@@ -3032,8 +3898,11 @@ async function resetApplication() {
 
     clearFilePreview();
 
+    cancelReply();
+
     messagesContainer.innerHTML = `
         <div class="empty-messages">
+
             <div class="empty-icon">
                 👋
             </div>
@@ -3045,6 +3914,7 @@ async function resetApplication() {
             <small>
                 ابدأ بإرسال رسالة الآن
             </small>
+
         </div>
     `;
 
@@ -3058,21 +3928,27 @@ async function resetApplication() {
 }
 
 function showLoginScreen() {
-    loginScreen.classList.remove(
+    loginScreen?.classList.remove(
         "hidden"
     );
 
-    app.classList.add(
+    app?.classList.add(
         "hidden"
     );
 }
 
 /* =========================
-   29. UI HELPERS
+   33. UI HELPERS
    ========================= */
 
 function clearLoginError() {
-    loginError.textContent = "";
+    if (!loginError) {
+        return;
+    }
+
+    loginError.textContent =
+        "";
+
     loginError.className =
         "error";
 }
@@ -3080,6 +3956,10 @@ function clearLoginError() {
 function showLoginError(
     message
 ) {
+    if (!loginError) {
+        return;
+    }
+
     loginError.textContent =
         message || "";
 
@@ -3090,6 +3970,10 @@ function showLoginError(
 function showLoginSuccess(
     message
 ) {
+    if (!loginError) {
+        return;
+    }
+
     loginError.textContent =
         message || "";
 
@@ -3104,10 +3988,6 @@ function showChatError(
         return;
     }
 
-    /*
-     * إزالة أخطاء قديمة لتجنب
-     * تكدس التنبيهات.
-     */
     messagesContainer
         .querySelectorAll(
             ".chat-error"
@@ -3126,7 +4006,8 @@ function showChatError(
         "chat-error";
 
     error.textContent =
-        message || "حدث خطأ.";
+        message ||
+        "حدث خطأ.";
 
     messagesContainer.appendChild(
         error
@@ -3134,9 +4015,12 @@ function showChatError(
 
     scrollBottom();
 
-    setTimeout(() => {
-        error.remove();
-    }, 4500);
+    setTimeout(
+        () => {
+            error.remove();
+        },
+        4500
+    );
 }
 
 function setButton(
@@ -3162,10 +4046,11 @@ function setActive(
         .querySelectorAll(
             ".conversation-button"
         )
-        .forEach(item =>
-            item.classList.remove(
-                "active"
-            )
+        .forEach(
+            item =>
+                item.classList.remove(
+                    "active"
+                )
         );
 
     button?.classList.add(
@@ -3174,10 +4059,12 @@ function setActive(
 }
 
 function clearFilePreview() {
-    selectedImage = null;
+    selectedImage =
+        null;
 
     if (imageInput) {
-        imageInput.value = "";
+        imageInput.value =
+            "";
     }
 
     if (filePreview) {
@@ -3191,18 +4078,22 @@ function clearFilePreview() {
 }
 
 function scrollBottom() {
-    requestAnimationFrame(() => {
-        if (!messagesContainer) {
-            return;
-        }
+    requestAnimationFrame(
+        () => {
+            if (
+                !messagesContainer
+            ) {
+                return;
+            }
 
-        messagesContainer.scrollTop =
-            messagesContainer.scrollHeight;
-    });
+            messagesContainer.scrollTop =
+                messagesContainer.scrollHeight;
+        }
+    );
 }
 
 /* =========================
-   30. SECURITY / UTILITY
+   34. SECURITY / UTILITY
    ========================= */
 
 function escapeHtml(
@@ -3238,8 +4129,28 @@ function cssEscape(
     }
 
     return stringValue.replace(
-        /["\\]/g,
-        "\\$&"
+        /[^a-zA-Z0-9_-]/g,
+        character =>
+            `\\${character}`
+    );
+}
+
+function createUniqueId() {
+    if (
+        window.crypto &&
+        typeof window.crypto
+            .randomUUID ===
+            "function"
+    ) {
+        return window.crypto.randomUUID();
+    }
+
+    return (
+        Date.now().toString(36) +
+        "-" +
+        Math.random()
+            .toString(36)
+            .substring(2, 12)
     );
 }
 
@@ -3292,7 +4203,7 @@ function formatDate(
 }
 
 /* =========================
-   31. AUTH ERROR MESSAGES
+   35. AUTH ERROR MESSAGES
    ========================= */
 
 function authMessage(
