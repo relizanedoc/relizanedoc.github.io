@@ -1,396 +1,467 @@
 "use strict";
 
-/* =========================================================
-   مركز التواصل
-   app.js
-   ========================================================= */
+/*
+ * app.js
+ * Supabase Chat / Contact Center
+ *
+ * الوظائف:
+ * - تسجيل الدخول
+ * - استعادة كلمة المرور
+ * - تغيير كلمة المرور
+ * - الملفات الشخصية
+ * - العملاء
+ * - المحادثات الخاصة والجماعية
+ * - الرسائل النصية
+ * - الصور
+ * - الرسائل الصوتية
+ * - الرد على الرسائل
+ * - التفاعلات
+ * - حذف الرسائل
+ * - نسخ الرسائل
+ * - تثبيت الرسائل
+ * - Supabase Realtime
+ */
 
-/* =========================
-   1. SUPABASE
-   ========================= */
-
-const { createClient } = window.supabase;
-
-const db = createClient(
-    window.SUPABASE_URL,
-    window.SUPABASE_ANON_KEY
-);
-
-/* =========================
-   2. DOM ELEMENTS
-   ========================= */
-
-const loginScreen = document.getElementById("loginScreen");
-const app = document.getElementById("app");
-
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-
-const loginButton = document.getElementById("loginButton");
-const forgotPasswordButton = document.getElementById("forgotPasswordButton");
-const loginError = document.getElementById("loginError");
-
-const groupButton = document.getElementById("groupButton");
-const customersList = document.getElementById("customersList");
-const logoutButton = document.getElementById("logoutButton");
-
-const conversationTitle = document.getElementById("conversationTitle");
-const conversationSubtitle = document.getElementById("conversationSubtitle");
-
-const messagesContainer = document.getElementById("messages");
-
-const filePreview = document.getElementById("filePreview");
-const messageForm = document.getElementById("messageForm");
-const messageInput = document.getElementById("messageInput");
-const imageInput = document.getElementById("imageInput");
-const recordButton = document.getElementById("recordButton");
-
-/* =========================
-   3. APPLICATION STATE
-   ========================= */
+let db = null;
 
 let currentUser = null;
 let currentProfile = null;
 let currentConversation = null;
 
+let conversations = [];
+let customers = [];
+
+let profileCache = new Map();
+let reactionCache = new Map();
+
 let replyingToMessage = null;
 
-let realtimeChannel = null;
+let selectedImage = null;
 
 let mediaRecorder = null;
-let audioChunks = [];
-let isRecording = false;
+let recordingChunks = [];
+let recordingStream = null;
 
-let selectedImage = null;
 let contextMenu = null;
 
-const profileCache = new Map();
-const reactionCache = new Map();
+let activeRealtimeChannel = null;
+let authSubscription = null;
 
-const REACTIONS = [
-    "❤️",
-    "👍",
-    "😂",
-    "😮",
-    "😢",
-    "😡"
-];
+let initialized = false;
 
-/* =========================
-   4. REPLY ELEMENTS
-   ========================= */
+let startingApplicationPromise = null;
+let startingApplicationUserId = null;
+
+/* =========================================================
+   DOM REFERENCES
+========================================================= */
+
+let loginScreen = null;
+let app = null;
+let loginBox = null;
+
+let emailInput = null;
+let passwordInput = null;
+let loginButton = null;
+let forgotPasswordButton = null;
+let loginError = null;
+
+let chatError = null;
+
+let conversationTitle = null;
+let conversationList = null;
+let customersList = null;
+
+let messagesContainer = null;
+let messageForm = null;
+let messageInput = null;
+let sendButton = null;
+
+let imageInput = null;
+let imageButton = null;
+let filePreview = null;
+
+let recordButton = null;
 
 let replyPreview = null;
-let replyPreviewSender = null;
-let replyPreviewContent = null;
+let replyPreviewText = null;
 let cancelReplyButton = null;
 
-/*
- * إنشاء واجهة الرد تلقائيًا إذا لم تكن
- * موجودة في index.html.
- */
-function ensureReplyPreview() {
-    replyPreview =
-        document.getElementById("replyPreview");
+let logoutButton = null;
 
-    replyPreviewSender =
-        document.getElementById(
-            "replyPreviewSender"
-        );
+let groupConversationButton = null;
 
-    replyPreviewContent =
-        document.getElementById(
-            "replyPreviewContent"
-        );
+/* =========================================================
+   INITIALIZATION
+========================================================= */
 
-    cancelReplyButton =
-        document.getElementById(
-            "cancelReplyButton"
-        );
-
-    /*
-     * إذا كانت عناصر الرد موجودة بالفعل
-     * في index.html نستخدمها مباشرة.
-     */
-    if (
-        replyPreview &&
-        replyPreviewSender &&
-        replyPreviewContent &&
-        cancelReplyButton
-    ) {
-        return;
-    }
-
-    /*
-     * إذا لم تكن موجودة، ننشئها تلقائيًا
-     * قبل نموذج إرسال الرسالة.
-     */
-    if (!messageForm) {
-        return;
-    }
-
-    replyPreview =
-        document.createElement("div");
-
-    replyPreview.id =
-        "replyPreview";
-
-    replyPreview.className =
-        "reply-preview hidden";
-
-    replyPreview.innerHTML = `
-        <div class="reply-preview-content">
-
-            <span
-                class="reply-preview-icon"
-                aria-hidden="true"
-            >
-                ↩
-            </span>
-
-            <div class="reply-preview-text">
-
-                <strong
-                    id="replyPreviewSender"
-                >
-                    الرد على
-                </strong>
-
-                <span
-                    id="replyPreviewContent"
-                ></span>
-
-            </div>
-        </div>
-
-        <button
-            id="cancelReplyButton"
-            type="button"
-            class="cancel-reply"
-            aria-label="إلغاء الرد"
-            title="إلغاء الرد"
-        >
-            ×
-        </button>
-    `;
-
-    messageForm.parentNode.insertBefore(
-        replyPreview,
-        messageForm
-    );
-
-    replyPreviewSender =
-        replyPreview.querySelector(
-            "#replyPreviewSender"
-        );
-
-    replyPreviewContent =
-        replyPreview.querySelector(
-            "#replyPreviewContent"
-        );
-
-    cancelReplyButton =
-        replyPreview.querySelector(
-            "#cancelReplyButton"
-        );
-}
-
-/* =========================
-   5. INITIALIZATION
-   ========================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    initialize
-);
+document.addEventListener("DOMContentLoaded", initialize);
 
 async function initialize() {
+    if (initialized) {
+        return;
+    }
+
+    initialized = true;
+
+    cacheDomElements();
+
     try {
+        initializeSupabase();
+
+        bindEvents();
+
         ensureReplyPreview();
 
-        loginButton?.addEventListener(
-            "click",
-            login
-        );
-
-        forgotPasswordButton?.addEventListener(
-            "click",
-            resetPassword
-        );
-
-        logoutButton?.addEventListener(
-            "click",
-            logout
-        );
-
-        groupButton?.addEventListener(
-            "click",
-            openGroupConversation
-        );
-
-        messageForm?.addEventListener(
-            "submit",
-            sendMessage
-        );
-
-        imageInput?.addEventListener(
-            "change",
-            handleImageSelection
-        );
-
-        recordButton?.addEventListener(
-            "click",
-            toggleRecording
-        );
-
-        cancelReplyButton?.addEventListener(
-            "click",
-            event => {
-                event.preventDefault();
-                event.stopPropagation();
-
-                cancelReply();
-            }
-        );
-
-        messageInput?.addEventListener(
-            "keydown",
-            event => {
-                if (
-                    event.key === "Enter" &&
-                    !event.shiftKey
-                ) {
-                    event.preventDefault();
-
-                    if (
-                        typeof messageForm?.requestSubmit ===
-                        "function"
-                    ) {
-                        messageForm.requestSubmit();
-                    } else {
-                        sendMessage(event);
-                    }
-                }
-            }
-        );
-
-        document.addEventListener(
-            "click",
-            event => {
-                if (
-                    contextMenu &&
-                    !contextMenu.contains(
-                        event.target
-                    )
-                ) {
-                    closeContextMenu();
-                }
-            }
-        );
-
-        document.addEventListener(
-            "keydown",
-            event => {
-                if (event.key === "Escape") {
-                    closeContextMenu();
-                }
-            }
-        );
-
-        window.addEventListener(
-            "resize",
-            () => {
-                closeContextMenu();
-                closeAllReactionPickers();
-            }
-        );
-
-        db.auth.onAuthStateChange(
-            async (
-                event,
-                session
-            ) => {
-                try {
-                    if (
-                        event ===
-                        "PASSWORD_RECOVERY"
-                    ) {
-                        showPasswordUpdateScreen();
-                        return;
-                    }
-
-                    if (
-                        event ===
-                            "SIGNED_IN" &&
-                        session?.user &&
-                        !currentUser
-                    ) {
-                        await startApplication(
-                            session.user
-                        );
-
-                        return;
-                    }
-
-                    if (
-                        event ===
-                        "SIGNED_OUT"
-                    ) {
-                        await resetApplication();
-                    }
-                } catch (error) {
-                    console.error(
-                        "Auth state error:",
-                        error
-                    );
-                }
-            }
-        );
-
-        const {
-            data,
-            error
-        } = await db.auth.getSession();
-
-        if (error) {
-            console.error(error);
-
-            showLoginError(
-                authMessage(error)
-            );
-
-            return;
-        }
-
-        if (data?.session?.user) {
-            await startApplication(
-                data.session.user
-            );
-        } else {
-            showLoginScreen();
-        }
-
+        await initializeAuth();
     } catch (error) {
-        console.error(
-            "Initialization error:",
-            error
-        );
+        console.error("Initialization error:", error);
 
         showLoginError(
+            error?.message ||
             "حدث خطأ أثناء تشغيل التطبيق."
         );
     }
 }
 
-/* =========================
-   6. LOGIN
-   ========================= */
+/* =========================================================
+   SUPABASE
+========================================================= */
+
+function initializeSupabase() {
+    const supabaseApi = window.supabase;
+
+    if (
+        !supabaseApi ||
+        typeof supabaseApi.createClient !== "function"
+    ) {
+        throw new Error(
+            "لم يتم تحميل مكتبة Supabase. تأكد من إضافة supabase-js قبل app.js."
+        );
+    }
+
+    const supabaseUrl = window.SUPABASE_URL;
+    const supabaseAnonKey = window.SUPABASE_ANON_KEY;
+
+    if (
+        typeof supabaseUrl !== "string" ||
+        !supabaseUrl.trim()
+    ) {
+        throw new Error(
+            "SUPABASE_URL غير موجود."
+        );
+    }
+
+    if (
+        typeof supabaseAnonKey !== "string" ||
+        !supabaseAnonKey.trim()
+    ) {
+        throw new Error(
+            "SUPABASE_ANON_KEY غير موجود."
+        );
+    }
+
+    db = supabaseApi.createClient(
+        supabaseUrl.trim(),
+        supabaseAnonKey.trim()
+    );
+}
+
+/* =========================================================
+   DOM
+========================================================= */
+
+function cacheDomElements() {
+    loginScreen = document.getElementById("login-screen");
+    app = document.getElementById("app");
+    loginBox = document.querySelector(".login-box");
+
+    emailInput = document.getElementById("email");
+    passwordInput = document.getElementById("password");
+    loginButton = document.getElementById("login-button");
+    forgotPasswordButton = document.getElementById(
+        "forgot-password-button"
+    );
+    loginError = document.getElementById("login-error");
+
+    chatError = document.getElementById("chat-error");
+
+    conversationTitle = document.getElementById(
+        "conversation-title"
+    );
+
+    conversationList = document.getElementById(
+        "conversation-list"
+    );
+
+    customersList = document.getElementById(
+        "customers-list"
+    );
+
+    messagesContainer = document.getElementById(
+        "messages-container"
+    );
+
+    messageForm = document.getElementById("message-form");
+
+    messageInput = document.getElementById(
+        "message-input"
+    );
+
+    sendButton = document.getElementById(
+        "send-button"
+    );
+
+    imageInput = document.getElementById(
+        "image-input"
+    );
+
+    imageButton = document.getElementById(
+        "image-button"
+    );
+
+    filePreview = document.getElementById(
+        "file-preview"
+    );
+
+    recordButton = document.getElementById(
+        "record-button"
+    );
+
+    replyPreview = document.getElementById(
+        "reply-preview"
+    );
+
+    replyPreviewText = document.getElementById(
+        "reply-preview-text"
+    );
+
+    cancelReplyButton = document.getElementById(
+        "cancel-reply"
+    );
+
+    logoutButton = document.getElementById(
+        "logout-button"
+    );
+
+    groupConversationButton = document.getElementById(
+        "group-conversation-button"
+    );
+}
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+function bindEvents() {
+    loginButton?.addEventListener(
+        "click",
+        login
+    );
+
+    forgotPasswordButton?.addEventListener(
+        "click",
+        sendPasswordReset
+    );
+
+    passwordInput?.addEventListener(
+        "keydown",
+        event => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                login();
+            }
+        }
+    );
+
+    messageForm?.addEventListener(
+        "submit",
+        sendMessage
+    );
+
+    messageInput?.addEventListener(
+        "keydown",
+        event => {
+            if (
+                event.key === "Enter" &&
+                !event.shiftKey
+            ) {
+                event.preventDefault();
+
+                if (
+                    typeof messageForm?.requestSubmit ===
+                    "function"
+                ) {
+                    messageForm.requestSubmit();
+                } else {
+                    sendMessage(event);
+                }
+            }
+        }
+    );
+
+    imageButton?.addEventListener(
+        "click",
+        () => {
+            imageInput?.click();
+        }
+    );
+
+    imageInput?.addEventListener(
+        "change",
+        handleImageSelection
+    );
+
+    recordButton?.addEventListener(
+        "click",
+        toggleRecording
+    );
+
+    cancelReplyButton?.addEventListener(
+        "click",
+        cancelReply
+    );
+
+    logoutButton?.addEventListener(
+        "click",
+        logout
+    );
+
+    groupConversationButton?.addEventListener(
+        "click",
+        openGroupConversation
+    );
+
+    document.addEventListener(
+        "click",
+        handleDocumentClick
+    );
+
+    document.addEventListener(
+        "keydown",
+        event => {
+            if (event.key === "Escape") {
+                closeContextMenu();
+                closeAllReactionPickers();
+            }
+        }
+    );
+
+    window.addEventListener(
+        "resize",
+        () => {
+            closeContextMenu();
+            closeAllReactionPickers();
+        }
+    );
+
+    window.addEventListener(
+        "scroll",
+        () => {
+            closeContextMenu();
+        },
+        true
+    );
+}
+
+function handleDocumentClick(event) {
+    if (
+        contextMenu &&
+        !contextMenu.contains(event.target) &&
+        !event.target.closest(".message-bubble")
+    ) {
+        closeContextMenu();
+    }
+
+    if (
+        !event.target.closest(".reaction-picker") &&
+        !event.target.closest(".reaction-trigger")
+    ) {
+        closeAllReactionPickers();
+    }
+}
+
+/* =========================================================
+   AUTH
+========================================================= */
+
+async function initializeAuth() {
+    if (!db) {
+        return;
+    }
+
+    const authState = db.auth.onAuthStateChange(
+        (event, session) => {
+            /*
+             * لا ننفذ استعلامات Supabase مباشرة داخل
+             * callback الخاص بـ onAuthStateChange لتجنب
+             * مشاكل deadlock في بعض إصدارات Supabase.
+             */
+            setTimeout(() => {
+                if (
+                    event === "SIGNED_IN" &&
+                    session?.user
+                ) {
+                    startApplication(
+                        session.user
+                    ).catch(error => {
+                        console.error(
+                            "startApplication error:",
+                            error
+                        );
+                    });
+                }
+
+                if (
+                    event === "PASSWORD_RECOVERY"
+                ) {
+                    showPasswordUpdateScreen();
+                }
+
+                if (
+                    event === "SIGNED_OUT"
+                ) {
+                    resetApplication();
+                }
+            }, 0);
+        }
+    );
+
+    if (
+        authState?.data?.subscription
+    ) {
+        authSubscription =
+            authState.data.subscription;
+    }
+
+    const {
+        data,
+        error
+    } = await db.auth.getSession();
+
+    if (error) {
+        throw error;
+    }
+
+    if (data?.session?.user) {
+        await startApplication(
+            data.session.user
+        );
+    } else {
+        showLoginScreen();
+    }
+}
 
 async function login() {
-    clearLoginError();
+    if (!db) {
+        showLoginError(
+            "Supabase غير جاهز."
+        );
+        return;
+    }
 
     const email =
-        emailInput?.value.trim() || "";
+        emailInput?.value?.trim() || "";
 
     const password =
         passwordInput?.value || "";
@@ -399,9 +470,6 @@ async function login() {
         showLoginError(
             "أدخل البريد الإلكتروني."
         );
-
-        emailInput?.focus();
-
         return;
     }
 
@@ -409,17 +477,12 @@ async function login() {
         showLoginError(
             "أدخل كلمة المرور."
         );
-
-        passwordInput?.focus();
-
         return;
     }
 
-    setButton(
-        loginButton,
-        true,
-        "جارٍ تسجيل الدخول..."
-    );
+    clearLoginError();
+
+    setLoginLoading(true);
 
     try {
         const {
@@ -436,14 +499,13 @@ async function login() {
 
         if (!data?.user) {
             throw new Error(
-                "تعذر الحصول على بيانات المستخدم."
+                "تعذر تسجيل الدخول."
             );
         }
 
         await startApplication(
             data.user
         );
-
     } catch (error) {
         console.error(
             "Login error:",
@@ -453,63 +515,73 @@ async function login() {
         showLoginError(
             authMessage(error)
         );
-
     } finally {
-        setButton(
-            loginButton,
-            false,
-            "تسجيل الدخول"
-        );
+        setLoginLoading(false);
     }
 }
 
-/* =========================
-   7. PASSWORD RESET
-   ========================= */
-
-async function resetPassword() {
-    clearLoginError();
-
-    const email =
-        emailInput?.value.trim() || "";
-
-    if (!email) {
-        showLoginError(
-            "أدخل بريدك الإلكتروني أولاً."
-        );
-
-        emailInput?.focus();
-
+async function logout() {
+    if (!db) {
         return;
     }
 
-    setButton(
-        forgotPasswordButton,
-        true,
-        "جارٍ الإرسال..."
-    );
+    try {
+        await db.auth.signOut();
+    } catch (error) {
+        console.error(
+            "Logout error:",
+            error
+        );
+
+        resetApplication();
+    }
+}
+
+async function sendPasswordReset() {
+    if (!db) {
+        return;
+    }
+
+    const email =
+        emailInput?.value?.trim() || "";
+
+    if (!email) {
+        showLoginError(
+            "أدخل البريد الإلكتروني أولًا."
+        );
+        return;
+    }
+
+    clearLoginError();
 
     try {
         const {
             error
-        } =
-            await db.auth.resetPasswordForEmail(
-                email,
-                {
-                    redirectTo:
-                        window.location.origin +
-                        "/"
-                }
-            );
+        } = await db.auth.resetPasswordForEmail(
+            email,
+            {
+                redirectTo:
+                    `${window.location.origin}${window.location.pathname}`
+            }
+        );
 
         if (error) {
             throw error;
         }
 
-        showLoginSuccess(
-            "تم إرسال رابط استرجاع كلمة المرور إلى بريدك الإلكتروني."
+        showLoginError(
+            "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني."
         );
 
+        if (loginError) {
+            loginError.classList.remove(
+                "error"
+            );
+
+            loginError.classList.add(
+                "success"
+            );
+        }
     } catch (error) {
         console.error(
             "Password reset error:",
@@ -519,250 +591,266 @@ async function resetPassword() {
         showLoginError(
             authMessage(error)
         );
-
-    } finally {
-        setButton(
-            forgotPasswordButton,
-            false,
-            "نسيت كلمة المرور؟"
-        );
     }
 }
 
 function showPasswordUpdateScreen() {
-    loginScreen?.classList.remove(
-        "hidden"
-    );
-
-    app?.classList.add(
-        "hidden"
-    );
-
-    const box =
-        loginScreen?.querySelector(
-            ".login-box"
-        );
-
-    if (!box) {
+    if (!loginBox) {
         return;
     }
 
-    box.innerHTML = `
-        <div
-            class="logo"
-            aria-hidden="true"
-        >
-            🔐
-        </div>
+    loginBox.dataset.passwordRecovery =
+        "true";
 
-        <h1>
-            تغيير كلمة المرور
-        </h1>
+    loginBox.innerHTML = `
+        <div class="password-update-screen">
+            <h2>تحديث كلمة المرور</h2>
 
-        <p>
-            أدخل كلمة المرور الجديدة لحسابك
-        </p>
-
-        <div class="field">
-            <label for="newPassword">
-                كلمة المرور الجديدة
-            </label>
+            <p>
+                أدخل كلمة المرور الجديدة.
+            </p>
 
             <input
-                id="newPassword"
+                id="new-password"
                 type="password"
                 autocomplete="new-password"
-                placeholder="أدخل كلمة المرور الجديدة"
+                placeholder="كلمة المرور الجديدة"
             >
-        </div>
-
-        <div class="field">
-            <label for="confirmPassword">
-                تأكيد كلمة المرور
-            </label>
 
             <input
-                id="confirmPassword"
+                id="confirm-new-password"
                 type="password"
                 autocomplete="new-password"
-                placeholder="أعد كتابة كلمة المرور"
+                placeholder="تأكيد كلمة المرور"
             >
+
+            <button
+                id="update-password-button"
+                type="button"
+            >
+                تحديث كلمة المرور
+            </button>
+
+            <div
+                id="password-update-error"
+                class="login-error"
+            ></div>
         </div>
-
-        <button
-            id="updatePasswordButton"
-            type="button"
-            class="primary-button"
-        >
-            حفظ كلمة المرور
-        </button>
-
-        <div
-            id="passwordUpdateError"
-            class="error"
-            role="alert"
-            aria-live="polite"
-        ></div>
     `;
 
     const newPassword =
         document.getElementById(
-            "newPassword"
+            "new-password"
         );
 
     const confirmPassword =
         document.getElementById(
-            "confirmPassword"
+            "confirm-new-password"
         );
 
     const updateButton =
         document.getElementById(
-            "updatePasswordButton"
+            "update-password-button"
         );
 
-    const errorBox =
+    const updateError =
         document.getElementById(
-            "passwordUpdateError"
+            "password-update-error"
         );
 
-    updateButton?.addEventListener(
-        "click",
+    const updatePassword =
         async () => {
             const password =
                 newPassword?.value || "";
 
-            const confirmation =
+            const confirm =
                 confirmPassword?.value || "";
 
-            if (errorBox) {
-                errorBox.textContent = "";
-                errorBox.className =
-                    "error";
-            }
-
             if (password.length < 6) {
-                if (errorBox) {
-                    errorBox.textContent =
-                        "كلمة المرور يجب أن تكون 6 أحرف على الأقل.";
+                if (updateError) {
+                    updateError.textContent =
+                        "كلمة المرور يجب أن تحتوي على 6 أحرف على الأقل.";
                 }
-
                 return;
             }
 
-            if (
-                password !==
-                confirmation
-            ) {
-                if (errorBox) {
-                    errorBox.textContent =
+            if (password !== confirm) {
+                if (updateError) {
+                    updateError.textContent =
                         "كلمتا المرور غير متطابقتين.";
                 }
-
                 return;
             }
 
-            setButton(
-                updateButton,
-                true,
-                "جارٍ الحفظ..."
-            );
+            if (updateButton) {
+                updateButton.disabled = true;
+                updateButton.textContent =
+                    "جارٍ التحديث...";
+            }
 
             try {
                 const {
                     error
-                } =
-                    await db.auth.updateUser({
-                        password
-                    });
+                } = await db.auth.updateUser({
+                    password
+                });
 
                 if (error) {
                     throw error;
                 }
 
-                if (errorBox) {
-                    errorBox.className =
-                        "success";
+                await db.auth.signOut();
 
-                    errorBox.textContent =
-                        "تم تغيير كلمة المرور بنجاح.";
-                }
-
-                setTimeout(
-                    async () => {
-                        await db.auth.signOut();
-                    },
-                    1200
-                );
-
+                window.location.reload();
             } catch (error) {
                 console.error(
                     "Update password error:",
                     error
                 );
 
-                if (errorBox) {
-                    errorBox.className =
-                        "error";
-
-                    errorBox.textContent =
+                if (updateError) {
+                    updateError.textContent =
                         authMessage(error);
                 }
 
-            } finally {
-                setButton(
-                    updateButton,
-                    false,
-                    "حفظ كلمة المرور"
-                );
+                if (updateButton) {
+                    updateButton.disabled =
+                        false;
+
+                    updateButton.textContent =
+                        "تحديث كلمة المرور";
+                }
+            }
+        };
+
+    updateButton?.addEventListener(
+        "click",
+        updatePassword
+    );
+
+    confirmPassword?.addEventListener(
+        "keydown",
+        event => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                updatePassword();
             }
         }
     );
+
+    newPassword?.focus();
 }
 
-/* =========================
-   8. START APPLICATION
-   ========================= */
+/* =========================================================
+   APPLICATION START / RESET
+========================================================= */
 
-async function startApplication(
-    user
-) {
-    if (!user) {
+async function startApplication(user) {
+    if (!db || !user) {
         return;
     }
 
-    currentUser = user;
-
-    const {
-        data,
-        error
-    } = await db
-        .from("profiles")
-        .select(
-            "id,display_name,role"
-        )
-        .eq("id", user.id)
-        .single();
-
-    if (error || !data) {
-        console.error(
-            "Profile error:",
-            error
-        );
-
-        showLoginError(
-            "تم تسجيل الدخول ولكن لم يتم العثور على ملف المستخدم في profiles."
-        );
-
+    if (
+        currentUser?.id === user.id &&
+        currentProfile
+    ) {
+        showAppScreen();
         return;
     }
 
-    currentProfile = data;
+    if (
+        startingApplicationPromise &&
+        startingApplicationUserId === user.id
+    ) {
+        return startingApplicationPromise;
+    }
 
-    profileCache.set(
-        data.id,
-        data
-    );
+    startingApplicationUserId =
+        user.id;
 
+    startingApplicationPromise =
+        (async () => {
+            try {
+                const {
+                    data: profile,
+                    error
+                } = await db
+                    .from("profiles")
+                    .select("*")
+                    .eq("id", user.id)
+                    .maybeSingle();
+
+                if (error) {
+                    throw error;
+                }
+
+                if (!profile) {
+                    throw new Error(
+                        "لم يتم العثور على ملف المستخدم في جدول profiles."
+                    );
+                }
+
+                currentUser = user;
+                currentProfile = profile;
+
+                showAppScreen();
+
+                await loadCustomers();
+                await loadConversations();
+
+                if (
+                    currentProfile.role ===
+                    "customer"
+                ) {
+                    await openPrivateConversation(
+                        currentProfile
+                    );
+                } else {
+                    await openInitialAdminConversation();
+                }
+            } catch (error) {
+                console.error(
+                    "Application start error:",
+                    error
+                );
+
+                currentUser = null;
+                currentProfile = null;
+
+                showLoginScreen();
+
+                showLoginError(
+                    error?.message ||
+                    "تعذر تحميل بيانات المستخدم."
+                );
+
+                try {
+                    await db.auth.signOut();
+                } catch (signOutError) {
+                    console.error(
+                        signOutError
+                    );
+                }
+            }
+        })();
+
+    try {
+        await startingApplicationPromise;
+    } finally {
+        if (
+            startingApplicationUserId ===
+            user.id
+        ) {
+            startingApplicationPromise =
+                null;
+
+            startingApplicationUserId =
+                null;
+        }
+    }
+}
+
+function showAppScreen() {
     loginScreen?.classList.add(
         "hidden"
     );
@@ -771,242 +859,375 @@ async function startApplication(
         "hidden"
     );
 
-    await loadCustomers();
-
-    await openGroupConversation();
+    clearLoginError();
 }
 
-/* =========================
-   9. CUSTOMERS
-   ========================= */
+function showLoginScreen() {
+    app?.classList.add(
+        "hidden"
+    );
 
-async function loadCustomers() {
-    if (!customersList) {
+    loginScreen?.classList.remove(
+        "hidden"
+    );
+
+    currentConversation = null;
+
+    removePinnedBanner();
+}
+
+function resetApplication() {
+    currentUser = null;
+    currentProfile = null;
+
+    conversations = [];
+    customers = [];
+
+    profileCache.clear();
+    reactionCache.clear();
+
+    currentConversation = null;
+    replyingToMessage = null;
+
+    selectedImage = null;
+
+    closeContextMenu();
+    closeAllReactionPickers();
+
+    if (
+        loginBox?.dataset
+            ?.passwordRecovery === "true"
+    ) {
+        /*
+         * شاشة تغيير كلمة المرور استبدلت
+         * محتوى login-box بالكامل، لذلك إعادة
+         * تحميل الصفحة تعيد HTML الأصلي.
+         */
+        window.location.reload();
         return;
     }
 
-    customersList.innerHTML = "";
+    if (activeRealtimeChannel) {
+        try {
+            db?.removeChannel(
+                activeRealtimeChannel
+            );
+        } catch (error) {
+            console.error(error);
+        }
+
+        activeRealtimeChannel = null;
+    }
+
+    cancelReply();
+    clearFilePreview();
+
+    if (messagesContainer) {
+        messagesContainer.innerHTML = "";
+    }
+
+    if (conversationList) {
+        conversationList.innerHTML = "";
+    }
+
+    if (customersList) {
+        customersList.innerHTML = "";
+    }
+
+    if (conversationTitle) {
+        conversationTitle.textContent =
+            "اختر محادثة";
+    }
+
+    showLoginScreen();
+}
+
+/* =========================================================
+   CONVERSATIONS
+========================================================= */
+
+async function loadConversations() {
+    if (
+        !db ||
+        !currentUser ||
+        !conversationList
+    ) {
+        return;
+    }
+
+    conversationList.innerHTML = "";
+
+    let query = db
+        .from("conversations")
+        .select("*")
+        .order(
+            "updated_at",
+            {
+                ascending: false
+            }
+        );
 
     if (
-        currentProfile?.role !==
-        "admin"
+        currentProfile?.role ===
+        "customer"
     ) {
-        customersList.innerHTML = `
-            <div class="customer-empty">
-                محادثتك الخاصة مع الإدارة
-            </div>
-        `;
-
-        return;
+        query = query.eq(
+            "customer_id",
+            currentUser.id
+        );
     }
 
     const {
         data,
         error
-    } = await db
-        .from("profiles")
-        .select(
-            "id,display_name,role"
-        )
-        .eq(
-            "role",
-            "customer"
-        )
-        .order(
-            "display_name",
-            {
-                ascending: true
-            }
-        );
+    } = await query;
 
     if (error) {
         console.error(
-            "Customers error:",
+            "Load conversations error:",
             error
         );
 
-        customersList.innerHTML = `
-            <div class="customer-empty">
-                تعذر تحميل العملاء
-            </div>
-        `;
+        showChatError(
+            error.message
+        );
 
         return;
     }
 
-    if (!data?.length) {
-        customersList.innerHTML = `
-            <div class="customer-empty">
-                لا يوجد عملاء
-            </div>
-        `;
+    conversations =
+        Array.isArray(data)
+            ? data
+            : [];
 
-        return;
-    }
-
-    data.forEach(
-        customer => {
-            profileCache.set(
-                customer.id,
-                customer
-            );
-
-            const button =
-                document.createElement(
-                    "button"
-                );
-
-            button.type = "button";
-
-            button.className =
-                "conversation-button customer-button";
-
-            button.innerHTML = `
-                <span
-                    class="customer-icon"
-                    aria-hidden="true"
-                >
-                    👤
-                </span>
-
-                <span class="conversation-copy">
-
-                    <strong>
-                        ${escapeHtml(
-                            customer.display_name ||
-                            "عميل"
-                        )}
-                    </strong>
-
-                    <small>
-                        محادثة خاصة
-                    </small>
-
-                </span>
-            `;
-
-            button.addEventListener(
-                "click",
-                () =>
-                    openPrivateConversation(
-                        customer
-                    )
-            );
-
-            customersList.appendChild(
-                button
-            );
-        }
-    );
+    renderConversationList();
 }
 
-/* =========================
-   10. GROUP CONVERSATION
-   ========================= */
+function renderConversationList() {
+    if (!conversationList) {
+        return;
+    }
 
-async function openGroupConversation() {
-    if (!currentUser) {
+    conversationList.innerHTML = "";
+
+    for (const conversation of conversations) {
+        const button =
+            document.createElement(
+                "button"
+            );
+
+        button.type = "button";
+        button.className =
+            "conversation-button";
+
+        button.dataset.conversationId =
+            conversation.id;
+
+        const title =
+            getConversationTitle(
+                conversation
+            );
+
+        button.textContent = title;
+
+        button.addEventListener(
+            "click",
+            () => {
+                selectConversation(
+                    conversation
+                );
+            }
+        );
+
+        if (
+            currentConversation?.id ===
+            conversation.id
+        ) {
+            button.classList.add(
+                "active"
+            );
+        }
+
+        conversationList.appendChild(
+            button
+        );
+    }
+}
+
+function getConversationTitle(
+    conversation
+) {
+    if (!conversation) {
+        return "محادثة";
+    }
+
+    if (
+        conversation.title?.trim()
+    ) {
+        return conversation.title;
+    }
+
+    if (
+        conversation.type === "group"
+    ) {
+        return "المجموعة";
+    }
+
+    if (
+        conversation.type === "private"
+    ) {
+        if (
+            currentProfile?.role ===
+            "customer"
+        ) {
+            return "المحادثة الخاصة";
+        }
+
+        if (
+            conversation.customer_id
+        ) {
+            const customer =
+                profileCache.get(
+                    conversation.customer_id
+                );
+
+            return (
+                customer?.full_name ||
+                customer?.name ||
+                customer?.email ||
+                "محادثة خاصة"
+            );
+        }
+
+        return "محادثة خاصة";
+    }
+
+    return "محادثة";
+}
+
+async function openInitialAdminConversation() {
+    if (
+        currentProfile?.role !==
+        "admin"
+    ) {
+        return;
+    }
+
+    const groupConversation =
+        conversations.find(
+            conversation =>
+                conversation.type ===
+                "group"
+        );
+
+    if (groupConversation) {
+        await selectConversation(
+            groupConversation
+        );
+        return;
+    }
+
+    const privateConversation =
+        conversations.find(
+            conversation =>
+                conversation.type ===
+                "private"
+        );
+
+    if (privateConversation) {
+        await selectConversation(
+            privateConversation
+        );
+    }
+}
+
+async function selectConversation(
+    conversation
+) {
+    if (!conversation) {
         return;
     }
 
     closeContextMenu();
+    closeAllReactionPickers();
+
+    /*
+     * مهم:
+     * لا نحذف pin الجديد عند الانتقال
+     * من محادثة إلى أخرى.
+     */
+    removePinnedBanner();
+
+    currentConversation =
+        conversation;
+
+    reactionCache.clear();
 
     cancelReply();
+    clearFilePreview();
 
-    let {
-        data,
-        error
-    } = await db
-        .from("conversations")
-        .select("*")
-        .eq(
-            "type",
-            "group"
-        )
-        .limit(1)
-        .maybeSingle();
-
-    if (error) {
-        console.error(
-            "Group conversation error:",
-            error
-        );
-
-        showChatError(
-            "تعذر الوصول إلى المحادثة الجماعية."
-        );
-
-        return;
-    }
-
-    if (
-        !data &&
-        currentProfile?.role ===
-            "admin"
-    ) {
-        const created =
-            await db
-                .from("conversations")
-                .insert({
-                    type: "group",
-                    customer_id: null
-                })
-                .select("*")
-                .single();
-
-        if (created.error) {
-            console.error(
-                "Create group error:",
-                created.error
+    if (conversationTitle) {
+        conversationTitle.textContent =
+            getConversationTitle(
+                conversation
             );
-
-            showChatError(
-                "لم يتم إنشاء المحادثة الجماعية. تأكد من سياسات RLS لجدول conversations."
-            );
-
-            return;
-        }
-
-        data =
-            created.data;
     }
 
-    if (!data) {
-        showChatError(
-            "لم يتم إنشاء المحادثة الجماعية في قاعدة البيانات بعد."
-        );
-
-        return;
-    }
-
-    await selectConversation(
-        data,
-        "المجموعة العامة",
-        "المحادثة الجماعية"
+    setActiveConversationButton(
+        conversation.id
     );
 
-    setActive(
-        groupButton
+    await loadMessages();
+
+    subscribeRealtime(
+        conversation.id
     );
 }
 
-/* =========================
-   11. PRIVATE CONVERSATION
-   ========================= */
+function setActiveConversationButton(
+    conversationId
+) {
+    if (!conversationList) {
+        return;
+    }
+
+    conversationList
+        .querySelectorAll(
+            ".conversation-button"
+        )
+        .forEach(button => {
+            button.classList.toggle(
+                "active",
+                button.dataset
+                    .conversationId ===
+                    conversationId
+            );
+        });
+}
 
 async function openPrivateConversation(
     customer
 ) {
-    if (!customer?.id) {
+    if (
+        !db ||
+        !currentUser ||
+        !customer
+    ) {
         return;
     }
 
-    closeContextMenu();
+    if (
+        customer.role &&
+        customer.role !== "customer"
+    ) {
+        return;
+    }
 
-    cancelReply();
+    const customerId =
+        customer.id;
 
     let {
-        data,
+        data: conversation,
         error
     } = await db
         .from("conversations")
@@ -1017,73 +1238,68 @@ async function openPrivateConversation(
         )
         .eq(
             "customer_id",
-            customer.id
+            customerId
         )
         .maybeSingle();
 
     if (error) {
         console.error(
-            "Private conversation lookup:",
+            "Find private conversation error:",
             error
         );
 
         showChatError(
-            "تعذر البحث عن المحادثة الخاصة."
+            error.message
         );
 
         return;
     }
 
-    if (
-        !data &&
-        currentProfile?.role ===
+    if (!conversation) {
+        if (
+            currentProfile?.role !==
             "admin"
-    ) {
-        const created =
-            await db
-                .from("conversations")
-                .insert({
-                    type: "private",
-                    customer_id:
-                        customer.id
-                })
-                .select("*")
-                .single();
-
-        if (created.error) {
-            console.error(
-                "Create private conversation:",
-                created.error
-            );
-
+        ) {
             showChatError(
-                "تعذر إنشاء المحادثة الخاصة. تأكد من سياسات RLS."
+                "المحادثة الخاصة غير موجودة."
             );
 
             return;
         }
 
-        data =
-            created.data;
-    }
+        const result =
+            await db
+                .from("conversations")
+                .insert({
+                    type: "private",
+                    customer_id:
+                        customerId
+                })
+                .select("*")
+                .single();
 
-    if (!data) {
-        showChatError(
-            "لا توجد محادثة خاصة لهذا العميل."
-        );
+        if (result.error) {
+            console.error(
+                "Create private conversation error:",
+                result.error
+            );
 
-        return;
-    }
+            showChatError(
+                result.error.message
+            );
 
-    /*
-     * التأكد من وجود الطرفين
-     * في conversation_members.
-     */
-    if (
-        currentProfile?.role ===
-        "admin"
-    ) {
-        const members =
+            return;
+        }
+
+        conversation =
+            result.data;
+
+        /*
+         * إضافة الأعضاء للمحادثة.
+         * إذا كان جدول conversation_members
+         * موجودًا في قاعدة البيانات.
+         */
+        try {
             await db
                 .from(
                     "conversation_members"
@@ -1092,15 +1308,15 @@ async function openPrivateConversation(
                     [
                         {
                             conversation_id:
-                                data.id,
+                                conversation.id,
                             user_id:
-                                customer.id
+                                currentUser.id
                         },
                         {
                             conversation_id:
-                                data.id,
+                                conversation.id,
                             user_id:
-                                currentUser.id
+                                customerId
                         }
                     ],
                     {
@@ -1108,180 +1324,224 @@ async function openPrivateConversation(
                             "conversation_id,user_id"
                     }
                 );
-
-        if (members.error) {
-            console.error(
-                "conversation_members error:",
-                members.error
+        } catch (memberError) {
+            console.warn(
+                "Could not add conversation members:",
+                memberError
             );
         }
+
+        conversations.push(
+            conversation
+        );
+
+        renderConversationList();
     }
 
     await selectConversation(
-        data,
-        customer.display_name ||
-            "محادثة خاصة",
-        "محادثة خاصة"
+        conversation
     );
 
-    document
-        .querySelectorAll(
-            ".conversation-button"
-        )
-        .forEach(
-            button =>
-                button.classList.remove(
-                    "active"
-                )
+    const customerButton =
+        customersList?.querySelector(
+            `[data-customer-id="${cssEscape(
+                customerId
+            )}"]`
         );
 
-    const customerButtons =
-        document.querySelectorAll(
-            ".customer-button"
-        );
-
-    customerButtons.forEach(
-        button => {
-            const strong =
-                button.querySelector(
-                    "strong"
-                );
-
-            if (
-                strong &&
-                strong.textContent.trim() ===
-                    (
-                        customer.display_name ||
-                        "عميل"
-                    ).trim()
-            ) {
-                button.classList.add(
-                    "active"
-                );
-            }
-        }
+    customerButton?.classList.add(
+        "active"
     );
 }
 
-/* =========================
-   12. SELECT CONVERSATION
-   ========================= */
-
-async function selectConversation(
-    conversation,
-    title,
-    subtitle
-) {
-    if (!conversation?.id) {
+async function openGroupConversation() {
+    if (
+        !db ||
+        currentProfile?.role !==
+            "admin"
+    ) {
         return;
     }
 
-    currentConversation =
-        conversation;
+    let {
+        data: group,
+        error
+    } = await db
+        .from("conversations")
+        .select("*")
+        .eq(
+            "type",
+            "group"
+        )
+        .maybeSingle();
 
-    conversationTitle.textContent =
-        title || "محادثة";
+    if (error) {
+        console.error(
+            "Find group error:",
+            error
+        );
 
-    conversationSubtitle.textContent =
-        subtitle || "";
+        showChatError(
+            error.message
+        );
 
-    reactionCache.clear();
+        return;
+    }
 
-    closeContextMenu();
+    if (!group) {
+        const result =
+            await db
+                .from("conversations")
+                .insert({
+                    type: "group",
+                    title: "المجموعة العامة"
+                })
+                .select("*")
+                .single();
 
-    cancelReply();
+        if (result.error) {
+            console.error(
+                "Create group error:",
+                result.error
+            );
 
-    clearFilePreview();
-   unpinMessage();
+            showChatError(
+                result.error.message
+            );
 
-    messagesContainer.innerHTML = `
-        <div class="empty-messages">
-
-            <div class="empty-icon">
-                ⏳
-            </div>
-
-            <strong>
-                جارٍ تحميل الرسائل...
-            </strong>
-
-        </div>
-    `;
-
-    await loadMessages();
-
-    subscribeRealtime();
-}
-
-/* =========================
-   13. LOAD MESSAGES
-   ========================= */
-/* =========================
-   PIN MESSAGES SYSTEM
-   ========================= */
-
-function pinMessage(message, isRestoring = false) {
-    if (!currentConversation?.id) return;
-
-    let banner = document.getElementById('pinnedMessageBanner');
-    if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'pinnedMessageBanner';
-        banner.className = 'pinned-message-banner';
-        
-        const chatHeader = document.querySelector('.chat-header');
-        if (chatHeader) {
-            chatHeader.after(banner);
+            return;
         }
+
+        group =
+            result.data;
+
+        conversations.push(
+            group
+        );
+
+        renderConversationList();
     }
 
-    const senderName = profileCache.get(message.sender_id)?.display_name || "مستخدم";
-    let previewText = "";
-    
-    if (message.message_type === "image") previewText = "📷 صورة";
-    else if (message.message_type === "audio") previewText = "🎤 رسالة صوتية";
-    else previewText = message.content || "رسالة";
-
-    banner.innerHTML = `
-        <div class="pinned-icon" aria-hidden="true">📌</div>
-        <div class="pinned-content">
-            <span class="pinned-label">رسالة مثبتة من ${escapeHtml(senderName)}</span>
-            <span class="pinned-text">${escapeHtml(previewText)}</span>
-        </div>
-        <button type="button" class="unpin-btn" title="فك التثبيت" aria-label="فك التثبيت">✕</button>
-    `;
-
-    banner.addEventListener('click', (e) => {
-        if(e.target.closest('.unpin-btn')) return;
-        scrollToMessage(message.id);
-    });
-
-    banner.querySelector('.unpin-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        unpinMessage();
-    });
-
-    if (!isRestoring) {
-        localStorage.setItem('pinned_' + currentConversation.id, JSON.stringify(message));
-    }
+    await selectConversation(
+        group
+    );
 }
 
-function unpinMessage() {
-    if (currentConversation?.id) {
-        localStorage.removeItem('pinned_' + currentConversation.id);
+/* =========================================================
+   CUSTOMERS
+========================================================= */
+
+async function loadCustomers() {
+    if (
+        !db ||
+        !customersList
+    ) {
+        return;
     }
-    const banner = document.getElementById('pinnedMessageBanner');
-    if (banner) {
-        banner.remove();
-    }
-}
-async function loadMessages() {
-    if (!currentConversation?.id) {
+
+    customersList.innerHTML = "";
+
+    if (
+        currentProfile?.role !==
+        "admin"
+    ) {
         return;
     }
 
     const {
-        data: messages,
+        data,
+        error
+    } = await db
+        .from("profiles")
+        .select("*")
+        .eq(
+            "role",
+            "customer"
+        )
+        .order(
+            "full_name",
+            {
+                ascending: true
+            }
+        );
+
+    if (error) {
+        console.error(
+            "Load customers error:",
+            error
+        );
+
+        showChatError(
+            error.message
+        );
+
+        return;
+    }
+
+    customers =
+        Array.isArray(data)
+            ? data
+            : [];
+
+    for (const customer of customers) {
+        profileCache.set(
+            customer.id,
+            customer
+        );
+
+        const button =
+            document.createElement(
+                "button"
+            );
+
+        button.type = "button";
+        button.className =
+            "customer-button";
+
+        button.dataset.customerId =
+            customer.id;
+
+        button.textContent =
+            customer.full_name ||
+            customer.name ||
+            customer.email ||
+            "عميل";
+
+        button.addEventListener(
+            "click",
+            () => {
+                openPrivateConversation(
+                    customer
+                );
+            }
+        );
+
+        customersList.appendChild(
+            button
+        );
+    }
+}
+
+/* =========================================================
+   MESSAGES
+========================================================= */
+
+async function loadMessages() {
+    if (
+        !db ||
+        !currentConversation ||
+        !messagesContainer
+    ) {
+        return;
+    }
+
+    messagesContainer.innerHTML =
+        "";
+
+    reactionCache.clear();
+
+    const {
+        data,
         error
     } = await db
         .from("messages")
@@ -1299,689 +1559,476 @@ async function loadMessages() {
 
     if (error) {
         console.error(
-            "Messages error:",
+            "Load messages error:",
             error
         );
 
-        messagesContainer.innerHTML = "";
-
         showChatError(
-            "تعذر تحميل الرسائل."
+            error.message
         );
 
         return;
     }
 
-    if (!messages?.length) {
-        messagesContainer.innerHTML = `
-            <div class="empty-messages">
+    const messages =
+        Array.isArray(data)
+            ? data
+            : [];
 
-                <div class="empty-icon">
-                    💬
-                </div>
-
-                <strong>
-                    لا توجد رسائل بعد
-                </strong>
-
-                <small>
-                    ابدأ بإرسال رسالة الآن
-                </small>
-
-            </div>
-        `;
-
-        return;
-    }
-
-    /*
-     * تحميل أسماء مرسلي الرسائل.
-     */
-    const senderIds = [
-        ...new Set(
-            messages
-                .map(
-                    message =>
-                        message.sender_id
-                )
-                .filter(Boolean)
-        )
-    ];
-
-    if (senderIds.length) {
-        const {
-            data: profiles,
-            error: profilesError
-        } = await db
-            .from("profiles")
-            .select(
-                "id,display_name,role"
-            )
-            .in(
-                "id",
-                senderIds
-            );
-
-        if (!profilesError) {
-            profiles?.forEach(
-                profile => {
-                    profileCache.set(
-                        profile.id,
-                        profile
-                    );
-                }
-            );
-        }
-    }
-
-    /*
-     * تحميل الرسائل التي نرد عليها.
-     */
     await loadReplyMessages(
         messages
     );
 
-    /*
-     * تحميل التفاعلات.
-     */
-    await loadReactions(
-        messages.map(
-            message => message.id
-        )
-    );
-
-    messagesContainer.innerHTML = "";
-
-    for (
-        const message of messages
-    ) {
+    for (const message of messages) {
         await renderMessage(
             message
         );
     }
-const savedPin = localStorage.getItem('pinned_' + currentConversation.id);
-    if (savedPin) {
-        try {
-            pinMessage(JSON.parse(savedPin), true);
-        } catch (e) {}
-    }
-    scrollBottom();
-}
 
-/* =========================
-   14. LOAD REPLY MESSAGES
-   ========================= */
+    await restorePinnedMessage(
+        messages
+    );
+
+    scrollMessagesToBottom();
+}
 
 async function loadReplyMessages(
     messages
 ) {
-    if (!messages?.length) {
-        return;
-    }
-
-    const replyIds = [
-        ...new Set(
-            messages
-                .map(
-                    message =>
-                        message.reply_to_message_id
-                )
-                .filter(Boolean)
-        )
-    ];
-
-    if (!replyIds.length) {
-        return;
-    }
-
-    const {
-        data: replies,
-        error
-    } = await db
-        .from("messages")
-        .select("*")
-        .in(
-            "id",
-            replyIds
-        );
-
-    if (error) {
-        console.error(
-            "Reply messages error:",
-            error
-        );
-
-        return;
-    }
-
-    if (!replies?.length) {
-        return;
-    }
-
-    const replySenderIds = [
-        ...new Set(
-            replies
-                .map(
-                    message =>
-                        message.sender_id
-                )
-                .filter(Boolean)
-        )
-    ];
-
     if (
-        replySenderIds.length
+        !Array.isArray(messages) ||
+        messages.length === 0
     ) {
-        const {
-            data: profiles,
-            error: profileError
-        } = await db
-            .from("profiles")
-            .select(
-                "id,display_name,role"
-            )
-            .in(
-                "id",
-                replySenderIds
-            );
-
-        if (!profileError) {
-            profiles?.forEach(
-                profile => {
-                    profileCache.set(
-                        profile.id,
-                        profile
-                    );
-                }
-            );
-        }
-    }
-
-    const replyMap =
-        new Map(
-            replies.map(
-                reply => [
-                    reply.id,
-                    reply
-                ]
-            )
-        );
-
-    messages.forEach(
-        message => {
-            if (
-                message.reply_to_message_id
-            ) {
-                message.reply_to =
-                    replyMap.get(
-                        message.reply_to_message_id
-                    ) || null;
-            }
-        }
-    );
-}
-
-/* =========================
-   15. LOAD REPLY FOR REALTIME
-   ========================= */
-
-async function hydrateReplyMessage(
-    message
-) {
-    if (
-        !message?.reply_to_message_id
-    ) {
-        return message;
-    }
-
-    const {
-        data: reply,
-        error
-    } = await db
-        .from("messages")
-        .select("*")
-        .eq(
-            "id",
-            message.reply_to_message_id
-        )
-        .maybeSingle();
-
-    if (error) {
-        console.error(
-            "Hydrate reply error:",
-            error
-        );
-
-        return message;
-    }
-
-    if (!reply) {
-        return message;
-    }
-
-    if (
-        reply.sender_id &&
-        !profileCache.has(
-            reply.sender_id
-        )
-    ) {
-        const {
-            data: profile
-        } = await db
-            .from("profiles")
-            .select(
-                "id,display_name,role"
-            )
-            .eq(
-                "id",
-                reply.sender_id
-            )
-            .maybeSingle();
-
-        if (profile) {
-            profileCache.set(
-                profile.id,
-                profile
-            );
-        }
-    }
-
-    message.reply_to =
-        reply;
-
-    return message;
-}
-
-/* =========================
-   16. LOAD REACTIONS
-   ========================= */
-
-async function loadReactions(
-    messageIds
-) {
-    if (!messageIds?.length) {
         return;
     }
+
+    const replyIds =
+        messages
+            .map(
+                message =>
+                    message.reply_to
+            )
+            .filter(Boolean);
+
+    if (replyIds.length === 0) {
+        return;
+    }
+
+    const uniqueIds =
+        [...new Set(replyIds)];
 
     const {
         data,
         error
     } = await db
-        .from("message_reactions")
-        .select(
-            "id,message_id,user_id,reaction,created_at"
-        )
+        .from("messages")
+        .select("*")
         .in(
-            "message_id",
-            messageIds
+            "id",
+            uniqueIds
         );
 
     if (error) {
-        console.error(
-            "Reaction load error:",
+        console.warn(
+            "Load reply messages error:",
             error
         );
 
         return;
     }
 
-    messageIds.forEach(
-        id => {
-            reactionCache.set(
-                id,
-                []
+    const replyMap =
+        new Map(
+            (data || []).map(
+                message => [
+                    message.id,
+                    message
+                ]
+            )
+        );
+
+    for (const message of messages) {
+        if (message.reply_to) {
+            message.replyMessage =
+                replyMap.get(
+                    message.reply_to
+                ) || null;
+        }
+    }
+}
+
+async function renderMessage(
+    message
+) {
+    if (
+        !messagesContainer ||
+        !message
+    ) {
+        return;
+    }
+
+    const existing =
+        messagesContainer.querySelector(
+            `[data-message-id="${cssEscape(
+                message.id
+            )}"]`
+        );
+
+    existing?.remove();
+
+    const wrapper =
+        document.createElement(
+            "div"
+        );
+
+    wrapper.className =
+        "message";
+
+    wrapper.dataset.messageId =
+        message.id;
+
+    const isMine =
+        message.sender_id ===
+        currentUser?.id;
+
+    if (isMine) {
+        wrapper.classList.add(
+            "own"
+        );
+    }
+
+    const sender =
+        await getProfile(
+            message.sender_id
+        );
+
+    const senderName =
+        sender?.full_name ||
+        sender?.name ||
+        sender?.email ||
+        "مستخدم";
+
+    const messageBubble =
+        document.createElement(
+            "div"
+        );
+
+    messageBubble.className =
+        "message-bubble";
+
+    if (message.replyMessage) {
+        const replyBox =
+            document.createElement(
+                "div"
+            );
+
+        replyBox.className =
+            "message-reply";
+
+        const replySender =
+            await getProfile(
+                message.replyMessage
+                    .sender_id
+            );
+
+        const replySenderName =
+            replySender?.full_name ||
+            replySender?.name ||
+            replySender?.email ||
+            "مستخدم";
+
+        const replyContent =
+            getMessagePreview(
+                message.replyMessage
+            );
+
+        replyBox.innerHTML = `
+            <div class="reply-sender">
+                ${escapeHtml(
+                    replySenderName
+                )}
+            </div>
+            <div class="reply-content">
+                ${escapeHtml(
+                    replyContent
+                )}
+            </div>
+        `;
+
+        messageBubble.appendChild(
+            replyBox
+        );
+    }
+
+    const senderElement =
+        document.createElement(
+            "div"
+        );
+
+    senderElement.className =
+        "message-sender";
+
+    senderElement.textContent =
+        senderName;
+
+    /*
+     * السماح بفتح محادثة خاصة
+     * مع العميل فقط.
+     */
+    if (
+        currentProfile?.role ===
+            "admin" &&
+        sender?.role ===
+            "customer" &&
+        message.sender_id !==
+            currentUser?.id
+    ) {
+        senderElement.classList.add(
+            "clickable"
+        );
+
+        senderElement.title =
+            "فتح محادثة خاصة";
+
+        senderElement.addEventListener(
+            "click",
+            event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                openPrivateConversation(
+                    sender
+                );
+            }
+        );
+    }
+
+    messageBubble.appendChild(
+        senderElement
+    );
+
+    const content =
+        document.createElement(
+            "div"
+        );
+
+    content.className =
+        "message-content";
+
+    if (
+        message.message_type ===
+        "image"
+    ) {
+        const image =
+            document.createElement(
+                "img"
+            );
+
+        image.className =
+            "message-image";
+
+        image.alt =
+            message.content ||
+            "صورة";
+
+        try {
+            const url =
+                await signedUrl(
+                    message.file_path
+                );
+
+            if (url) {
+                image.src = url;
+            }
+        } catch (error) {
+            console.error(
+                "Image URL error:",
+                error
+            );
+        }
+
+        content.appendChild(
+            image
+        );
+    } else if (
+        message.message_type ===
+        "audio"
+    ) {
+        const audio =
+            document.createElement(
+                "audio"
+            );
+
+        audio.controls = true;
+
+        audio.preload =
+            "metadata";
+
+        try {
+            const url =
+                await signedUrl(
+                    message.file_path
+                );
+
+            if (url) {
+                audio.src = url;
+            }
+        } catch (error) {
+            console.error(
+                "Audio URL error:",
+                error
+            );
+        }
+
+        content.appendChild(
+            audio
+        );
+
+        if (message.content) {
+            const audioName =
+                document.createElement(
+                    "div"
+                );
+
+            audioName.className =
+                "audio-name";
+
+            audioName.textContent =
+                message.content;
+
+            content.appendChild(
+                audioName
+            );
+        }
+    } else {
+        content.textContent =
+            message.content || "";
+    }
+
+    messageBubble.appendChild(
+        content
+    );
+
+    const footer =
+        document.createElement(
+            "div"
+        );
+
+    footer.className =
+        "message-footer";
+
+    const date =
+        document.createElement(
+            "span"
+        );
+
+    date.className =
+        "message-date";
+
+    date.textContent =
+        formatDate(
+            message.created_at
+        );
+
+    footer.appendChild(
+        date
+    );
+
+    messageBubble.appendChild(
+        footer
+    );
+
+    const reactions =
+        document.createElement(
+            "div"
+        );
+
+    reactions.className =
+        "message-reactions";
+
+    await renderReactionSummary(
+        message,
+        reactions
+    );
+
+    messageBubble.appendChild(
+        reactions
+    );
+
+    /*
+     * الضغط بالزر الأيسر يفتح القائمة.
+     * stopPropagation مهم جدًا حتى لا يقوم
+     * document click بإغلاق القائمة مباشرة.
+     */
+    messageBubble.addEventListener(
+        "click",
+        event => {
+            if (
+                event.target.closest(
+                    ".reaction-trigger"
+                ) ||
+                event.target.closest(
+                    ".reaction-picker"
+                ) ||
+                event.target.closest(
+                    ".message-sender"
+                ) ||
+                event.target.closest(
+                    "audio"
+                ) ||
+                event.target.closest(
+                    "img"
+                )
+            ) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            openMessageMenu(
+                message,
+                event.clientX,
+                event.clientY
             );
         }
     );
 
-    data?.forEach(
-        reaction => {
-            if (
-                !reactionCache.has(
-                    reaction.message_id
-                )
-            ) {
-                reactionCache.set(
-                    reaction.message_id,
-                    []
-                );
-            }
-
-            reactionCache
-                .get(
-                    reaction.message_id
-                )
-                .push(
-                    reaction
-                );
-        }
-    );
-}
-
-/* =========================
-   17. RENDER MESSAGE
-   ========================= */
-
-/* =========================
-   17. RENDER MESSAGE
-   ========================= */
-
-async function renderMessage(message) {
-    if (!message?.id) {
-        return;
-    }
-
-    const existing = messagesContainer.querySelector(
-        `[data-message-id="${cssEscape(message.id)}"]`
-    );
-
-    if (existing) {
-        existing.remove();
-    }
-
-    const element = document.createElement("div");
-
-    const own = message.sender_id === currentUser?.id;
-
-    element.className = own ? "message own" : "message";
-    element.dataset.messageId = message.id;
-
-    const sender = profileCache.get(message.sender_id)?.display_name || "مستخدم";
-
-    let content = "";
-
-    /*
-     * صورة
-     */
-    if (message.message_type === "image") {
-        const url = await signedUrl(message.file_path);
-
-        if (url) {
-            content = `
-                <a
-                    class="image-message-link"
-                    href="${escapeHtml(url)}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        class="message-image"
-                        src="${escapeHtml(url)}"
-                        alt="صورة مرسلة"
-                        loading="lazy"
-                    >
-                </a>
-            `;
-        } else {
-            content = `
-                <div class="message-text">
-                    تعذر تحميل الصورة
-                </div>
-            `;
-        }
-    }
-    /*
-     * تسجيل صوتي
-     */
-    else if (message.message_type === "audio") {
-        const url = await signedUrl(message.file_path);
-
-        if (url) {
-            content = `
-                <audio
-                    class="message-audio"
-                    controls
-                    preload="metadata"
-                    src="${escapeHtml(url)}"
-                ></audio>
-            `;
-        } else {
-            content = `
-                <div class="message-text">
-                    تعذر تحميل التسجيل الصوتي
-                </div>
-            `;
-        }
-    }
-    /*
-     * رسالة نصية
-     */
-    else {
-        content = `
-            <div class="message-text">
-                ${escapeHtml(message.content || "")}
-            </div>
-        `;
-    }
-
-    /*
-     * الرد على رسالة سابقة.
-     */
-    let replyContent = "";
-
-    if (message.reply_to) {
-        const replySender = profileCache.get(message.reply_to.sender_id)?.display_name || "مستخدم";
-
-        let previewText = "";
-
-        if (message.reply_to.message_type === "image") {
-            previewText = "📷 صورة";
-        } else if (message.reply_to.message_type === "audio") {
-            previewText = "🎤 رسالة صوتية";
-        } else {
-            previewText = message.reply_to.content || "رسالة";
-        }
-
-        replyContent = `
-            <div
-                class="message-reply"
-                data-reply-target="${escapeHtml(message.reply_to.id)}"
-                title="الانتقال إلى الرسالة الأصلية"
-            >
-                <div class="message-reply-name">
-                    ${escapeHtml(replySender)}
-                </div>
-
-                <div class="message-reply-content">
-                    ${escapeHtml(previewText)}
-                </div>
-            </div>
-        `;
-    }
-
-    /*
-     * مؤشر التفاعل الصغير.
-     */
-    const reactionTrigger = `
-        <button
-            type="button"
-            class="reaction-trigger"
-            title="إضافة تفاعل"
-            aria-label="إضافة تفاعل"
-        >
-            ❤️
-        </button>
-    `;
-
-    /*
-     * قائمة التفاعلات الستة.
-     */
-    const reactionPicker = `
-        <div
-            class="reaction-picker"
-            data-message-id="${escapeHtml(message.id)}"
-            aria-label="اختيار تفاعل"
-        >
-            ${REACTIONS.map(
-                reaction => `
-                    <button
-                        type="button"
-                        class="reaction-button"
-                        data-reaction="${reaction}"
-                        title="${reaction}"
-                        aria-label="${reaction}"
-                    >
-                        ${reaction}
-                    </button>
-                `
-            ).join("")}
-        </div>
-    `;
-
-    element.innerHTML = `
-        <div class="message-wrapper">
-
-            ${reactionPicker}
-
-            ${reactionTrigger}
-
-            <div
-                class="message-bubble"
-                tabindex="0"
-                role="button"
-                aria-label="خيارات الرسالة"
-            >
-
-                ${
-                    !own
-                        ? `
-                            <div class="message-sender" title="${currentProfile?.role === 'admin' ? 'اضغط لمراسلة العضو خاص' : ''}">
-                                ${escapeHtml(sender)}
-                            </div>
-                        `
-                        : ""
-                }
-
-                ${replyContent}
-
-                ${content}
-
-                <div class="message-footer">
-
-                    <span class="message-time">
-                        ${formatDate(message.created_at)}
-                    </span>
-
-                    ${
-                        own
-                            ? `
-                                <span
-                                    class="message-status"
-                                    title="تم الإرسال"
-                                >
-                                    ✓✓
-                                </span>
-                            `
-                            : ""
-                    }
-
-                </div>
-            </div>
-
-            <div
-                class="message-reactions"
-                data-reactions-for="${escapeHtml(message.id)}"
-            ></div>
-
-        </div>
-    `;
-
-    messagesContainer.appendChild(element);
-
-    const bubble = element.querySelector(".message-bubble");
-    const picker = element.querySelector(".reaction-picker");
-    const trigger = element.querySelector(".reaction-trigger");
-    const replyElement = element.querySelector(".message-reply");
-    
-    // --- تمت الإضافة هنا: تعريف عنصر اسم المرسل وبرمجة حدث الضغط عليه للأدمين ---
-    const senderElement = element.querySelector(".message-sender");
-
-    if (senderElement) {
-        senderElement.addEventListener("click", (event) => {
-            event.stopPropagation(); // منع فتح قائمة الخيارات عند الضغط على الاسم
-            
-            if (currentProfile?.role === "admin" && message.sender_id !== currentUser?.id) {
-                const customerProfile = profileCache.get(message.sender_id);
-                if (customerProfile) {
-                    openPrivateConversation(customerProfile);
-                }
-            }
-        });
-    }
-    // --------------------------------------------------------------------------
-
-    /*
-     * الضغط على الرد ينقل للرسالة الأصلية.
-     */
-    replyElement?.addEventListener("click", event => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        const targetId = replyElement.dataset.replyTarget;
-        scrollToMessage(targetId);
-    });
-
-    /*
-     * الضغط على الرسالة يفتح القائمة.
-     * تم إضافة .message-sender للمنع حتى لا تفتح القائمة عند الضغط على الاسم
-     */
-    bubble?.addEventListener("click", event => {
-        if (event.target.closest("a, audio, button, .message-reply, .message-sender")) {
-            return;
-        }
-
-        openMessageMenu(message, element, event);
-    });
-
-    /*
-     * الزر الأيمن.
-     */
-    bubble?.addEventListener("contextmenu", event => {
-        event.preventDefault();
-        openMessageMenu(message, element, event);
-    });
-
-    /*
-     * فتح التفاعلات عند الضغط على القلب الصغير.
-     */
-    trigger?.addEventListener("click", event => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        closeAllReactionPickers(picker);
-        picker?.classList.toggle("force-show");
-    });
-
-    /*
-     * أزرار التفاعلات الستة.
-     */
-    element.querySelectorAll(".reaction-button").forEach(button => {
-        button.addEventListener("click", async event => {
+    messageBubble.addEventListener(
+        "contextmenu",
+        event => {
             event.preventDefault();
             event.stopPropagation();
 
-            const reaction = button.dataset.reaction;
-            picker?.classList.remove("force-show");
+            openMessageMenu(
+                message,
+                event.clientX,
+                event.clientY
+            );
+        }
+    );
 
-            await toggleReaction(message.id, reaction);
-        });
-    });
+    wrapper.appendChild(
+        messageBubble
+    );
 
-    /*
-     * تحديث ملخص التفاعلات.
-     */
-    renderReactionSummary(message.id);
+    messagesContainer.appendChild(
+        wrapper
+    );
 }
-/* =========================
-   18. MESSAGE MENU
-   ========================= */
+
+/* =========================================================
+   MESSAGE MENU
+========================================================= */
 
 function openMessageMenu(
     message,
-    element,
-    event
+    x,
+    y
 ) {
     closeContextMenu();
+
+    closeAllReactionPickers();
 
     contextMenu =
         document.createElement(
@@ -1991,73 +2038,51 @@ function openMessageMenu(
     contextMenu.className =
         "message-context-menu";
 
-    const canDelete =
+    const isMine =
         message.sender_id ===
-            currentUser?.id ||
+        currentUser?.id;
+
+    const canDelete =
+        isMine ||
         currentProfile?.role ===
             "admin";
 
+    const pinned =
+        isPinnedMessage(
+            message
+        );
+
     contextMenu.innerHTML = `
-    <button
-            type="button"
-            class="context-item"
-            data-action="pin"
-        >
-            <span class="context-icon">
-                📌
-            </span>
-            <span>
-                تثبيت الرسالة
-            </span>
-        </button>
-        contextMenu
-        .querySelector('[data-action="pin"]')
-        ?.addEventListener("click", event => {
-            event.preventDefault();
-            event.stopPropagation();
-            closeContextMenu();
-            pinMessage(message);
-        });
         <button
             type="button"
-            class="context-item"
             data-action="copy"
         >
-            <span class="context-icon">
-                📋
-            </span>
-
-            <span>
-                نسخ الرسالة
-            </span>
+            نسخ
         </button>
 
         <button
             type="button"
-            class="context-item"
             data-action="reply"
         >
-            <span class="context-icon">
-                ↩️
-            </span>
-
-            <span>
-                إضافة رد
-            </span>
+            رد
         </button>
 
         <button
             type="button"
-            class="context-item"
             data-action="reaction"
         >
-            <span class="context-icon">
-                ❤️
-            </span>
+            تفاعل
+        </button>
 
-            <span>
-                إضافة تفاعل
-            </span>
+        <button
+            type="button"
+            data-action="pin"
+        >
+            ${
+                pinned
+                    ? "فك التثبيت"
+                    : "تثبيت الرسالة"
+            }
         </button>
 
         ${
@@ -2065,16 +2090,10 @@ function openMessageMenu(
                 ? `
                     <button
                         type="button"
-                        class="context-item danger"
                         data-action="delete"
+                        class="danger"
                     >
-                        <span class="context-icon">
-                            🗑️
-                        </span>
-
-                        <span>
-                            حذف الرسالة
-                        </span>
+                        حذف
                     </button>
                 `
                 : ""
@@ -2085,30 +2104,24 @@ function openMessageMenu(
         contextMenu
     );
 
-    /*
-     * نسخ.
-     */
     contextMenu
         .querySelector(
             '[data-action="copy"]'
         )
         ?.addEventListener(
             "click",
-            async event => {
+            event => {
                 event.preventDefault();
                 event.stopPropagation();
 
-                await copyMessage(
+                closeContextMenu();
+
+                copyMessage(
                     message
                 );
-
-                closeContextMenu();
             }
         );
 
-    /*
-     * إضافة رد.
-     */
     contextMenu
         .querySelector(
             '[data-action="reply"]'
@@ -2127,9 +2140,6 @@ function openMessageMenu(
             }
         );
 
-    /*
-     * إضافة تفاعل.
-     */
     contextMenu
         .querySelector(
             '[data-action="reaction"]'
@@ -2142,71 +2152,69 @@ function openMessageMenu(
 
                 closeContextMenu();
 
-                const picker =
-                    element.querySelector(
-                        ".reaction-picker"
-                    );
-
-                closeAllReactionPickers();
-
-                picker?.classList.add(
-                    "force-show"
-                );
-
-                setTimeout(
-                    () => {
-                        picker?.classList.remove(
-                            "force-show"
-                        );
-                    },
-                    2500
+                showReactionPickerForMessage(
+                    message
                 );
             }
         );
 
     /*
-     * حذف.
+     * هذا هو الجزء الذي كان به خطأ في الكود الأصلي.
+     * JavaScript يجب أن يكون خارج innerHTML.
      */
+    contextMenu
+        .querySelector(
+            '[data-action="pin"]'
+        )
+        ?.addEventListener(
+            "click",
+            event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                closeContextMenu();
+
+                if (
+                    isPinnedMessage(
+                        message
+                    )
+                ) {
+                    unpinMessage(
+                        currentConversation?.id
+                    );
+                } else {
+                    pinMessage(
+                        message
+                    );
+                }
+            }
+        );
+
     contextMenu
         .querySelector(
             '[data-action="delete"]'
         )
         ?.addEventListener(
             "click",
-            async event => {
+            event => {
                 event.preventDefault();
                 event.stopPropagation();
 
                 closeContextMenu();
 
-                await deleteMessage(
-                    message.id,
-                    element
+                deleteMessage(
+                    message
                 );
             }
         );
 
-    const clientX =
-        Number.isFinite(
-            event?.clientX
-        )
-            ? event.clientX
-            : window.innerWidth / 2;
-
-    const clientY =
-        Number.isFinite(
-            event?.clientY
-        )
-            ? event.clientY
-            : window.innerHeight / 2;
-
-    positionMenu(
-        clientX,
-        clientY
+    positionContextMenu(
+        x,
+        y
     );
 }
 
-function positionMenu(
+function positionContextMenu(
     x,
     y
 ) {
@@ -2217,29 +2225,41 @@ function positionMenu(
     const rect =
         contextMenu.getBoundingClientRect();
 
-    const margin = 8;
+    let left =
+        Number.isFinite(x)
+            ? x
+            : window.innerWidth / 2;
 
-    const left =
-        Math.max(
-            margin,
-            Math.min(
-                x,
-                window.innerWidth -
-                    rect.width -
-                    margin
-            )
-        );
+    let top =
+        Number.isFinite(y)
+            ? y
+            : window.innerHeight / 2;
 
-    const top =
-        Math.max(
-            margin,
-            Math.min(
-                y,
-                window.innerHeight -
-                    rect.height -
-                    margin
-            )
-        );
+    if (
+        left + rect.width >
+        window.innerWidth
+    ) {
+        left =
+            window.innerWidth -
+            rect.width -
+            8;
+    }
+
+    if (
+        top + rect.height >
+        window.innerHeight
+    ) {
+        top =
+            window.innerHeight -
+            rect.height -
+            8;
+    }
+
+    left =
+        Math.max(8, left);
+
+    top =
+        Math.max(8, top);
 
     contextMenu.style.left =
         `${left}px`;
@@ -2255,74 +2275,164 @@ function closeContextMenu() {
     }
 }
 
-/* =========================
-   19. REPLY SYSTEM
-   ========================= */
+/* =========================================================
+   COPY / DELETE / REPLY
+========================================================= */
+
+async function copyMessage(
+    message
+) {
+    const text =
+        getMessagePreview(
+            message
+        );
+
+    if (!text) {
+        return;
+    }
+
+    try {
+        if (
+            navigator.clipboard &&
+            typeof navigator.clipboard.writeText ===
+                "function"
+        ) {
+            await navigator.clipboard.writeText(
+                text
+            );
+        } else {
+            const textarea =
+                document.createElement(
+                    "textarea"
+                );
+
+            textarea.value =
+                text;
+
+            textarea.style.position =
+                "fixed";
+
+            textarea.style.opacity =
+                "0";
+
+            document.body.appendChild(
+                textarea
+            );
+
+            textarea.select();
+
+            document.execCommand(
+                "copy"
+            );
+
+            textarea.remove();
+        }
+    } catch (error) {
+        console.error(
+            "Copy error:",
+            error
+        );
+    }
+}
+
+async function deleteMessage(
+    message
+) {
+    if (
+        !db ||
+        !message?.id
+    ) {
+        return;
+    }
+
+    const isMine =
+        message.sender_id ===
+        currentUser?.id;
+
+    const isAdmin =
+        currentProfile?.role ===
+        "admin";
+
+    if (
+        !isMine &&
+        !isAdmin
+    ) {
+        return;
+    }
+
+    const confirmed =
+        window.confirm(
+            "هل أنت متأكد من حذف هذه الرسالة؟"
+        );
+
+    if (!confirmed) {
+        return;
+    }
+
+    const {
+        error
+    } = await db
+        .from("messages")
+        .delete()
+        .eq(
+            "id",
+            message.id
+        );
+
+    if (error) {
+        console.error(
+            "Delete message error:",
+            error
+        );
+
+        showChatError(
+            error.message
+        );
+
+        return;
+    }
+
+    if (
+        isPinnedMessage(
+            message
+        )
+    ) {
+        unpinMessage(
+            currentConversation?.id
+        );
+    }
+
+    document
+        .querySelector(
+            `[data-message-id="${cssEscape(
+                message.id
+            )}"]`
+        )
+        ?.remove();
+}
 
 function startReply(
     message
 ) {
-    if (!message?.id) {
+    if (!message) {
         return;
     }
-
-    ensureReplyPreview();
 
     replyingToMessage =
         message;
 
-    const senderName =
-        profileCache.get(
-            message.sender_id
-        )?.display_name ||
-        (
-            message.sender_id ===
-            currentUser?.id
-                ? "أنت"
-                : "مستخدم"
+    if (replyPreview) {
+        replyPreview.classList.remove(
+            "hidden"
         );
-
-    let previewText = "";
-
-    if (
-        message.message_type ===
-        "image"
-    ) {
-        previewText =
-            "📷 صورة";
-    } else if (
-        message.message_type ===
-        "audio"
-    ) {
-        previewText =
-            "🎤 رسالة صوتية";
-    } else {
-        previewText =
-            message.content ||
-            "رسالة";
     }
 
-    if (replyPreviewSender) {
-        replyPreviewSender.textContent =
-            `الرد على ${senderName}`;
+    if (replyPreviewText) {
+        replyPreviewText.textContent =
+            getMessagePreview(
+                message
+            );
     }
-
-    if (replyPreviewContent) {
-        replyPreviewContent.textContent =
-            previewText;
-    }
-
-    replyPreview?.classList.remove(
-        "hidden"
-    );
-
-    /*
-     * تمييز الرسالة الأصلية مؤقتًا.
-     */
-    scrollToMessage(
-        message.id,
-        false
-    );
 
     messageInput?.focus();
 }
@@ -2337,562 +2447,81 @@ function cancelReply() {
         );
     }
 
-    if (replyPreviewSender) {
-        replyPreviewSender.textContent =
-            "الرد على";
-    }
-
-    if (replyPreviewContent) {
-        replyPreviewContent.textContent =
+    if (replyPreviewText) {
+        replyPreviewText.textContent =
             "";
     }
 }
 
-function scrollToMessage(
-    messageId,
-    highlight = true
-) {
-    if (!messageId) {
-        return;
-    }
-
-    const element =
-        messagesContainer.querySelector(
-            `[data-message-id="${cssEscape(
-                messageId
-            )}"]`
-        );
-
-    if (!element) {
-        return;
-    }
-
-    element.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
-
-    if (!highlight) {
-        return;
-    }
-
-    element.classList.remove(
-        "message-highlight"
-    );
-
-    void element.offsetWidth;
-
-    element.classList.add(
-        "message-highlight"
-    );
-
-    setTimeout(
-        () => {
-            element.classList.remove(
-                "message-highlight"
-            );
-        },
-        1500
-    );
-}
-
-/* =========================
-   20. REACTION PICKERS
-   ========================= */
-
-function closeAllReactionPickers(
-    except = null
-) {
-    document
-        .querySelectorAll(
-            ".reaction-picker.force-show"
-        )
-        .forEach(
-            picker => {
-                if (
-                    picker !==
-                    except
-                ) {
-                    picker.classList.remove(
-                        "force-show"
-                    );
-                }
-            }
-        );
-}
-
-/* =========================
-   21. COPY MESSAGE
-   ========================= */
-
-async function copyMessage(
-    message
-) {
-    const isText =
-        !message.message_type ||
-        message.message_type ===
-            "text";
-
+function ensureReplyPreview() {
     if (
-        !isText ||
-        !message.content
-    ) {
-        showChatError(
-            "نسخ النص متاح للرسائل النصية فقط."
-        );
-
-        return;
-    }
-
-    try {
-        if (
-            navigator.clipboard &&
-            typeof navigator.clipboard
-                .writeText ===
-                "function"
-        ) {
-            await navigator.clipboard.writeText(
-                message.content
-            );
-
-            return;
-        }
-
-        throw new Error(
-            "Clipboard API unavailable"
-        );
-
-    } catch (error) {
-        try {
-            const textarea =
-                document.createElement(
-                    "textarea"
-                );
-
-            textarea.value =
-                message.content;
-
-            textarea.style.position =
-                "fixed";
-
-            textarea.style.left =
-                "-9999px";
-
-            textarea.style.top =
-                "0";
-
-            textarea.style.opacity =
-                "0";
-
-            document.body.appendChild(
-                textarea
-            );
-
-            textarea.focus();
-            textarea.select();
-
-            document.execCommand(
-                "copy"
-            );
-
-            textarea.remove();
-
-        } catch (fallbackError) {
-            console.error(
-                "Copy error:",
-                fallbackError
-            );
-
-            showChatError(
-                "تعذر نسخ الرسالة."
-            );
-        }
-    }
-}
-
-/* =========================
-   22. DELETE MESSAGE
-   ========================= */
-
-async function deleteMessage(
-    id,
-    element
-) {
-    if (
-        !id ||
-        !currentUser
+        replyPreview &&
+        replyPreviewText
     ) {
         return;
     }
 
-    const messageElement =
-        element ||
-        messagesContainer.querySelector(
-            `[data-message-id="${cssEscape(
-                id
-            )}"]`
-        );
+    const form =
+        messageForm;
 
-    if (
-        messageElement &&
-        messageElement.classList.contains(
-            "deleting"
-        )
-    ) {
+    if (!form) {
         return;
     }
 
-    const confirmed =
-        window.confirm(
-            "هل أنت متأكد أنك تريد حذف هذه الرسالة للجميع؟"
-        );
+    if (!replyPreview) {
+        replyPreview =
+            document.createElement(
+                "div"
+            );
 
-    if (!confirmed) {
-        return;
-    }
+        replyPreview.id =
+            "reply-preview";
 
-    messageElement?.classList.add(
-        "deleting"
-    );
+        replyPreview.className =
+            "reply-preview hidden";
 
-    const {
-        error
-    } = await db
-        .from("messages")
-        .delete()
-        .eq(
-            "id",
-            id
-        );
+        replyPreview.innerHTML = `
+            <div class="reply-preview-content">
+                <div
+                    id="reply-preview-text"
+                    class="reply-preview-text"
+                ></div>
 
-    if (error) {
-        console.error(
-            "Delete message error:",
-            error
-        );
-
-        messageElement?.classList.remove(
-            "deleting"
-        );
-
-        showChatError(
-            "تعذر حذف الرسالة. تأكد من سياسات RLS."
-        );
-
-        return;
-    }
-
-    reactionCache.delete(
-        id
-    );
-
-    messageElement?.remove();
-
-    if (
-        !messagesContainer.querySelector(
-            ".message"
-        )
-    ) {
-        messagesContainer.innerHTML = `
-            <div class="empty-messages">
-
-                <div class="empty-icon">
-                    💬
-                </div>
-
-                <strong>
-                    لا توجد رسائل بعد
-                </strong>
-
-                <small>
-                    ابدأ بإرسال رسالة الآن
-                </small>
-
+                <button
+                    type="button"
+                    id="cancel-reply"
+                    aria-label="إلغاء الرد"
+                >
+                    ×
+                </button>
             </div>
         `;
+
+        form.parentElement?.insertBefore(
+            replyPreview,
+            form
+        );
+
+        replyPreviewText =
+            replyPreview.querySelector(
+                "#reply-preview-text"
+            );
+
+        cancelReplyButton =
+            replyPreview.querySelector(
+                "#cancel-reply"
+            );
+
+        cancelReplyButton?.addEventListener(
+            "click",
+            cancelReply
+        );
     }
 }
 
-/* =========================
-   23. REACTIONS
-   ========================= */
-
-async function toggleReaction(
-    messageId,
-    reaction
-) {
-    if (
-        !messageId ||
-        !currentUser ||
-        !REACTIONS.includes(
-            reaction
-        )
-    ) {
-        return;
-    }
-
-    const {
-        data: existing,
-        error: existingError
-    } = await db
-        .from(
-            "message_reactions"
-        )
-        .select(
-            "id,reaction"
-        )
-        .eq(
-            "message_id",
-            messageId
-        )
-        .eq(
-            "user_id",
-            currentUser.id
-        )
-        .maybeSingle();
-
-    if (existingError) {
-        console.error(
-            "Reaction lookup:",
-            existingError
-        );
-
-        showChatError(
-            "تعذر قراءة التفاعل."
-        );
-
-        return;
-    }
-
-    if (existing) {
-        let result;
-
-        if (
-            existing.reaction ===
-            reaction
-        ) {
-            result =
-                await db
-                    .from(
-                        "message_reactions"
-                    )
-                    .delete()
-                    .eq(
-                        "id",
-                        existing.id
-                    );
-        } else {
-            result =
-                await db
-                    .from(
-                        "message_reactions"
-                    )
-                    .update({
-                        reaction
-                    })
-                    .eq(
-                        "id",
-                        existing.id
-                    );
-        }
-
-        if (result.error) {
-            console.error(
-                "Reaction update:",
-                result.error
-            );
-
-            showChatError(
-                "تعذر تحديث التفاعل."
-            );
-
-            return;
-        }
-
-    } else {
-        const {
-            error
-        } = await db
-            .from(
-                "message_reactions"
-            )
-            .insert({
-                message_id:
-                    messageId,
-                user_id:
-                    currentUser.id,
-                reaction
-            });
-
-        if (error) {
-            console.error(
-                "Reaction insert:",
-                error
-            );
-
-            showChatError(
-                "تعذر إضافة التفاعل."
-            );
-
-            return;
-        }
-    }
-
-    await refreshReactions(
-        messageId
-    );
-}
-
-async function refreshReactions(
-    messageId
-) {
-    if (!messageId) {
-        return;
-    }
-
-    const {
-        data,
-        error
-    } = await db
-        .from(
-            "message_reactions"
-        )
-        .select(
-            "id,message_id,user_id,reaction,created_at"
-        )
-        .eq(
-            "message_id",
-            messageId
-        );
-
-    if (error) {
-        console.error(
-            "Refresh reactions:",
-            error
-        );
-
-        return;
-    }
-
-    reactionCache.set(
-        messageId,
-        data || []
-    );
-
-    renderReactionSummary(
-        messageId
-    );
-}
-
-function renderReactionSummary(
-    messageId
-) {
-    const box =
-        messagesContainer.querySelector(
-            `[data-reactions-for="${cssEscape(
-                messageId
-            )}"]`
-        );
-
-    if (!box) {
-        return;
-    }
-
-    const list =
-        reactionCache.get(
-            messageId
-        ) || [];
-
-    const counts =
-        new Map();
-
-    const mine =
-        new Set();
-
-    list.forEach(
-        item => {
-            const current =
-                counts.get(
-                    item.reaction
-                ) || 0;
-
-            counts.set(
-                item.reaction,
-                current + 1
-            );
-
-            if (
-                item.user_id ===
-                currentUser?.id
-            ) {
-                mine.add(
-                    item.reaction
-                );
-            }
-        }
-    );
-
-    box.innerHTML =
-        REACTIONS
-            .filter(
-                reaction =>
-                    counts.has(
-                        reaction
-                    )
-            )
-            .map(
-                reaction => `
-                    <button
-                        type="button"
-                        class="reaction-summary ${
-                            mine.has(
-                                reaction
-                            )
-                                ? "mine"
-                                : ""
-                        }"
-                        data-summary-reaction="${reaction}"
-                        title="تفاعل ${reaction}"
-                        aria-label="تفاعل ${reaction}"
-                    >
-                        <span>
-                            ${reaction}
-                        </span>
-
-                        <b>
-                            ${counts.get(
-                                reaction
-                            )}
-                        </b>
-                    </button>
-                `
-            )
-            .join("");
-
-    box.querySelectorAll(
-        ".reaction-summary"
-    ).forEach(
-        button => {
-            button.addEventListener(
-                "click",
-                async event => {
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    await toggleReaction(
-                        messageId,
-                        button.dataset
-                            .summaryReaction
-                    );
-                }
-            );
-        }
-    );
-}
-
-/* =========================
-   24. SEND MESSAGE
-   ========================= */
+/* =========================================================
+   SEND TEXT
+========================================================= */
 
 async function sendMessage(
     event
@@ -2900,26 +2529,31 @@ async function sendMessage(
     event?.preventDefault();
 
     if (
-        !currentConversation?.id
+        !db ||
+        !currentUser ||
+        !currentConversation
     ) {
-        showChatError(
-            "اختر محادثة أولاً."
-        );
-
         return;
     }
 
     const text =
-        messageInput?.value.trim() ||
+        messageInput?.value?.trim() ||
         "";
 
-    /*
-     * إذا كانت هناك صورة مختارة،
-     * إرسال الصورة مع الرد إن وجد.
-     */
-    if (selectedImage) {
+    if (
+        selectedImage
+    ) {
+        const file =
+            selectedImage;
+
+        selectedImage =
+            null;
+
+        clearFilePreview();
+
         await uploadImage(
-            selectedImage
+            file,
+            text
         );
 
         return;
@@ -2929,58 +2563,82 @@ async function sendMessage(
         return;
     }
 
-    const replyId =
-        replyingToMessage?.id ||
-        null;
+    setMessageSending(
+        true
+    );
 
-    const {
-        error
-    } = await db
-        .from("messages")
-        .insert({
+    try {
+        const payload = {
             conversation_id:
                 currentConversation.id,
+
             sender_id:
                 currentUser.id,
-            message_type:
-                "text",
+
             content:
                 text,
-            reply_to_message_id:
-                replyId
-        });
 
-    if (error) {
+            message_type:
+                "text"
+        };
+
+        if (
+            replyingToMessage?.id
+        ) {
+            payload.reply_to =
+                replyingToMessage.id;
+        }
+
+        const {
+            error
+        } = await db
+            .from("messages")
+            .insert(payload);
+
+        if (error) {
+            throw error;
+        }
+
+        if (messageInput) {
+            messageInput.value =
+                "";
+        }
+
+        cancelReply();
+
+        scrollMessagesToBottom();
+    } catch (error) {
         console.error(
             "Send message error:",
             error
         );
 
         showChatError(
-            "تعذر إرسال الرسالة."
+            error.message
         );
-
-        return;
+    } finally {
+        setMessageSending(
+            false
+        );
     }
-
-    messageInput.value = "";
-
-    cancelReply();
-
-    messageInput.focus();
 }
 
-/* =========================
-   25. IMAGE SELECTION
-   ========================= */
+/* =========================================================
+   IMAGE
+========================================================= */
 
 function handleImageSelection(
     event
 ) {
     const file =
-        event.target.files?.[0];
+        event.target?.files?.[0];
 
     if (!file) {
+        selectedImage =
+            null;
+
+        clearFilePreview();
+
         return;
     }
 
@@ -2989,27 +2647,26 @@ function handleImageSelection(
             "image/"
         )
     ) {
-        clearFilePreview();
-
         showChatError(
-            "الملف المختار ليس صورة."
+            "الملف المحدد ليس صورة."
         );
+
+        clearFilePreview();
 
         return;
     }
 
-    /*
-     * الحد الأقصى 10 MB.
-     */
-    if (
-        file.size >
-        10 * 1024 * 1024
-    ) {
-        clearFilePreview();
+    const maxSize =
+        10 * 1024 * 1024;
 
+    if (
+        file.size > maxSize
+    ) {
         showChatError(
-            "حجم الصورة يجب ألا يتجاوز 10 ميغابايت."
+            "حجم الصورة يجب ألا يتجاوز 10MB."
         );
+
+        clearFilePreview();
 
         return;
     }
@@ -3017,15 +2674,21 @@ function handleImageSelection(
     selectedImage =
         file;
 
-    filePreview.classList.remove(
-        "hidden"
+    showFilePreview(
+        file
     );
+}
+
+function showFilePreview(
+    file
+) {
+    if (!filePreview) {
+        return;
+    }
 
     filePreview.innerHTML = `
-        <div class="selected-file">
-
+        <div class="file-preview-item">
             <span>
-                🖼️
                 ${escapeHtml(
                     file.name
                 )}
@@ -3033,950 +2696,25 @@ function handleImageSelection(
 
             <button
                 type="button"
-                id="removeFileButton"
-                title="إلغاء الصورة"
-                aria-label="إلغاء الصورة"
+                id="clear-file-preview"
             >
-                ✕
+                ×
             </button>
-
         </div>
     `;
 
-    document
-        .getElementById(
-            "removeFileButton"
+    filePreview.classList.remove(
+        "hidden"
+    );
+
+    filePreview
+        .querySelector(
+            "#clear-file-preview"
         )
         ?.addEventListener(
             "click",
             clearFilePreview
         );
-}
-
-/* =========================
-   26. UPLOAD IMAGE
-   ========================= */
-
-async function uploadImage(
-    file
-) {
-    if (
-        !file ||
-        !currentConversation?.id ||
-        !currentUser?.id
-    ) {
-        return;
-    }
-
-    const extension =
-        ext(
-            file.name
-        );
-
-    const path =
-        `images/${currentConversation.id}/${currentUser.id}/${createUniqueId()}.${extension}`;
-
-    const upload =
-        await db.storage
-            .from("chat-files")
-            .upload(
-                path,
-                file,
-                {
-                    cacheControl:
-                        "3600",
-                    upsert:
-                        false,
-                    contentType:
-                        file.type
-                }
-            );
-
-    if (upload.error) {
-        console.error(
-            "Image upload:",
-            upload.error
-        );
-
-        showChatError(
-            "تعذر رفع الصورة."
-        );
-
-        return;
-    }
-
-    const replyId =
-        replyingToMessage?.id ||
-        null;
-
-    const {
-        error
-    } = await db
-        .from("messages")
-        .insert({
-            conversation_id:
-                currentConversation.id,
-            sender_id:
-                currentUser.id,
-            message_type:
-                "image",
-            content:
-                file.name,
-            file_path:
-                path,
-            reply_to_message_id:
-                replyId
-        });
-
-    if (error) {
-        console.error(
-            "Image message insert:",
-            error
-        );
-
-        showChatError(
-            "تم رفع الصورة ولكن تعذر إرسالها."
-        );
-
-        return;
-    }
-
-    clearFilePreview();
-
-    cancelReply();
-
-    messageInput?.focus();
-}
-
-/* =========================
-   27. AUDIO RECORDING
-   ========================= */
-
-async function toggleRecording() {
-    if (isRecording) {
-        stopRecording();
-    } else {
-        await startRecording();
-    }
-}
-
-async function startRecording() {
-    if (
-        !navigator.mediaDevices ||
-        !navigator.mediaDevices
-            .getUserMedia
-    ) {
-        showChatError(
-            "المتصفح لا يدعم تسجيل الصوت."
-        );
-
-        return;
-    }
-
-    if (
-        !currentConversation?.id
-    ) {
-        showChatError(
-            "اختر محادثة أولاً."
-        );
-
-        return;
-    }
-
-    try {
-        const stream =
-            await navigator.mediaDevices.getUserMedia(
-                {
-                    audio: true
-                }
-            );
-
-        audioChunks = [];
-
-        let mimeType = "";
-
-        if (
-            typeof MediaRecorder !==
-            "undefined"
-        ) {
-            const supportedTypes = [
-                "audio/webm;codecs=opus",
-                "audio/webm",
-                "audio/ogg;codecs=opus",
-                "audio/ogg",
-                "audio/mp4"
-            ];
-
-            mimeType =
-                supportedTypes.find(
-                    type =>
-                        typeof MediaRecorder.isTypeSupported ===
-                            "function" &&
-                        MediaRecorder.isTypeSupported(
-                            type
-                        )
-                ) || "";
-        }
-
-        mediaRecorder =
-            mimeType
-                ? new MediaRecorder(
-                      stream,
-                      {
-                          mimeType
-                      }
-                  )
-                : new MediaRecorder(
-                      stream
-                  );
-
-        mediaRecorder.ondataavailable =
-            event => {
-                if (
-                    event.data &&
-                    event.data.size >
-                        0
-                ) {
-                    audioChunks.push(
-                        event.data
-                    );
-                }
-            };
-
-        mediaRecorder.onstop =
-            async () => {
-                try {
-                    stream
-                        .getTracks()
-                        .forEach(
-                            track =>
-                                track.stop()
-                        );
-
-                    const type =
-                        mediaRecorder
-                            ?.mimeType ||
-                        "audio/webm";
-
-                    const blob =
-                        new Blob(
-                            audioChunks,
-                            {
-                                type
-                            }
-                        );
-
-                    if (
-                        blob.size >
-                        0
-                    ) {
-                        await uploadAudio(
-                            blob
-                        );
-                    }
-
-                } catch (error) {
-                    console.error(
-                        "Audio processing:",
-                        error
-                    );
-
-                    showChatError(
-                        "تعذر معالجة التسجيل الصوتي."
-                    );
-
-                } finally {
-                    audioChunks = [];
-                    mediaRecorder = null;
-                }
-            };
-
-        mediaRecorder.start();
-
-        isRecording = true;
-
-        recordButton.textContent =
-            "⏹️";
-
-        recordButton.classList.add(
-            "recording"
-        );
-
-        recordButton.title =
-            "إيقاف التسجيل";
-
-        recordButton.setAttribute(
-            "aria-label",
-            "إيقاف التسجيل"
-        );
-
-    } catch (error) {
-        console.error(
-            "Microphone error:",
-            error
-        );
-
-        showChatError(
-            "تعذر الوصول إلى الميكروفون. تأكد من السماح للموقع باستخدامه."
-        );
-    }
-}
-
-function stopRecording() {
-    if (
-        mediaRecorder &&
-        mediaRecorder.state !==
-            "inactive"
-    ) {
-        mediaRecorder.stop();
-    }
-
-    isRecording = false;
-
-    recordButton.textContent =
-        "🎤";
-
-    recordButton.classList.remove(
-        "recording"
-    );
-
-    recordButton.title =
-        "تسجيل صوتي";
-
-    recordButton.setAttribute(
-        "aria-label",
-        "تسجيل صوتي"
-    );
-}
-
-/* =========================
-   28. UPLOAD AUDIO
-   ========================= */
-
-async function uploadAudio(
-    blob
-) {
-    if (
-        !blob ||
-        !currentConversation?.id ||
-        !currentUser?.id
-    ) {
-        return;
-    }
-
-    let extension =
-        "webm";
-
-    const mime =
-        blob.type?.toLowerCase() ||
-        "";
-
-    if (
-        mime.includes("ogg")
-    ) {
-        extension =
-            "ogg";
-    } else if (
-        mime.includes("mp4")
-    ) {
-        extension =
-            "m4a";
-    }
-
-    const path =
-        `audio/${currentConversation.id}/${currentUser.id}/${createUniqueId()}.${extension}`;
-
-    const upload =
-        await db.storage
-            .from("chat-files")
-            .upload(
-                path,
-                blob,
-                {
-                    cacheControl:
-                        "3600",
-                    upsert:
-                        false,
-                    contentType:
-                        blob.type ||
-                        "audio/webm"
-                }
-            );
-
-    if (upload.error) {
-        console.error(
-            "Audio upload:",
-            upload.error
-        );
-
-        showChatError(
-            "تعذر رفع التسجيل الصوتي."
-        );
-
-        return;
-    }
-
-    const replyId =
-        replyingToMessage?.id ||
-        null;
-
-    const {
-        error
-    } = await db
-        .from("messages")
-        .insert({
-            conversation_id:
-                currentConversation.id,
-            sender_id:
-                currentUser.id,
-            message_type:
-                "audio",
-            content:
-                "رسالة صوتية",
-            file_path:
-                path,
-            reply_to_message_id:
-                replyId
-        });
-
-    if (error) {
-        console.error(
-            "Audio message insert:",
-            error
-        );
-
-        showChatError(
-            "تم رفع التسجيل ولكن تعذر إرساله."
-        );
-
-        return;
-    }
-
-    cancelReply();
-}
-
-/* =========================
-   29. SIGNED URL
-   ========================= */
-
-async function signedUrl(
-    path
-) {
-    if (!path) {
-        return null;
-    }
-
-    const {
-        data,
-        error
-    } = await db.storage
-        .from("chat-files")
-        .createSignedUrl(
-            path,
-            3600
-        );
-
-    if (error) {
-        console.error(
-            "Signed URL error:",
-            error
-        );
-
-        return null;
-    }
-
-    return (
-        data?.signedUrl ||
-        null
-    );
-}
-
-/* =========================
-   30. REALTIME
-   ========================= */
-
-function subscribeRealtime() {
-    if (
-        !currentConversation?.id
-    ) {
-        return;
-    }
-
-    if (realtimeChannel) {
-        db.removeChannel(
-            realtimeChannel
-        );
-
-        realtimeChannel =
-            null;
-    }
-
-    const conversationId =
-        currentConversation.id;
-
-    realtimeChannel =
-        db.channel(
-            `chat-${conversationId}-${Date.now()}`
-        );
-
-    /*
-     * الرسائل.
-     */
-    realtimeChannel.on(
-        "postgres_changes",
-        {
-            event: "*",
-            schema: "public",
-            table: "messages",
-            filter:
-                `conversation_id=eq.${conversationId}`
-        },
-        async payload => {
-            try {
-                /*
-                 * حذف.
-                 */
-                if (
-                    payload.eventType ===
-                    "DELETE"
-                ) {
-                    const id =
-                        payload.old?.id;
-
-                    if (id) {
-                        messagesContainer
-                            .querySelector(
-                                `[data-message-id="${cssEscape(
-                                    id
-                                )}"]`
-                            )
-                            ?.remove();
-
-                        reactionCache.delete(
-                            id
-                        );
-                    }
-
-                    return;
-                }
-
-                /*
-                 * تحديث رسالة موجودة.
-                 */
-                if (
-                    payload.eventType ===
-                    "UPDATE"
-                ) {
-                    const message =
-                        payload.new;
-
-                    if (!message?.id) {
-                        return;
-                    }
-
-                    const existing =
-                        messagesContainer.querySelector(
-                            `[data-message-id="${cssEscape(
-                                message.id
-                            )}"]`
-                        );
-
-                    if (existing) {
-                        await hydrateReplyMessage(
-                            message
-                        );
-
-                        await renderMessage(
-                            message
-                        );
-                    }
-
-                    return;
-                }
-
-                /*
-                 * إدخال رسالة جديدة.
-                 */
-                if (
-                    payload.eventType ===
-                    "INSERT"
-                ) {
-                    let message =
-                        payload.new;
-
-                    if (!message?.id) {
-                        return;
-                    }
-
-                    /*
-                     * منع تكرار الرسالة.
-                     */
-                    if (
-                        messagesContainer.querySelector(
-                            `[data-message-id="${cssEscape(
-                                message.id
-                            )}"]`
-                        )
-                    ) {
-                        return;
-                    }
-
-                    messagesContainer
-                        .querySelector(
-                            ".empty-messages"
-                        )
-                        ?.remove();
-
-                    /*
-                     * تحميل ملف المرسل
-                     * إذا لم يكن موجودًا.
-                     */
-                    if (
-                        message.sender_id &&
-                        !profileCache.has(
-                            message.sender_id
-                        )
-                    ) {
-                        const {
-                            data
-                        } = await db
-                            .from(
-                                "profiles"
-                            )
-                            .select(
-                                "id,display_name,role"
-                            )
-                            .eq(
-                                "id",
-                                message.sender_id
-                            )
-                            .maybeSingle();
-
-                        if (data) {
-                            profileCache.set(
-                                data.id,
-                                data
-                            );
-                        }
-                    }
-
-                    /*
-                     * تحميل الرسالة التي
-                     * تم الرد عليها.
-                     */
-                    message =
-                        await hydrateReplyMessage(
-                            message
-                        );
-
-                    reactionCache.set(
-                        message.id,
-                        []
-                    );
-
-                    await renderMessage(
-                        message
-                    );
-
-                    scrollBottom();
-                }
-
-            } catch (error) {
-                console.error(
-                    "Realtime message error:",
-                    error
-                );
-            }
-        }
-    );
-
-    /*
-     * التفاعلات.
-     */
-    realtimeChannel.on(
-        "postgres_changes",
-        {
-            event: "*",
-            schema: "public",
-            table: "message_reactions"
-        },
-        async payload => {
-            try {
-                const messageId =
-                    payload.new?.message_id ||
-                    payload.old?.message_id;
-
-                if (!messageId) {
-                    return;
-                }
-
-                const messageExists =
-                    messagesContainer.querySelector(
-                        `[data-message-id="${cssEscape(
-                            messageId
-                        )}"]`
-                    );
-
-                if (!messageExists) {
-                    return;
-                }
-
-                await refreshReactions(
-                    messageId
-                );
-
-            } catch (error) {
-                console.error(
-                    "Realtime reaction error:",
-                    error
-                );
-            }
-        }
-    );
-
-    realtimeChannel.subscribe(
-        status => {
-            if (
-                status ===
-                "CHANNEL_ERROR"
-            ) {
-                console.error(
-                    "Realtime channel error."
-                );
-            }
-        }
-    );
-}
-
-/* =========================
-   31. LOGOUT
-   ========================= */
-
-async function logout() {
-    try {
-        if (isRecording) {
-            stopRecording();
-        }
-
-        const {
-            error
-        } = await db.auth.signOut();
-
-        if (error) {
-            throw error;
-        }
-
-    } catch (error) {
-        console.error(
-            "Logout error:",
-            error
-        );
-
-        showLoginError(
-            authMessage(error)
-        );
-    }
-}
-
-/* =========================
-   32. RESET APPLICATION
-   ========================= */
-
-async function resetApplication() {
-    currentUser = null;
-    currentProfile = null;
-    currentConversation = null;
-
-    replyingToMessage =
-        null;
-
-    profileCache.clear();
-    reactionCache.clear();
-
-    closeContextMenu();
-
-    closeAllReactionPickers();
-
-    if (realtimeChannel) {
-        try {
-            await db.removeChannel(
-                realtimeChannel
-            );
-        } catch (error) {
-            console.error(
-                "Remove channel error:",
-                error
-            );
-        }
-
-        realtimeChannel =
-            null;
-    }
-
-    if (isRecording) {
-        stopRecording();
-    }
-
-    clearFilePreview();
-
-    cancelReply();
-
-    messagesContainer.innerHTML = `
-        <div class="empty-messages">
-
-            <div class="empty-icon">
-                👋
-            </div>
-
-            <strong>
-                مرحبًا بك في مركز التواصل
-            </strong>
-
-            <small>
-                ابدأ بإرسال رسالة الآن
-            </small>
-
-        </div>
-    `;
-
-    app.classList.add(
-        "hidden"
-    );
-
-    loginScreen.classList.remove(
-        "hidden"
-    );
-}
-
-function showLoginScreen() {
-    loginScreen?.classList.remove(
-        "hidden"
-    );
-
-    app?.classList.add(
-        "hidden"
-    );
-}
-
-/* =========================
-   33. UI HELPERS
-   ========================= */
-
-function clearLoginError() {
-    if (!loginError) {
-        return;
-    }
-
-    loginError.textContent =
-        "";
-
-    loginError.className =
-        "error";
-}
-
-function showLoginError(
-    message
-) {
-    if (!loginError) {
-        return;
-    }
-
-    loginError.textContent =
-        message || "";
-
-    loginError.className =
-        "error";
-}
-
-function showLoginSuccess(
-    message
-) {
-    if (!loginError) {
-        return;
-    }
-
-    loginError.textContent =
-        message || "";
-
-    loginError.className =
-        "success";
-}
-
-function showChatError(
-    message
-) {
-    if (!messagesContainer) {
-        return;
-    }
-
-    messagesContainer
-        .querySelectorAll(
-            ".chat-error"
-        )
-        .forEach(
-            element =>
-                element.remove()
-        );
-
-    const error =
-        document.createElement(
-            "div"
-        );
-
-    error.className =
-        "chat-error";
-
-    error.textContent =
-        message ||
-        "حدث خطأ.";
-
-    messagesContainer.appendChild(
-        error
-    );
-
-    scrollBottom();
-
-    setTimeout(
-        () => {
-            error.remove();
-        },
-        4500
-    );
-}
-
-function setButton(
-    button,
-    loading,
-    text
-) {
-    if (!button) {
-        return;
-    }
-
-    button.disabled =
-        Boolean(loading);
-
-    button.textContent =
-        text;
-}
-
-function setActive(
-    button
-) {
-    document
-        .querySelectorAll(
-            ".conversation-button"
-        )
-        .forEach(
-            item =>
-                item.classList.remove(
-                    "active"
-                )
-        );
-
-    button?.classList.add(
-        "active"
-    );
 }
 
 function clearFilePreview() {
@@ -3998,99 +2736,1884 @@ function clearFilePreview() {
     }
 }
 
-function scrollBottom() {
-    requestAnimationFrame(
-        () => {
-            if (
-                !messagesContainer
-            ) {
-                return;
+async function uploadImage(
+    file,
+    caption = ""
+) {
+    if (
+        !db ||
+        !currentUser ||
+        !currentConversation ||
+        !file
+    ) {
+        return;
+    }
+
+    setMessageSending(
+        true
+    );
+
+    const path =
+        buildStoragePath(
+            "images",
+            file.name
+        );
+
+    try {
+        const {
+            error: uploadError
+        } = await db
+            .storage
+            .from("chat-files")
+            .upload(
+                path,
+                file,
+                {
+                    cacheControl:
+                        "3600",
+                    upsert: false,
+                    contentType:
+                        file.type ||
+                        "application/octet-stream"
+                }
+            );
+
+        if (uploadError) {
+            throw uploadError;
+        }
+
+        const payload = {
+            conversation_id:
+                currentConversation.id,
+
+            sender_id:
+                currentUser.id,
+
+            content:
+                caption ||
+                file.name,
+
+            message_type:
+                "image",
+
+            file_path:
+                path
+        };
+
+        if (
+            replyingToMessage?.id
+        ) {
+            payload.reply_to =
+                replyingToMessage.id;
+        }
+
+        const {
+            error: insertError
+        } = await db
+            .from("messages")
+            .insert(payload);
+
+        if (insertError) {
+            /*
+             * تنظيف الملف إذا فشل إنشاء
+             * سجل الرسالة.
+             */
+            try {
+                await db
+                    .storage
+                    .from("chat-files")
+                    .remove([path]);
+            } catch (removeError) {
+                console.warn(
+                    removeError
+                );
             }
 
-            messagesContainer.scrollTop =
-                messagesContainer.scrollHeight;
+            throw insertError;
         }
+
+        if (messageInput) {
+            messageInput.value =
+                "";
+        }
+
+        cancelReply();
+    } catch (error) {
+        console.error(
+            "Upload image error:",
+            error
+        );
+
+        showChatError(
+            error.message
+        );
+
+        selectedImage =
+            file;
+    } finally {
+        setMessageSending(
+            false
+        );
+    }
+}
+
+/* =========================================================
+   AUDIO RECORDING
+========================================================= */
+
+async function toggleRecording() {
+    if (mediaRecorder) {
+        stopRecording();
+    } else {
+        await startRecording();
+    }
+}
+
+async function startRecording() {
+    if (
+        !navigator.mediaDevices ||
+        typeof navigator.mediaDevices
+            .getUserMedia !==
+            "function"
+    ) {
+        showChatError(
+            "المتصفح لا يدعم تسجيل الصوت."
+        );
+
+        return;
+    }
+
+    if (
+        typeof MediaRecorder ===
+        "undefined"
+    ) {
+        showChatError(
+            "MediaRecorder غير مدعوم في هذا المتصفح."
+        );
+
+        return;
+    }
+
+    if (
+        !currentUser ||
+        !currentConversation
+    ) {
+        return;
+    }
+
+    try {
+        recordingStream =
+            await navigator.mediaDevices.getUserMedia(
+                {
+                    audio: true
+                }
+            );
+
+        const mimeTypes = [
+            "audio/webm;codecs=opus",
+            "audio/webm",
+            "audio/ogg;codecs=opus",
+            "audio/mp4"
+        ];
+
+        let mimeType = "";
+
+        for (
+            const type of mimeTypes
+        ) {
+            if (
+                MediaRecorder.isTypeSupported(
+                    type
+                )
+            ) {
+                mimeType =
+                    type;
+                break;
+            }
+        }
+
+        mediaRecorder =
+            mimeType
+                ? new MediaRecorder(
+                      recordingStream,
+                      {
+                          mimeType
+                      }
+                  )
+                : new MediaRecorder(
+                      recordingStream
+                  );
+
+        recordingChunks =
+            [];
+
+        /*
+         * نلتقط المحادثة والرد عند بدء
+         * التسجيل حتى لا يتم رفع الصوت
+         * إلى محادثة مختلفة إذا غيّر المستخدم
+         * المحادثة أثناء التسجيل.
+         */
+        const recordingConversationId =
+            currentConversation.id;
+
+        const recordingUserId =
+            currentUser.id;
+
+        const recordingReplyId =
+            replyingToMessage?.id ||
+            null;
+
+        mediaRecorder.ondataavailable =
+            event => {
+                if (
+                    event.data &&
+                    event.data.size > 0
+                ) {
+                    recordingChunks.push(
+                        event.data
+                    );
+                }
+            };
+
+        mediaRecorder.onstop =
+            async () => {
+                const chunks =
+                    recordingChunks;
+
+                recordingChunks =
+                    [];
+
+                const recorder =
+                    mediaRecorder;
+
+                mediaRecorder =
+                    null;
+
+                recordingStream
+                    ?.getTracks()
+                    .forEach(
+                        track => {
+                            try {
+                                track.stop();
+                            } catch (
+                                error
+                            ) {
+                                console.warn(
+                                    error
+                                );
+                            }
+                        }
+                    );
+
+                recordingStream =
+                    null;
+
+                updateRecordButton(
+                    false
+                );
+
+                if (
+                    !chunks.length
+                ) {
+                    return;
+                }
+
+                const blob =
+                    new Blob(
+                        chunks,
+                        {
+                            type:
+                                recorder
+                                    ?.mimeType ||
+                                "audio/webm"
+                        }
+                    );
+
+                await uploadAudio(
+                    blob,
+                    recordingConversationId,
+                    recordingUserId,
+                    recordingReplyId
+                );
+            };
+
+        mediaRecorder.onerror =
+            event => {
+                console.error(
+                    "MediaRecorder error:",
+                    event
+                );
+
+                showChatError(
+                    "حدث خطأ أثناء تسجيل الصوت."
+                );
+
+                cleanupRecording();
+            };
+
+        mediaRecorder.start();
+
+        updateRecordButton(
+            true
+        );
+    } catch (error) {
+        console.error(
+            "Start recording error:",
+            error
+        );
+
+        cleanupRecording();
+
+        if (
+            error?.name ===
+            "NotAllowedError"
+        ) {
+            showChatError(
+                "تم رفض صلاحية الميكروفون."
+            );
+        } else {
+            showChatError(
+                "تعذر تشغيل تسجيل الصوت."
+            );
+        }
+    }
+}
+
+function stopRecording() {
+    if (!mediaRecorder) {
+        return;
+    }
+
+    try {
+        mediaRecorder.stop();
+    } catch (error) {
+        console.error(
+            "Stop recording error:",
+            error
+        );
+
+        cleanupRecording();
+    }
+}
+
+function cleanupRecording() {
+    try {
+        mediaRecorder?.stop?.();
+    } catch (error) {
+        console.warn(error);
+    }
+
+    mediaRecorder =
+        null;
+
+    recordingChunks =
+        [];
+
+    recordingStream
+        ?.getTracks()
+        .forEach(
+            track => {
+                try {
+                    track.stop();
+                } catch (error) {
+                    console.warn(error);
+                }
+            }
+        );
+
+    recordingStream =
+        null;
+
+    updateRecordButton(
+        false
     );
 }
 
-/* =========================
-   34. SECURITY / UTILITY
-   ========================= */
-
-function escapeHtml(
-    value
+async function uploadAudio(
+    blob,
+    conversationId,
+    userId,
+    replyId = null
 ) {
-    const element =
+    if (
+        !db ||
+        !blob ||
+        !conversationId ||
+        !userId
+    ) {
+        return;
+    }
+
+    setMessageSending(
+        true
+    );
+
+    const extension =
+        getAudioExtension(
+            blob.type
+        );
+
+    const path =
+        buildStoragePath(
+            "audio",
+            `recording.${extension}`
+        );
+
+    try {
+        const {
+            error: uploadError
+        } = await db
+            .storage
+            .from("chat-files")
+            .upload(
+                path,
+                blob,
+                {
+                    cacheControl:
+                        "3600",
+                    upsert: false,
+                    contentType:
+                        blob.type ||
+                        "audio/webm"
+                }
+            );
+
+        if (uploadError) {
+            throw uploadError;
+        }
+
+        const payload = {
+            conversation_id:
+                conversationId,
+
+            sender_id:
+                userId,
+
+            content:
+                "رسالة صوتية",
+
+            message_type:
+                "audio",
+
+            file_path:
+                path
+        };
+
+        if (replyId) {
+            payload.reply_to =
+                replyId;
+        }
+
+        const {
+            error: insertError
+        } = await db
+            .from("messages")
+            .insert(payload);
+
+        if (insertError) {
+            try {
+                await db
+                    .storage
+                    .from("chat-files")
+                    .remove([path]);
+            } catch (removeError) {
+                console.warn(
+                    removeError
+                );
+            }
+
+            throw insertError;
+        }
+
+        if (
+            conversationId ===
+            currentConversation?.id
+        ) {
+            cancelReply();
+        }
+    } catch (error) {
+        console.error(
+            "Upload audio error:",
+            error
+        );
+
+        showChatError(
+            error.message
+        );
+    } finally {
+        setMessageSending(
+            false
+        );
+    }
+}
+
+function updateRecordButton(
+    recording
+) {
+    if (!recordButton) {
+        return;
+    }
+
+    recordButton.classList.toggle(
+        "recording",
+        recording
+    );
+
+    recordButton.setAttribute(
+        "aria-label",
+        recording
+            ? "إيقاف التسجيل"
+            : "تسجيل صوت"
+    );
+
+    recordButton.title =
+        recording
+            ? "إيقاف التسجيل"
+            : "تسجيل صوت";
+
+    recordButton.textContent =
+        recording
+            ? "⏹"
+            : "🎙";
+}
+
+/* =========================================================
+   REACTIONS
+========================================================= */
+
+const REACTIONS = [
+    "👍",
+    "❤️",
+    "😂",
+    "😮",
+    "😢",
+    "😡"
+];
+
+async function renderReactionSummary(
+    message,
+    container
+) {
+    if (
+        !message ||
+        !container
+    ) {
+        return;
+    }
+
+    const reactions =
+        await loadReactions(
+            message.id
+        );
+
+    const counts =
+        new Map();
+
+    for (const reaction of reactions) {
+        const value =
+            reaction.reaction;
+
+        counts.set(
+            value,
+            (counts.get(value) || 0) +
+                1
+        );
+    }
+
+    for (
+        const [reaction, count] of
+        counts
+    ) {
+        const button =
+            document.createElement(
+                "button"
+            );
+
+        button.type = "button";
+        button.className =
+            "reaction-summary";
+
+        button.dataset.reaction =
+            reaction;
+
+        button.title =
+            `${reaction} ${count}`;
+
+        button.textContent =
+            `${reaction} ${count}`;
+
+        button.addEventListener(
+            "click",
+            async event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                await toggleReaction(
+                    message,
+                    reaction
+                );
+            }
+        );
+
+        container.appendChild(
+            button
+        );
+    }
+
+    const addButton =
+        document.createElement(
+            "button"
+        );
+
+    addButton.type = "button";
+
+    addButton.className =
+        "reaction-trigger";
+
+    addButton.textContent =
+        "＋";
+
+    addButton.title =
+        "إضافة تفاعل";
+
+    addButton.addEventListener(
+        "click",
+        event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            showReactionPicker(
+                message,
+                addButton
+            );
+        }
+    );
+
+    container.appendChild(
+        addButton
+    );
+}
+
+async function loadReactions(
+    messageId
+) {
+    if (
+        reactionCache.has(
+            messageId
+        )
+    ) {
+        return reactionCache.get(
+            messageId
+        );
+    }
+
+    const {
+        data,
+        error
+    } = await db
+        .from("message_reactions")
+        .select("*")
+        .eq(
+            "message_id",
+            messageId
+        );
+
+    if (error) {
+        console.warn(
+            "Load reactions error:",
+            error
+        );
+
+        reactionCache.set(
+            messageId,
+            []
+        );
+
+        return [];
+    }
+
+    const reactions =
+        Array.isArray(data)
+            ? data
+            : [];
+
+    reactionCache.set(
+        messageId,
+        reactions
+    );
+
+    return reactions;
+}
+
+function showReactionPicker(
+    message,
+    anchor
+) {
+    closeAllReactionPickers();
+
+    const picker =
         document.createElement(
             "div"
         );
 
-    element.textContent =
-        value == null
-            ? ""
-            : String(value);
+    picker.className =
+        "reaction-picker";
 
-    return element.innerHTML;
-}
-
-function cssEscape(
-    value
-) {
-    const stringValue =
-        String(value);
-
-    if (
-        window.CSS &&
-        typeof window.CSS.escape ===
-            "function"
+    for (
+        const reaction of REACTIONS
     ) {
-        return window.CSS.escape(
-            stringValue
+        const button =
+            document.createElement(
+                "button"
+            );
+
+        button.type = "button";
+
+        button.className =
+            "reaction-option";
+
+        button.textContent =
+            reaction;
+
+        button.addEventListener(
+            "click",
+            async event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                picker.remove();
+
+                await toggleReaction(
+                    message,
+                    reaction
+                );
+            }
+        );
+
+        picker.appendChild(
+            button
         );
     }
 
-    return stringValue.replace(
-        /[^a-zA-Z0-9_-]/g,
-        character =>
-            `\\${character}`
+    document.body.appendChild(
+        picker
+    );
+
+    const rect =
+        anchor.getBoundingClientRect();
+
+    let left =
+        rect.left;
+
+    let top =
+        rect.bottom + 5;
+
+    const pickerRect =
+        picker.getBoundingClientRect();
+
+    if (
+        left + pickerRect.width >
+        window.innerWidth
+    ) {
+        left =
+            window.innerWidth -
+            pickerRect.width -
+            8;
+    }
+
+    if (
+        top + pickerRect.height >
+        window.innerHeight
+    ) {
+        top =
+            rect.top -
+            pickerRect.height -
+            5;
+    }
+
+    picker.style.left =
+        `${Math.max(
+            8,
+            left
+        )}px`;
+
+    picker.style.top =
+        `${Math.max(
+            8,
+            top
+        )}px`;
+}
+
+function showReactionPickerForMessage(
+    message
+) {
+    const element =
+        document.querySelector(
+            `[data-message-id="${cssEscape(
+                message.id
+            )}"]`
+        );
+
+    const button =
+        element?.querySelector(
+            ".reaction-trigger"
+        );
+
+    if (button) {
+        showReactionPicker(
+            message,
+            button
+        );
+    }
+}
+
+function closeAllReactionPickers() {
+    document
+        .querySelectorAll(
+            ".reaction-picker"
+        )
+        .forEach(
+            picker =>
+                picker.remove()
+        );
+}
+
+async function toggleReaction(
+    message,
+    reaction
+) {
+    if (
+        !db ||
+        !currentUser ||
+        !message?.id
+    ) {
+        return;
+    }
+
+    try {
+        const {
+            data: existing,
+            error: findError
+        } = await db
+            .from("message_reactions")
+            .select("id,reaction")
+            .eq(
+                "message_id",
+                message.id
+            )
+            .eq(
+                "user_id",
+                currentUser.id
+            )
+            .limit(1)
+            .maybeSingle();
+
+        if (findError) {
+            throw findError;
+        }
+
+        if (existing) {
+            if (
+                existing.reaction ===
+                reaction
+            ) {
+                const {
+                    error
+                } = await db
+                    .from(
+                        "message_reactions"
+                    )
+                    .delete()
+                    .eq(
+                        "id",
+                        existing.id
+                    );
+
+                if (error) {
+                    throw error;
+                }
+            } else {
+                const {
+                    error
+                } = await db
+                    .from(
+                        "message_reactions"
+                    )
+                    .update({
+                        reaction
+                    })
+                    .eq(
+                        "id",
+                        existing.id
+                    );
+
+                if (error) {
+                    throw error;
+                }
+            }
+        } else {
+            const {
+                error
+            } = await db
+                .from(
+                    "message_reactions"
+                )
+                .insert({
+                    message_id:
+                        message.id,
+
+                    user_id:
+                        currentUser.id,
+
+                    reaction
+                });
+
+            if (error) {
+                throw error;
+            }
+        }
+
+        reactionCache.delete(
+            message.id
+        );
+
+        await refreshRenderedMessage(
+            message.id
+        );
+    } catch (error) {
+        console.error(
+            "Toggle reaction error:",
+            error
+        );
+
+        showChatError(
+            error.message
+        );
+    }
+}
+
+async function refreshRenderedMessage(
+    messageId
+) {
+    if (
+        !currentConversation ||
+        !messagesContainer
+    ) {
+        return;
+    }
+
+    const {
+        data: message,
+        error
+    } = await db
+        .from("messages")
+        .select("*")
+        .eq(
+            "id",
+            messageId
+        )
+        .maybeSingle();
+
+    if (error) {
+        console.warn(error);
+        return;
+    }
+
+    if (!message) {
+        return;
+    }
+
+    const {
+        data: replyMessage
+    } = message.reply_to
+        ? await db
+              .from("messages")
+              .select("*")
+              .eq(
+                  "id",
+                  message.reply_to
+              )
+              .maybeSingle()
+        : {
+              data: null
+          };
+
+    message.replyMessage =
+        replyMessage || null;
+
+    await renderMessage(
+        message
     );
 }
 
-function createUniqueId() {
+/* =========================================================
+   PINNED MESSAGES
+========================================================= */
+
+function getPinnedStorageKey(
+    conversationId
+) {
+    return `pinned_message_${conversationId}`;
+}
+
+function getPinnedMessage(
+    conversationId
+) {
+    if (!conversationId) {
+        return null;
+    }
+
+    try {
+        const value =
+            localStorage.getItem(
+                getPinnedStorageKey(
+                    conversationId
+                )
+            );
+
+        if (!value) {
+            return null;
+        }
+
+        return JSON.parse(
+            value
+        );
+    } catch (error) {
+        console.warn(
+            "Read pinned message error:",
+            error
+        );
+
+        return null;
+    }
+}
+
+function savePinnedMessage(
+    conversationId,
+    message
+) {
     if (
-        window.crypto &&
-        typeof window.crypto
-            .randomUUID ===
-            "function"
+        !conversationId ||
+        !message
     ) {
-        return window.crypto.randomUUID();
+        return;
+    }
+
+    try {
+        localStorage.setItem(
+            getPinnedStorageKey(
+                conversationId
+            ),
+            JSON.stringify(
+                message
+            )
+        );
+    } catch (error) {
+        console.warn(
+            "Save pinned message error:",
+            error
+        );
+    }
+}
+
+function removePinnedStorage(
+    conversationId
+) {
+    if (!conversationId) {
+        return;
+    }
+
+    try {
+        localStorage.removeItem(
+            getPinnedStorageKey(
+                conversationId
+            )
+        );
+    } catch (error) {
+        console.warn(
+            "Remove pinned message error:",
+            error
+        );
+    }
+}
+
+function isPinnedMessage(
+    message
+) {
+    if (
+        !currentConversation ||
+        !message
+    ) {
+        return false;
+    }
+
+    const pinned =
+        getPinnedMessage(
+            currentConversation.id
+        );
+
+    return (
+        pinned?.id ===
+        message.id
+    );
+}
+
+function pinMessage(
+    message,
+    isRestoring = false
+) {
+    if (
+        !currentConversation ||
+        !message
+    ) {
+        return;
+    }
+
+    savePinnedMessage(
+        currentConversation.id,
+        message
+    );
+
+    renderPinnedBanner(
+        message
+    );
+
+    if (!isRestoring) {
+        scrollToMessage(
+            message.id
+        );
+    }
+}
+
+function unpinMessage(
+    conversationId =
+        currentConversation?.id
+) {
+    removePinnedStorage(
+        conversationId
+    );
+
+    removePinnedBanner();
+}
+
+function removePinnedBanner() {
+    document
+        .querySelector(
+            ".pinned-message-banner"
+        )
+        ?.remove();
+}
+
+async function restorePinnedMessage(
+    messages
+) {
+    if (
+        !currentConversation
+    ) {
+        return;
+    }
+
+    const pinned =
+        getPinnedMessage(
+            currentConversation.id
+        );
+
+    if (!pinned?.id) {
+        removePinnedBanner();
+        return;
+    }
+
+    const actualMessage =
+        messages.find(
+            message =>
+                message.id ===
+                pinned.id
+        );
+
+    if (!actualMessage) {
+        removePinnedStorage(
+            currentConversation.id
+        );
+
+        removePinnedBanner();
+
+        return;
+    }
+
+    await renderPinnedBanner(
+        actualMessage
+    );
+}
+
+async function renderPinnedBanner(
+    message
+) {
+    removePinnedBanner();
+
+    const header =
+        document.querySelector(
+            ".chat-header"
+        );
+
+    if (!header) {
+        return;
+    }
+
+    const sender =
+        await getProfile(
+            message.sender_id
+        );
+
+    const senderName =
+        sender?.full_name ||
+        sender?.name ||
+        sender?.email ||
+        "مستخدم";
+
+    const preview =
+        getMessagePreview(
+            message
+        );
+
+    const banner =
+        document.createElement(
+            "div"
+        );
+
+    banner.className =
+        "pinned-message-banner";
+
+    banner.innerHTML = `
+        <div class="pinned-message-content">
+            <strong>
+                رسالة مثبتة
+            </strong>
+
+            <span>
+                ${escapeHtml(
+                    senderName
+                )}: ${escapeHtml(
+                    preview
+                )}
+            </span>
+        </div>
+
+        <button
+            type="button"
+            class="unpin-message-button"
+            aria-label="فك التثبيت"
+        >
+            ×
+        </button>
+    `;
+
+    header.insertAdjacentElement(
+        "afterend",
+        banner
+    );
+
+    banner
+        .querySelector(
+            ".unpin-message-button"
+        )
+        ?.addEventListener(
+            "click",
+            event => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                unpinMessage(
+                    currentConversation?.id
+                );
+            }
+        );
+
+    banner.addEventListener(
+        "click",
+        event => {
+            if (
+                event.target.closest(
+                    ".unpin-message-button"
+                )
+            ) {
+                return;
+            }
+
+            scrollToMessage(
+                message.id
+            );
+        }
+    );
+}
+
+function scrollToMessage(
+    messageId
+) {
+    const element =
+        document.querySelector(
+            `[data-message-id="${cssEscape(
+                messageId
+            )}"]`
+        );
+
+    if (!element) {
+        return;
+    }
+
+    element.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+
+    element.classList.add(
+        "message-highlight"
+    );
+
+    setTimeout(() => {
+        element.classList.remove(
+            "message-highlight"
+        );
+    }, 1500);
+}
+
+/* =========================================================
+   REALTIME
+========================================================= */
+
+async function subscribeRealtime(
+    conversationId
+) {
+    if (!db || !conversationId) {
+        return;
+    }
+
+    if (activeRealtimeChannel) {
+        try {
+            await db.removeChannel(
+                activeRealtimeChannel
+            );
+        } catch (error) {
+            console.warn(
+                "Remove realtime channel error:",
+                error
+            );
+        }
+
+        activeRealtimeChannel =
+            null;
+    }
+
+    const channelName =
+        `conversation:${conversationId}:${Date.now()}`;
+
+    const channel =
+        db.channel(
+            channelName
+        );
+
+    channel.on(
+        "postgres_changes",
+        {
+            event: "*",
+            schema: "public",
+            table: "messages",
+            filter:
+                `conversation_id=eq.${conversationId}`
+        },
+        async payload => {
+            await handleRealtimeMessage(
+                payload
+            );
+        }
+    );
+
+    channel.on(
+        "postgres_changes",
+        {
+            event: "*",
+            schema: "public",
+            table: "message_reactions"
+        },
+        async payload => {
+            await handleRealtimeReaction(
+                payload
+            );
+        }
+    );
+
+    channel.on(
+        "postgres_changes",
+        {
+            event: "*",
+            schema: "public",
+            table: "conversations",
+            filter:
+                `id=eq.${conversationId}`
+        },
+        async () => {
+            await loadConversations();
+        }
+    );
+
+    const {
+        error
+    } = await channel.subscribe();
+
+    if (error) {
+        console.error(
+            "Realtime subscribe error:",
+            error
+        );
+
+        return;
+    }
+
+    activeRealtimeChannel =
+        channel;
+}
+
+async function handleRealtimeMessage(
+    payload
+) {
+    if (
+        !currentConversation ||
+        !messagesContainer
+    ) {
+        return;
+    }
+
+    const newRecord =
+        payload?.new;
+
+    const oldRecord =
+        payload?.old;
+
+    const messageId =
+        newRecord?.id ||
+        oldRecord?.id;
+
+    if (!messageId) {
+        return;
+    }
+
+    if (
+        payload.eventType ===
+        "INSERT"
+    ) {
+        /*
+         * منع تكرار الرسالة إذا كانت
+         * موجودة بالفعل في DOM.
+         */
+        const existing =
+            messagesContainer.querySelector(
+                `[data-message-id="${cssEscape(
+                    messageId
+                )}"]`
+            );
+
+        if (existing) {
+            return;
+        }
+
+        await renderMessage(
+            newRecord
+        );
+
+        scrollMessagesToBottom();
+
+        return;
+    }
+
+    if (
+        payload.eventType ===
+        "UPDATE"
+    ) {
+        await refreshRenderedMessage(
+            messageId
+        );
+
+        return;
+    }
+
+    if (
+        payload.eventType ===
+        "DELETE"
+    ) {
+        const saved =
+            getPinnedMessage(
+                currentConversation.id
+            );
+
+        if (
+            saved?.id ===
+            messageId
+        ) {
+            unpinMessage(
+                currentConversation.id
+            );
+        }
+
+        document
+            .querySelector(
+                `[data-message-id="${cssEscape(
+                    messageId
+                )}"]`
+            )
+            ?.remove();
+    }
+}
+
+async function handleRealtimeReaction(
+    payload
+) {
+    const record =
+        payload?.new ||
+        payload?.old;
+
+    const messageId =
+        record?.message_id;
+
+    if (!messageId) {
+        return;
+    }
+
+    const element =
+        document.querySelector(
+            `[data-message-id="${cssEscape(
+                messageId
+            )}"]`
+        );
+
+    if (!element) {
+        return;
+    }
+
+    reactionCache.delete(
+        messageId
+    );
+
+    await refreshRenderedMessage(
+        messageId
+    );
+}
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+async function getProfile(
+    userId
+) {
+    if (!userId) {
+        return null;
+    }
+
+    if (
+        profileCache.has(
+            userId
+        )
+    ) {
+        return profileCache.get(
+            userId
+        );
+    }
+
+    if (!db) {
+        return null;
+    }
+
+    const {
+        data,
+        error
+    } = await db
+        .from("profiles")
+        .select("*")
+        .eq(
+            "id",
+            userId
+        )
+        .maybeSingle();
+
+    if (error) {
+        console.warn(
+            "Get profile error:",
+            error
+        );
+
+        return null;
+    }
+
+    if (data) {
+        profileCache.set(
+            userId,
+            data
+        );
+    }
+
+    return data;
+}
+
+/* =========================================================
+   STORAGE
+========================================================= */
+
+async function signedUrl(
+    path
+) {
+    if (
+        !db ||
+        !path
+    ) {
+        return null;
+    }
+
+    const {
+        data,
+        error
+    } = await db
+        .storage
+        .from("chat-files")
+        .createSignedUrl(
+            path,
+            60 * 60
+        );
+
+    if (error) {
+        throw error;
+    }
+
+    return data?.signedUrl ||
+        null;
+}
+
+function buildStoragePath(
+    folder,
+    fileName
+) {
+    const safeName =
+        sanitizeFileName(
+            fileName
+        );
+
+    const id =
+        createUniqueId();
+
+    const userId =
+        currentUser?.id ||
+        "anonymous";
+
+    return [
+        folder,
+        userId,
+        `${Date.now()}_${id}_${safeName}`
+    ].join("/");
+}
+
+function sanitizeFileName(
+    fileName
+) {
+    const value =
+        String(
+            fileName ||
+                "file"
+        );
+
+    return value
+        .replace(
+            /[^\w.\-]+/g,
+            "_"
+        )
+        .slice(
+            0,
+            150
+        );
+}
+
+function getAudioExtension(
+    mimeType
+) {
+    const type =
+        String(
+            mimeType ||
+                ""
+        ).toLowerCase();
+
+    if (
+        type.includes(
+            "ogg"
+        )
+    ) {
+        return "ogg";
+    }
+
+    if (
+        type.includes(
+            "mp4"
+        )
+    ) {
+        return "m4a";
+    }
+
+    if (
+        type.includes(
+            "mpeg"
+        )
+    ) {
+        return "mp3";
+    }
+
+    return "webm";
+}
+
+/* =========================================================
+   UI HELPERS
+========================================================= */
+
+function setLoginLoading(
+    loading
+) {
+    if (!loginButton) {
+        return;
+    }
+
+    loginButton.disabled =
+        loading;
+
+    loginButton.textContent =
+        loading
+            ? "جارٍ تسجيل الدخول..."
+            : "تسجيل الدخول";
+}
+
+function setMessageSending(
+    sending
+) {
+    if (sendButton) {
+        sendButton.disabled =
+            sending;
+    }
+}
+
+function showLoginError(
+    message
+) {
+    if (!loginError) {
+        return;
+    }
+
+    loginError.textContent =
+        message || "";
+
+    loginError.classList.remove(
+        "success"
+    );
+
+    loginError.classList.add(
+        "error"
+    );
+}
+
+function clearLoginError() {
+    if (!loginError) {
+        return;
+    }
+
+    loginError.textContent =
+        "";
+
+    loginError.classList.remove(
+        "error",
+        "success"
+    );
+}
+
+function showChatError(
+    message
+) {
+    if (chatError) {
+        chatError.textContent =
+            message || "";
+
+        chatError.classList.remove(
+            "hidden"
+        );
+
+        setTimeout(() => {
+            chatError?.classList.add(
+                "hidden"
+            );
+        }, 5000);
+
+        return;
+    }
+
+    if (messagesContainer) {
+        const errorElement =
+            document.createElement(
+                "div"
+            );
+
+        errorElement.className =
+            "chat-error";
+
+        errorElement.textContent =
+            message || "";
+
+        messagesContainer.appendChild(
+            errorElement
+        );
+
+        scrollMessagesToBottom();
+
+        setTimeout(() => {
+            errorElement.remove();
+        }, 5000);
+    }
+}
+
+function scrollMessagesToBottom() {
+    if (!messagesContainer) {
+        return;
+    }
+
+    messagesContainer.scrollTop =
+        messagesContainer.scrollHeight;
+}
+
+/* =========================================================
+   FORMATTING
+========================================================= */
+
+function getMessagePreview(
+    message
+) {
+    if (!message) {
+        return "";
+    }
+
+    if (
+        message.message_type ===
+        "image"
+    ) {
+        return (
+            message.content ||
+            "صورة"
+        );
+    }
+
+    if (
+        message.message_type ===
+        "audio"
+    ) {
+        return (
+            message.content ||
+            "رسالة صوتية"
+        );
     }
 
     return (
-        Date.now().toString(36) +
-        "-" +
-        Math.random()
-            .toString(36)
-            .substring(2, 12)
-    );
-}
-
-function ext(
-    filename
-) {
-    const extension =
-        String(filename || "")
-            .split(".")
-            .pop()
-            .toLowerCase()
-            .replace(
-                /[^a-z0-9]/g,
-                ""
-            );
-
-    return (
-        extension ||
-        "bin"
+        message.content ||
+        ""
     );
 }
 
@@ -4112,28 +4635,103 @@ function formatDate(
         return "";
     }
 
-    return date.toLocaleString(
-        "ar-DZ",
-        {
-            day: "2-digit",
-            month: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit"
-        }
+    try {
+        return new Intl.DateTimeFormat(
+            "ar-DZ",
+            {
+                dateStyle:
+                    "short",
+                timeStyle:
+                    "short"
+            }
+        ).format(date);
+    } catch (error) {
+        return date.toLocaleString();
+    }
+}
+
+function escapeHtml(
+    value
+) {
+    return String(
+        value ?? ""
+    )
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+}
+
+function cssEscape(
+    value
+) {
+    const stringValue =
+        String(
+            value ?? ""
+        );
+
+    if (
+        window.CSS &&
+        typeof window.CSS.escape ===
+            "function"
+    ) {
+        return window.CSS.escape(
+            stringValue
+        );
+    }
+
+    return stringValue.replace(
+        /[^a-zA-Z0-9_-]/g,
+        character =>
+            `\\${character}`
     );
 }
 
-/* =========================
-   35. AUTH ERROR MESSAGES
-   ========================= */
+function createUniqueId() {
+    if (
+        typeof crypto !==
+            "undefined" &&
+        typeof crypto.randomUUID ===
+            "function"
+    ) {
+        return crypto.randomUUID();
+    }
+
+    return (
+        Date.now().toString(36) +
+        Math.random()
+            .toString(36)
+            .slice(2)
+    );
+}
+
+/* =========================================================
+   AUTH ERROR MESSAGES
+========================================================= */
 
 function authMessage(
     error
 ) {
     const message =
-        (
+        String(
             error?.message ||
-            ""
+                ""
         ).toLowerCase();
 
     if (
@@ -4141,19 +4739,7 @@ function authMessage(
             "invalid login credentials"
         )
     ) {
-        return (
-            "البريد الإلكتروني أو كلمة المرور غير صحيحة."
-        );
-    }
-
-    if (
-        message.includes(
-            "email rate limit exceeded"
-        )
-    ) {
-        return (
-            "تم تجاوز حد إرسال رسائل الاسترجاع مؤقتًا. انتظر قليلًا ثم حاول مرة أخرى."
-        );
+        return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
     }
 
     if (
@@ -4161,23 +4747,77 @@ function authMessage(
             "email not confirmed"
         )
     ) {
-        return (
-            "يجب تأكيد البريد الإلكتروني قبل تسجيل الدخول."
-        );
+        return "يجب تأكيد البريد الإلكتروني أولًا.";
     }
 
     if (
         message.includes(
-            "password should be at least"
+            "user not found"
         )
     ) {
-        return (
-            "كلمة المرور قصيرة جدًا."
-        );
+        return "المستخدم غير موجود.";
+    }
+
+    if (
+        message.includes(
+            "password"
+        ) &&
+        message.includes(
+            "short"
+        )
+    ) {
+        return "كلمة المرور قصيرة جدًا.";
+    }
+
+    if (
+        message.includes(
+            "rate limit"
+        )
+    ) {
+        return "تم تجاوز عدد المحاولات المسموح بها. حاول لاحقًا.";
     }
 
     return (
         error?.message ||
-        "حدث خطأ غير معروف."
+        "حدث خطأ غير متوقع."
     );
 }
+
+/* =========================================================
+   CLEANUP
+========================================================= */
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+        try {
+            recordingStream
+                ?.getTracks()
+                .forEach(
+                    track =>
+                        track.stop()
+                );
+        } catch (error) {
+            console.warn(error);
+        }
+
+        try {
+            if (
+                activeRealtimeChannel &&
+                db
+            ) {
+                db.removeChannel(
+                    activeRealtimeChannel
+                );
+            }
+        } catch (error) {
+            console.warn(error);
+        }
+
+        try {
+            authSubscription?.unsubscribe?.();
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+);
