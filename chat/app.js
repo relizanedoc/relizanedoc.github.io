@@ -1192,6 +1192,7 @@ async function selectConversation(
     cancelReply();
 
     clearFilePreview();
+   unpinMessage();
 
     messagesContainer.innerHTML = `
         <div class="empty-messages">
@@ -1215,7 +1216,65 @@ async function selectConversation(
 /* =========================
    13. LOAD MESSAGES
    ========================= */
+/* =========================
+   PIN MESSAGES SYSTEM
+   ========================= */
 
+function pinMessage(message, isRestoring = false) {
+    if (!currentConversation?.id) return;
+
+    let banner = document.getElementById('pinnedMessageBanner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'pinnedMessageBanner';
+        banner.className = 'pinned-message-banner';
+        
+        const chatHeader = document.querySelector('.chat-header');
+        if (chatHeader) {
+            chatHeader.after(banner);
+        }
+    }
+
+    const senderName = profileCache.get(message.sender_id)?.display_name || "مستخدم";
+    let previewText = "";
+    
+    if (message.message_type === "image") previewText = "📷 صورة";
+    else if (message.message_type === "audio") previewText = "🎤 رسالة صوتية";
+    else previewText = message.content || "رسالة";
+
+    banner.innerHTML = `
+        <div class="pinned-icon" aria-hidden="true">📌</div>
+        <div class="pinned-content">
+            <span class="pinned-label">رسالة مثبتة من ${escapeHtml(senderName)}</span>
+            <span class="pinned-text">${escapeHtml(previewText)}</span>
+        </div>
+        <button type="button" class="unpin-btn" title="فك التثبيت" aria-label="فك التثبيت">✕</button>
+    `;
+
+    banner.addEventListener('click', (e) => {
+        if(e.target.closest('.unpin-btn')) return;
+        scrollToMessage(message.id);
+    });
+
+    banner.querySelector('.unpin-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        unpinMessage();
+    });
+
+    if (!isRestoring) {
+        localStorage.setItem('pinned_' + currentConversation.id, JSON.stringify(message));
+    }
+}
+
+function unpinMessage() {
+    if (currentConversation?.id) {
+        localStorage.removeItem('pinned_' + currentConversation.id);
+    }
+    const banner = document.getElementById('pinnedMessageBanner');
+    if (banner) {
+        banner.remove();
+    }
+}
 async function loadMessages() {
     if (!currentConversation?.id) {
         return;
@@ -1340,7 +1399,12 @@ async function loadMessages() {
             message
         );
     }
-
+const savedPin = localStorage.getItem('pinned_' + currentConversation.id);
+    if (savedPin) {
+        try {
+            pinMessage(JSON.parse(savedPin), true);
+        } catch (e) {}
+    }
     scrollBottom();
 }
 
@@ -1598,81 +1662,51 @@ async function loadReactions(
    17. RENDER MESSAGE
    ========================= */
 
-async function renderMessage(
-    message
-) {
+/* =========================
+   17. RENDER MESSAGE
+   ========================= */
+
+async function renderMessage(message) {
     if (!message?.id) {
         return;
     }
 
-    const existing =
-        messagesContainer.querySelector(
-            `[data-message-id="${cssEscape(
-                message.id
-            )}"]`
-        );
+    const existing = messagesContainer.querySelector(
+        `[data-message-id="${cssEscape(message.id)}"]`
+    );
 
     if (existing) {
         existing.remove();
     }
 
-    const element =
-        document.createElement(
-            "div"
-        );
+    const element = document.createElement("div");
 
-    const own =
-        message.sender_id ===
-        currentUser?.id;
+    const own = message.sender_id === currentUser?.id;
 
-    const canDelete =
-        own ||
-        currentProfile?.role ===
-            "admin";
+    element.className = own ? "message own" : "message";
+    element.dataset.messageId = message.id;
 
-    element.className =
-        own
-            ? "message own"
-            : "message";
-
-    element.dataset.messageId =
-        message.id;
-
-    const sender =
-        profileCache.get(
-            message.sender_id
-        )?.display_name ||
-        "مستخدم";
+    const sender = profileCache.get(message.sender_id)?.display_name || "مستخدم";
 
     let content = "";
 
     /*
      * صورة
      */
-    if (
-        message.message_type ===
-        "image"
-    ) {
-        const url =
-            await signedUrl(
-                message.file_path
-            );
+    if (message.message_type === "image") {
+        const url = await signedUrl(message.file_path);
 
         if (url) {
             content = `
                 <a
                     class="image-message-link"
-                    href="${escapeHtml(
-                        url
-                    )}"
+                    href="${escapeHtml(url)}"
                     target="_blank"
                     rel="noopener noreferrer"
                 >
                     <img
                         class="message-image"
-                        src="${escapeHtml(
-                            url
-                        )}"
+                        src="${escapeHtml(url)}"
                         alt="صورة مرسلة"
                         loading="lazy"
                     >
@@ -1686,18 +1720,11 @@ async function renderMessage(
             `;
         }
     }
-
     /*
      * تسجيل صوتي
      */
-    else if (
-        message.message_type ===
-        "audio"
-    ) {
-        const url =
-            await signedUrl(
-                message.file_path
-            );
+    else if (message.message_type === "audio") {
+        const url = await signedUrl(message.file_path);
 
         if (url) {
             content = `
@@ -1705,9 +1732,7 @@ async function renderMessage(
                     class="message-audio"
                     controls
                     preload="metadata"
-                    src="${escapeHtml(
-                        url
-                    )}"
+                    src="${escapeHtml(url)}"
                 ></audio>
             `;
         } else {
@@ -1718,16 +1743,13 @@ async function renderMessage(
             `;
         }
     }
-
     /*
      * رسالة نصية
      */
     else {
         content = `
             <div class="message-text">
-                ${escapeHtml(
-                    message.content || ""
-                )}
+                ${escapeHtml(message.content || "")}
             </div>
         `;
     }
@@ -1738,50 +1760,30 @@ async function renderMessage(
     let replyContent = "";
 
     if (message.reply_to) {
-        const replySender =
-            profileCache.get(
-                message.reply_to.sender_id
-            )?.display_name ||
-            "مستخدم";
+        const replySender = profileCache.get(message.reply_to.sender_id)?.display_name || "مستخدم";
 
         let previewText = "";
 
-        if (
-            message.reply_to.message_type ===
-            "image"
-        ) {
-            previewText =
-                "📷 صورة";
-        } else if (
-            message.reply_to.message_type ===
-            "audio"
-        ) {
-            previewText =
-                "🎤 رسالة صوتية";
+        if (message.reply_to.message_type === "image") {
+            previewText = "📷 صورة";
+        } else if (message.reply_to.message_type === "audio") {
+            previewText = "🎤 رسالة صوتية";
         } else {
-            previewText =
-                message.reply_to.content ||
-                "رسالة";
+            previewText = message.reply_to.content || "رسالة";
         }
 
         replyContent = `
             <div
                 class="message-reply"
-                data-reply-target="${escapeHtml(
-                    message.reply_to.id
-                )}"
+                data-reply-target="${escapeHtml(message.reply_to.id)}"
                 title="الانتقال إلى الرسالة الأصلية"
             >
                 <div class="message-reply-name">
-                    ${escapeHtml(
-                        replySender
-                    )}
+                    ${escapeHtml(replySender)}
                 </div>
 
                 <div class="message-reply-content">
-                    ${escapeHtml(
-                        previewText
-                    )}
+                    ${escapeHtml(previewText)}
                 </div>
             </div>
         `;
@@ -1789,9 +1791,6 @@ async function renderMessage(
 
     /*
      * مؤشر التفاعل الصغير.
-     *
-     * لا تظهر مجموعة الإيموجي كاملة
-     * إلا عند الضغط عليه.
      */
     const reactionTrigger = `
         <button
@@ -1810,9 +1809,7 @@ async function renderMessage(
     const reactionPicker = `
         <div
             class="reaction-picker"
-            data-message-id="${escapeHtml(
-                message.id
-            )}"
+            data-message-id="${escapeHtml(message.id)}"
             aria-label="اختيار تفاعل"
         >
             ${REACTIONS.map(
@@ -1838,21 +1835,6 @@ async function renderMessage(
 
             ${reactionTrigger}
 
-            ${
-                canDelete
-                    ? `
-                        <button
-                            type="button"
-                            class="delete-message-btn"
-                            title="حذف الرسالة"
-                            aria-label="حذف الرسالة"
-                        >
-                            🗑️
-                        </button>
-                    `
-                    : ""
-            }
-
             <div
                 class="message-bubble"
                 tabindex="0"
@@ -1863,10 +1845,8 @@ async function renderMessage(
                 ${
                     !own
                         ? `
-                            <div class="message-sender">
-                                ${escapeHtml(
-                                    sender
-                                )}
+                            <div class="message-sender" title="${currentProfile?.role === 'admin' ? 'اضغط لمراسلة العضو خاص' : ''}">
+                                ${escapeHtml(sender)}
                             </div>
                         `
                         : ""
@@ -1879,9 +1859,7 @@ async function renderMessage(
                 <div class="message-footer">
 
                     <span class="message-time">
-                        ${formatDate(
-                            message.created_at
-                        )}
+                        ${formatDate(message.created_at)}
                     </span>
 
                     ${
@@ -1902,175 +1880,98 @@ async function renderMessage(
 
             <div
                 class="message-reactions"
-                data-reactions-for="${escapeHtml(
-                    message.id
-                )}"
+                data-reactions-for="${escapeHtml(message.id)}"
             ></div>
 
         </div>
     `;
 
-    messagesContainer.appendChild(
-        element
-    );
+    messagesContainer.appendChild(element);
 
-    const bubble =
-        element.querySelector(
-            ".message-bubble"
-        );
+    const bubble = element.querySelector(".message-bubble");
+    const picker = element.querySelector(".reaction-picker");
+    const trigger = element.querySelector(".reaction-trigger");
+    const replyElement = element.querySelector(".message-reply");
+    
+    // --- تمت الإضافة هنا: تعريف عنصر اسم المرسل وبرمجة حدث الضغط عليه للأدمين ---
+    const senderElement = element.querySelector(".message-sender");
 
-    const picker =
-        element.querySelector(
-            ".reaction-picker"
-        );
-
-    const trigger =
-        element.querySelector(
-            ".reaction-trigger"
-        );
-
-    const replyElement =
-        element.querySelector(
-            ".message-reply"
-        );
+    if (senderElement) {
+        senderElement.addEventListener("click", (event) => {
+            event.stopPropagation(); // منع فتح قائمة الخيارات عند الضغط على الاسم
+            
+            if (currentProfile?.role === "admin" && message.sender_id !== currentUser?.id) {
+                const customerProfile = profileCache.get(message.sender_id);
+                if (customerProfile) {
+                    openPrivateConversation(customerProfile);
+                }
+            }
+        });
+    }
+    // --------------------------------------------------------------------------
 
     /*
      * الضغط على الرد ينقل للرسالة الأصلية.
      */
-    replyElement?.addEventListener(
-        "click",
-        event => {
-            event.preventDefault();
-            event.stopPropagation();
+    replyElement?.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
 
-            const targetId =
-                replyElement.dataset
-                    .replyTarget;
-
-            scrollToMessage(
-                targetId
-            );
-        }
-    );
+        const targetId = replyElement.dataset.replyTarget;
+        scrollToMessage(targetId);
+    });
 
     /*
      * الضغط على الرسالة يفتح القائمة.
+     * تم إضافة .message-sender للمنع حتى لا تفتح القائمة عند الضغط على الاسم
      */
-    bubble?.addEventListener(
-        "click",
-        event => {
-            if (
-                event.target.closest(
-                    "a, audio, button, .message-reply"
-                )
-            ) {
-                return;
-            }
-
-            openMessageMenu(
-                message,
-                element,
-                event
-            );
+    bubble?.addEventListener("click", event => {
+        if (event.target.closest("a, audio, button, .message-reply, .message-sender")) {
+            return;
         }
-    );
+
+        openMessageMenu(message, element, event);
+    });
 
     /*
      * الزر الأيمن.
      */
-    bubble?.addEventListener(
-        "contextmenu",
-        event => {
-            event.preventDefault();
-
-            openMessageMenu(
-                message,
-                element,
-                event
-            );
-        }
-    );
+    bubble?.addEventListener("contextmenu", event => {
+        event.preventDefault();
+        openMessageMenu(message, element, event);
+    });
 
     /*
-     * فتح التفاعلات عند الضغط
-     * على القلب الصغير.
+     * فتح التفاعلات عند الضغط على القلب الصغير.
      */
-    trigger?.addEventListener(
-        "click",
-        event => {
-            event.preventDefault();
-            event.stopPropagation();
+    trigger?.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
 
-            closeAllReactionPickers(
-                picker
-            );
-
-            picker?.classList.toggle(
-                "force-show"
-            );
-        }
-    );
+        closeAllReactionPickers(picker);
+        picker?.classList.toggle("force-show");
+    });
 
     /*
      * أزرار التفاعلات الستة.
      */
-    element
-        .querySelectorAll(
-            ".reaction-button"
-        )
-        .forEach(
-            button => {
-                button.addEventListener(
-                    "click",
-                    async event => {
-                        event.preventDefault();
-                        event.stopPropagation();
+    element.querySelectorAll(".reaction-button").forEach(button => {
+        button.addEventListener("click", async event => {
+            event.preventDefault();
+            event.stopPropagation();
 
-                        const reaction =
-                            button.dataset
-                                .reaction;
+            const reaction = button.dataset.reaction;
+            picker?.classList.remove("force-show");
 
-                        picker?.classList.remove(
-                            "force-show"
-                        );
-
-                        await toggleReaction(
-                            message.id,
-                            reaction
-                        );
-                    }
-                );
-            }
-        );
-
-    /*
-     * حذف الرسالة.
-     */
-    element
-        .querySelector(
-            ".delete-message-btn"
-        )
-        ?.addEventListener(
-            "click",
-            async event => {
-                event.preventDefault();
-                event.stopPropagation();
-
-                await deleteMessage(
-                    message.id,
-                    element
-                );
-            }
-        );
+            await toggleReaction(message.id, reaction);
+        });
+    });
 
     /*
      * تحديث ملخص التفاعلات.
      */
-    renderReactionSummary(
-        message.id
-    );
+    renderReactionSummary(message.id);
 }
-
 /* =========================
    18. MESSAGE MENU
    ========================= */
@@ -2097,6 +1998,26 @@ function openMessageMenu(
             "admin";
 
     contextMenu.innerHTML = `
+    <button
+            type="button"
+            class="context-item"
+            data-action="pin"
+        >
+            <span class="context-icon">
+                📌
+            </span>
+            <span>
+                تثبيت الرسالة
+            </span>
+        </button>
+        contextMenu
+        .querySelector('[data-action="pin"]')
+        ?.addEventListener("click", event => {
+            event.preventDefault();
+            event.stopPropagation();
+            closeContextMenu();
+            pinMessage(message);
+        });
         <button
             type="button"
             class="context-item"
