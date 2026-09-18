@@ -35,7 +35,6 @@ let profileCache = new Map();
 let reactionCache = new Map();
 
 let replyingToMessage = null;
-
 let selectedImage = null;
 
 let mediaRecorder = null;
@@ -95,7 +94,10 @@ let groupConversationButton = null;
    INITIALIZATION
 ========================================================= */
 
-document.addEventListener("DOMContentLoaded", initialize);
+document.addEventListener(
+    "DOMContentLoaded",
+    initialize
+);
 
 async function initialize() {
     if (initialized) {
@@ -115,7 +117,10 @@ async function initialize() {
 
         await initializeAuth();
     } catch (error) {
-        console.error("Initialization error:", error);
+        console.error(
+            "Initialization error:",
+            error
+        );
 
         showLoginError(
             error?.message ||
@@ -133,15 +138,19 @@ function initializeSupabase() {
 
     if (
         !supabaseApi ||
-        typeof supabaseApi.createClient !== "function"
+        typeof supabaseApi.createClient !==
+            "function"
     ) {
         throw new Error(
             "لم يتم تحميل مكتبة Supabase. تأكد من إضافة supabase-js قبل app.js."
         );
     }
 
-    const supabaseUrl = window.SUPABASE_URL;
-    const supabaseAnonKey = window.SUPABASE_ANON_KEY;
+    const supabaseUrl =
+        window.SUPABASE_URL;
+
+    const supabaseAnonKey =
+        window.SUPABASE_ANON_KEY;
 
     if (
         typeof supabaseUrl !== "string" ||
@@ -172,81 +181,156 @@ function initializeSupabase() {
 ========================================================= */
 
 function cacheDomElements() {
-    loginScreen = document.getElementById("login-screen");
-    app = document.getElementById("app");
-    loginBox = document.querySelector(".login-box");
+    /*
+     * هذه الأسماء مطابقة لـ index.html
+     */
 
-    emailInput = document.getElementById("email");
-    passwordInput = document.getElementById("password");
-    loginButton = document.getElementById("login-button");
-    forgotPasswordButton = document.getElementById(
-        "forgot-password-button"
-    );
-    loginError = document.getElementById("login-error");
+    loginScreen =
+        document.getElementById(
+            "loginScreen"
+        );
 
-    chatError = document.getElementById("chat-error");
+    app =
+        document.getElementById(
+            "app"
+        );
 
-    conversationTitle = document.getElementById(
-        "conversation-title"
-    );
+    loginBox =
+        document.querySelector(
+            ".login-box"
+        );
 
-    conversationList = document.getElementById(
-        "conversation-list"
-    );
+    emailInput =
+        document.getElementById(
+            "email"
+        );
 
-    customersList = document.getElementById(
-        "customers-list"
-    );
+    passwordInput =
+        document.getElementById(
+            "password"
+        );
 
-    messagesContainer = document.getElementById(
-        "messages-container"
-    );
+    loginButton =
+        document.getElementById(
+            "loginButton"
+        );
 
-    messageForm = document.getElementById("message-form");
+    forgotPasswordButton =
+        document.getElementById(
+            "forgotPasswordButton"
+        );
 
-    messageInput = document.getElementById(
-        "message-input"
-    );
+    loginError =
+        document.getElementById(
+            "loginError"
+        );
 
-    sendButton = document.getElementById(
-        "send-button"
-    );
+    /*
+     * هذا العنصر غير موجود حاليًا في index.html.
+     * لذلك سيبقى null، وshowChatError لديها fallback.
+     */
+    chatError =
+        document.getElementById(
+            "chatError"
+        );
 
-    imageInput = document.getElementById(
-        "image-input"
-    );
+    conversationTitle =
+        document.getElementById(
+            "conversationTitle"
+        );
 
-    imageButton = document.getElementById(
-        "image-button"
-    );
+    /*
+     * لا يوجد conversationList في index.html
+     * لذلك هو اختياري.
+     */
+    conversationList =
+        document.getElementById(
+            "conversationList"
+        );
 
-    filePreview = document.getElementById(
-        "file-preview"
-    );
+    customersList =
+        document.getElementById(
+            "customersList"
+        );
 
-    recordButton = document.getElementById(
-        "record-button"
-    );
+    /*
+     * index.html يستخدم id="messages"
+     */
+    messagesContainer =
+        document.getElementById(
+            "messages"
+        );
 
-    replyPreview = document.getElementById(
-        "reply-preview"
-    );
+    messageForm =
+        document.getElementById(
+            "messageForm"
+        );
 
-    replyPreviewText = document.getElementById(
-        "reply-preview-text"
-    );
+    messageInput =
+        document.getElementById(
+            "messageInput"
+        );
 
-    cancelReplyButton = document.getElementById(
-        "cancel-reply"
-    );
+    /*
+     * زر الإرسال لا يملك id.
+     * لديه class="send-button".
+     */
+    sendButton =
+        document.querySelector(
+            "#messageForm .send-button"
+        );
 
-    logoutButton = document.getElementById(
-        "logout-button"
-    );
+    imageInput =
+        document.getElementById(
+            "imageInput"
+        );
 
-    groupConversationButton = document.getElementById(
-        "group-conversation-button"
-    );
+    imageButton =
+        document.getElementById(
+            "imageButton"
+        );
+
+    filePreview =
+        document.getElementById(
+            "filePreview"
+        );
+
+    recordButton =
+        document.getElementById(
+            "recordButton"
+        );
+
+    replyPreview =
+        document.getElementById(
+            "replyPreview"
+        );
+
+    /*
+     * في index.html الاسم هو:
+     * replyPreviewContent
+     */
+    replyPreviewText =
+        document.getElementById(
+            "replyPreviewContent"
+        );
+
+    cancelReplyButton =
+        document.getElementById(
+            "cancelReplyButton"
+        );
+
+    logoutButton =
+        document.getElementById(
+            "logoutButton"
+        );
+
+    /*
+     * في index.html الاسم هو groupButton
+     */
+    groupConversationButton =
+        document.getElementById(
+            "groupButton"
+        );
 }
 
 /* =========================================================
@@ -302,7 +386,21 @@ function bindEvents() {
 
     imageButton?.addEventListener(
         "click",
-        () => {
+        event => {
+            /*
+             * إذا كان imageButton عبارة عن label
+             * كما في index.html، لا نحتاج click إضافي
+             * حتى لا يتم فتح اختيار الملف مرتين.
+             */
+            if (
+                imageButton.tagName.toLowerCase() ===
+                "label"
+            ) {
+                return;
+            }
+
+            event.preventDefault();
+
             imageInput?.click();
         }
     );
@@ -390,42 +488,40 @@ async function initializeAuth() {
         return;
     }
 
-    const authState = db.auth.onAuthStateChange(
-        (event, session) => {
-            /*
-             * لا ننفذ استعلامات Supabase مباشرة داخل
-             * callback الخاص بـ onAuthStateChange لتجنب
-             * مشاكل deadlock في بعض إصدارات Supabase.
-             */
-            setTimeout(() => {
-                if (
-                    event === "SIGNED_IN" &&
-                    session?.user
-                ) {
-                    startApplication(
-                        session.user
-                    ).catch(error => {
-                        console.error(
-                            "startApplication error:",
-                            error
-                        );
-                    });
-                }
+    const authState =
+        db.auth.onAuthStateChange(
+            (event, session) => {
+                setTimeout(() => {
+                    if (
+                        event === "SIGNED_IN" &&
+                        session?.user
+                    ) {
+                        startApplication(
+                            session.user
+                        ).catch(error => {
+                            console.error(
+                                "startApplication error:",
+                                error
+                            );
+                        });
+                    }
 
-                if (
-                    event === "PASSWORD_RECOVERY"
-                ) {
-                    showPasswordUpdateScreen();
-                }
+                    if (
+                        event ===
+                        "PASSWORD_RECOVERY"
+                    ) {
+                        showPasswordUpdateScreen();
+                    }
 
-                if (
-                    event === "SIGNED_OUT"
-                ) {
-                    resetApplication();
-                }
-            }, 0);
-        }
-    );
+                    if (
+                        event ===
+                        "SIGNED_OUT"
+                    ) {
+                        resetApplication();
+                    }
+                }, 0);
+            }
+        );
 
     if (
         authState?.data?.subscription
@@ -461,10 +557,12 @@ async function login() {
     }
 
     const email =
-        emailInput?.value?.trim() || "";
+        emailInput?.value?.trim() ||
+        "";
 
     const password =
-        passwordInput?.value || "";
+        passwordInput?.value ||
+        "";
 
     if (!email) {
         showLoginError(
@@ -488,10 +586,11 @@ async function login() {
         const {
             data,
             error
-        } = await db.auth.signInWithPassword({
-            email,
-            password
-        });
+        } =
+            await db.auth.signInWithPassword({
+                email,
+                password
+            });
 
         if (error) {
             throw error;
@@ -526,7 +625,13 @@ async function logout() {
     }
 
     try {
-        await db.auth.signOut();
+        const {
+            error
+        } = await db.auth.signOut();
+
+        if (error) {
+            throw error;
+        }
     } catch (error) {
         console.error(
             "Logout error:",
@@ -543,7 +648,8 @@ async function sendPasswordReset() {
     }
 
     const email =
-        emailInput?.value?.trim() || "";
+        emailInput?.value?.trim() ||
+        "";
 
     if (!email) {
         showLoginError(
@@ -557,13 +663,14 @@ async function sendPasswordReset() {
     try {
         const {
             error
-        } = await db.auth.resetPasswordForEmail(
-            email,
-            {
-                redirectTo:
-                    `${window.location.origin}${window.location.pathname}`
-            }
-        );
+        } =
+            await db.auth.resetPasswordForEmail(
+                email,
+                {
+                    redirectTo:
+                        `${window.location.origin}${window.location.pathname}`
+                }
+            );
 
         if (error) {
             throw error;
@@ -661,10 +768,12 @@ function showPasswordUpdateScreen() {
     const updatePassword =
         async () => {
             const password =
-                newPassword?.value || "";
+                newPassword?.value ||
+                "";
 
             const confirm =
-                confirmPassword?.value || "";
+                confirmPassword?.value ||
+                "";
 
             if (password.length < 6) {
                 if (updateError) {
@@ -683,7 +792,9 @@ function showPasswordUpdateScreen() {
             }
 
             if (updateButton) {
-                updateButton.disabled = true;
+                updateButton.disabled =
+                    true;
+
                 updateButton.textContent =
                     "جارٍ التحديث...";
             }
@@ -691,9 +802,10 @@ function showPasswordUpdateScreen() {
             try {
                 const {
                     error
-                } = await db.auth.updateUser({
-                    password
-                });
+                } =
+                    await db.auth.updateUser({
+                        password
+                    });
 
                 if (error) {
                     throw error;
@@ -745,7 +857,9 @@ function showPasswordUpdateScreen() {
    APPLICATION START / RESET
 ========================================================= */
 
-async function startApplication(user) {
+async function startApplication(
+    user
+) {
     if (!db || !user) {
         return;
     }
@@ -760,7 +874,8 @@ async function startApplication(user) {
 
     if (
         startingApplicationPromise &&
-        startingApplicationUserId === user.id
+        startingApplicationUserId ===
+            user.id
     ) {
         return startingApplicationPromise;
     }
@@ -774,11 +889,12 @@ async function startApplication(user) {
                 const {
                     data: profile,
                     error
-                } = await db
-                    .from("profiles")
-                    .select("*")
-                    .eq("id", user.id)
-                    .maybeSingle();
+                } =
+                    await db
+                        .from("profiles")
+                        .select("*")
+                        .eq("id", user.id)
+                        .maybeSingle();
 
                 if (error) {
                     throw error;
@@ -790,12 +906,21 @@ async function startApplication(user) {
                     );
                 }
 
-                currentUser = user;
-                currentProfile = profile;
+                currentUser =
+                    user;
+
+                currentProfile =
+                    profile;
+
+                profileCache.set(
+                    user.id,
+                    profile
+                );
 
                 showAppScreen();
 
                 await loadCustomers();
+
                 await loadConversations();
 
                 if (
@@ -814,8 +939,11 @@ async function startApplication(user) {
                     error
                 );
 
-                currentUser = null;
-                currentProfile = null;
+                currentUser =
+                    null;
+
+                currentProfile =
+                    null;
 
                 showLoginScreen();
 
@@ -826,7 +954,9 @@ async function startApplication(user) {
 
                 try {
                     await db.auth.signOut();
-                } catch (signOutError) {
+                } catch (
+                    signOutError
+                ) {
                     console.error(
                         signOutError
                     );
@@ -871,7 +1001,8 @@ function showLoginScreen() {
         "hidden"
     );
 
-    currentConversation = null;
+    currentConversation =
+        null;
 
     removePinnedBanner();
 }
@@ -886,26 +1017,17 @@ function resetApplication() {
     profileCache.clear();
     reactionCache.clear();
 
-    currentConversation = null;
-    replyingToMessage = null;
+    currentConversation =
+        null;
 
-    selectedImage = null;
+    replyingToMessage =
+        null;
+
+    selectedImage =
+        null;
 
     closeContextMenu();
     closeAllReactionPickers();
-
-    if (
-        loginBox?.dataset
-            ?.passwordRecovery === "true"
-    ) {
-        /*
-         * شاشة تغيير كلمة المرور استبدلت
-         * محتوى login-box بالكامل، لذلك إعادة
-         * تحميل الصفحة تعيد HTML الأصلي.
-         */
-        window.location.reload();
-        return;
-    }
 
     if (activeRealtimeChannel) {
         try {
@@ -916,22 +1038,26 @@ function resetApplication() {
             console.error(error);
         }
 
-        activeRealtimeChannel = null;
+        activeRealtimeChannel =
+            null;
     }
 
     cancelReply();
     clearFilePreview();
 
     if (messagesContainer) {
-        messagesContainer.innerHTML = "";
+        messagesContainer.innerHTML =
+            "";
     }
 
     if (conversationList) {
-        conversationList.innerHTML = "";
+        conversationList.innerHTML =
+            "";
     }
 
     if (customersList) {
-        customersList.innerHTML = "";
+        customersList.innerHTML =
+            "";
     }
 
     if (conversationTitle) {
@@ -947,34 +1073,42 @@ function resetApplication() {
 ========================================================= */
 
 async function loadConversations() {
+    /*
+     * لا نشترط conversationList لأن index.html
+     * الحالي لا يحتوي عليه.
+     */
     if (
         !db ||
-        !currentUser ||
-        !conversationList
+        !currentUser
     ) {
         return;
     }
 
-    conversationList.innerHTML = "";
+    if (conversationList) {
+        conversationList.innerHTML =
+            "";
+    }
 
-    let query = db
-        .from("conversations")
-        .select("*")
-        .order(
-            "updated_at",
-            {
-                ascending: false
-            }
-        );
+    let query =
+        db
+            .from("conversations")
+            .select("*")
+            .order(
+                "updated_at",
+                {
+                    ascending: false
+                }
+            );
 
     if (
         currentProfile?.role ===
         "customer"
     ) {
-        query = query.eq(
-            "customer_id",
-            currentUser.id
-        );
+        query =
+            query.eq(
+                "customer_id",
+                currentUser.id
+            );
     }
 
     const {
@@ -1000,6 +1134,25 @@ async function loadConversations() {
             ? data
             : [];
 
+    /*
+     * تحديث profileCache لأسماء العملاء
+     */
+    for (
+        const conversation of
+        conversations
+    ) {
+        if (
+            conversation.customer_id &&
+            !profileCache.has(
+                conversation.customer_id
+            )
+        ) {
+            await getProfile(
+                conversation.customer_id
+            );
+        }
+    }
+
     renderConversationList();
 }
 
@@ -1008,27 +1161,31 @@ function renderConversationList() {
         return;
     }
 
-    conversationList.innerHTML = "";
+    conversationList.innerHTML =
+        "";
 
-    for (const conversation of conversations) {
+    for (
+        const conversation of
+        conversations
+    ) {
         const button =
             document.createElement(
                 "button"
             );
 
-        button.type = "button";
+        button.type =
+            "button";
+
         button.className =
             "conversation-button";
 
         button.dataset.conversationId =
             conversation.id;
 
-        const title =
+        button.textContent =
             getConversationTitle(
                 conversation
             );
-
-        button.textContent = title;
 
         button.addEventListener(
             "click",
@@ -1068,13 +1225,15 @@ function getConversationTitle(
     }
 
     if (
-        conversation.type === "group"
+        conversation.type ===
+        "group"
     ) {
         return "المجموعة";
     }
 
     if (
-        conversation.type === "private"
+        conversation.type ===
+        "private"
     ) {
         if (
             currentProfile?.role ===
@@ -1124,6 +1283,7 @@ async function openInitialAdminConversation() {
         await selectConversation(
             groupConversation
         );
+
         return;
     }
 
@@ -1151,11 +1311,6 @@ async function selectConversation(
     closeContextMenu();
     closeAllReactionPickers();
 
-    /*
-     * مهم:
-     * لا نحذف pin الجديد عند الانتقال
-     * من محادثة إلى أخرى.
-     */
     removePinnedBanner();
 
     currentConversation =
@@ -1179,7 +1334,7 @@ async function selectConversation(
 
     await loadMessages();
 
-    subscribeRealtime(
+    await subscribeRealtime(
         conversation.id
     );
 }
@@ -1195,14 +1350,16 @@ function setActiveConversationButton(
         .querySelectorAll(
             ".conversation-button"
         )
-        .forEach(button => {
-            button.classList.toggle(
-                "active",
-                button.dataset
-                    .conversationId ===
-                    conversationId
-            );
-        });
+        .forEach(
+            button => {
+                button.classList.toggle(
+                    "active",
+                    button.dataset
+                        .conversationId ===
+                        conversationId
+                );
+            }
+        );
 }
 
 async function openPrivateConversation(
@@ -1218,7 +1375,8 @@ async function openPrivateConversation(
 
     if (
         customer.role &&
-        customer.role !== "customer"
+        customer.role !==
+            "customer"
     ) {
         return;
     }
@@ -1226,21 +1384,34 @@ async function openPrivateConversation(
     const customerId =
         customer.id;
 
-    let {
-        data: conversation,
+    /*
+     * لا نستخدم maybeSingle مباشرة،
+     * لأن وجود أكثر من محادثة خاصة لنفس
+     * العميل كان يسبب:
+     * "JSON object requested, multiple rows returned"
+     */
+    const {
+        data: privateConversations,
         error
-    } = await db
-        .from("conversations")
-        .select("*")
-        .eq(
-            "type",
-            "private"
-        )
-        .eq(
-            "customer_id",
-            customerId
-        )
-        .maybeSingle();
+    } =
+        await db
+            .from("conversations")
+            .select("*")
+            .eq(
+                "type",
+                "private"
+            )
+            .eq(
+                "customer_id",
+                customerId
+            )
+            .order(
+                "updated_at",
+                {
+                    ascending: false
+                }
+            )
+            .limit(1);
 
     if (error) {
         console.error(
@@ -1254,6 +1425,10 @@ async function openPrivateConversation(
 
         return;
     }
+
+    let conversation =
+        privateConversations?.[0] ||
+        null;
 
     if (!conversation) {
         if (
@@ -1294,12 +1469,27 @@ async function openPrivateConversation(
         conversation =
             result.data;
 
-        /*
-         * إضافة الأعضاء للمحادثة.
-         * إذا كان جدول conversation_members
-         * موجودًا في قاعدة البيانات.
-         */
-        try {
+        conversations.push(
+            conversation
+        );
+
+        renderConversationList();
+    }
+
+    /*
+     * إضافة أعضاء المحادثة فقط عندما يكون
+     * المستخدم الحالي admin.
+     *
+     * هذا يمنع العميل من محاولة تعديل
+     * conversation_members إذا لم تسمح له RLS.
+     */
+    if (
+        currentProfile?.role ===
+        "admin"
+    ) {
+        const {
+            error: membersError
+        } =
             await db
                 .from(
                     "conversation_members"
@@ -1324,19 +1514,26 @@ async function openPrivateConversation(
                             "conversation_id,user_id"
                     }
                 );
-        } catch (memberError) {
+
+        if (membersError) {
+            /*
+             * لا نمنع فتح المحادثة هنا.
+             * قد تكون RLS مضبوطة بطريقة أخرى.
+             */
             console.warn(
-                "Could not add conversation members:",
-                memberError
+                "Conversation members upsert warning:",
+                membersError
             );
         }
-
-        conversations.push(
-            conversation
-        );
-
-        renderConversationList();
     }
+
+    /*
+     * حفظ العميل في cache
+     */
+    profileCache.set(
+        customerId,
+        customer
+    );
 
     await selectConversation(
         conversation
@@ -1347,6 +1544,18 @@ async function openPrivateConversation(
             `[data-customer-id="${cssEscape(
                 customerId
             )}"]`
+        );
+
+    customersList
+        ?.querySelectorAll(
+            ".customer-button"
+        )
+        .forEach(
+            button => {
+                button.classList.remove(
+                    "active"
+                );
+            }
         );
 
     customerButton?.classList.add(
@@ -1363,17 +1572,27 @@ async function openGroupConversation() {
         return;
     }
 
-    let {
-        data: group,
+    /*
+     * نفس الحماية من multiple rows
+     */
+    const {
+        data: groups,
         error
-    } = await db
-        .from("conversations")
-        .select("*")
-        .eq(
-            "type",
-            "group"
-        )
-        .maybeSingle();
+    } =
+        await db
+            .from("conversations")
+            .select("*")
+            .eq(
+                "type",
+                "group"
+            )
+            .order(
+                "updated_at",
+                {
+                    ascending: false
+                }
+            )
+            .limit(1);
 
     if (error) {
         console.error(
@@ -1388,13 +1607,17 @@ async function openGroupConversation() {
         return;
     }
 
+    let group =
+        groups?.[0] || null;
+
     if (!group) {
         const result =
             await db
                 .from("conversations")
                 .insert({
                     type: "group",
-                    title: "المجموعة العامة"
+                    title:
+                        "المجموعة العامة"
                 })
                 .select("*")
                 .single();
@@ -1439,7 +1662,8 @@ async function loadCustomers() {
         return;
     }
 
-    customersList.innerHTML = "";
+    customersList.innerHTML =
+        "";
 
     if (
         currentProfile?.role !==
@@ -1451,19 +1675,20 @@ async function loadCustomers() {
     const {
         data,
         error
-    } = await db
-        .from("profiles")
-        .select("*")
-        .eq(
-            "role",
-            "customer"
-        )
-        .order(
-            "full_name",
-            {
-                ascending: true
-            }
-        );
+    } =
+        await db
+            .from("profiles")
+            .select("*")
+            .eq(
+                "role",
+                "customer"
+            )
+            .order(
+                "full_name",
+                {
+                    ascending: true
+                }
+            );
 
     if (error) {
         console.error(
@@ -1483,7 +1708,10 @@ async function loadCustomers() {
             ? data
             : [];
 
-    for (const customer of customers) {
+    for (
+        const customer of
+        customers
+    ) {
         profileCache.set(
             customer.id,
             customer
@@ -1494,7 +1722,9 @@ async function loadCustomers() {
                 "button"
             );
 
-        button.type = "button";
+        button.type =
+            "button";
+
         button.className =
             "customer-button";
 
@@ -1543,19 +1773,20 @@ async function loadMessages() {
     const {
         data,
         error
-    } = await db
-        .from("messages")
-        .select("*")
-        .eq(
-            "conversation_id",
-            currentConversation.id
-        )
-        .order(
-            "created_at",
-            {
-                ascending: true
-            }
-        );
+    } =
+        await db
+            .from("messages")
+            .select("*")
+            .eq(
+                "conversation_id",
+                currentConversation.id
+            )
+            .order(
+                "created_at",
+                {
+                    ascending: true
+                }
+            );
 
     if (error) {
         console.error(
@@ -1579,7 +1810,10 @@ async function loadMessages() {
         messages
     );
 
-    for (const message of messages) {
+    for (
+        const message of
+        messages
+    ) {
         await renderMessage(
             message
         );
@@ -1615,18 +1849,23 @@ async function loadReplyMessages(
     }
 
     const uniqueIds =
-        [...new Set(replyIds)];
+        [
+            ...new Set(
+                replyIds
+            )
+        ];
 
     const {
         data,
         error
-    } = await db
-        .from("messages")
-        .select("*")
-        .in(
-            "id",
-            uniqueIds
-        );
+    } =
+        await db
+            .from("messages")
+            .select("*")
+            .in(
+                "id",
+                uniqueIds
+            );
 
     if (error) {
         console.warn(
@@ -1647,12 +1886,16 @@ async function loadReplyMessages(
             )
         );
 
-    for (const message of messages) {
+    for (
+        const message of
+        messages
+    ) {
         if (message.reply_to) {
             message.replyMessage =
                 replyMap.get(
                     message.reply_to
-                ) || null;
+                ) ||
+                null;
         }
     }
 }
@@ -1748,6 +1991,7 @@ async function renderMessage(
                     replySenderName
                 )}
             </div>
+
             <div class="reply-content">
                 ${escapeHtml(
                     replyContent
@@ -1771,10 +2015,6 @@ async function renderMessage(
     senderElement.textContent =
         senderName;
 
-    /*
-     * السماح بفتح محادثة خاصة
-     * مع العميل فقط.
-     */
     if (
         currentProfile?.role ===
             "admin" &&
@@ -1838,7 +2078,8 @@ async function renderMessage(
                 );
 
             if (url) {
-                image.src = url;
+                image.src =
+                    url;
             }
         } catch (error) {
             console.error(
@@ -1859,7 +2100,8 @@ async function renderMessage(
                 "audio"
             );
 
-        audio.controls = true;
+        audio.controls =
+            true;
 
         audio.preload =
             "metadata";
@@ -1871,7 +2113,8 @@ async function renderMessage(
                 );
 
             if (url) {
-                audio.src = url;
+                audio.src =
+                    url;
             }
         } catch (error) {
             console.error(
@@ -1902,7 +2145,8 @@ async function renderMessage(
         }
     } else {
         content.textContent =
-            message.content || "";
+            message.content ||
+            "";
     }
 
     messageBubble.appendChild(
@@ -1955,11 +2199,6 @@ async function renderMessage(
         reactions
     );
 
-    /*
-     * الضغط بالزر الأيسر يفتح القائمة.
-     * stopPropagation مهم جدًا حتى لا يقوم
-     * document click بإغلاق القائمة مباشرة.
-     */
     messageBubble.addEventListener(
         "click",
         event => {
@@ -2158,10 +2397,6 @@ function openMessageMenu(
             }
         );
 
-    /*
-     * هذا هو الجزء الذي كان به خطأ في الكود الأصلي.
-     * JavaScript يجب أن يكون خارج innerHTML.
-     */
     contextMenu
         .querySelector(
             '[data-action="pin"]'
@@ -2256,10 +2491,16 @@ function positionContextMenu(
     }
 
     left =
-        Math.max(8, left);
+        Math.max(
+            8,
+            left
+        );
 
     top =
-        Math.max(8, top);
+        Math.max(
+            8,
+            top
+        );
 
     contextMenu.style.left =
         `${left}px`;
@@ -2271,7 +2512,9 @@ function positionContextMenu(
 function closeContextMenu() {
     if (contextMenu) {
         contextMenu.remove();
-        contextMenu = null;
+
+        contextMenu =
+            null;
     }
 }
 
@@ -2294,7 +2537,9 @@ async function copyMessage(
     try {
         if (
             navigator.clipboard &&
-            typeof navigator.clipboard.writeText ===
+            typeof navigator
+                .clipboard
+                .writeText ===
                 "function"
         ) {
             await navigator.clipboard.writeText(
@@ -2371,13 +2616,14 @@ async function deleteMessage(
 
     const {
         error
-    } = await db
-        .from("messages")
-        .delete()
-        .eq(
-            "id",
-            message.id
-        );
+    } =
+        await db
+            .from("messages")
+            .delete()
+            .eq(
+                "id",
+                message.id
+            );
 
     if (error) {
         console.error(
@@ -2454,9 +2700,21 @@ function cancelReply() {
 }
 
 function ensureReplyPreview() {
+    /*
+     * index.html يحتوي بالفعل على:
+     *
+     * replyPreview
+     * replyPreviewContent
+     * cancelReplyButton
+     *
+     * لذلك نستخدم الموجود بدل إنشاء
+     * عنصر ثانٍ.
+     */
+
     if (
         replyPreview &&
-        replyPreviewText
+        replyPreviewText &&
+        cancelReplyButton
     ) {
         return;
     }
@@ -2475,48 +2733,57 @@ function ensureReplyPreview() {
             );
 
         replyPreview.id =
-            "reply-preview";
+            "replyPreview";
 
         replyPreview.className =
             "reply-preview hidden";
 
         replyPreview.innerHTML = `
             <div class="reply-preview-content">
-                <div
-                    id="reply-preview-text"
-                    class="reply-preview-text"
-                ></div>
+                <span class="reply-preview-icon">
+                    ↩
+                </span>
 
-                <button
-                    type="button"
-                    id="cancel-reply"
-                    aria-label="إلغاء الرد"
-                >
-                    ×
-                </button>
+                <div class="reply-preview-text">
+                    <span
+                        id="replyPreviewContent"
+                    ></span>
+                </div>
             </div>
+
+            <button
+                type="button"
+                id="cancelReplyButton"
+                aria-label="إلغاء الرد"
+            >
+                ×
+            </button>
         `;
 
         form.parentElement?.insertBefore(
             replyPreview,
             form
         );
+    }
 
+    if (!replyPreviewText) {
         replyPreviewText =
             replyPreview.querySelector(
-                "#reply-preview-text"
+                "#replyPreviewContent"
             );
+    }
 
+    if (!cancelReplyButton) {
         cancelReplyButton =
             replyPreview.querySelector(
-                "#cancel-reply"
+                "#cancelReplyButton"
             );
-
-        cancelReplyButton?.addEventListener(
-            "click",
-            cancelReply
-        );
     }
+
+    cancelReplyButton?.addEventListener(
+        "click",
+        cancelReply
+    );
 }
 
 /* =========================================================
@@ -2540,9 +2807,7 @@ async function sendMessage(
         messageInput?.value?.trim() ||
         "";
 
-    if (
-        selectedImage
-    ) {
+    if (selectedImage) {
         const file =
             selectedImage;
 
@@ -2591,9 +2856,12 @@ async function sendMessage(
 
         const {
             error
-        } = await db
-            .from("messages")
-            .insert(payload);
+        } =
+            await db
+                .from("messages")
+                .insert(
+                    payload
+                );
 
         if (error) {
             throw error;
@@ -2659,9 +2927,7 @@ function handleImageSelection(
     const maxSize =
         10 * 1024 * 1024;
 
-    if (
-        file.size > maxSize
-    ) {
+    if (file.size > maxSize) {
         showChatError(
             "حجم الصورة يجب ألا يتجاوز 10MB."
         );
@@ -2762,21 +3028,23 @@ async function uploadImage(
     try {
         const {
             error: uploadError
-        } = await db
-            .storage
-            .from("chat-files")
-            .upload(
-                path,
-                file,
-                {
-                    cacheControl:
-                        "3600",
-                    upsert: false,
-                    contentType:
-                        file.type ||
-                        "application/octet-stream"
-                }
-            );
+        } =
+            await db
+                .storage
+                .from("chat-files")
+                .upload(
+                    path,
+                    file,
+                    {
+                        cacheControl:
+                            "3600",
+                        upsert:
+                            false,
+                        contentType:
+                            file.type ||
+                            "application/octet-stream"
+                    }
+                );
 
         if (uploadError) {
             throw uploadError;
@@ -2809,21 +3077,24 @@ async function uploadImage(
 
         const {
             error: insertError
-        } = await db
-            .from("messages")
-            .insert(payload);
+        } =
+            await db
+                .from("messages")
+                .insert(
+                    payload
+                );
 
         if (insertError) {
-            /*
-             * تنظيف الملف إذا فشل إنشاء
-             * سجل الرسالة.
-             */
             try {
                 await db
                     .storage
                     .from("chat-files")
-                    .remove([path]);
-            } catch (removeError) {
+                    .remove([
+                        path
+                    ]);
+            } catch (
+                removeError
+            ) {
                 console.warn(
                     removeError
                 );
@@ -2850,6 +3121,10 @@ async function uploadImage(
 
         selectedImage =
             file;
+
+        showFilePreview(
+            file
+        );
     } finally {
         setMessageSending(
             false
@@ -2916,7 +3191,8 @@ async function startRecording() {
             "audio/mp4"
         ];
 
-        let mimeType = "";
+        let mimeType =
+            "";
 
         for (
             const type of mimeTypes
@@ -2928,6 +3204,7 @@ async function startRecording() {
             ) {
                 mimeType =
                     type;
+
                 break;
             }
         }
@@ -2947,12 +3224,6 @@ async function startRecording() {
         recordingChunks =
             [];
 
-        /*
-         * نلتقط المحادثة والرد عند بدء
-         * التسجيل حتى لا يتم رفع الصوت
-         * إلى محادثة مختلفة إذا غيّر المستخدم
-         * المحادثة أثناء التسجيل.
-         */
         const recordingConversationId =
             currentConversation.id;
 
@@ -3023,8 +3294,7 @@ async function startRecording() {
                         chunks,
                         {
                             type:
-                                recorder
-                                    ?.mimeType ||
+                                recorder?.mimeType ||
                                 "audio/webm"
                         }
                     );
@@ -3098,7 +3368,13 @@ function stopRecording() {
 
 function cleanupRecording() {
     try {
-        mediaRecorder?.stop?.();
+        if (
+            mediaRecorder &&
+            mediaRecorder.state !==
+                "inactive"
+        ) {
+            mediaRecorder.stop();
+        }
     } catch (error) {
         console.warn(error);
     }
@@ -3115,8 +3391,12 @@ function cleanupRecording() {
             track => {
                 try {
                     track.stop();
-                } catch (error) {
-                    console.warn(error);
+                } catch (
+                    error
+                ) {
+                    console.warn(
+                        error
+                    );
                 }
             }
         );
@@ -3162,21 +3442,23 @@ async function uploadAudio(
     try {
         const {
             error: uploadError
-        } = await db
-            .storage
-            .from("chat-files")
-            .upload(
-                path,
-                blob,
-                {
-                    cacheControl:
-                        "3600",
-                    upsert: false,
-                    contentType:
-                        blob.type ||
-                        "audio/webm"
-                }
-            );
+        } =
+            await db
+                .storage
+                .from("chat-files")
+                .upload(
+                    path,
+                    blob,
+                    {
+                        cacheControl:
+                            "3600",
+                        upsert:
+                            false,
+                        contentType:
+                            blob.type ||
+                            "audio/webm"
+                    }
+                );
 
         if (uploadError) {
             throw uploadError;
@@ -3206,17 +3488,24 @@ async function uploadAudio(
 
         const {
             error: insertError
-        } = await db
-            .from("messages")
-            .insert(payload);
+        } =
+            await db
+                .from("messages")
+                .insert(
+                    payload
+                );
 
         if (insertError) {
             try {
                 await db
                     .storage
                     .from("chat-files")
-                    .remove([path]);
-            } catch (removeError) {
+                    .remove([
+                        path
+                    ]);
+            } catch (
+                removeError
+            ) {
                 console.warn(
                     removeError
                 );
@@ -3309,27 +3598,34 @@ async function renderReactionSummary(
     const counts =
         new Map();
 
-    for (const reaction of reactions) {
+    for (
+        const reaction of
+        reactions
+    ) {
         const value =
             reaction.reaction;
 
         counts.set(
             value,
-            (counts.get(value) || 0) +
-                1
+            (counts.get(value) ||
+                0) + 1
         );
     }
 
     for (
-        const [reaction, count] of
-        counts
+        const [
+            reaction,
+            count
+        ] of counts
     ) {
         const button =
             document.createElement(
                 "button"
             );
 
-        button.type = "button";
+        button.type =
+            "button";
+
         button.className =
             "reaction-summary";
 
@@ -3365,7 +3661,8 @@ async function renderReactionSummary(
             "button"
         );
 
-    addButton.type = "button";
+    addButton.type =
+        "button";
 
     addButton.className =
         "reaction-trigger";
@@ -3410,13 +3707,16 @@ async function loadReactions(
     const {
         data,
         error
-    } = await db
-        .from("message_reactions")
-        .select("*")
-        .eq(
-            "message_id",
-            messageId
-        );
+    } =
+        await db
+            .from(
+                "message_reactions"
+            )
+            .select("*")
+            .eq(
+                "message_id",
+                messageId
+            );
 
     if (error) {
         console.warn(
@@ -3467,7 +3767,8 @@ function showReactionPicker(
                 "button"
             );
 
-        button.type = "button";
+        button.type =
+            "button";
 
         button.className =
             "reaction-option";
@@ -3594,19 +3895,24 @@ async function toggleReaction(
         const {
             data: existing,
             error: findError
-        } = await db
-            .from("message_reactions")
-            .select("id,reaction")
-            .eq(
-                "message_id",
-                message.id
-            )
-            .eq(
-                "user_id",
-                currentUser.id
-            )
-            .limit(1)
-            .maybeSingle();
+        } =
+            await db
+                .from(
+                    "message_reactions"
+                )
+                .select(
+                    "id,reaction"
+                )
+                .eq(
+                    "message_id",
+                    message.id
+                )
+                .eq(
+                    "user_id",
+                    currentUser.id
+                )
+                .limit(1)
+                .maybeSingle();
 
         if (findError) {
             throw findError;
@@ -3619,15 +3925,16 @@ async function toggleReaction(
             ) {
                 const {
                     error
-                } = await db
-                    .from(
-                        "message_reactions"
-                    )
-                    .delete()
-                    .eq(
-                        "id",
-                        existing.id
-                    );
+                } =
+                    await db
+                        .from(
+                            "message_reactions"
+                        )
+                        .delete()
+                        .eq(
+                            "id",
+                            existing.id
+                        );
 
                 if (error) {
                     throw error;
@@ -3635,17 +3942,18 @@ async function toggleReaction(
             } else {
                 const {
                     error
-                } = await db
-                    .from(
-                        "message_reactions"
-                    )
-                    .update({
-                        reaction
-                    })
-                    .eq(
-                        "id",
-                        existing.id
-                    );
+                } =
+                    await db
+                        .from(
+                            "message_reactions"
+                        )
+                        .update({
+                            reaction
+                        })
+                        .eq(
+                            "id",
+                            existing.id
+                        );
 
                 if (error) {
                     throw error;
@@ -3654,19 +3962,20 @@ async function toggleReaction(
         } else {
             const {
                 error
-            } = await db
-                .from(
-                    "message_reactions"
-                )
-                .insert({
-                    message_id:
-                        message.id,
+            } =
+                await db
+                    .from(
+                        "message_reactions"
+                    )
+                    .insert({
+                        message_id:
+                            message.id,
 
-                    user_id:
-                        currentUser.id,
+                        user_id:
+                            currentUser.id,
 
-                    reaction
-                });
+                        reaction
+                    });
 
             if (error) {
                 throw error;
@@ -3697,7 +4006,8 @@ async function refreshRenderedMessage(
 ) {
     if (
         !currentConversation ||
-        !messagesContainer
+        !messagesContainer ||
+        !db
     ) {
         return;
     }
@@ -3705,14 +4015,15 @@ async function refreshRenderedMessage(
     const {
         data: message,
         error
-    } = await db
-        .from("messages")
-        .select("*")
-        .eq(
-            "id",
-            messageId
-        )
-        .maybeSingle();
+    } =
+        await db
+            .from("messages")
+            .select("*")
+            .eq(
+                "id",
+                messageId
+            )
+            .maybeSingle();
 
     if (error) {
         console.warn(error);
@@ -3725,21 +4036,23 @@ async function refreshRenderedMessage(
 
     const {
         data: replyMessage
-    } = message.reply_to
-        ? await db
-              .from("messages")
-              .select("*")
-              .eq(
-                  "id",
-                  message.reply_to
-              )
-              .maybeSingle()
-        : {
-              data: null
-          };
+    } =
+        message.reply_to
+            ? await db
+                  .from("messages")
+                  .select("*")
+                  .eq(
+                      "id",
+                      message.reply_to
+                  )
+                  .maybeSingle()
+            : {
+                  data: null
+              };
 
     message.replyMessage =
-        replyMessage || null;
+        replyMessage ||
+        null;
 
     await renderMessage(
         message
@@ -3907,9 +4220,7 @@ function removePinnedBanner() {
 async function restorePinnedMessage(
     messages
 ) {
-    if (
-        !currentConversation
-    ) {
+    if (!currentConversation) {
         return;
     }
 
@@ -4132,7 +4443,8 @@ async function subscribeRealtime(
         {
             event: "*",
             schema: "public",
-            table: "message_reactions"
+            table:
+                "message_reactions"
         },
         async payload => {
             await handleRealtimeReaction(
@@ -4146,7 +4458,8 @@ async function subscribeRealtime(
         {
             event: "*",
             schema: "public",
-            table: "conversations",
+            table:
+                "conversations",
             filter:
                 `id=eq.${conversationId}`
         },
@@ -4155,21 +4468,33 @@ async function subscribeRealtime(
         }
     );
 
-    const {
-        error
-    } = await channel.subscribe();
+    /*
+     * subscribe في Supabase v2 يعيد channel
+     * ويُفضّل التعامل مع الحالة من callback.
+     */
+    channel.subscribe(
+        status => {
+            if (
+                status ===
+                "SUBSCRIBED"
+            ) {
+                activeRealtimeChannel =
+                    channel;
+            }
 
-    if (error) {
-        console.error(
-            "Realtime subscribe error:",
-            error
-        );
-
-        return;
-    }
-
-    activeRealtimeChannel =
-        channel;
+            if (
+                status ===
+                    "CHANNEL_ERROR" ||
+                status ===
+                    "TIMED_OUT"
+            ) {
+                console.error(
+                    "Realtime status:",
+                    status
+                );
+            }
+        }
+    );
 }
 
 async function handleRealtimeMessage(
@@ -4200,10 +4525,6 @@ async function handleRealtimeMessage(
         payload.eventType ===
         "INSERT"
     ) {
-        /*
-         * منع تكرار الرسالة إذا كانت
-         * موجودة بالفعل في DOM.
-         */
         const existing =
             messagesContainer.querySelector(
                 `[data-message-id="${cssEscape(
@@ -4325,14 +4646,15 @@ async function getProfile(
     const {
         data,
         error
-    } = await db
-        .from("profiles")
-        .select("*")
-        .eq(
-            "id",
-            userId
-        )
-        .maybeSingle();
+    } =
+        await db
+            .from("profiles")
+            .select("*")
+            .eq(
+                "id",
+                userId
+            )
+            .maybeSingle();
 
     if (error) {
         console.warn(
@@ -4370,20 +4692,23 @@ async function signedUrl(
     const {
         data,
         error
-    } = await db
-        .storage
-        .from("chat-files")
-        .createSignedUrl(
-            path,
-            60 * 60
-        );
+    } =
+        await db
+            .storage
+            .from("chat-files")
+            .createSignedUrl(
+                path,
+                60 * 60
+            );
 
     if (error) {
         throw error;
     }
 
-    return data?.signedUrl ||
-        null;
+    return (
+        data?.signedUrl ||
+        null
+    );
 }
 
 function buildStoragePath(
