@@ -1730,3 +1730,90 @@ audio {
         transform: scale(1);
     }
 }
+/* =========================================================
+   تعديلات مخصصة (إصلاحات + إضافات جديدة)
+   ========================================================= */
+
+/* 1. إصلاح المسافة بين اسم المرسل ونص الرسالة */
+.message-sender {
+    margin-bottom: 2px !important; /* تقليل المسافة أسفل الاسم */
+    line-height: 1.2;
+    cursor: pointer; /* جعل الاسم قابلاً للضغط لتمكين الأدمين من مراسلتهم */
+}
+
+.message-sender:hover {
+    text-decoration: underline; /* تمييز الاسم عند مرور الماوس */
+}
+
+.message-text {
+    margin-top: 0 !important;
+    line-height: 1.5; /* تعديل تباعد الأسطر ليكون مريحاً وأكثر احترافية */
+}
+
+/* 2. إخفاء أيقونة سلة المهملات نهائياً من الرسائل */
+.delete-message-btn {
+    display: none !important;
+}
+
+/* 3. تصميم شريط الرسالة المثبتة (Pin) أعلى المحادثة */
+.pinned-message-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 22px;
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    position: sticky; /* لجعلها ثابتة بالأعلى أثناء التمرير */
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    transition: background var(--transition);
+}
+
+.pinned-message-banner:hover {
+    background: var(--surface-hover);
+}
+
+.pinned-icon {
+    color: var(--primary);
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.pinned-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.pinned-label {
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.pinned-text {
+    color: var(--text-soft);
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* إضافة نقاط (...) إذا كان النص طويلاً */
+}
+
+.unpin-btn {
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 20px;
+    padding: 4px 8px;
+    border-radius: 50%;
+    transition: background var(--transition), color var(--transition);
+}
+
+.unpin-btn:hover {
+    background: var(--danger-soft);
+    color: var(--danger);
+}
