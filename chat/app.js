@@ -4,22 +4,48 @@
  * app.js
  * Supabase Chat / Contact Center
  *
- * الوظائف:
- * - تسجيل الدخول
- * - استعادة كلمة المرور
- * - تغيير كلمة المرور
- * - الملفات الشخصية
- * - العملاء
- * - المحادثات الخاصة والجماعية
- * - الرسائل النصية
- * - الصور
- * - الرسائل الصوتية
- * - الرد على الرسائل
- * - التفاعلات
- * - حذف الرسائل
- * - نسخ الرسائل
- * - تثبيت الرسائل
- * - Supabase Realtime
+ * متوافق مع قاعدة البيانات الحالية:
+ *
+ * profiles:
+ * id
+ * display_name
+ * role
+ * created_at
+ *
+ * conversations:
+ * id
+ * type
+ * customer_id
+ * created_at
+ *
+ * conversation_members:
+ * conversation_id
+ * user_id
+ *
+ * messages:
+ * id
+ * conversation_id
+ * sender_id
+ * message_type
+ * content
+ * file_path
+ * created_at
+ * reply_to_message_id
+ *
+ * message_reactions:
+ * id
+ * message_id
+ * user_id
+ * reaction
+ * created_at
+ *
+ * message_reads:
+ * message_id
+ * user_id
+ * read_at
+ *
+ * Storage bucket:
+ * chat-files
  */
 
 
@@ -97,7 +123,6 @@ let replyPreviewText = null;
 let cancelReplyButton = null;
 
 let logoutButton = null;
-
 let groupConversationButton = null;
 
 
@@ -144,7 +169,6 @@ async function initialize() {
             error?.message ||
             "حدث خطأ أثناء تشغيل التطبيق."
         );
-
     }
 }
 
@@ -156,89 +180,55 @@ async function initialize() {
 function cacheDomElements() {
 
     loginScreen =
-        document.getElementById(
-            "loginScreen"
-        );
+        document.getElementById("loginScreen");
 
     loginBox =
-        document.querySelector(
-            ".login-box"
-        );
+        document.querySelector(".login-box");
 
     loginForm =
-        document.getElementById(
-            "loginForm"
-        );
+        document.getElementById("loginForm");
 
     app =
-        document.getElementById(
-            "app"
-        );
+        document.getElementById("app");
 
     emailInput =
-        document.getElementById(
-            "email"
-        );
+        document.getElementById("email");
 
     passwordInput =
-        document.getElementById(
-            "password"
-        );
+        document.getElementById("password");
 
     loginButton =
-        document.getElementById(
-            "loginButton"
-        );
+        document.getElementById("loginButton");
 
     forgotPasswordButton =
-        document.getElementById(
-            "forgotPasswordButton"
-        );
+        document.getElementById("forgotPasswordButton");
 
     loginError =
-        document.getElementById(
-            "loginError"
-        );
+        document.getElementById("loginError");
 
     chatError =
-        document.getElementById(
-            "chatError"
-        );
+        document.getElementById("chatError");
 
     conversationTitle =
-        document.getElementById(
-            "conversationTitle"
-        );
+        document.getElementById("conversationTitle");
 
     conversationSubtitle =
-        document.getElementById(
-            "conversationSubtitle"
-        );
+        document.getElementById("conversationSubtitle");
 
     conversationList =
-        document.getElementById(
-            "conversationList"
-        );
+        document.getElementById("conversationList");
 
     customersList =
-        document.getElementById(
-            "customersList"
-        );
+        document.getElementById("customersList");
 
     messagesContainer =
-        document.getElementById(
-            "messages"
-        );
+        document.getElementById("messages");
 
     messageForm =
-        document.getElementById(
-            "messageForm"
-        );
+        document.getElementById("messageForm");
 
     messageInput =
-        document.getElementById(
-            "messageInput"
-        );
+        document.getElementById("messageInput");
 
     sendButton =
         document.querySelector(
@@ -246,54 +236,34 @@ function cacheDomElements() {
         );
 
     imageInput =
-        document.getElementById(
-            "imageInput"
-        );
+        document.getElementById("imageInput");
 
     imageButton =
-        document.getElementById(
-            "imageButton"
-        );
+        document.getElementById("imageButton");
 
     filePreview =
-        document.getElementById(
-            "filePreview"
-        );
+        document.getElementById("filePreview");
 
     recordButton =
-        document.getElementById(
-            "recordButton"
-        );
+        document.getElementById("recordButton");
 
     replyPreview =
-        document.getElementById(
-            "replyPreview"
-        );
+        document.getElementById("replyPreview");
 
     replyPreviewSender =
-        document.getElementById(
-            "replyPreviewSender"
-        );
+        document.getElementById("replyPreviewSender");
 
     replyPreviewText =
-        document.getElementById(
-            "replyPreviewContent"
-        );
+        document.getElementById("replyPreviewContent");
 
     cancelReplyButton =
-        document.getElementById(
-            "cancelReplyButton"
-        );
+        document.getElementById("cancelReplyButton");
 
     logoutButton =
-        document.getElementById(
-            "logoutButton"
-        );
+        document.getElementById("logoutButton");
 
     groupConversationButton =
-        document.getElementById(
-            "groupButton"
-        );
+        document.getElementById("groupButton");
 }
 
 
@@ -315,12 +285,10 @@ function validateRequiredDom() {
     const missing =
         Object.entries(required)
             .filter(
-                ([, element]) =>
-                    !element
+                ([, element]) => !element
             )
             .map(
-                ([name]) =>
-                    name
+                ([name]) => name
             );
 
     if (missing.length > 0) {
@@ -359,8 +327,7 @@ function initializeSupabase() {
         window.SUPABASE_ANON_KEY;
 
     if (
-        typeof supabaseUrl !==
-            "string" ||
+        typeof supabaseUrl !== "string" ||
         !supabaseUrl.trim()
     ) {
 
@@ -370,8 +337,7 @@ function initializeSupabase() {
     }
 
     if (
-        typeof supabaseAnonKey !==
-            "string" ||
+        typeof supabaseAnonKey !== "string" ||
         !supabaseAnonKey.trim()
     ) {
 
@@ -394,10 +360,6 @@ function initializeSupabase() {
 
 function bindEvents() {
 
-    /*
-     * تسجيل الدخول يتم من خلال form submit.
-     * هذا يمنع مشكلة الضغط على الزر أو Enter.
-     */
     loginForm?.addEventListener(
         "submit",
         event => {
@@ -405,7 +367,6 @@ function bindEvents() {
             event.preventDefault();
 
             login();
-
         }
     );
 
@@ -443,10 +404,8 @@ function bindEvents() {
                 } else {
 
                     sendMessage(event);
-
                 }
             }
-
         }
     );
 
@@ -455,10 +414,6 @@ function bindEvents() {
         "click",
         event => {
 
-            /*
-             * imageButton عبارة عن label.
-             * المتصفح يفتح input تلقائيًا.
-             */
             if (
                 imageButton.tagName.toLowerCase() ===
                 "label"
@@ -469,7 +424,6 @@ function bindEvents() {
             event.preventDefault();
 
             imageInput?.click();
-
         }
     );
 
@@ -519,9 +473,7 @@ function bindEvents() {
                 closeContextMenu();
 
                 closeAllReactionPickers();
-
             }
-
         }
     );
 
@@ -533,7 +485,6 @@ function bindEvents() {
             closeContextMenu();
 
             closeAllReactionPickers();
-
         }
     );
 
@@ -543,7 +494,6 @@ function bindEvents() {
         () => {
 
             closeContextMenu();
-
         },
         true
     );
@@ -559,7 +509,6 @@ function handleDocumentClick(event) {
     ) {
 
         closeContextMenu();
-
     }
 
 
@@ -569,7 +518,6 @@ function handleDocumentClick(event) {
     ) {
 
         closeAllReactionPickers();
-
     }
 }
 
@@ -605,10 +553,8 @@ async function initializeAuth() {
                                         "startApplication error:",
                                         error
                                     );
-
                                 }
                             );
-
                         }
 
 
@@ -618,7 +564,6 @@ async function initializeAuth() {
                         ) {
 
                             showPasswordUpdateScreen();
-
                         }
 
 
@@ -628,13 +573,11 @@ async function initializeAuth() {
                         ) {
 
                             resetApplication();
-
                         }
 
                     },
                     0
                 );
-
             }
         );
 
@@ -645,7 +588,6 @@ async function initializeAuth() {
 
         authSubscription =
             authState.data.subscription;
-
     }
 
 
@@ -670,7 +612,6 @@ async function initializeAuth() {
     } else {
 
         showLoginScreen();
-
     }
 }
 
@@ -692,13 +633,11 @@ async function login() {
 
 
     const email =
-        emailInput?.value?.trim() ||
-        "";
+        emailInput?.value?.trim() || "";
 
 
     const password =
-        passwordInput?.value ||
-        "";
+        passwordInput?.value || "";
 
 
     if (!email) {
@@ -764,14 +703,12 @@ async function login() {
             throw new Error(
                 "تعذر تسجيل الدخول."
             );
-
         }
 
 
         await startApplication(
             data.user
         );
-
 
     } catch (error) {
 
@@ -784,11 +721,9 @@ async function login() {
             authMessage(error)
         );
 
-
     } finally {
 
         setLoginLoading(false);
-
     }
 }
 
@@ -823,7 +758,6 @@ async function logout() {
         );
 
         resetApplication();
-
     }
 }
 
@@ -845,8 +779,7 @@ async function sendPasswordReset() {
 
 
     const email =
-        emailInput?.value?.trim() ||
-        "";
+        emailInput?.value?.trim() || "";
 
 
     if (!email) {
@@ -897,7 +830,6 @@ async function sendPasswordReset() {
             "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني."
         );
 
-
     } catch (error) {
 
         console.error(
@@ -908,7 +840,6 @@ async function sendPasswordReset() {
         showLoginError(
             authMessage(error)
         );
-
     }
 }
 
@@ -995,13 +926,11 @@ function showPasswordUpdateScreen() {
         async () => {
 
             const password =
-                newPassword?.value ||
-                "";
+                newPassword?.value || "";
 
 
             const confirm =
-                confirmPassword?.value ||
-                "";
+                confirmPassword?.value || "";
 
 
             if (password.length < 6) {
@@ -1010,7 +939,6 @@ function showPasswordUpdateScreen() {
 
                     updateError.textContent =
                         "كلمة المرور يجب أن تحتوي على 6 أحرف على الأقل.";
-
                 }
 
                 return;
@@ -1023,7 +951,6 @@ function showPasswordUpdateScreen() {
 
                     updateError.textContent =
                         "كلمتا المرور غير متطابقتين.";
-
                 }
 
                 return;
@@ -1032,12 +959,10 @@ function showPasswordUpdateScreen() {
 
             if (updateButton) {
 
-                updateButton.disabled =
-                    true;
+                updateButton.disabled = true;
 
                 updateButton.textContent =
                     "جارٍ التحديث...";
-
             }
 
 
@@ -1060,7 +985,6 @@ function showPasswordUpdateScreen() {
 
                 window.location.reload();
 
-
             } catch (error) {
 
                 console.error(
@@ -1073,7 +997,6 @@ function showPasswordUpdateScreen() {
 
                     updateError.textContent =
                         authMessage(error);
-
                 }
 
 
@@ -1084,11 +1007,8 @@ function showPasswordUpdateScreen() {
 
                     updateButton.textContent =
                         "تحديث كلمة المرور";
-
                 }
-
             }
-
         };
 
 
@@ -1107,9 +1027,7 @@ function showPasswordUpdateScreen() {
                 event.preventDefault();
 
                 updatePassword();
-
             }
-
         }
     );
 
@@ -1146,7 +1064,6 @@ async function startApplication(user) {
     ) {
 
         return startingApplicationPromise;
-
     }
 
 
@@ -1180,7 +1097,6 @@ async function startApplication(user) {
                     throw new Error(
                         "تم تسجيل الدخول بنجاح، لكن لم يتم العثور على ملف المستخدم في جدول profiles."
                     );
-
                 }
 
 
@@ -1218,9 +1134,7 @@ async function startApplication(user) {
                 } else {
 
                     await openInitialAdminConversation();
-
                 }
-
 
             } catch (error) {
 
@@ -1230,11 +1144,9 @@ async function startApplication(user) {
                 );
 
 
-                currentUser =
-                    null;
+                currentUser = null;
 
-                currentProfile =
-                    null;
+                currentProfile = null;
 
 
                 showLoginScreen();
@@ -1255,9 +1167,7 @@ async function startApplication(user) {
                     console.error(
                         signOutError
                     );
-
                 }
-
             }
 
         })();
@@ -1279,9 +1189,7 @@ async function startApplication(user) {
 
             startingApplicationUserId =
                 null;
-
         }
-
     }
 }
 
@@ -1310,8 +1218,7 @@ function showLoginScreen() {
         "hidden"
     );
 
-    currentConversation =
-        null;
+    currentConversation = null;
 
     removePinnedBanner();
 }
@@ -1328,20 +1235,14 @@ function resetApplication() {
     profileCache.clear();
     reactionCache.clear();
 
-    currentConversation =
-        null;
+    currentConversation = null;
 
-    replyingToMessage =
-        null;
-
-    selectedImage =
-        null;
-
+    replyingToMessage = null;
+    selectedImage = null;
 
     closeContextMenu();
 
     closeAllReactionPickers();
-
 
     cleanupRecording();
 
@@ -1357,11 +1258,9 @@ function resetApplication() {
         } catch (error) {
 
             console.error(error);
-
         }
 
-        activeRealtimeChannel =
-            null;
+        activeRealtimeChannel = null;
     }
 
 
@@ -1372,15 +1271,13 @@ function resetApplication() {
 
     if (messagesContainer) {
 
-        messagesContainer.innerHTML =
-            `
-                <div class="empty-messages">
-                    <div class="empty-icon" aria-hidden="true">👋</div>
-                    <strong>مرحبًا بك في مركز التواصل</strong>
-                    <small>ابدأ بإرسال رسالة الآن</small>
-                </div>
-            `;
-
+        messagesContainer.innerHTML = `
+            <div class="empty-messages">
+                <div class="empty-icon" aria-hidden="true">👋</div>
+                <strong>مرحبًا بك في مركز التواصل</strong>
+                <small>ابدأ بإرسال رسالة الآن</small>
+            </div>
+        `;
     }
 
 
@@ -1398,7 +1295,6 @@ function resetApplication() {
 
         conversationTitle.textContent =
             "المجموعة العامة";
-
     }
 
 
@@ -1406,7 +1302,6 @@ function resetApplication() {
 
         conversationSubtitle.textContent =
             "المحادثة الجماعية";
-
     }
 
 
@@ -1435,7 +1330,7 @@ async function loadConversations() {
             .from("conversations")
             .select("*")
             .order(
-                "updated_at",
+                "created_at",
                 {
                     ascending: false
                 }
@@ -1452,7 +1347,6 @@ async function loadConversations() {
                 "customer_id",
                 currentUser.id
             );
-
     }
 
 
@@ -1484,8 +1378,7 @@ async function loadConversations() {
 
 
     for (
-        const conversation of
-        conversations
+        const conversation of conversations
     ) {
 
         if (
@@ -1498,9 +1391,7 @@ async function loadConversations() {
             await getProfile(
                 conversation.customer_id
             );
-
         }
-
     }
 
 
@@ -1515,13 +1406,11 @@ function renderConversationList() {
     }
 
 
-    conversationList.innerHTML =
-        "";
+    conversationList.innerHTML = "";
 
 
     for (
-        const conversation of
-        conversations
+        const conversation of conversations
     ) {
 
         const button =
@@ -1530,9 +1419,7 @@ function renderConversationList() {
             );
 
 
-        button.type =
-            "button";
-
+        button.type = "button";
 
         button.className =
             "conversation-button";
@@ -1555,7 +1442,6 @@ function renderConversationList() {
                 selectConversation(
                     conversation
                 );
-
             }
         );
 
@@ -1568,14 +1454,12 @@ function renderConversationList() {
             button.classList.add(
                 "active"
             );
-
         }
 
 
         conversationList.appendChild(
             button
         );
-
     }
 }
 
@@ -1590,21 +1474,11 @@ function getConversationTitle(
 
 
     if (
-        conversation.title?.trim()
-    ) {
-
-        return conversation.title;
-
-    }
-
-
-    if (
         conversation.type ===
         "group"
     ) {
 
         return "المجموعة العامة";
-
     }
 
 
@@ -1619,7 +1493,6 @@ function getConversationTitle(
         ) {
 
             return "المحادثة الخاصة";
-
         }
 
 
@@ -1634,12 +1507,9 @@ function getConversationTitle(
 
 
             return (
-                customer?.full_name ||
-                customer?.name ||
-                customer?.email ||
+                customer?.display_name ||
                 "محادثة خاصة"
             );
-
         }
 
 
@@ -1693,7 +1563,6 @@ async function openInitialAdminConversation() {
         await selectConversation(
             privateConversation
         );
-
     }
 }
 
@@ -1720,7 +1589,6 @@ async function selectConversation(
 
     reactionCache.clear();
 
-
     cancelReply();
 
     clearFilePreview();
@@ -1732,7 +1600,6 @@ async function selectConversation(
             getConversationTitle(
                 conversation
             );
-
     }
 
 
@@ -1742,7 +1609,6 @@ async function selectConversation(
             conversation.type === "group"
                 ? "المحادثة الجماعية"
                 : "محادثة خاصة";
-
     }
 
 
@@ -1752,7 +1618,6 @@ async function selectConversation(
 
 
     await loadMessages();
-
 
     await subscribeRealtime(
         conversation.id
@@ -1778,15 +1643,17 @@ function setActiveConversationButton(
 
                 button.classList.toggle(
                     "active",
-                    button.dataset
-                        .conversationId ===
+                    button.dataset.conversationId ===
                         conversationId
                 );
-
             }
         );
 }
 
+
+/* =========================================================
+   PRIVATE CONVERSATION
+========================================================= */
 
 async function openPrivateConversation(
     customer
@@ -1804,8 +1671,7 @@ async function openPrivateConversation(
 
     if (
         customer.role &&
-        customer.role !==
-            "customer"
+        customer.role !== "customer"
     ) {
 
         return;
@@ -1832,7 +1698,7 @@ async function openPrivateConversation(
                 customerId
             )
             .order(
-                "updated_at",
+                "created_at",
                 {
                     ascending: false
                 }
@@ -1912,14 +1778,9 @@ async function openPrivateConversation(
 
 
         renderConversationList();
-
     }
 
 
-    /*
-     * إضافة أعضاء المحادثة عندما يكون
-     * المستخدم Admin.
-     */
     if (
         currentProfile?.role ===
         "admin"
@@ -1960,12 +1821,10 @@ async function openPrivateConversation(
         if (membersError) {
 
             console.warn(
-                "Conversation members upsert warning:",
+                "Conversation members warning:",
                 membersError
             );
-
         }
-
     }
 
 
@@ -1992,18 +1851,21 @@ async function openPrivateConversation(
                     button.dataset.customerId ===
                         String(customerId)
                 );
-
             }
         );
 }
 
+
+/* =========================================================
+   GROUP CONVERSATION
+========================================================= */
 
 async function openGroupConversation() {
 
     if (
         !db ||
         currentProfile?.role !==
-            "admin"
+        "admin"
     ) {
 
         return;
@@ -2022,7 +1884,7 @@ async function openGroupConversation() {
                 "group"
             )
             .order(
-                "updated_at",
+                "created_at",
                 {
                     ascending: false
                 }
@@ -2052,13 +1914,15 @@ async function openGroupConversation() {
 
     if (!group) {
 
+        /*
+         * conversations لا يحتوي على title.
+         * لذلك لا نرسل title إلى قاعدة البيانات.
+         */
         const result =
             await db
                 .from("conversations")
                 .insert({
-                    type: "group",
-                    title:
-                        "المجموعة العامة"
+                    type: "group"
                 })
                 .select("*")
                 .single();
@@ -2089,7 +1953,6 @@ async function openGroupConversation() {
 
 
         renderConversationList();
-
     }
 
 
@@ -2114,8 +1977,7 @@ async function loadCustomers() {
     }
 
 
-    customersList.innerHTML =
-        "";
+    customersList.innerHTML = "";
 
 
     if (
@@ -2139,7 +2001,7 @@ async function loadCustomers() {
                 "customer"
             )
             .order(
-                "full_name",
+                "display_name",
                 {
                     ascending: true
                 }
@@ -2168,8 +2030,7 @@ async function loadCustomers() {
 
 
     for (
-        const customer of
-        customers
+        const customer of customers
     ) {
 
         profileCache.set(
@@ -2197,9 +2058,7 @@ async function loadCustomers() {
 
 
         button.textContent =
-            customer.full_name ||
-            customer.name ||
-            customer.email ||
+            customer.display_name ||
             "عميل";
 
 
@@ -2210,7 +2069,6 @@ async function loadCustomers() {
                 openPrivateConversation(
                     customer
                 );
-
             }
         );
 
@@ -2218,7 +2076,6 @@ async function loadCustomers() {
         customersList.appendChild(
             button
         );
-
     }
 }
 
@@ -2239,9 +2096,7 @@ async function loadMessages() {
     }
 
 
-    messagesContainer.innerHTML =
-        "";
-
+    messagesContainer.innerHTML = "";
 
     reactionCache.clear();
 
@@ -2292,14 +2147,12 @@ async function loadMessages() {
 
 
     for (
-        const message of
-        messages
+        const message of messages
     ) {
 
         await renderMessage(
             message
         );
-
     }
 
 
@@ -2329,7 +2182,7 @@ async function loadReplyMessages(
         messages
             .map(
                 message =>
-                    message.reply_to
+                    message.reply_to_message_id
             )
             .filter(Boolean);
 
@@ -2341,9 +2194,7 @@ async function loadReplyMessages(
 
     const uniqueIds =
         [
-            ...new Set(
-                replyIds
-            )
+            ...new Set(replyIds)
         ];
 
 
@@ -2383,23 +2234,25 @@ async function loadReplyMessages(
 
 
     for (
-        const message of
-        messages
+        const message of messages
     ) {
 
-        if (message.reply_to) {
+        if (
+            message.reply_to_message_id
+        ) {
 
             message.replyMessage =
                 replyMap.get(
-                    message.reply_to
-                ) ||
-                null;
-
+                    message.reply_to_message_id
+                ) || null;
         }
-
     }
 }
 
+
+/* =========================================================
+   RENDER MESSAGE
+========================================================= */
 
 async function renderMessage(
     message
@@ -2449,7 +2302,6 @@ async function renderMessage(
         wrapper.classList.add(
             "own"
         );
-
     }
 
 
@@ -2460,9 +2312,7 @@ async function renderMessage(
 
 
     const senderName =
-        sender?.full_name ||
-        sender?.name ||
-        sender?.email ||
+        sender?.display_name ||
         "مستخدم";
 
 
@@ -2490,15 +2340,12 @@ async function renderMessage(
 
         const replySender =
             await getProfile(
-                message.replyMessage
-                    .sender_id
+                message.replyMessage.sender_id
             );
 
 
         const replySenderName =
-            replySender?.full_name ||
-            replySender?.name ||
-            replySender?.email ||
+            replySender?.display_name ||
             "مستخدم";
 
 
@@ -2526,7 +2373,6 @@ async function renderMessage(
         messageBubble.appendChild(
             replyBox
         );
-
     }
 
 
@@ -2545,12 +2391,9 @@ async function renderMessage(
 
 
     if (
-        currentProfile?.role ===
-            "admin" &&
-        sender?.role ===
-            "customer" &&
-        message.sender_id !==
-            currentUser?.id
+        currentProfile?.role === "admin" &&
+        sender?.role === "customer" &&
+        message.sender_id !== currentUser?.id
     ) {
 
         senderElement.classList.add(
@@ -2570,14 +2413,11 @@ async function renderMessage(
 
                 event.stopPropagation();
 
-
                 openPrivateConversation(
                     sender
                 );
-
             }
         );
-
     }
 
 
@@ -2597,8 +2437,7 @@ async function renderMessage(
 
 
     if (
-        message.message_type ===
-        "image"
+        message.message_type === "image"
     ) {
 
         const image =
@@ -2628,7 +2467,6 @@ async function renderMessage(
 
                 image.src =
                     url;
-
             }
 
         } catch (error) {
@@ -2637,7 +2475,6 @@ async function renderMessage(
                 "Image URL error:",
                 error
             );
-
         }
 
 
@@ -2646,8 +2483,7 @@ async function renderMessage(
         );
 
     } else if (
-        message.message_type ===
-        "audio"
+        message.message_type === "audio"
     ) {
 
         const audio =
@@ -2656,9 +2492,7 @@ async function renderMessage(
             );
 
 
-        audio.controls =
-            true;
-
+        audio.controls = true;
 
         audio.preload =
             "metadata";
@@ -2676,7 +2510,6 @@ async function renderMessage(
 
                 audio.src =
                     url;
-
             }
 
         } catch (error) {
@@ -2685,7 +2518,6 @@ async function renderMessage(
                 "Audio URL error:",
                 error
             );
-
         }
 
 
@@ -2713,15 +2545,12 @@ async function renderMessage(
             content.appendChild(
                 audioName
             );
-
         }
 
     } else {
 
         content.textContent =
-            message.content ||
-            "";
-
+            message.content || "";
     }
 
 
@@ -2823,7 +2652,6 @@ async function renderMessage(
                 event.clientX,
                 event.clientY
             );
-
         }
     );
 
@@ -2842,7 +2670,6 @@ async function renderMessage(
                 event.clientX,
                 event.clientY
             );
-
         }
     );
 
@@ -2971,7 +2798,6 @@ function openMessageMenu(
                 copyMessage(
                     message
                 );
-
             }
         );
 
@@ -2993,7 +2819,6 @@ function openMessageMenu(
                 startReply(
                     message
                 );
-
             }
         );
 
@@ -3015,7 +2840,6 @@ function openMessageMenu(
                 showReactionPickerForMessage(
                     message
                 );
-
             }
         );
 
@@ -3050,9 +2874,7 @@ function openMessageMenu(
                     pinMessage(
                         message
                     );
-
                 }
-
             }
         );
 
@@ -3074,7 +2896,6 @@ function openMessageMenu(
                 deleteMessage(
                     message
                 );
-
             }
         );
 
@@ -3121,7 +2942,6 @@ function positionContextMenu(
             window.innerWidth -
             rect.width -
             8;
-
     }
 
 
@@ -3134,30 +2954,15 @@ function positionContextMenu(
             window.innerHeight -
             rect.height -
             8;
-
     }
 
 
-    left =
-        Math.max(
-            8,
-            left
-        );
-
-
-    top =
-        Math.max(
-            8,
-            top
-        );
-
-
     contextMenu.style.left =
-        `${left}px`;
+        `${Math.max(8, left)}px`;
 
 
     contextMenu.style.top =
-        `${top}px`;
+        `${Math.max(8, top)}px`;
 }
 
 
@@ -3167,9 +2972,7 @@ function closeContextMenu() {
 
         contextMenu.remove();
 
-        contextMenu =
-            null;
-
+        contextMenu = null;
     }
 }
 
@@ -3239,7 +3042,6 @@ async function copyMessage(
 
 
             textarea.remove();
-
         }
 
     } catch (error) {
@@ -3248,7 +3050,6 @@ async function copyMessage(
             "Copy error:",
             error
         );
-
     }
 }
 
@@ -3336,7 +3137,6 @@ async function deleteMessage(
         unpinMessage(
             currentConversation?.id
         );
-
     }
 
 
@@ -3372,7 +3172,6 @@ async function startReply(
         replyPreview.classList.remove(
             "hidden"
         );
-
     }
 
 
@@ -3383,9 +3182,7 @@ async function startReply(
 
 
     const senderName =
-        sender?.full_name ||
-        sender?.name ||
-        sender?.email ||
+        sender?.display_name ||
         "مستخدم";
 
 
@@ -3393,7 +3190,6 @@ async function startReply(
 
         replyPreviewSender.textContent =
             `الرد على ${senderName}`;
-
     }
 
 
@@ -3403,7 +3199,6 @@ async function startReply(
             getMessagePreview(
                 message
             );
-
     }
 
 
@@ -3422,7 +3217,6 @@ function cancelReply() {
         replyPreview.classList.add(
             "hidden"
         );
-
     }
 
 
@@ -3430,7 +3224,6 @@ function cancelReply() {
 
         replyPreviewSender.textContent =
             "الرد على";
-
     }
 
 
@@ -3438,7 +3231,6 @@ function cancelReply() {
 
         replyPreviewText.textContent =
             "";
-
     }
 }
 
@@ -3514,7 +3306,6 @@ function ensureReplyPreview() {
             replyPreview,
             form
         );
-
     }
 
 
@@ -3524,7 +3315,6 @@ function ensureReplyPreview() {
             replyPreview.querySelector(
                 "#replyPreviewSender"
             );
-
     }
 
 
@@ -3534,7 +3324,6 @@ function ensureReplyPreview() {
             replyPreview.querySelector(
                 "#replyPreviewContent"
             );
-
     }
 
 
@@ -3544,14 +3333,9 @@ function ensureReplyPreview() {
             replyPreview.querySelector(
                 "#cancelReplyButton"
             );
-
     }
 
 
-    /*
-     * إذا تم إنشاء الزر هنا فقط،
-     * نضيف له listener.
-     */
     if (
         cancelReplyButton &&
         !cancelReplyButton.dataset.bound
@@ -3564,7 +3348,6 @@ function ensureReplyPreview() {
             "click",
             cancelReply
         );
-
     }
 }
 
@@ -3601,9 +3384,7 @@ async function sendMessage(
             selectedImage;
 
 
-        selectedImage =
-            null;
-
+        selectedImage = null;
 
         clearFilePreview();
 
@@ -3612,7 +3393,6 @@ async function sendMessage(
             file,
             text
         );
-
 
         return;
     }
@@ -3623,9 +3403,7 @@ async function sendMessage(
     }
 
 
-    setMessageSending(
-        true
-    );
+    setMessageSending(true);
 
 
     try {
@@ -3643,17 +3421,19 @@ async function sendMessage(
 
             message_type:
                 "text"
-
         };
 
 
+        /*
+         * الاسم الصحيح في قاعدة البيانات:
+         * reply_to_message_id
+         */
         if (
             replyingToMessage?.id
         ) {
 
-            payload.reply_to =
+            payload.reply_to_message_id =
                 replyingToMessage.id;
-
         }
 
 
@@ -3676,12 +3456,10 @@ async function sendMessage(
 
             messageInput.value =
                 "";
-
         }
 
 
         cancelReply();
-
 
     } catch (error) {
 
@@ -3696,10 +3474,7 @@ async function sendMessage(
 
     } finally {
 
-        setMessageSending(
-            false
-        );
-
+        setMessageSending(false);
     }
 }
 
@@ -3718,8 +3493,7 @@ function handleImageSelection(
 
     if (!file) {
 
-        selectedImage =
-            null;
+        selectedImage = null;
 
         clearFilePreview();
 
@@ -3728,9 +3502,7 @@ function handleImageSelection(
 
 
     if (
-        !file.type.startsWith(
-            "image/"
-        )
+        !file.type.startsWith("image/")
     ) {
 
         showChatError(
@@ -3816,27 +3588,22 @@ function showFilePreview(
 
 function clearFilePreview() {
 
-    selectedImage =
-        null;
+    selectedImage = null;
 
 
     if (imageInput) {
 
-        imageInput.value =
-            "";
-
+        imageInput.value = "";
     }
 
 
     if (filePreview) {
 
-        filePreview.innerHTML =
-            "";
+        filePreview.innerHTML = "";
 
         filePreview.classList.add(
             "hidden"
         );
-
     }
 }
 
@@ -3857,9 +3624,7 @@ async function uploadImage(
     }
 
 
-    setMessageSending(
-        true
-    );
+    setMessageSending(true);
 
 
     const path =
@@ -3916,7 +3681,6 @@ async function uploadImage(
 
             file_path:
                 path
-
         };
 
 
@@ -3924,9 +3688,8 @@ async function uploadImage(
             replyingToMessage?.id
         ) {
 
-            payload.reply_to =
+            payload.reply_to_message_id =
                 replyingToMessage.id;
-
         }
 
 
@@ -3956,7 +3719,6 @@ async function uploadImage(
                 console.warn(
                     removeError
                 );
-
             }
 
 
@@ -3968,12 +3730,10 @@ async function uploadImage(
 
             messageInput.value =
                 "";
-
         }
 
 
         cancelReply();
-
 
     } catch (error) {
 
@@ -3996,13 +3756,9 @@ async function uploadImage(
             file
         );
 
-
     } finally {
 
-        setMessageSending(
-            false
-        );
-
+        setMessageSending(false);
     }
 }
 
@@ -4020,7 +3776,6 @@ async function toggleRecording() {
     } else {
 
         await startRecording();
-
     }
 }
 
@@ -4081,8 +3836,7 @@ async function startRecording() {
         ];
 
 
-        let mimeType =
-            "";
+        let mimeType = "";
 
 
         for (
@@ -4099,9 +3853,7 @@ async function startRecording() {
                     type;
 
                 break;
-
             }
-
         }
 
 
@@ -4118,8 +3870,7 @@ async function startRecording() {
                   );
 
 
-        recordingChunks =
-            [];
+        recordingChunks = [];
 
 
         const recordingConversationId =
@@ -4146,9 +3897,7 @@ async function startRecording() {
                     recordingChunks.push(
                         event.data
                     );
-
                 }
-
             };
 
 
@@ -4159,16 +3908,14 @@ async function startRecording() {
                     recordingChunks;
 
 
-                recordingChunks =
-                    [];
+                recordingChunks = [];
 
 
                 const recorder =
                     mediaRecorder;
 
 
-                mediaRecorder =
-                    null;
+                mediaRecorder = null;
 
 
                 recordingStream
@@ -4177,38 +3924,22 @@ async function startRecording() {
                         track => {
 
                             try {
-
                                 track.stop();
-
-                            } catch (
-                                error
-                            ) {
-
-                                console.warn(
-                                    error
-                                );
-
+                            } catch (error) {
+                                console.warn(error);
                             }
-
                         }
                     );
 
 
-                recordingStream =
-                    null;
+                recordingStream = null;
 
 
-                updateRecordButton(
-                    false
-                );
+                updateRecordButton(false);
 
 
-                if (
-                    !chunks.length
-                ) {
-
+                if (!chunks.length) {
                     return;
-
                 }
 
 
@@ -4229,7 +3960,6 @@ async function startRecording() {
                     recordingUserId,
                     recordingReplyId
                 );
-
             };
 
 
@@ -4248,17 +3978,13 @@ async function startRecording() {
 
 
                 cleanupRecording();
-
             };
 
 
         mediaRecorder.start();
 
 
-        updateRecordButton(
-            true
-        );
-
+        updateRecordButton(true);
 
     } catch (error) {
 
@@ -4285,9 +4011,7 @@ async function startRecording() {
             showChatError(
                 "تعذر تشغيل تسجيل الصوت."
             );
-
         }
-
     }
 }
 
@@ -4310,9 +4034,7 @@ function stopRecording() {
             error
         );
 
-
         cleanupRecording();
-
     }
 }
 
@@ -4328,22 +4050,17 @@ function cleanupRecording() {
         ) {
 
             mediaRecorder.stop();
-
         }
 
     } catch (error) {
 
         console.warn(error);
-
     }
 
 
-    mediaRecorder =
-        null;
+    mediaRecorder = null;
 
-
-    recordingChunks =
-        [];
+    recordingChunks = [];
 
 
     recordingStream
@@ -4352,28 +4069,18 @@ function cleanupRecording() {
             track => {
 
                 try {
-
                     track.stop();
-
                 } catch (error) {
-
-                    console.warn(
-                        error
-                    );
-
+                    console.warn(error);
                 }
-
             }
         );
 
 
-    recordingStream =
-        null;
+    recordingStream = null;
 
 
-    updateRecordButton(
-        false
-    );
+    updateRecordButton(false);
 }
 
 
@@ -4395,9 +4102,7 @@ async function uploadAudio(
     }
 
 
-    setMessageSending(
-        true
-    );
+    setMessageSending(true);
 
 
     const extension =
@@ -4459,15 +4164,13 @@ async function uploadAudio(
 
             file_path:
                 path
-
         };
 
 
         if (replyId) {
 
-            payload.reply_to =
+            payload.reply_to_message_id =
                 replyId;
-
         }
 
 
@@ -4497,7 +4200,6 @@ async function uploadAudio(
                 console.warn(
                     removeError
                 );
-
             }
 
 
@@ -4511,9 +4213,7 @@ async function uploadAudio(
         ) {
 
             cancelReply();
-
         }
-
 
     } catch (error) {
 
@@ -4527,13 +4227,9 @@ async function uploadAudio(
             error.message
         );
 
-
     } finally {
 
-        setMessageSending(
-            false
-        );
-
+        setMessageSending(false);
     }
 }
 
@@ -4613,8 +4309,7 @@ async function renderReactionSummary(
 
 
     for (
-        const reaction of
-        reactions
+        const reaction of reactions
     ) {
 
         const value =
@@ -4623,10 +4318,8 @@ async function renderReactionSummary(
 
         counts.set(
             value,
-            (counts.get(value) ||
-                0) + 1
+            (counts.get(value) || 0) + 1
         );
-
     }
 
 
@@ -4643,9 +4336,7 @@ async function renderReactionSummary(
             );
 
 
-        button.type =
-            "button";
-
+        button.type = "button";
 
         button.className =
             "reaction-summary";
@@ -4676,7 +4367,6 @@ async function renderReactionSummary(
                     message,
                     reaction
                 );
-
             }
         );
 
@@ -4684,7 +4374,6 @@ async function renderReactionSummary(
         container.appendChild(
             button
         );
-
     }
 
 
@@ -4694,17 +4383,13 @@ async function renderReactionSummary(
         );
 
 
-    addButton.type =
-        "button";
-
+    addButton.type = "button";
 
     addButton.className =
         "reaction-trigger";
 
 
-    addButton.textContent =
-        "＋";
-
+    addButton.textContent = "＋";
 
     addButton.title =
         "إضافة تفاعل";
@@ -4723,7 +4408,6 @@ async function renderReactionSummary(
                 message,
                 addButton
             );
-
         }
     );
 
@@ -4747,7 +4431,6 @@ async function loadReactions(
         return reactionCache.get(
             messageId
         );
-
     }
 
 
@@ -4756,9 +4439,7 @@ async function loadReactions(
         error
     } =
         await db
-            .from(
-                "message_reactions"
-            )
+            .from("message_reactions")
             .select("*")
             .eq(
                 "message_id",
@@ -4781,7 +4462,6 @@ async function loadReactions(
 
 
         return [];
-
     }
 
 
@@ -4829,9 +4509,7 @@ function showReactionPicker(
             );
 
 
-        button.type =
-            "button";
-
+        button.type = "button";
 
         button.className =
             "reaction-option";
@@ -4857,7 +4535,6 @@ function showReactionPicker(
                     message,
                     reaction
                 );
-
             }
         );
 
@@ -4865,7 +4542,6 @@ function showReactionPicker(
         picker.appendChild(
             button
         );
-
     }
 
 
@@ -4899,7 +4575,6 @@ function showReactionPicker(
             window.innerWidth -
             pickerRect.width -
             8;
-
     }
 
 
@@ -4912,22 +4587,15 @@ function showReactionPicker(
             rect.top -
             pickerRect.height -
             5;
-
     }
 
 
     picker.style.left =
-        `${Math.max(
-            8,
-            left
-        )}px`;
+        `${Math.max(8, left)}px`;
 
 
     picker.style.top =
-        `${Math.max(
-            8,
-            top
-        )}px`;
+        `${Math.max(8, top)}px`;
 }
 
 
@@ -4955,7 +4623,6 @@ function showReactionPickerForMessage(
             message,
             button
         );
-
     }
 }
 
@@ -4995,12 +4662,8 @@ async function toggleReaction(
             error: findError
         } =
             await db
-                .from(
-                    "message_reactions"
-                )
-                .select(
-                    "id,reaction"
-                )
+                .from("message_reactions")
+                .select("id,reaction")
                 .eq(
                     "message_id",
                     message.id
@@ -5064,7 +4727,6 @@ async function toggleReaction(
                 if (error) {
                     throw error;
                 }
-
             }
 
         } else {
@@ -5077,7 +4739,6 @@ async function toggleReaction(
                         "message_reactions"
                     )
                     .insert({
-
                         message_id:
                             message.id,
 
@@ -5085,14 +4746,12 @@ async function toggleReaction(
                             currentUser.id,
 
                         reaction
-
                     });
 
 
             if (error) {
                 throw error;
             }
-
         }
 
 
@@ -5105,7 +4764,6 @@ async function toggleReaction(
             message.id
         );
 
-
     } catch (error) {
 
         console.error(
@@ -5117,7 +4775,6 @@ async function toggleReaction(
         showChatError(
             error.message
         );
-
     }
 }
 
@@ -5166,13 +4823,13 @@ async function refreshRenderedMessage(
     const {
         data: replyMessage
     } =
-        message.reply_to
+        message.reply_to_message_id
             ? await db
                   .from("messages")
                   .select("*")
                   .eq(
                       "id",
-                      message.reply_to
+                      message.reply_to_message_id
                   )
                   .maybeSingle()
             : {
@@ -5181,8 +4838,7 @@ async function refreshRenderedMessage(
 
 
     message.replyMessage =
-        replyMessage ||
-        null;
+        replyMessage || null;
 
 
     await renderMessage(
@@ -5200,7 +4856,6 @@ function getPinnedStorageKey(
 ) {
 
     return `pinned_message_${conversationId}`;
-
 }
 
 
@@ -5228,10 +4883,7 @@ function getPinnedMessage(
         }
 
 
-        return JSON.parse(
-            value
-        );
-
+        return JSON.parse(value);
 
     } catch (error) {
 
@@ -5271,14 +4923,12 @@ function savePinnedMessage(
             )
         );
 
-
     } catch (error) {
 
         console.warn(
             "Save pinned message error:",
             error
         );
-
     }
 }
 
@@ -5300,14 +4950,12 @@ function removePinnedStorage(
             )
         );
 
-
     } catch (error) {
 
         console.warn(
             "Remove pinned message error:",
             error
         );
-
     }
 }
 
@@ -5368,7 +5016,6 @@ function pinMessage(
         scrollToMessage(
             message.id
         );
-
     }
 }
 
@@ -5394,7 +5041,6 @@ function removePinnedBanner() {
             ".pinned-message-banner"
         )
         ?.remove();
-
 }
 
 
@@ -5438,7 +5084,6 @@ async function restorePinnedMessage(
 
         removePinnedBanner();
 
-
         return;
     }
 
@@ -5474,9 +5119,7 @@ async function renderPinnedBanner(
 
 
     const senderName =
-        sender?.full_name ||
-        sender?.name ||
-        sender?.email ||
+        sender?.display_name ||
         "مستخدم";
 
 
@@ -5545,7 +5188,6 @@ async function renderPinnedBanner(
                 unpinMessage(
                     currentConversation?.id
                 );
-
             }
         );
 
@@ -5567,7 +5209,6 @@ async function renderPinnedBanner(
             scrollToMessage(
                 message.id
             );
-
         }
     );
 }
@@ -5638,12 +5279,10 @@ async function subscribeRealtime(
                 "Remove realtime channel error:",
                 error
             );
-
         }
 
 
-        activeRealtimeChannel =
-            null;
+        activeRealtimeChannel = null;
     }
 
 
@@ -5671,7 +5310,6 @@ async function subscribeRealtime(
             await handleRealtimeMessage(
                 payload
             );
-
         }
     );
 
@@ -5689,7 +5327,6 @@ async function subscribeRealtime(
             await handleRealtimeReaction(
                 payload
             );
-
         }
     );
 
@@ -5707,7 +5344,6 @@ async function subscribeRealtime(
         async () => {
 
             await loadConversations();
-
         }
     );
 
@@ -5722,7 +5358,6 @@ async function subscribeRealtime(
 
                 activeRealtimeChannel =
                     channel;
-
             }
 
 
@@ -5737,9 +5372,7 @@ async function subscribeRealtime(
                     "Realtime status:",
                     status
                 );
-
             }
-
         }
     );
 }
@@ -5794,13 +5427,41 @@ async function handleRealtimeMessage(
         }
 
 
+        let message =
+            newRecord;
+
+
+        if (
+            message?.reply_to_message_id
+        ) {
+
+            const {
+                data: replyMessage
+            } =
+                await db
+                    .from("messages")
+                    .select("*")
+                    .eq(
+                        "id",
+                        message.reply_to_message_id
+                    )
+                    .maybeSingle();
+
+
+            message = {
+                ...message,
+                replyMessage:
+                    replyMessage || null
+            };
+        }
+
+
         await renderMessage(
-            newRecord
+            message
         );
 
 
         scrollMessagesToBottom();
-
 
         return;
     }
@@ -5814,7 +5475,6 @@ async function handleRealtimeMessage(
         await refreshRenderedMessage(
             messageId
         );
-
 
         return;
     }
@@ -5839,7 +5499,6 @@ async function handleRealtimeMessage(
             unpinMessage(
                 currentConversation.id
             );
-
         }
 
 
@@ -5850,7 +5509,6 @@ async function handleRealtimeMessage(
                 )}"]`
             )
             ?.remove();
-
     }
 }
 
@@ -5919,7 +5577,6 @@ async function getProfile(
         return profileCache.get(
             userId
         );
-
     }
 
 
@@ -5960,7 +5617,6 @@ async function getProfile(
             userId,
             data
         );
-
     }
 
 
@@ -6045,7 +5701,7 @@ function sanitizeFileName(
     const value =
         String(
             fileName ||
-                "file"
+            "file"
         );
 
 
@@ -6067,41 +5723,31 @@ function getAudioExtension(
 
     const type =
         String(
-            mimeType ||
-                ""
+            mimeType || ""
         ).toLowerCase();
 
 
     if (
-        type.includes(
-            "ogg"
-        )
+        type.includes("ogg")
     ) {
 
         return "ogg";
-
     }
 
 
     if (
-        type.includes(
-            "mp4"
-        )
+        type.includes("mp4")
     ) {
 
         return "m4a";
-
     }
 
 
     if (
-        type.includes(
-            "mpeg"
-        )
+        type.includes("mpeg")
     ) {
 
         return "mp3";
-
     }
 
 
@@ -6141,7 +5787,6 @@ function setMessageSending(
 
         sendButton.disabled =
             sending;
-
     }
 }
 
@@ -6269,7 +5914,6 @@ function showChatError(
             errorElement.remove();
 
         }, 5000);
-
     }
 }
 
@@ -6308,7 +5952,6 @@ function getMessagePreview(
             message.content ||
             "صورة"
         );
-
     }
 
 
@@ -6321,7 +5964,6 @@ function getMessagePreview(
             message.content ||
             "رسالة صوتية"
         );
-
     }
 
 
@@ -6352,7 +5994,6 @@ function formatDate(
     ) {
 
         return "";
-
     }
 
 
@@ -6369,11 +6010,9 @@ function formatDate(
             }
         ).format(date);
 
-
     } catch (error) {
 
         return date.toLocaleString();
-
     }
 }
 
@@ -6427,7 +6066,6 @@ function cssEscape(
         return window.CSS.escape(
             stringValue
         );
-
     }
 
 
@@ -6449,7 +6087,6 @@ function createUniqueId() {
     ) {
 
         return crypto.randomUUID();
-
     }
 
 
@@ -6482,8 +6119,7 @@ function authMessage(
 
     const message =
         String(
-            error?.message ||
-                ""
+            error?.message || ""
         ).toLowerCase();
 
 
@@ -6494,7 +6130,6 @@ function authMessage(
     ) {
 
         return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
-
     }
 
 
@@ -6505,7 +6140,6 @@ function authMessage(
     ) {
 
         return "يجب تأكيد البريد الإلكتروني أولًا.";
-
     }
 
 
@@ -6516,32 +6150,23 @@ function authMessage(
     ) {
 
         return "المستخدم غير موجود.";
-
     }
 
 
     if (
-        message.includes(
-            "password"
-        ) &&
-        message.includes(
-            "short"
-        )
+        message.includes("password") &&
+        message.includes("short")
     ) {
 
         return "كلمة المرور قصيرة جدًا.";
-
     }
 
 
     if (
-        message.includes(
-            "rate limit"
-        )
+        message.includes("rate limit")
     ) {
 
         return "تم تجاوز عدد المحاولات المسموح بها. حاول لاحقًا.";
-
     }
 
 
@@ -6572,7 +6197,6 @@ window.addEventListener(
         } catch (error) {
 
             console.warn(error);
-
         }
 
 
@@ -6586,13 +6210,11 @@ window.addEventListener(
                 db.removeChannel(
                     activeRealtimeChannel
                 );
-
             }
 
         } catch (error) {
 
             console.warn(error);
-
         }
 
 
@@ -6603,8 +6225,6 @@ window.addEventListener(
         } catch (error) {
 
             console.warn(error);
-
         }
-
     }
 );
