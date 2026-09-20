@@ -1461,48 +1461,28 @@ function renderConversationList() {
     }
 }
 
-
-function getConversationTitle(
-    conversation
-) {
+function getConversationTitle(conversation) {
 
     if (!conversation) {
         return "محادثة";
     }
 
-
-    if (
-        conversation.type ===
-        "group"
-    ) {
-
+    if (conversation.type === "group") {
         return "المجموعة العامة";
     }
 
+    if (conversation.type === "private") {
 
-    if (
-        conversation.type ===
-        "private"
-    ) {
-
-        if (
-            currentProfile?.role ===
-            "customer"
-        ) {
-
-            return "المحادثة الخاصة";
+        if (currentProfile?.role === "customer") {
+            return "عبد الكريم";
         }
 
-
-        if (
-            conversation.customer_id
-        ) {
+        if (conversation.customer_id) {
 
             const customer =
                 profileCache.get(
                     conversation.customer_id
                 );
-
 
             return (
                 customer?.display_name ||
@@ -1510,14 +1490,11 @@ function getConversationTitle(
             );
         }
 
-
         return "محادثة خاصة";
     }
 
-
     return "محادثة";
 }
-
 
 async function openInitialAdminConversation() {
 
