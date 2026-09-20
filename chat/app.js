@@ -1131,15 +1131,19 @@ async function startApplication(user) {
         currentProfile
     );
 
+    await loadConversations();
+
     const publicGroup = conversations.find(
         conversation =>
             conversation.type === "group"
     );
 
     if (publicGroup) {
+
         await selectConversation(
             publicGroup
         );
+
     }
 
 } else {
