@@ -1830,7 +1830,48 @@ async function openPrivateConversation(
         );
 }
 
+async function openCustomerPrivateConversation() {
 
+    if (
+        !currentUser ||
+        currentProfile?.role !== "customer"
+    ) {
+        return;
+    }
+
+    const conversation =
+        conversations.find(
+            conversation =>
+                conversation.type === "private" &&
+                conversation.customer_id === currentUser.id
+        );
+
+    if (!conversation) {
+
+        showChatError(
+            "المحادثة الخاصة غير موجودة."
+        );
+
+        return;
+    }
+
+    await selectConversation(
+        conversation
+    );
+
+    customersList
+        ?.querySelectorAll(
+            ".customer-button"
+        )
+        .forEach(
+            button => {
+
+                button.classList.add(
+                    "active"
+                );
+            }
+        );
+}
 /* =========================================================
    GROUP CONVERSATION
 ========================================================= */
@@ -1947,70 +1988,197 @@ async function loadCustomers() {
         !db ||
         !customersList
     ) {
-
         return;
     }
-
 
     customersList.innerHTML = "";
 
+    /* =====================================================
+       ADMIN
+    ===================================================== */
 
-    if (
-        currentProfile?.role !==
-        "admin"
-    ) {
+    if (currentProfile?.role === "admin") {
 
-        return;
-    }
+        const {
+            data,
+            error
+        } =
+            await db
+                .from("profiles")
+                .select("*")
+                .eq(
+                    "role",
+                    "customer"
+                )
+                .order(
+                    "display_name",
+                    {
+                        ascending: true
+                    }
+                );
 
+        if (error) {
 
-    const {
-        data,
-        error
-    } =
-        await db
-            .from("profiles")
-            .select("*")
-            .eq(
-                "role",
-                "customer"
-            )
-            .order(
-                "display_name",
-                {
-                    ascending: true
+            console.error(
+                "Load customers error:",
+                error
+            );
+
+            showChatError(
+                error.message
+            );
+
+            return;
+        }
+
+        customers =
+            Array.isArray(data)
+                ? data
+                : [];
+
+        for (
+            const customer of customers
+        ) {
+
+            profileCache.set(
+                customer.id,
+                customer
+            );
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+            button.type =
+                "button";
+
+            button.className =
+                "customer-button";
+
+            button.dataset.customerId =
+                customer.id;
+
+            button.textContent =
+                customer.display_name ||
+                "عميل";
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    openPrivateConversation(
+                        customer
+                    );
                 }
             );
 
-
-    if (error) {
-
-        console.error(
-            "Load customers error:",
-            error
-        );
-
-        showChatError(
-            error.message
-        );
+            customersList.appendChild(
+                button
+            );
+        }
 
         return;
     }
 
 
-    customers =
-        Array.isArray(data)
-            ? data
-            : [];
+    /* =====================================================
+       CUSTOMER
+       إظهار الأدمن في المحادثات الخاصة
+    ===================================================== */
+
+    if (currentProfile?.role === "customer") {
+
+        const privateConversation =
+            conversations.find(
+                conversation =>
+                    conversation.type === "private" &&
+                    conversation.customer_id === currentUser.id
+            );
+
+        if (!privateConversation) {
+            return;
+        }
 
 
-    for (
-        const customer of customers
-    ) {
+        const {
+            data: members,
+            error: membersError
+        } =
+            await db
+                .from("conversation_members")
+                .select("user_id")
+                .eq(
+                    "conversation_id",
+                    privateConversation.id
+                );
+
+
+        if (membersError) {
+
+            console.error(
+                "Load private conversation members error:",
+                membersError
+            );
+
+            showChatError(
+                membersError.message
+            );
+
+            return;
+        }
+
+
+        const adminMember =
+            (members || []).find(
+                member =>
+                    member.user_id !==
+                    currentUser.id
+            );
+
+
+        if (!adminMember) {
+            return;
+        }
+
+
+        const {
+            data: adminProfile,
+            error: adminError
+        } =
+            await db
+                .from("profiles")
+                .select("*")
+                .eq(
+                    "id",
+                    adminMember.user_id
+                )
+                .maybeSingle();
+
+
+        if (adminError) {
+
+            console.error(
+                "Load admin profile error:",
+                adminError
+            );
+
+            showChatError(
+                adminError.message
+            );
+
+            return;
+        }
+
+
+        if (!adminProfile) {
+            return;
+        }
+
 
         profileCache.set(
-            customer.id,
-            customer
+            adminProfile.id,
+            adminProfile
         );
 
 
@@ -2029,21 +2197,19 @@ async function loadCustomers() {
 
 
         button.dataset.customerId =
-            customer.id;
+            adminProfile.id;
 
 
         button.textContent =
-            customer.display_name ||
-            "عميل";
+            adminProfile.display_name ||
+            "مدير";
 
 
         button.addEventListener(
             "click",
             () => {
 
-                openPrivateConversation(
-                    customer
-                );
+                openCustomerPrivateConversation();
             }
         );
 
@@ -2053,8 +2219,6 @@ async function loadCustomers() {
         );
     }
 }
-
-
 /* =========================================================
    MESSAGES
 ========================================================= */
