@@ -611,10 +611,10 @@ async function initializeAuth() {
 
     } else {
 
-        showLoginScreen();
+        window.showLoginScreen();
+
     }
 }
-
 
 /* =========================================================
    LOGIN
@@ -1052,8 +1052,7 @@ async function startApplication(user) {
         currentProfile
     ) {
 
-        showAppScreen();
-
+window.showAppScreen();
         return;
     }
 
@@ -1114,8 +1113,7 @@ async function startApplication(user) {
                 );
 
 
-                showAppScreen();
-
+window.showAppScreen();
 
                 /*
                  * مهم:
@@ -1208,8 +1206,7 @@ async function startApplication(user) {
                 currentProfile = null;
 
 
-                showLoginScreen();
-
+window.showLoginScreen();
 
                 showLoginError(
                     error?.message ||
@@ -1251,33 +1248,79 @@ async function startApplication(user) {
         }
     }
 }
-function showAppScreen() {
+window.showAppScreen = function () {
 
-    loginScreen?.classList.add(
-        "hidden"
-    );
-
-    app?.classList.remove(
-        "hidden"
-    );
+    loginScreen?.classList.add("hidden");
+    app?.classList.remove("hidden");
 
     clearLoginError();
-}
+};
 
 
-function showLoginScreen() {
+window.showLoginScreen = function () {
 
-    app?.classList.add(
-        "hidden"
-    );
-
-    loginScreen?.classList.remove(
-        "hidden"
-    );
+    app?.classList.add("hidden");
+    loginScreen?.classList.remove("hidden");
 
     currentConversation = null;
 
     removePinnedBanner();
+};
+function resetApplication() {
+
+    currentUser = null;
+    currentProfile = null;
+
+    conversations = [];
+    customers = [];
+
+    profileCache.clear();
+    reactionCache.clear();
+
+    currentConversation = null;
+
+    replyingToMessage = null;
+    selectedImage = null;
+
+    closeContextMenu();
+    closeAllReactionPickers();
+    cleanupRecording();
+
+    cancelReply();
+    clearFilePreview();
+
+    if (activeRealtimeChannel && db) {
+        db.removeChannel(activeRealtimeChannel);
+        activeRealtimeChannel = null;
+    }
+
+    if (messagesContainer) {
+        messagesContainer.innerHTML = `
+            <div class="empty-messages">
+                <div class="empty-icon" aria-hidden="true">👋</div>
+                <strong>مرحبًا بك في مركز التواصل</strong>
+                <small>ابدأ بإرسال رسالة الآن</small>
+            </div>
+        `;
+    }
+
+    if (conversationList) {
+        conversationList.innerHTML = "";
+    }
+
+    if (customersList) {
+        customersList.innerHTML = "";
+    }
+
+    if (conversationTitle) {
+        conversationTitle.textContent = "المجموعة العامة";
+    }
+
+    if (conversationSubtitle) {
+        conversationSubtitle.textContent = "المحادثة الجماعية";
+    }
+
+    window.showLoginScreen();
 }
 /* =========================================================
    CONVERSATIONS
@@ -1418,23 +1461,36 @@ function renderConversationList() {
     }
 }
 
-function getConversationTitle(conversation) {
+function getConversationTitle(
+    conversation
+) {
 
     if (!conversation) {
         return "محادثة";
     }
 
-    if (conversation.type === "group") {
+    if (
+        conversation.type ===
+        "group"
+    ) {
         return "المجموعة العامة";
     }
 
-    if (conversation.type === "private") {
+    if (
+        conversation.type ===
+        "private"
+    ) {
 
-        if (currentProfile?.role === "customer") {
+        if (
+            currentProfile?.role ===
+            "customer"
+        ) {
             return "عبد الكريم";
         }
 
-        if (conversation.customer_id) {
+        if (
+            conversation.customer_id
+        ) {
 
             const customer =
                 profileCache.get(
@@ -1452,7 +1508,6 @@ function getConversationTitle(conversation) {
 
     return "محادثة";
 }
-
 async function openInitialAdminConversation() {
 
     if (
@@ -1503,59 +1558,87 @@ async function selectConversation(
     conversation
 ) {
 
-    if (!conversation) {
+    if (
+        !conversation ||
+        !conversation.id
+    ) {
         return;
     }
 
-
     closeContextMenu();
-
     closeAllReactionPickers();
-
     removePinnedBanner();
 
+    cancelReply();
+    clearFilePreview();
 
-    currentConversation =
-        conversation;
-
+    /*
+     * نحدد المحادثة الجديدة فورًا قبل
+     * أي طلب للرسائل.
+     */
+    currentConversation = {
+        ...conversation
+    };
 
     reactionCache.clear();
 
-    cancelReply();
-
-    clearFilePreview();
-
-
     if (conversationTitle) {
-
         conversationTitle.textContent =
             getConversationTitle(
                 conversation
             );
     }
 
-
     if (conversationSubtitle) {
-
         conversationSubtitle.textContent =
             conversation.type === "group"
                 ? "المحادثة الجماعية"
                 : "محادثة خاصة";
     }
 
-
     setActiveConversationButton(
         conversation.id
     );
 
+    /*
+     * إلغاء اشتراك المحادثة السابقة.
+     */
+    if (
+        activeRealtimeChannel &&
+        db
+    ) {
+        try {
+            await db.removeChannel(
+                activeRealtimeChannel
+            );
+        } catch (error) {
+            console.error(
+                "Remove old realtime channel error:",
+                error
+            );
+        }
 
+        activeRealtimeChannel = null;
+    }
+
+    /*
+     * تحميل رسائل المحادثة المختارة فقط.
+     */
     await loadMessages();
 
-    await subscribeRealtime(
+    /*
+     * لا نشترك إلا إذا بقيت هذه هي
+     * المحادثة الحالية.
+     */
+    if (
+        currentConversation?.id ===
         conversation.id
-    );
+    ) {
+        await subscribeRealtime(
+            conversation.id
+        );
+    }
 }
-
 
 function setActiveConversationButton(
     conversationId
@@ -2220,15 +2303,14 @@ async function loadMessages() {
         !currentConversation ||
         !messagesContainer
     ) {
-
         return;
     }
 
+    const conversationId =
+        currentConversation.id;
 
     messagesContainer.innerHTML = "";
-
     reactionCache.clear();
-
 
     const {
         data,
@@ -2239,7 +2321,7 @@ async function loadMessages() {
             .select("*")
             .eq(
                 "conversation_id",
-                currentConversation.id
+                conversationId
             )
             .order(
                 "created_at",
@@ -2248,9 +2330,7 @@ async function loadMessages() {
                 }
             );
 
-
     if (error) {
-
         console.error(
             "Load messages error:",
             error
@@ -2263,17 +2343,36 @@ async function loadMessages() {
         return;
     }
 
+    /*
+     * إذا انتقل المستخدم إلى محادثة أخرى
+     * أثناء تحميل الرسائل، لا نعرض نتائج
+     * المحادثة القديمة.
+     */
+    if (
+        !currentConversation ||
+        currentConversation.id !== conversationId
+    ) {
+        return;
+    }
 
     const messages =
         Array.isArray(data)
             ? data
             : [];
 
-
     await loadReplyMessages(
         messages
     );
 
+    /*
+     * تحقق مرة ثانية بعد العمليات غير المتزامنة.
+     */
+    if (
+        !currentConversation ||
+        currentConversation.id !== conversationId
+    ) {
+        return;
+    }
 
     for (
         const message of messages
@@ -2284,11 +2383,9 @@ async function loadMessages() {
         );
     }
 
-
     await restorePinnedMessage(
         messages
     );
-
 
     scrollMessagesToBottom();
 }
