@@ -1335,21 +1335,6 @@ async function loadConversations() {
                     ascending: false
                 }
             );
-
-
-    if (
-        currentProfile?.role ===
-        "customer"
-    ) {
-
-        query =
-            query.eq(
-                "customer_id",
-                currentUser.id
-            );
-    }
-
-
     const {
         data,
         error
