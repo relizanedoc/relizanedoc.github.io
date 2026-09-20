@@ -1123,18 +1123,29 @@ async function startApplication(user) {
 
 
                 if (
-                    currentProfile.role ===
-                    "customer"
-                ) {
+    currentProfile.role ===
+    "customer"
+) {
 
-                    await openPrivateConversation(
-                        currentProfile
-                    );
+    await openPrivateConversation(
+        currentProfile
+    );
 
-                } else {
+    const publicGroup = conversations.find(
+        conversation =>
+            conversation.type === "group"
+    );
 
-                    await openInitialAdminConversation();
-                }
+    if (publicGroup) {
+        await selectConversation(
+            publicGroup
+        );
+    }
+
+} else {
+
+    await openInitialAdminConversation();
+}
 
             } catch (error) {
 
