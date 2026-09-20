@@ -1117,38 +1117,84 @@ async function startApplication(user) {
                 showAppScreen();
 
 
-                await loadCustomers();
-
+                /*
+                 * مهم:
+                 * نحمّل المحادثات أولاً حتى تتمكن
+                 * loadCustomers() من العثور على
+                 * المحادثة الخاصة بالعميل.
+                 */
                 await loadConversations();
 
 
-if (currentProfile.role === "customer") {
-    await loadConversations();
+                /*
+                 * تحميل قائمة العملاء للأدمن،
+                 * أو إظهار الأدمن للعميل.
+                 */
+                await loadCustomers();
 
-    // المحادثة الخاصة بالعميل
-    const privateConversation = conversations.find(
-        conversation =>
-            conversation.type === "private" &&
-            conversation.customer_id === currentUser.id
-    );
 
-    // المجموعة العامة
-    const publicGroup = conversations.find(
-        conversation =>
-            conversation.type === "group"
-    );
+                /*
+                 * CUSTOMER
+                 */
+                if (
+                    currentProfile.role ===
+                    "customer"
+                ) {
 
-    // افتح الخاصة أولاً إذا كانت موجودة
-    if (privateConversation) {
-        await selectConversation(privateConversation);
-    } else if (publicGroup) {
-        // إذا لم توجد الخاصة، افتح المجموعة العامة
-        await selectConversation(publicGroup);
-    }
-} else {
-    await openInitialAdminConversation();
-}
-               
+                    // المحادثة الخاصة بالعميل
+                    const privateConversation =
+                        conversations.find(
+                            conversation =>
+                                conversation.type ===
+                                    "private" &&
+                                conversation.customer_id ===
+                                    currentUser.id
+                        );
+
+
+                    // المجموعة العامة
+                    const publicGroup =
+                        conversations.find(
+                            conversation =>
+                                conversation.type ===
+                                "group"
+                        );
+
+
+                    /*
+                     * افتح المحادثة الخاصة أولاً
+                     */
+                    if (privateConversation) {
+
+                        await selectConversation(
+                            privateConversation
+                        );
+
+                    }
+
+                    /*
+                     * إذا لم توجد الخاصة،
+                     * افتح المجموعة العامة
+                     */
+                    else if (publicGroup) {
+
+                        await selectConversation(
+                            publicGroup
+                        );
+                    }
+
+                }
+
+
+                /*
+                 * ADMIN
+                 */
+                else {
+
+                    await openInitialAdminConversation();
+                }
+
+
             } catch (error) {
 
                 console.error(
@@ -1205,123 +1251,6 @@ if (currentProfile.role === "customer") {
         }
     }
 }
-
-
-function showAppScreen() {
-
-    loginScreen?.classList.add(
-        "hidden"
-    );
-
-    app?.classList.remove(
-        "hidden"
-    );
-
-    clearLoginError();
-}
-
-
-function showLoginScreen() {
-
-    app?.classList.add(
-        "hidden"
-    );
-
-    loginScreen?.classList.remove(
-        "hidden"
-    );
-
-    currentConversation = null;
-
-    removePinnedBanner();
-}
-
-
-function resetApplication() {
-
-    currentUser = null;
-    currentProfile = null;
-
-    conversations = [];
-    customers = [];
-
-    profileCache.clear();
-    reactionCache.clear();
-
-    currentConversation = null;
-
-    replyingToMessage = null;
-    selectedImage = null;
-
-    closeContextMenu();
-
-    closeAllReactionPickers();
-
-    cleanupRecording();
-
-
-    if (activeRealtimeChannel) {
-
-        try {
-
-            db?.removeChannel(
-                activeRealtimeChannel
-            );
-
-        } catch (error) {
-
-            console.error(error);
-        }
-
-        activeRealtimeChannel = null;
-    }
-
-
-    cancelReply();
-
-    clearFilePreview();
-
-
-    if (messagesContainer) {
-
-        messagesContainer.innerHTML = `
-            <div class="empty-messages">
-                <div class="empty-icon" aria-hidden="true">👋</div>
-                <strong>مرحبًا بك في مركز التواصل</strong>
-                <small>ابدأ بإرسال رسالة الآن</small>
-            </div>
-        `;
-    }
-
-
-    if (conversationList) {
-        conversationList.innerHTML = "";
-    }
-
-
-    if (customersList) {
-        customersList.innerHTML = "";
-    }
-
-
-    if (conversationTitle) {
-
-        conversationTitle.textContent =
-            "المجموعة العامة";
-    }
-
-
-    if (conversationSubtitle) {
-
-        conversationSubtitle.textContent =
-            "المحادثة الجماعية";
-    }
-
-
-    showLoginScreen();
-}
-
-
 /* =========================================================
    CONVERSATIONS
 ========================================================= */
