@@ -1251,6 +1251,34 @@ async function startApplication(user) {
         }
     }
 }
+function showAppScreen() {
+
+    loginScreen?.classList.add(
+        "hidden"
+    );
+
+    app?.classList.remove(
+        "hidden"
+    );
+
+    clearLoginError();
+}
+
+
+function showLoginScreen() {
+
+    app?.classList.add(
+        "hidden"
+    );
+
+    loginScreen?.classList.remove(
+        "hidden"
+    );
+
+    currentConversation = null;
+
+    removePinnedBanner();
+}
 /* =========================================================
    CONVERSATIONS
 ========================================================= */
