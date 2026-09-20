@@ -1809,10 +1809,8 @@ async function openGroupConversation() {
 
     if (
         !db ||
-        currentProfile?.role !==
-        "admin"
+        !currentUser
     ) {
-
         return;
     }
 
@@ -1857,12 +1855,25 @@ async function openGroupConversation() {
         null;
 
 
+    /*
+     * إذا لم توجد المجموعة،
+     * يقوم الأدمن بإنشائها.
+     */
     if (!group) {
 
-        /*
-         * conversations لا يحتوي على title.
-         * لذلك لا نرسل title إلى قاعدة البيانات.
-         */
+        if (
+            currentProfile?.role !==
+            "admin"
+        ) {
+
+            showChatError(
+                "المجموعة العامة غير موجودة."
+            );
+
+            return;
+        }
+
+
         const result =
             await db
                 .from("conversations")
@@ -1901,12 +1912,34 @@ async function openGroupConversation() {
     }
 
 
+    /*
+     * تأكد أن المجموعة موجودة في الذاكرة.
+     */
+    const existingGroup =
+        conversations.find(
+            conversation =>
+                conversation.id ===
+                group.id
+        );
+
+
+    if (!existingGroup) {
+
+        conversations.push(
+            group
+        );
+
+        renderConversationList();
+    }
+
+
+    /*
+     * افتح المجموعة للعميل أو الأدمن.
+     */
     await selectConversation(
         group
     );
 }
-
-
 /* =========================================================
    CUSTOMERS
 ========================================================= */
