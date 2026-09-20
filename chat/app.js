@@ -1373,7 +1373,7 @@ async function loadConversations() {
         Array.isArray(data)
             ? data
             : [];
-
+console.log("CUSTOMER CONVERSATIONS:", conversations);
 
     for (
         const conversation of conversations
