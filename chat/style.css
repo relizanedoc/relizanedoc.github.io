@@ -1,47 +1,55 @@
 /* =========================================================
    مركز التواصل — style.css  (v2 · Telegram/WhatsApp Pro)
-   Dark theme · RTL · Tajawal
+   Light theme (Day Mode) · RTL · Tajawal
 ========================================================= */
 
 /* ---------- 1) Design Tokens ---------- */
 :root {
-    --bg-0: #0e1621;            /* telegram dark base */
-    --bg-1: #17212b;
-    --bg-2: #1e2a38;
-    --sidebar-bg: #17212b;
-    --surface: #1e2a38;
-    --surface-hover: #2b3a4d;
-    --border: rgba(255, 255, 255, 0.07);
-    --border-strong: rgba(255, 255, 255, 0.13);
+    /* Light Mode Backgrounds */
+    --bg-0: #efeae2;            /* WhatsApp/Telegram chat background */
+    --bg-1: #ffffff;            /* Main white background */
+    --bg-2: #f0f2f5;            /* Secondary gray background */
+    --sidebar-bg: #ffffff;
+    --surface: #ffffff;
+    --surface-hover: #f5f6f6;
+    --border: #e9edef;
+    --border-strong: #d1d7db;
 
-    --text-1: #f5f5f5;
-    --text-2: #c4c9cf;
-    --text-3: #7f91a4;
-    --text-4: #5c6e82;
+    /* Light Mode Text Colors */
+    --text-1: #111b21;          /* Primary dark text */
+    --text-2: #3b4a54;          /* Secondary text */
+    --text-3: #667781;          /* Muted text */
+    --text-4: #8696a0;          /* Placeholders */
 
-    --accent: #2b5278;          /* own message blue (telegram) */
-    --accent-light: #3a6d9e;
-    --accent-name: #6ab3f3;     /* sender name color */
-    --accent-soft: rgba(106, 179, 243, 0.12);
-    --link: #6ab3f3;
+    /* Brand Colors (Telegram Blue style) */
+    --accent: #3390ec;          
+    --accent-light: #52a4ef;
+    --accent-name: #2a7cbd;     /* sender name color */
+    --accent-soft: rgba(51, 144, 236, 0.12);
+    --link: #027eb5;
 
-    --bubble-other: #182533;
-    --bubble-own: linear-gradient(180deg, #2b5278 0%, #265070 100%);
+    /* Chat Bubbles */
+    --bubble-other: #ffffff;
+    --bubble-own: #d9fdd3;      /* WhatsApp/Telegram Light Green for sent messages */
 
-    --success: #4fae4e;
-    --danger: #eb5757;
-    --danger-soft: rgba(235, 87, 87, 0.14);
-    --warning: #ffd67a;
+    /* Status Colors */
+    --success: #25d366;
+    --danger: #ef4444;
+    --danger-soft: rgba(239, 68, 68, 0.1);
+    --warning: #f59e0b;
 
+    /* Border Radius (Untouched) */
     --radius-s: 8px;
     --radius-m: 12px;
     --radius-l: 16px;
     --radius-bubble: 16px;
     --radius-tail: 5px;
 
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
-    --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.45);
+    /* Light Mode Shadows */
+    --shadow-1: 0 1px 2px rgba(11, 20, 26, 0.1);
+    --shadow-2: 0 4px 12px rgba(11, 20, 26, 0.08);
 
+    /* Layout (Untouched) */
     --sidebar-w: 300px;
     --transition: 0.18s ease;
 }
@@ -80,15 +88,15 @@ button {
 button:disabled { cursor: not-allowed; opacity: 0.6; }
 img { max-width: 100%; display: block; }
 
-::selection { background: rgba(106, 179, 243, 0.35); }
+::selection { background: rgba(51, 144, 236, 0.3); }
 
 .hidden { display: none !important; }
 
 /* Scrollbars */
 ::-webkit-scrollbar { width: 7px; height: 7px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(127, 145, 164, 0.3); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(127, 145, 164, 0.55); }
+::-webkit-scrollbar-thumb { background: rgba(134, 150, 160, 0.3); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(134, 150, 160, 0.55); }
 
 /* =========================================================
    3) LOGIN SCREEN
@@ -100,9 +108,9 @@ img { max-width: 100%; display: block; }
     place-items: center;
     padding: 24px;
     background:
-        radial-gradient(900px 500px at 80% 0%, rgba(43, 82, 120, 0.35), transparent 60%),
-        radial-gradient(700px 400px at 10% 100%, rgba(106, 179, 243, 0.1), transparent 60%),
-        var(--bg-0);
+        radial-gradient(900px 500px at 80% 0%, rgba(51, 144, 236, 0.15), transparent 60%),
+        radial-gradient(700px 400px at 10% 100%, rgba(37, 211, 102, 0.1), transparent 60%),
+        var(--bg-2);
 }
 
 .login-box {
@@ -130,11 +138,12 @@ img { max-width: 100%; display: block; }
     place-items: center;
     font-size: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2b5278, #3a6d9e);
-    box-shadow: 0 6px 20px rgba(43, 82, 120, 0.5);
+    color: white;
+    background: linear-gradient(135deg, #3390ec, #52a4ef);
+    box-shadow: 0 6px 20px rgba(51, 144, 236, 0.3);
 }
 
-.login-box h1 { font-size: 25px; font-weight: 800; }
+.login-box h1 { font-size: 25px; font-weight: 800; color: var(--text-1); }
 .login-box > p { color: var(--text-3); margin: 6px 0 26px; font-size: 14.5px; }
 
 .login-box .field { text-align: right; margin-bottom: 16px; }
@@ -150,7 +159,7 @@ img { max-width: 100%; display: block; }
 .login-box input {
     width: 100%;
     padding: 13px 16px;
-    background: var(--bg-0);
+    background: var(--bg-1);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-m);
     outline: none;
@@ -159,8 +168,8 @@ img { max-width: 100%; display: block; }
 
 .login-box input::placeholder { color: var(--text-4); }
 .login-box input:focus {
-    border-color: var(--accent-light);
-    box-shadow: 0 0 0 3px rgba(58, 109, 158, 0.3);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(51, 144, 236, 0.2);
 }
 
 .primary-button {
@@ -168,14 +177,14 @@ img { max-width: 100%; display: block; }
     margin-top: 6px;
     padding: 14px;
     border-radius: var(--radius-m);
-    background: linear-gradient(135deg, #2b5278, #3a6d9e);
+    background: linear-gradient(135deg, #3390ec, #52a4ef);
     color: #fff;
     font-weight: 700;
     font-size: 15px;
     transition: filter var(--transition), transform var(--transition);
 }
 
-.primary-button:hover:not(:disabled) { filter: brightness(1.12); transform: translateY(-1px); }
+.primary-button:hover:not(:disabled) { filter: brightness(1.05); transform: translateY(-1px); }
 
 .forgot-password {
     margin-top: 16px;
@@ -194,27 +203,27 @@ img { max-width: 100%; display: block; }
 .error:empty, .success:empty, .login-error:empty { display: none; }
 .error, .login-error:not(:empty) {
     background: var(--danger-soft);
-    color: #ff8a8a;
-    border: 1px solid rgba(235, 87, 87, 0.35);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.2);
 }
 .success {
-    background: rgba(79, 174, 78, 0.14);
-    color: #7dd87c;
-    border: 1px solid rgba(79, 174, 78, 0.35);
+    background: rgba(37, 211, 102, 0.1);
+    color: #16a34a;
+    border: 1px solid rgba(37, 211, 102, 0.25);
 }
 
 /* Password recovery (JS-injected) */
 .password-update-screen { display: flex; flex-direction: column; gap: 14px; text-align: right; }
-.password-update-screen h2 { font-size: 20px; font-weight: 800; text-align: center; }
+.password-update-screen h2 { font-size: 20px; font-weight: 800; text-align: center; color: var(--text-1); }
 .password-update-screen p { color: var(--text-3); font-size: 14px; text-align: center; }
 .password-update-screen input {
     width: 100%; padding: 13px 16px;
-    background: var(--bg-0); border: 1px solid var(--border-strong);
+    background: var(--bg-1); border: 1px solid var(--border-strong);
     border-radius: var(--radius-m); outline: none;
 }
 .password-update-screen button {
     padding: 13px; border-radius: var(--radius-m);
-    background: linear-gradient(135deg, #2b5278, #3a6d9e);
+    background: linear-gradient(135deg, #3390ec, #52a4ef);
     color: #fff; font-weight: 700;
 }
 
@@ -251,11 +260,12 @@ img { max-width: 100%; display: block; }
     display: grid; place-items: center;
     font-size: 21px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2b5278, #3a6d9e);
+    color: white;
+    background: linear-gradient(135deg, #3390ec, #52a4ef);
 }
 
 .brand-copy { display: flex; flex-direction: column; line-height: 1.35; }
-.brand-copy strong { font-size: 15.5px; font-weight: 800; }
+.brand-copy strong { font-size: 15.5px; font-weight: 800; color: var(--text-1); }
 .brand-copy small { color: var(--text-3); font-size: 12px; }
 
 .sidebar-content {
@@ -284,10 +294,11 @@ img { max-width: 100%; display: block; }
     display: grid; place-items: center;
     font-size: 21px;
     border-radius: 50%;
-    background: var(--surface-hover);
+    background: var(--bg-2);
 }
 .conversation-button.active .conversation-icon {
-    background: linear-gradient(135deg, #2b5278, #3a6d9e);
+    background: linear-gradient(135deg, #3390ec, #52a4ef);
+    color: white;
 }
 
 .conversation-copy {
@@ -297,6 +308,7 @@ img { max-width: 100%; display: block; }
 }
 .conversation-copy strong {
     font-size: 14.5px; font-weight: 700;
+    color: var(--text-1);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .conversation-copy small { font-size: 12px; color: var(--text-3); }
@@ -336,13 +348,12 @@ img { max-width: 100%; display: block; }
     width: 34px; height: 34px;
     flex-shrink: 0;
     border-radius: 50%;
-    background: var(--surface-hover) center / 55% no-repeat;
-    /* neutral avatar placeholder */
+    background: var(--bg-2) center / 55% no-repeat;
     box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 
 .customer-button:hover { background: var(--surface-hover); color: var(--text-1); }
-.customer-button.active { background: var(--accent-soft); color: var(--text-1); font-weight: 700; }
+.customer-button.active { background: var(--accent-soft); color: var(--accent-name); font-weight: 700; }
 
 .logout {
     display: flex;
@@ -352,7 +363,7 @@ img { max-width: 100%; display: block; }
     margin: 10px;
     padding: 12px;
     border-radius: var(--radius-m);
-    color: #ff8a8a;
+    color: #dc2626;
     font-weight: 700;
     font-size: 14px;
     transition: background var(--transition);
@@ -381,6 +392,7 @@ img { max-width: 100%; display: block; }
     border-radius: var(--radius-l);
     background: var(--bg-1);
     border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
 .language-banner-flag {
@@ -421,12 +433,14 @@ img { max-width: 100%; display: block; }
     display: grid; place-items: center;
     font-size: 21px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2b5278, #3a6d9e);
+    color: white;
+    background: linear-gradient(135deg, #3390ec, #52a4ef);
 }
 
 .chat-heading { flex: 1; min-width: 0; line-height: 1.35; }
 .chat-heading h2 {
     font-size: 16px; font-weight: 800;
+    color: var(--text-1);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .chat-heading p { font-size: 12.5px; color: var(--text-3); }
@@ -445,8 +459,8 @@ img { max-width: 100%; display: block; }
     animation: pulse 2s infinite;
 }
 @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(79, 174, 78, 0.45); }
-    50%      { box-shadow: 0 0 0 5px rgba(79, 174, 78, 0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.45); }
+    50%      { box-shadow: 0 0 0 5px rgba(37, 211, 102, 0); }
 }
 
 /* ---------- Pinned banner ---------- */
@@ -455,8 +469,8 @@ img { max-width: 100%; display: block; }
     align-items: center;
     gap: 12px;
     padding: 9px 18px;
-    background: rgba(255, 214, 122, 0.07);
-    border-bottom: 1px solid rgba(255, 214, 122, 0.18);
+    background: #fffdf5;
+    border-bottom: 1px solid rgba(245, 158, 11, 0.15);
     cursor: pointer;
 }
 .pinned-message-content {
@@ -479,7 +493,7 @@ img { max-width: 100%; display: block; }
 }
 .unpin-message-button:hover { background: var(--danger-soft); color: var(--danger); }
 
-/* ---------- Messages (WhatsApp/Telegram pattern) ---------- */
+/* ---------- Messages ---------- */
 .messages {
     flex: 1;
     overflow-y: auto;
@@ -487,8 +501,8 @@ img { max-width: 100%; display: block; }
     display: flex;
     flex-direction: column;
     gap: 3px;
-    /* subtle chat wallpaper */
-    background-image: radial-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+    /* Subtle chat wallpaper dots for light mode */
+    background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
     background-size: 22px 22px;
 }
 
@@ -520,7 +534,6 @@ img { max-width: 100%; display: block; }
     to   { opacity: 1; transform: none; }
 }
 
-/* Others: right side (RTL start) · Own: left side */
 .message.own { justify-content: flex-end; }
 
 .message-bubble {
@@ -535,20 +548,20 @@ img { max-width: 100%; display: block; }
     transition: box-shadow var(--transition);
 }
 
-.message-bubble:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); }
+.message-bubble:hover { box-shadow: var(--shadow-2); }
 
 .message.own .message-bubble {
     background: var(--bubble-own);
     border-start-start-radius: var(--radius-bubble);
     border-start-end-radius: var(--radius-tail);
-    color: #fff;
+    color: var(--text-1); /* Fixed: Removed white text for light mode */
 }
 
 .message-highlight .message-bubble {
     animation: highlight 1.5s ease;
 }
 @keyframes highlight {
-    0%, 60% { box-shadow: 0 0 0 2px rgba(255, 214, 122, 0.6); }
+    0%, 60% { box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.5); }
     100%    { box-shadow: var(--shadow-1); }
 }
 
@@ -560,7 +573,7 @@ img { max-width: 100%; display: block; }
     color: var(--accent-name);
     margin-bottom: 1px;
 }
-.message.own .message-sender { color: rgba(255, 255, 255, 0.85); }
+.message.own .message-sender { color: #008069; } /* WhatsApp dark green for own name or keeping it dark */
 .message-sender.clickable { cursor: pointer; }
 .message-sender.clickable:hover { text-decoration: underline; }
 
@@ -591,9 +604,9 @@ img { max-width: 100%; display: block; }
     display: block;
 }
 .audio-name { font-size: 12px; color: var(--text-3); margin-top: 3px; }
-.message.own .audio-name { color: rgba(255, 255, 255, 0.7); }
+.message.own .audio-name { color: var(--text-2); }
 
-/* Date row — small, subtle, aligned to bubble end */
+/* Date row */
 .message-footer {
     display: flex;
     justify-content: flex-end;
@@ -606,23 +619,23 @@ img { max-width: 100%; display: block; }
     color: var(--text-4);
     user-select: none;
 }
-.message.own .message-date { color: rgba(255, 255, 255, 0.55); }
+.message.own .message-date { color: rgba(11, 20, 26, 0.55); } /* Fixed: Darker date on light green bubble */
 
 /* Reply quote inside bubble */
 .message-reply {
-    border-inline-start: 2px solid var(--accent-light);
-    background: rgba(0, 0, 0, 0.22);
+    border-inline-start: 3px solid var(--accent-light);
+    background: rgba(0, 0, 0, 0.04);
     padding: 5px 9px;
     border-radius: 7px;
     margin-bottom: 5px;
     cursor: pointer;
 }
 .message.own .message-reply {
-    background: rgba(255, 255, 255, 0.13);
-    border-inline-start-color: rgba(255, 255, 255, 0.65);
+    background: rgba(0, 0, 0, 0.05);
+    border-inline-start-color: rgba(0, 128, 105, 0.6);
 }
 .reply-sender { font-size: 11.5px; font-weight: 700; color: var(--accent-name); }
-.message.own .reply-sender { color: rgba(255, 255, 255, 0.9); }
+.message.own .reply-sender { color: #008069; }
 .reply-content {
     font-size: 12.5px;
     color: var(--text-3);
@@ -630,7 +643,7 @@ img { max-width: 100%; display: block; }
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.message.own .reply-content { color: rgba(255, 255, 255, 0.7); }
+.message.own .reply-content { color: var(--text-2); }
 
 /* Reactions */
 .message-reactions {
@@ -642,7 +655,7 @@ img { max-width: 100%; display: block; }
 .reaction-summary {
     padding: 2px 8px;
     border-radius: 99px;
-    background: var(--bg-0);
+    background: var(--bg-1);
     border: 1px solid var(--border-strong);
     font-size: 12px;
     line-height: 1.6;
@@ -651,9 +664,9 @@ img { max-width: 100%; display: block; }
 }
 .reaction-summary:hover { transform: scale(1.08); border-color: var(--accent-light); }
 .message.own .reaction-summary {
-    background: rgba(0, 0, 0, 0.22);
-    border-color: rgba(255, 255, 255, 0.25);
-    color: #fff;
+    background: rgba(255, 255, 255, 0.6);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: var(--text-2);
 }
 .reaction-trigger {
     width: 24px; height: 24px;
@@ -665,13 +678,13 @@ img { max-width: 100%; display: block; }
     transition: opacity var(--transition), background var(--transition);
 }
 .message-bubble:hover .reaction-trigger { opacity: 1; }
-.reaction-trigger:hover { background: var(--accent-soft); color: var(--accent-name); }
+.reaction-trigger:hover { background: var(--bg-2); color: var(--accent-name); }
 
 .chat-error {
     align-self: center;
     background: var(--danger-soft);
-    color: #ff8a8a;
-    border: 1px solid rgba(235, 87, 87, 0.35);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.2);
     padding: 9px 18px;
     border-radius: 99px;
     font-size: 13.5px;
@@ -709,7 +722,8 @@ img { max-width: 100%; display: block; }
     padding: 9px 14px;
     border-radius: var(--radius-m);
     background: var(--bg-1);
-    border-inline-start: 3px solid var(--accent-light);
+    border-inline-start: 3px solid var(--accent);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 .reply-preview-content {
     flex: 1;
@@ -736,7 +750,7 @@ img { max-width: 100%; display: block; }
 }
 .cancel-reply:hover { background: var(--danger-soft); color: var(--danger); }
 
-/* ---------- Composer (Telegram style) ---------- */
+/* ---------- Composer ---------- */
 .composer {
     display: flex;
     align-items: flex-end;
@@ -746,6 +760,7 @@ img { max-width: 100%; display: block; }
     border-radius: var(--radius-l);
     background: var(--bg-1);
     border: 1px solid var(--border-strong);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .action-button {
@@ -759,7 +774,7 @@ img { max-width: 100%; display: block; }
     transition: background var(--transition), color var(--transition);
     user-select: none;
 }
-.action-button:hover { background: var(--surface-hover); color: var(--text-1); }
+.action-button:hover { background: var(--surface-hover); color: var(--accent); }
 
 .action-button.recording {
     background: var(--danger-soft);
@@ -767,8 +782,8 @@ img { max-width: 100%; display: block; }
     animation: recPulse 1.2s infinite;
 }
 @keyframes recPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(235, 87, 87, 0.5); }
-    50%      { box-shadow: 0 0 0 8px rgba(235, 87, 87, 0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+    50%      { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
 }
 
 .composer input[type="text"] {
@@ -779,6 +794,7 @@ img { max-width: 100%; display: block; }
     border: none;
     outline: none;
     font-size: 14.5px;
+    color: var(--text-1);
 }
 .composer input[type="text"]::placeholder { color: var(--text-4); }
 
@@ -787,12 +803,12 @@ img { max-width: 100%; display: block; }
     flex-shrink: 0;
     display: grid; place-items: center;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2b5278, #3a6d9e);
+    background: linear-gradient(135deg, #3390ec, #52a4ef);
     color: #fff;
     font-size: 16px;
     transition: transform var(--transition), filter var(--transition);
 }
-.send-button:hover:not(:disabled) { transform: scale(1.07); filter: brightness(1.12); }
+.send-button:hover:not(:disabled) { transform: scale(1.07); filter: brightness(1.05); }
 .send-button:active:not(:disabled) { transform: scale(0.95); }
 
 /* =========================================================
@@ -804,7 +820,7 @@ img { max-width: 100%; display: block; }
     min-width: 170px;
     padding: 6px;
     border-radius: 12px;
-    background: var(--bg-2);
+    background: var(--bg-1);
     border: 1px solid var(--border-strong);
     box-shadow: var(--shadow-2);
     display: flex;
@@ -820,11 +836,11 @@ img { max-width: 100%; display: block; }
     border-radius: 8px;
     text-align: right;
     font-size: 13.5px;
-    color: var(--text-2);
+    color: var(--text-1);
     transition: background var(--transition), color var(--transition);
 }
-.message-context-menu button:hover { background: var(--surface-hover); color: var(--text-1); }
-.message-context-menu button.danger { color: #ff8a8a; }
+.message-context-menu button:hover { background: var(--bg-2); color: var(--accent); }
+.message-context-menu button.danger { color: #dc2626; }
 .message-context-menu button.danger:hover { background: var(--danger-soft); }
 
 .reaction-picker {
@@ -834,7 +850,7 @@ img { max-width: 100%; display: block; }
     gap: 2px;
     padding: 6px 8px;
     border-radius: 99px;
-    background: var(--bg-2);
+    background: var(--bg-1);
     border: 1px solid var(--border-strong);
     box-shadow: var(--shadow-2);
     animation: menuIn 0.15s ease both;
@@ -846,7 +862,7 @@ img { max-width: 100%; display: block; }
     border-radius: 50%;
     transition: transform var(--transition), background var(--transition);
 }
-.reaction-option:hover { transform: scale(1.25); background: var(--accent-soft); }
+.reaction-option:hover { transform: scale(1.25); background: var(--bg-2); }
 
 /* =========================================================
    7) RESPONSIVE
