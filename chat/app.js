@@ -1134,23 +1134,13 @@ async function startApplication(user) {
     );
 
     if (publicGroup) {
-
-        await selectConversation(
-            publicGroup
-        );
-
-    } else {
-
-        showChatError(
-            "المجموعة العامة غير موجودة."
-        );
+        await selectConversation(publicGroup);
     }
 
 } else {
 
     await openInitialAdminConversation();
 }
-
             } catch (error) {
 
                 console.error(
