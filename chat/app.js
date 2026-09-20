@@ -1122,14 +1122,9 @@ async function startApplication(user) {
                 await loadConversations();
 
 
-                if (
-    currentProfile.role ===
-    "customer"
+              if (
+    currentProfile.role === "customer"
 ) {
-
-    await openPrivateConversation(
-        currentProfile
-    );
 
     await loadConversations();
 
@@ -1144,6 +1139,11 @@ async function startApplication(user) {
             publicGroup
         );
 
+    } else {
+
+        showChatError(
+            "المجموعة العامة غير موجودة."
+        );
     }
 
 } else {
