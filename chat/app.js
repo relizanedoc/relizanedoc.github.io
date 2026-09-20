@@ -1122,25 +1122,33 @@ async function startApplication(user) {
                 await loadConversations();
 
 
-              if (
-    currentProfile.role === "customer"
-) {
-
+if (currentProfile.role === "customer") {
     await loadConversations();
 
+    // المحادثة الخاصة بالعميل
+    const privateConversation = conversations.find(
+        conversation =>
+            conversation.type === "private" &&
+            conversation.customer_id === currentUser.id
+    );
+
+    // المجموعة العامة
     const publicGroup = conversations.find(
         conversation =>
             conversation.type === "group"
     );
 
-    if (publicGroup) {
+    // افتح الخاصة أولاً إذا كانت موجودة
+    if (privateConversation) {
+        await selectConversation(privateConversation);
+    } else if (publicGroup) {
+        // إذا لم توجد الخاصة، افتح المجموعة العامة
         await selectConversation(publicGroup);
     }
-
 } else {
-
     await openInitialAdminConversation();
 }
+               
             } catch (error) {
 
                 console.error(
