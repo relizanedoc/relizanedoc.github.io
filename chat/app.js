@@ -2484,7 +2484,7 @@ function startMessageSync(conversationId) {
             messageSyncInProgress = false;
         }
 
-    }, 3000);
+    }, 1000);
 }
 async function loadReplyMessages(
     messages
