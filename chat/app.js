@@ -1796,51 +1796,52 @@ async function openPrivateConversation(
     }
 
 
-    if (
-        currentProfile?.role ===
-        "admin"
-    ) {
+if (currentProfile?.role === "admin") {
 
-        const {
-            error: membersError
-        } =
-            await db
-                .from(
-                    "conversation_members"
-                )
-                .upsert(
-                    [
-                        {
-                            conversation_id:
-                                conversation.id,
+    const { data: existingMembers, error: membersCheckError } =
+        await db
+            .from("conversation_members")
+            .select("user_id")
+            .eq("conversation_id", conversation.id)
+            .in("user_id", [currentUser.id, customerId]);
 
-                            user_id:
-                                currentUser.id
-                        },
+    if (membersCheckError) {
+        console.warn(
+            "Conversation members check warning:",
+            membersCheckError
+        );
+    } else {
 
-                        {
-                            conversation_id:
-                                conversation.id,
+        const existingIds = new Set(
+            (existingMembers || []).map(member => member.user_id)
+        );
 
-                            user_id:
-                                customerId
-                        }
-                    ],
-                    {
-                        onConflict:
-                            "conversation_id,user_id"
-                    }
+        const missingMembers = [
+            currentUser.id,
+            customerId
+        ]
+            .filter(userId => !existingIds.has(userId))
+            .map(userId => ({
+                conversation_id: conversation.id,
+                user_id: userId
+            }));
+
+        if (missingMembers.length > 0) {
+
+            const { error: membersError } =
+                await db
+                    .from("conversation_members")
+                    .insert(missingMembers);
+
+            if (membersError) {
+                console.warn(
+                    "Conversation members warning:",
+                    membersError
                 );
-
-
-        if (membersError) {
-
-            console.warn(
-                "Conversation members warning:",
-                membersError
-            );
+            }
         }
     }
+}
 
 
     profileCache.set(
