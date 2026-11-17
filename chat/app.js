@@ -76,6 +76,8 @@ let contextMenu = null;
 
 let activeRealtimeChannel = null;
 let authSubscription = null;
+let messageSyncTimer = null;
+let messageSyncInProgress = false;
 
 let initialized = false;
 
@@ -1268,6 +1270,8 @@ window.showLoginScreen = function () {
 };
 function resetApplication() {
 
+    stopMessageSync();
+
     currentUser = null;
     currentProfile = null;
 
@@ -1576,6 +1580,7 @@ async function selectConversation(
      * نحدد المحادثة الجديدة فورًا قبل
      * أي طلب للرسائل.
      */
+   stopMessageSync();
     currentConversation = {
         ...conversation
     };
@@ -1630,15 +1635,18 @@ async function selectConversation(
      * لا نشترك إلا إذا بقيت هذه هي
      * المحادثة الحالية.
      */
-    if (
-        currentConversation?.id ===
+  if (
+    currentConversation?.id ===
+    conversation.id
+) {
+    await subscribeRealtime(
         conversation.id
-    ) {
-        await subscribeRealtime(
-            conversation.id
-        );
-    }
+    );
+
+    startMessageSync(conversation.id);
 }
+
+} // نهاية دالة selectConversation
 
 function setActiveConversationButton(
     conversationId
@@ -2391,7 +2399,93 @@ async function loadMessages() {
     scrollMessagesToBottom();
 }
 
+function stopMessageSync() {
 
+    if (messageSyncTimer) {
+        clearInterval(messageSyncTimer);
+        messageSyncTimer = null;
+    }
+
+    messageSyncInProgress = false;
+}
+
+
+function startMessageSync(conversationId) {
+
+    stopMessageSync();
+
+    if (!conversationId) {
+        return;
+    }
+
+    messageSyncTimer = setInterval(async () => {
+
+        if (
+            messageSyncInProgress ||
+            !currentConversation ||
+            currentConversation.id !== conversationId
+        ) {
+            return;
+        }
+
+        messageSyncInProgress = true;
+
+        try {
+
+            const { data, error } = await db
+                .from("messages")
+                .select("*")
+                .eq("conversation_id", conversationId)
+                .order("created_at", { ascending: true });
+
+            if (error) {
+                console.warn("Message sync error:", error);
+                return;
+            }
+
+            if (
+                !currentConversation ||
+                currentConversation.id !== conversationId
+            ) {
+                return;
+            }
+
+            const newMessages = (data || []).filter(message => {
+
+                return !messagesContainer.querySelector(
+                    `[data-message-id="${cssEscape(message.id)}"]`
+                );
+            });
+
+            if (newMessages.length > 0) {
+
+                await loadReplyMessages(newMessages);
+
+                for (const message of newMessages) {
+
+                    if (
+                        currentConversation?.id !== conversationId
+                    ) {
+                        break;
+                    }
+
+                    await renderMessage(message);
+                }
+
+                scrollMessagesToBottom();
+            }
+
+        } catch (error) {
+
+            console.error("Message sync error:", error);
+
+        } finally {
+
+            messageSyncInProgress = false;
+        }
+
+    }, 3000);
+}
 async function loadReplyMessages(
     messages
 ) {
