@@ -1323,3 +1323,27 @@ label.action-button:focus-visible {
     .action-button { width: 34px; height: 36px; }
     .send-button { width: 37px; height: 37px; }
 }
+/* ---------- Message Alignment Fix ---------- */
+
+/* اجعل كل رسالة تحتل سطرًا كاملًا */
+.messages .message {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+/* رسائلك أنت: إلى اليمين */
+.messages .message.own {
+    justify-content: flex-end;
+}
+
+/* رسائل الآخرين: إلى اليسار */
+.messages .message:not(.own) {
+    justify-content: flex-start;
+}
+
+/* حافظ على اتجاه النص العربي */
+.messages .message-bubble {
+    direction: rtl;
+    text-align: right;
+}
