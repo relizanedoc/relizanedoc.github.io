@@ -825,8 +825,8 @@ function resetApplication() {
     lockedBanner?.classList.add("hidden");
 
     if (customersList) customersList.innerHTML = "";
-    if (conversationTitle) conversationTitle.textContent = "فضاء الإسبانية";
-    if (conversationSubtitle) conversationSubtitle.textContent = "الأستاذ عبد الكريم";
+    if (conversationTitle) conversationTitle.textContent = "فضاء الطب";
+    if (conversationSubtitle) conversationSubtitle.textContent = "الدكتور محمد";
     if (chatAvatar) chatAvatar.textContent = "🎓";
 
     window.showLoginScreen();
