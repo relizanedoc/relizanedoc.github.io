@@ -27,6 +27,14 @@ const unreadCounts = new Map();     // Map<convId, number>
 const previewCache = new Map();     // Map<convId, {last_content, last_type, last_created_at, last_sender_id}>
 const renderingMessageIds = new Set();
 
+// إعدادات كلمة اليوم والعد التنازلي للبكالوريا
+let wordOfDayData = null;
+let bacCountdownData = null;
+
+// حالة كتم التلميذ الحالي داخل القسم المفتوح
+let currentUserMutedUntil = null;
+let muteExpireTimer = null;
+
 const GROUP_CONFIG = {
     "2as": {
         title: "قسم 2 لغات أجنبية",
@@ -83,10 +91,12 @@ let initialized = false;
 let startingApplicationPromise = null;
 let startingApplicationUserId = null;
 
-// حالة نافذة الأعضاء
+// حالة نافذة الأعضاء والكتم المؤقت
 let modalConversationId = null;
 let modalInitialMemberIds = new Set();
 let modalSelectedMemberIds = new Set();
+let modalInitialMutes = new Map();       // Map<userId, muted_until | null>
+let modalMuteActions = new Map();        // Map<userId, "keep" | "unmute" | "15m" | "1h" | "24h" | "7d">
 let modalAllStudents = [];
 
 // حالة الأرشيف
@@ -174,6 +184,19 @@ let groupButtons = [];
 let customersList = null;
 let logoutButton = null;
 
+// كلمة اليوم
+let wordOfDayCard = null;
+let editWodButton = null;
+let wodWord = null;
+let wodTranslation = null;
+let wodExample = null;
+
+// العد التنازلي للبكالوريا
+let bacCountdownBanner = null;
+let bacCountdownTitle = null;
+let bacCountdownDays = null;
+let editBacButton = null;
+
 let mobileBackButton = null;
 let chatAvatar = null;
 let conversationTitle = null;
@@ -193,6 +216,8 @@ let chatSearchClose = null;
 
 let messagesContainer = null;
 let lockedBanner = null;
+let mutedBanner = null;
+let mutedUntilText = null;
 let filePreview = null;
 
 let editPreview = null;
@@ -240,6 +265,30 @@ let pollQuestionInput = null;
 let pollModalMessage = null;
 let sendPollButton = null;
 let cancelPollButton = null;
+
+let pollResultsModal = null;
+let pollResultsModalTitle = null;
+let pollResultsModalClose = null;
+let pollResultsSummary = null;
+let pollResultsList = null;
+
+let wodModal = null;
+let wodModalClose = null;
+let wodWordInput = null;
+let wodTranslationInput = null;
+let wodExampleInput = null;
+let wodModalMessage = null;
+let saveWodButton = null;
+let cancelWodButton = null;
+
+let bacModal = null;
+let bacModalClose = null;
+let bacTitleInput = null;
+let bacDateInput = null;
+let bacEnabledCheckbox = null;
+let bacModalMessage = null;
+let saveBacButton = null;
+let cancelBacButton = null;
 
 let readersModal = null;
 let readersModalClose = null;
@@ -295,6 +344,17 @@ function cacheDomElements() {
     customersList = document.getElementById("customersList");
     logoutButton = document.getElementById("logoutButton");
 
+    wordOfDayCard = document.getElementById("wordOfDayCard");
+    editWodButton = document.getElementById("editWodButton");
+    wodWord = document.getElementById("wodWord");
+    wodTranslation = document.getElementById("wodTranslation");
+    wodExample = document.getElementById("wodExample");
+
+    bacCountdownBanner = document.getElementById("bacCountdownBanner");
+    bacCountdownTitle = document.getElementById("bacCountdownTitle");
+    bacCountdownDays = document.getElementById("bacCountdownDays");
+    editBacButton = document.getElementById("editBacButton");
+
     mobileBackButton = document.getElementById("mobileBackButton");
     chatAvatar = document.querySelector(".chat-avatar");
     conversationTitle = document.getElementById("conversationTitle");
@@ -314,6 +374,8 @@ function cacheDomElements() {
 
     messagesContainer = document.getElementById("messages");
     lockedBanner = document.getElementById("lockedBanner");
+    mutedBanner = document.getElementById("mutedBanner");
+    mutedUntilText = document.getElementById("mutedUntilText");
     filePreview = document.getElementById("filePreview");
 
     editPreview = document.getElementById("editPreview");
@@ -360,6 +422,30 @@ function cacheDomElements() {
     pollModalMessage = document.getElementById("pollModalMessage");
     sendPollButton = document.getElementById("sendPollButton");
     cancelPollButton = document.getElementById("cancelPollButton");
+
+    pollResultsModal = document.getElementById("pollResultsModal");
+    pollResultsModalTitle = document.getElementById("pollResultsModalTitle");
+    pollResultsModalClose = document.getElementById("pollResultsModalClose");
+    pollResultsSummary = document.getElementById("pollResultsSummary");
+    pollResultsList = document.getElementById("pollResultsList");
+
+    wodModal = document.getElementById("wodModal");
+    wodModalClose = document.getElementById("wodModalClose");
+    wodWordInput = document.getElementById("wodWordInput");
+    wodTranslationInput = document.getElementById("wodTranslationInput");
+    wodExampleInput = document.getElementById("wodExampleInput");
+    wodModalMessage = document.getElementById("wodModalMessage");
+    saveWodButton = document.getElementById("saveWodButton");
+    cancelWodButton = document.getElementById("cancelWodButton");
+
+    bacModal = document.getElementById("bacModal");
+    bacModalClose = document.getElementById("bacModalClose");
+    bacTitleInput = document.getElementById("bacTitleInput");
+    bacDateInput = document.getElementById("bacDateInput");
+    bacEnabledCheckbox = document.getElementById("bacEnabledCheckbox");
+    bacModalMessage = document.getElementById("bacModalMessage");
+    saveBacButton = document.getElementById("saveBacButton");
+    cancelBacButton = document.getElementById("cancelBacButton");
 
     readersModal = document.getElementById("readersModal");
     readersModalClose = document.getElementById("readersModalClose");
@@ -579,12 +665,30 @@ function bindEvents() {
         setSelectedTag(chip.dataset.tag || "");
     });
 
+    // كلمة / قاعدة اليوم (Palabra del Día)
+    editWodButton?.addEventListener("click", openWodModal);
+    wodModalClose?.addEventListener("click", closeWodModal);
+    cancelWodButton?.addEventListener("click", closeWodModal);
+    saveWodButton?.addEventListener("click", saveWordOfDay);
+    wodModal?.addEventListener("click", e => { if (e.target === wodModal) closeWodModal(); });
+
+    // العد التنازلي للبكالوريا (قسم 3 لغات)
+    editBacButton?.addEventListener("click", openBacModal);
+    bacModalClose?.addEventListener("click", closeBacModal);
+    cancelBacButton?.addEventListener("click", closeBacModal);
+    saveBacButton?.addEventListener("click", saveBacCountdown);
+    bacModal?.addEventListener("click", e => { if (e.target === bacModal) closeBacModal(); });
+
     // الاختبارات السريعة (Poll / Mini-Quiz)
     pollButton?.addEventListener("click", openPollModal);
     pollModalClose?.addEventListener("click", closePollModal);
     cancelPollButton?.addEventListener("click", closePollModal);
     sendPollButton?.addEventListener("click", submitNewPoll);
     pollModal?.addEventListener("click", e => { if (e.target === pollModal) closePollModal(); });
+
+    // تفاصيل إجابات الاختبار (للأستاذ)
+    pollResultsModalClose?.addEventListener("click", closePollResultsModal);
+    pollResultsModal?.addEventListener("click", e => { if (e.target === pollResultsModal) closePollResultsModal(); });
 
     // البحث داخل المحادثة
     chatSearchButton?.addEventListener("click", toggleChatSearch);
@@ -606,7 +710,7 @@ function bindEvents() {
 
     lockChatButton?.addEventListener("click", toggleConversationLock);
 
-    // الأعضاء
+    // الأعضاء والكتم المؤقت
     manageMembersButton?.addEventListener("click", openMembersModal);
     membersModalClose?.addEventListener("click", closeMembersModal);
     cancelMembersButton?.addEventListener("click", closeMembersModal);
@@ -642,6 +746,9 @@ function bindEvents() {
             closeMembersModal();
             closeArchiveModal();
             closePollModal();
+            closePollResultsModal();
+            closeWodModal();
+            closeBacModal();
             closeReadersModal();
             closeChatSearch();
         }
@@ -691,6 +798,196 @@ function setSelectedTag(tag) {
     if (tagToggleButton) {
         const barOpen = !tagBar?.classList.contains("hidden");
         tagToggleButton.classList.toggle("active", Boolean(selectedTag) || barOpen);
+    }
+}
+
+/* =========================================================
+   APP SETTINGS: PALABRA DEL DÍA & BAC COUNTDOWN
+========================================================= */
+
+async function loadAppSettings() {
+    if (!db || !currentUser) return;
+
+    const { data, error } = await db
+        .from("app_settings")
+        .select("key, value")
+        .in("key", ["word_of_day", "bac_countdown"]);
+
+    if (error || !Array.isArray(data)) return;
+
+    for (const row of data) {
+        if (row.key === "word_of_day") wordOfDayData = row.value || null;
+        if (row.key === "bac_countdown") bacCountdownData = row.value || null;
+    }
+
+    renderWordOfDayCard();
+    renderBacCountdownBanner();
+}
+
+function renderWordOfDayCard() {
+    if (!wordOfDayCard) return;
+
+    const isAdmin = currentProfile?.role === "admin";
+    const word = String(wordOfDayData?.word || "").trim();
+    const translation = String(wordOfDayData?.translation || "").trim();
+    const example = String(wordOfDayData?.example || "").trim();
+
+    if (!word && !isAdmin) {
+        wordOfDayCard.classList.add("hidden");
+        return;
+    }
+
+    wordOfDayCard.classList.remove("hidden");
+    editWodButton?.classList.toggle("hidden", !isAdmin);
+
+    if (wodWord) wodWord.textContent = word || "Aprobar el bachillerato";
+    if (wodTranslation) wodTranslation.textContent = translation || "أضف كلمة أو قاعدة اليوم للتلاميذ";
+    if (wodExample) wodExample.textContent = example;
+}
+
+function openWodModal() {
+    if (!wodModal || currentProfile?.role !== "admin") return;
+    if (wodWordInput) wodWordInput.value = wordOfDayData?.word || "";
+    if (wodTranslationInput) wodTranslationInput.value = wordOfDayData?.translation || "";
+    if (wodExampleInput) wodExampleInput.value = wordOfDayData?.example || "";
+    hideModalMessage(wodModalMessage);
+    wodModal.classList.remove("hidden");
+    wodWordInput?.focus();
+}
+
+function closeWodModal() {
+    wodModal?.classList.add("hidden");
+    hideModalMessage(wodModalMessage);
+}
+
+async function saveWordOfDay() {
+    if (!db || currentProfile?.role !== "admin") return;
+
+    const word = (wodWordInput?.value || "").trim();
+    const translation = (wodTranslationInput?.value || "").trim();
+    const example = (wodExampleInput?.value || "").trim();
+
+    if (!word) { showModalMessage(wodModalMessage, "اكتب الكلمة أو القاعدة بالإسبانية أولًا.", "error"); return; }
+    if (!translation) { showModalMessage(wodModalMessage, "اكتب الترجمة أو الشرح بالعربية.", "error"); return; }
+
+    if (saveWodButton) { saveWodButton.disabled = true; saveWodButton.textContent = "جارٍ الحفظ..."; }
+    hideModalMessage(wodModalMessage);
+
+    try {
+        const nextValue = { word, translation, example };
+        const { error } = await db
+            .from("app_settings")
+            .upsert({ key: "word_of_day", value: nextValue, updated_at: new Date().toISOString() }, { onConflict: "key" });
+        if (error) throw error;
+
+        wordOfDayData = nextValue;
+        renderWordOfDayCard();
+        showModalMessage(wodModalMessage, "تم تحديث كلمة اليوم لجميع التلاميذ.", "success");
+        setTimeout(closeWodModal, 650);
+    } catch (error) {
+        showModalMessage(wodModalMessage, error?.message || "تعذر حفظ كلمة اليوم.", "error");
+    } finally {
+        if (saveWodButton) { saveWodButton.disabled = false; saveWodButton.textContent = "حفظ ونشر للجميع"; }
+    }
+}
+
+function renderBacCountdownBanner() {
+    if (!bacCountdownBanner) return;
+
+    const is3as = currentConversation?.type === "group" && currentConversation?.group_key === "3as";
+    if (!is3as) {
+        bacCountdownBanner.classList.add("hidden");
+        return;
+    }
+
+    const isAdmin = currentProfile?.role === "admin";
+    const enabled = bacCountdownData ? bacCountdownData.enabled !== false : false;
+    const title = String(bacCountdownData?.title || "العدّ التنازلي للبكالوريا").trim();
+    const targetDateStr = String(bacCountdownData?.target_date || "").trim();
+
+    if (!enabled && !isAdmin) {
+        bacCountdownBanner.classList.add("hidden");
+        return;
+    }
+
+    bacCountdownBanner.classList.remove("hidden");
+    editBacButton?.classList.toggle("hidden", !isAdmin);
+
+    if (bacCountdownTitle) {
+        bacCountdownTitle.textContent = enabled ? title : `${title} (مخفي عن التلاميذ)`;
+    }
+
+    if (bacCountdownDays) {
+        if (!targetDateStr) {
+            bacCountdownDays.textContent = "لم يُحدد التاريخ بعد";
+        } else {
+            bacCountdownDays.textContent = formatCountdownRemaining(targetDateStr);
+        }
+    }
+}
+
+function formatCountdownRemaining(dateStr) {
+    const parts = String(dateStr).split("-").map(Number);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) return dateStr;
+
+    const target = new Date(parts[0], parts[1] - 1, parts[2]);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+
+    if (diffDays < 0) return "انتهى الموعد";
+    if (diffDays === 0) return "اليوم الموعد! بالتوفيق 🎓";
+    if (diffDays === 1) return "غدًا الموعد! بالتوفيق";
+    if (diffDays === 2) return "متبقي يومان";
+    if (diffDays <= 10) return `متبقي ${diffDays} أيام`;
+    return `متبقي ${diffDays} يومًا`;
+}
+
+function openBacModal() {
+    if (!bacModal || currentProfile?.role !== "admin") return;
+    if (bacTitleInput) bacTitleInput.value = bacCountdownData?.title || "العدّ التنازلي للبكالوريا";
+    if (bacDateInput) bacDateInput.value = bacCountdownData?.target_date || "";
+    if (bacEnabledCheckbox) bacEnabledCheckbox.checked = bacCountdownData ? bacCountdownData.enabled !== false : true;
+    hideModalMessage(bacModalMessage);
+    bacModal.classList.remove("hidden");
+    bacTitleInput?.focus();
+}
+
+function closeBacModal() {
+    bacModal?.classList.add("hidden");
+    hideModalMessage(bacModalMessage);
+}
+
+async function saveBacCountdown() {
+    if (!db || currentProfile?.role !== "admin") return;
+
+    const title = (bacTitleInput?.value || "").trim() || "العدّ التنازلي للبكالوريا";
+    const target_date = (bacDateInput?.value || "").trim();
+    const enabled = Boolean(bacEnabledCheckbox?.checked);
+
+    if (enabled && !target_date) {
+        showModalMessage(bacModalMessage, "اختر تاريخ الامتحان أولًا.", "error");
+        return;
+    }
+
+    if (saveBacButton) { saveBacButton.disabled = true; saveBacButton.textContent = "جارٍ الحفظ..."; }
+    hideModalMessage(bacModalMessage);
+
+    try {
+        const nextValue = { title, target_date, enabled };
+        const { error } = await db
+            .from("app_settings")
+            .upsert({ key: "bac_countdown", value: nextValue, updated_at: new Date().toISOString() }, { onConflict: "key" });
+        if (error) throw error;
+
+        bacCountdownData = nextValue;
+        renderBacCountdownBanner();
+        showModalMessage(bacModalMessage, "تم تحديث العدّ التنازلي بنجاح.", "success");
+        setTimeout(closeBacModal, 650);
+    } catch (error) {
+        showModalMessage(bacModalMessage, error?.message || "تعذر حفظ الإعدادات.", "error");
+    } finally {
+        if (saveBacButton) { saveBacButton.disabled = false; saveBacButton.textContent = "حفظ التغييرات"; }
     }
 }
 
@@ -983,7 +1280,11 @@ async function startApplication(user) {
 
             await loadConversations();
             await loadCustomers();
-            await Promise.all([loadUnreadCounts(), loadConversationPreviews()]);
+            await Promise.all([
+                loadUnreadCounts(),
+                loadConversationPreviews(),
+                loadAppSettings()
+            ]);
             await subscribeGlobalRealtime();
 
             if (currentProfile.role === "customer") {
@@ -1026,14 +1327,19 @@ window.showLoginScreen = function () {
     removePinnedBanner();
     manageMembersButton?.classList.add("hidden");
     lockChatButton?.classList.add("hidden");
+    bacCountdownBanner?.classList.add("hidden");
     closeMembersModal();
     closeArchiveModal();
     closePollModal();
+    closePollResultsModal();
+    closeWodModal();
+    closeBacModal();
     closeReadersModal();
 };
 
 function resetApplication() {
     stopMessageSync();
+    clearMuteExpireTimer();
     app?.classList.remove("mobile-chat-open");
 
     currentUser = null;
@@ -1043,6 +1349,9 @@ function resetApplication() {
     currentMessages = [];
     hasMoreMessages = false;
     oldestLoadedTimestamp = null;
+    wordOfDayData = null;
+    bacCountdownData = null;
+    currentUserMutedUntil = null;
 
     profileCache.clear();
     reactionCache.clear();
@@ -1064,6 +1373,9 @@ function resetApplication() {
     closeMembersModal();
     closeArchiveModal();
     closePollModal();
+    closePollResultsModal();
+    closeWodModal();
+    closeBacModal();
     closeReadersModal();
     closeChatSearch();
     cleanupRecording();
@@ -1082,6 +1394,8 @@ function resetApplication() {
         btn.classList.remove("active");
     });
     groupsSectionTitle?.classList.add("hidden");
+    wordOfDayCard?.classList.add("hidden");
+    bacCountdownBanner?.classList.add("hidden");
     manageMembersButton?.classList.add("hidden");
     lockChatButton?.classList.add("hidden");
     tagToggleButton?.classList.add("hidden");
@@ -1089,6 +1403,7 @@ function resetApplication() {
     tagBar?.classList.add("hidden");
     spanishBar?.classList.add("hidden");
     lockedBanner?.classList.add("hidden");
+    mutedBanner?.classList.add("hidden");
 
     if (sidebarSearchInput) sidebarSearchInput.value = "";
     if (customersList) customersList.innerHTML = "";
@@ -1273,7 +1588,7 @@ function closeReadersModal() {
 }
 
 /* =========================================================
-   CONVERSATIONS, LOCK MODE & TYPING PRESENCE
+   CONVERSATIONS, LOCK MODE, MUTE & TYPING PRESENCE
 ========================================================= */
 
 async function loadConversations() {
@@ -1374,9 +1689,11 @@ async function selectConversation(conversation, options = {}) {
     clearFilePreview();
     stopMessageSync();
     clearLocalTyping();
+    clearMuteExpireTimer();
 
     currentConversation = { ...conversation };
     currentMessages = [];
+    currentUserMutedUntil = null;
     hasMoreMessages = false;
     oldestLoadedTimestamp = null;
     reactionCache.clear();
@@ -1412,7 +1729,7 @@ async function selectConversation(conversation, options = {}) {
     manageMembersButton?.classList.toggle("hidden", !isAdminGroup);
     lockChatButton?.classList.toggle("hidden", !isAdminGroup);
 
-    applyConversationLockUI(Boolean(conversation.is_locked));
+    renderBacCountdownBanner();
     updateSidebarActiveState(conversation);
 
     if (activeRealtimeChannel && db) {
@@ -1420,11 +1737,62 @@ async function selectConversation(conversation, options = {}) {
         activeRealtimeChannel = null;
     }
 
+    // التحقق من حالة كتم التلميذ في هذا القسم
+    if (currentProfile?.role !== "admin" && conversation.type === "group") {
+        await loadCurrentUserMuteStatus(conversation.id);
+    }
+
+    applyConversationLockUI(Boolean(conversation.is_locked));
+
     await loadMessages();
 
     if (String(currentConversation?.id) === String(conversation.id)) {
         await subscribeRealtime(conversation.id);
         startMessageSync(conversation.id);
+    }
+}
+
+async function loadCurrentUserMuteStatus(conversationId) {
+    if (!db || !currentUser || !conversationId) return;
+    try {
+        const { data } = await db
+            .from("conversation_members")
+            .select("muted_until")
+            .eq("conversation_id", conversationId)
+            .eq("user_id", currentUser.id)
+            .maybeSingle();
+
+        if (String(currentConversation?.id) === String(conversationId)) {
+            setCurrentUserMutedUntil(data?.muted_until || null);
+        }
+    } catch {}
+}
+
+function isMuteActive(mutedUntil) {
+    if (!mutedUntil) return false;
+    const ts = new Date(mutedUntil).getTime();
+    return Number.isFinite(ts) && ts > Date.now();
+}
+
+function clearMuteExpireTimer() {
+    if (muteExpireTimer) {
+        clearTimeout(muteExpireTimer);
+        muteExpireTimer = null;
+    }
+}
+
+function setCurrentUserMutedUntil(mutedUntil) {
+    clearMuteExpireTimer();
+    currentUserMutedUntil = isMuteActive(mutedUntil) ? mutedUntil : null;
+
+    if (currentUserMutedUntil) {
+        const msLeft = new Date(currentUserMutedUntil).getTime() - Date.now();
+        if (msLeft > 0 && msLeft < 24 * 60 * 60 * 1000) {
+            muteExpireTimer = setTimeout(() => {
+                currentUserMutedUntil = null;
+                applyConversationLockUI(Boolean(currentConversation?.is_locked));
+            }, msLeft + 500);
+        }
     }
 }
 
@@ -1492,10 +1860,19 @@ function applyConversationLockUI(isLocked) {
     }
 
     const studentLocked = !isAdmin && isGroup && isLocked;
-    lockedBanner?.classList.toggle("hidden", !studentLocked);
-    messageForm?.classList.toggle("hidden", studentLocked);
+    const studentMuted = !isAdmin && isGroup && !studentLocked && isMuteActive(currentUserMutedUntil);
 
-    if (studentLocked) {
+    lockedBanner?.classList.toggle("hidden", !studentLocked);
+    mutedBanner?.classList.toggle("hidden", !studentMuted);
+
+    if (studentMuted && mutedUntilText) {
+        mutedUntilText.textContent = `حتى ${formatDate(currentUserMutedUntil)}`;
+    }
+
+    const hideComposer = studentLocked || studentMuted;
+    messageForm?.classList.toggle("hidden", hideComposer);
+
+    if (hideComposer) {
         spanishBar?.classList.add("hidden");
         spanishToggleButton?.classList.remove("active");
     }
@@ -1623,8 +2000,46 @@ async function openGroupConversation(groupKey) {
 }
 
 /* =========================================================
-   MANAGE GROUP MEMBERS MODAL
+   MANAGE GROUP MEMBERS & TEMPORARY MUTE MODAL (ADMIN)
 ========================================================= */
+
+function computeMuteUntilIso(durationKey) {
+    const now = Date.now();
+    if (durationKey === "15m") return new Date(now + 15 * 60 * 1000).toISOString();
+    if (durationKey === "1h") return new Date(now + 60 * 60 * 1000).toISOString();
+    if (durationKey === "24h") return new Date(now + 24 * 60 * 60 * 1000).toISOString();
+    if (durationKey === "7d") return new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString();
+    return null;
+}
+
+async function quickMuteStudent(userId, displayName, durationKey) {
+    if (!db || currentProfile?.role !== "admin" || currentConversation?.type !== "group" || !userId) return;
+
+    const nextMutedUntil = durationKey === "unmute" ? null : computeMuteUntilIso(durationKey);
+
+    try {
+        const { data, error } = await db
+            .from("conversation_members")
+            .update({ muted_until: nextMutedUntil })
+            .eq("conversation_id", currentConversation.id)
+            .eq("user_id", userId)
+            .select("user_id");
+
+        if (error) throw error;
+        if (!data || data.length === 0) {
+            showChatError("تعذر تطبيق الكتم — تأكد من تشغيل صلاحية تحديث conversation_members.");
+            return;
+        }
+
+        showChatInfo(
+            nextMutedUntil
+                ? `🔇 تم كتم ${displayName} مؤقتًا في هذا القسم.`
+                : `🔊 تم فك الكتم عن ${displayName}.`
+        );
+    } catch (error) {
+        showChatError(error?.message || "تعذر تغيير حالة الكتم.");
+    }
+}
 
 async function openMembersModal() {
     if (!db || !membersModal || currentProfile?.role !== "admin" || currentConversation?.type !== "group") return;
@@ -1632,11 +2047,13 @@ async function openMembersModal() {
     modalConversationId = currentConversation.id;
     modalInitialMemberIds = new Set();
     modalSelectedMemberIds = new Set();
+    modalInitialMutes = new Map();
+    modalMuteActions = new Map();
     modalAllStudents = [];
 
     if (membersModalTitle) membersModalTitle.textContent = `أعضاء ${getConversationTitle(currentConversation)}`;
     if (membersSearchInput) membersSearchInput.value = "";
-    hideMembersModalMessage();
+    hideModalMessage(membersModalMessage);
     membersModal.classList.remove("hidden");
 
     if (membersChecklist) membersChecklist.innerHTML = `<div class="members-empty">جارٍ تحميل التلاميذ...</div>`;
@@ -1645,18 +2062,21 @@ async function openMembersModal() {
     try {
         const [studentsRes, membersRes] = await Promise.all([
             db.from("profiles").select("id, display_name, role").eq("role", "customer").order("display_name", { ascending: true }),
-            db.from("conversation_members").select("user_id").eq("conversation_id", modalConversationId)
+            db.from("conversation_members").select("user_id, muted_until").eq("conversation_id", modalConversationId)
         ]);
         if (studentsRes.error) throw studentsRes.error;
         if (membersRes.error) throw membersRes.error;
 
         modalAllStudents = studentsRes.data || [];
-        const currentSet = new Set((membersRes.data || []).map(r => r.user_id));
+        const memberMap = new Map((membersRes.data || []).map(r => [r.user_id, r.muted_until || null]));
 
         modalAllStudents.forEach(s => {
-            if (currentSet.has(s.id)) {
+            if (memberMap.has(s.id)) {
                 modalInitialMemberIds.add(s.id);
                 modalSelectedMemberIds.add(s.id);
+                const mUntil = memberMap.get(s.id);
+                modalInitialMutes.set(s.id, isMuteActive(mUntil) ? mUntil : null);
+                modalMuteActions.set(s.id, "keep");
             }
         });
 
@@ -1664,7 +2084,7 @@ async function openMembersModal() {
         if (saveMembersButton) saveMembersButton.disabled = false;
     } catch (error) {
         if (membersChecklist) membersChecklist.innerHTML = `<div class="members-empty">تعذر تحميل الأعضاء.</div>`;
-        showMembersModalMessage(error?.message || "حدث خطأ.", "error");
+        showModalMessage(membersModalMessage, error?.message || "حدث خطأ.", "error");
     }
 }
 
@@ -1681,22 +2101,92 @@ function renderMembersChecklist() {
 
     membersChecklist.innerHTML = "";
     for (const student of filtered) {
-        const label = document.createElement("label");
-        label.className = "member-row";
+        const isChecked = modalSelectedMemberIds.has(student.id);
+        const existingMute = modalInitialMutes.get(student.id) || null;
+        const currentAction = modalMuteActions.get(student.id) || "keep";
+
+        const row = document.createElement("div");
+        row.className = "member-row";
+
+        const leftLabel = document.createElement("label");
+        leftLabel.className = "member-row-left";
+
         const cb = document.createElement("input");
         cb.type = "checkbox";
-        cb.checked = modalSelectedMemberIds.has(student.id);
+        cb.checked = isChecked;
+
+        const info = document.createElement("div");
+        info.className = "member-row-info";
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "member-row-name";
+        nameSpan.textContent = student.display_name || "تلميذ";
+        info.appendChild(nameSpan);
+
+        if (isChecked && existingMute && currentAction === "keep") {
+            const muteBadge = document.createElement("span");
+            muteBadge.className = "member-muted-badge";
+            muteBadge.textContent = `🔇 مكتوم حتى ${formatDate(existingMute)}`;
+            info.appendChild(muteBadge);
+        }
+
+        leftLabel.appendChild(cb);
+        leftLabel.appendChild(info);
+        row.appendChild(leftLabel);
+
+        const controls = document.createElement("div");
+        controls.className = "member-mute-controls";
+
+        const select = document.createElement("select");
+        select.className = "member-mute-select";
+        select.setAttribute("aria-label", `حالة الكتم للتلميذ ${student.display_name || ""}`);
+
+        const isVisuallyMuted =
+            (existingMute && currentAction === "keep") ||
+            ["15m", "1h", "24h", "7d"].includes(currentAction);
+        if (isVisuallyMuted) select.classList.add("is-muted");
+
+        if (!isChecked) select.classList.add("hidden");
+
+        const optionsHtml = existingMute
+            ? `<option value="keep">🔇 إبقاء الكتم الحالي</option>
+               <option value="unmute">🔊 فك الكتم</option>
+               <option value="15m">🔇 كتم 15 دقيقة</option>
+               <option value="1h">🔇 كتم ساعة</option>
+               <option value="24h">🔇 كتم 24 ساعة</option>
+               <option value="7d">🔇 كتم أسبوع</option>`
+            : `<option value="keep">🔊 نشط (بدون كتم)</option>
+               <option value="15m">🔇 كتم 15 دقيقة</option>
+               <option value="1h">🔇 كتم ساعة</option>
+               <option value="24h">🔇 كتم 24 ساعة</option>
+               <option value="7d">🔇 كتم أسبوع</option>`;
+
+        select.innerHTML = optionsHtml;
+        select.value = currentAction;
+
+        select.addEventListener("change", () => {
+            modalMuteActions.set(student.id, select.value);
+            const mutedNow =
+                (existingMute && select.value === "keep") ||
+                ["15m", "1h", "24h", "7d"].includes(select.value);
+            select.classList.toggle("is-muted", mutedNow);
+        });
+
         cb.addEventListener("change", () => {
-            if (cb.checked) modalSelectedMemberIds.add(student.id);
-            else modalSelectedMemberIds.delete(student.id);
+            if (cb.checked) {
+                modalSelectedMemberIds.add(student.id);
+                if (!modalMuteActions.has(student.id)) modalMuteActions.set(student.id, "keep");
+                select.classList.remove("hidden");
+            } else {
+                modalSelectedMemberIds.delete(student.id);
+                select.classList.add("hidden");
+            }
             if (membersCount) membersCount.textContent = `${modalSelectedMemberIds.size} محدد`;
         });
-        const span = document.createElement("span");
-        span.className = "member-row-name";
-        span.textContent = student.display_name || "تلميذ";
-        label.appendChild(cb);
-        label.appendChild(span);
-        membersChecklist.appendChild(label);
+
+        controls.appendChild(select);
+        row.appendChild(controls);
+        membersChecklist.appendChild(row);
     }
 }
 
@@ -1705,13 +2195,28 @@ async function saveGroupMembers() {
 
     const toAdd = [...modalSelectedMemberIds]
         .filter(uid => !modalInitialMemberIds.has(uid))
-        .map(uid => ({ conversation_id: modalConversationId, user_id: uid }));
+        .map(uid => {
+            const action = modalMuteActions.get(uid) || "keep";
+            const muted_until = ["15m", "1h", "24h", "7d"].includes(action)
+                ? computeMuteUntilIso(action)
+                : null;
+            return { conversation_id: modalConversationId, user_id: uid, muted_until };
+        });
+
     const toRemove = [...modalInitialMemberIds].filter(uid => !modalSelectedMemberIds.has(uid));
 
-    if (toAdd.length === 0 && toRemove.length === 0) { closeMembersModal(); return; }
+    const muteUpdates = [...modalSelectedMemberIds]
+        .filter(uid => modalInitialMemberIds.has(uid))
+        .map(uid => ({ uid, action: modalMuteActions.get(uid) || "keep" }))
+        .filter(item => item.action !== "keep");
+
+    if (toAdd.length === 0 && toRemove.length === 0 && muteUpdates.length === 0) {
+        closeMembersModal();
+        return;
+    }
 
     if (saveMembersButton) { saveMembersButton.disabled = true; saveMembersButton.textContent = "جارٍ الحفظ..."; }
-    hideMembersModalMessage();
+    hideModalMessage(membersModalMessage);
 
     try {
         if (toAdd.length > 0) {
@@ -1726,11 +2231,25 @@ async function saveGroupMembers() {
                 .in("user_id", toRemove);
             if (error) throw error;
         }
+        for (const item of muteUpdates) {
+            const nextVal = item.action === "unmute" ? null : computeMuteUntilIso(item.action);
+            const { data, error } = await db
+                .from("conversation_members")
+                .update({ muted_until: nextVal })
+                .eq("conversation_id", modalConversationId)
+                .eq("user_id", item.uid)
+                .select("user_id");
+            if (error) throw error;
+            if (!data || data.length === 0) {
+                throw new Error("تعذر حفظ حالة الكتم — تأكد من إضافة سياسة UPDATE للأستاذ على conversation_members.");
+            }
+        }
+
         modalInitialMemberIds = new Set(modalSelectedMemberIds);
-        showMembersModalMessage("تم تحديث أعضاء القسم بنجاح.", "success");
+        showModalMessage(membersModalMessage, "تم تحديث أعضاء القسم وحالات الكتم بنجاح.", "success");
         setTimeout(closeMembersModal, 700);
     } catch (error) {
-        showMembersModalMessage(error?.message || "تعذر حفظ التغييرات.", "error");
+        showModalMessage(membersModalMessage, error?.message || "تعذر حفظ التغييرات.", "error");
     } finally {
         if (saveMembersButton) { saveMembersButton.disabled = false; saveMembersButton.textContent = "حفظ التغييرات"; }
     }
@@ -1739,25 +2258,11 @@ async function saveGroupMembers() {
 function closeMembersModal() {
     membersModal?.classList.add("hidden");
     modalConversationId = null;
-    hideMembersModalMessage();
-}
-
-function showMembersModalMessage(text, type = "error") {
-    if (!membersModalMessage) return;
-    membersModalMessage.textContent = text;
-    membersModalMessage.classList.remove("hidden", "error", "success");
-    membersModalMessage.classList.add(type);
-}
-
-function hideMembersModalMessage() {
-    if (!membersModalMessage) return;
-    membersModalMessage.textContent = "";
-    membersModalMessage.classList.add("hidden");
-    membersModalMessage.classList.remove("error", "success");
+    hideModalMessage(membersModalMessage);
 }
 
 /* =========================================================
-   MINI-QUIZ / POLL MODAL (ADMIN) & VOTING
+   MINI-QUIZ / POLL MODAL, VOTING & PARTICIPANTS DETAILS
 ========================================================= */
 
 function openPollModal() {
@@ -1766,27 +2271,14 @@ function openPollModal() {
     pollModal.querySelectorAll(".poll-option-input").forEach(inp => { inp.value = ""; });
     const noneRadio = pollModal.querySelector('input[name="pollCorrect"][value="-1"]');
     if (noneRadio) noneRadio.checked = true;
-    hidePollModalMessage();
+    hideModalMessage(pollModalMessage);
     pollModal.classList.remove("hidden");
     pollQuestionInput?.focus();
 }
 
 function closePollModal() {
     pollModal?.classList.add("hidden");
-    hidePollModalMessage();
-}
-
-function showPollModalMessage(text) {
-    if (!pollModalMessage) return;
-    pollModalMessage.textContent = text;
-    pollModalMessage.classList.remove("hidden", "success");
-    pollModalMessage.classList.add("error");
-}
-
-function hidePollModalMessage() {
-    if (!pollModalMessage) return;
-    pollModalMessage.textContent = "";
-    pollModalMessage.classList.add("hidden");
+    hideModalMessage(pollModalMessage);
 }
 
 async function submitNewPoll() {
@@ -1808,11 +2300,11 @@ async function submitNewPoll() {
         }
     });
 
-    if (!question) { showPollModalMessage("اكتب نص السؤال أولًا."); return; }
-    if (options.length < 2) { showPollModalMessage("أدخل خيارين على الأقل."); return; }
+    if (!question) { showModalMessage(pollModalMessage, "اكتب نص السؤال أولًا.", "error"); return; }
+    if (options.length < 2) { showModalMessage(pollModalMessage, "أدخل خيارين على الأقل.", "error"); return; }
 
     if (sendPollButton) { sendPollButton.disabled = true; sendPollButton.textContent = "جارٍ النشر..."; }
-    hidePollModalMessage();
+    hideModalMessage(pollModalMessage);
 
     try {
         const payload = {
@@ -1843,7 +2335,7 @@ async function submitNewPoll() {
         }
     } catch (error) {
         console.error("Create poll error:", error);
-        showPollModalMessage(error?.message || "تعذر نشر الاختبار.");
+        showModalMessage(pollModalMessage, error?.message || "تعذر نشر الاختبار.", "error");
     } finally {
         if (sendPollButton) { sendPollButton.disabled = false; sendPollButton.textContent = "نشر الاختبار"; }
     }
@@ -1885,12 +2377,13 @@ function buildPollCardElement(message) {
     const options = Array.isArray(data.options) ? data.options : [];
     const correctIndex = Number.isInteger(data.correct_index) ? data.correct_index : -1;
     const isQuiz = correctIndex >= 0;
+    const isAdmin = currentProfile?.role === "admin";
 
     const votes = pollVotesCache.get(String(message.id)) || [];
     const totalVotes = votes.length;
     const myVote = votes.find(v => v.user_id === currentUser?.id);
     const hasVoted = Boolean(myVote);
-    const showResults = hasVoted || currentProfile?.role === "admin";
+    const showResults = hasVoted || isAdmin;
     const revealCorrect = isQuiz && showResults;
 
     const counts = options.map(() => 0);
@@ -1961,8 +2454,117 @@ function buildPollCardElement(message) {
         `<span>${hasVoted ? "تم التصويت" : "اضغط للتصويت"}</span>`;
     card.appendChild(meta);
 
+    // زر تفاصيل المشاركين للأستاذ فقط
+    if (isAdmin) {
+        const detailsBtn = document.createElement("button");
+        detailsBtn.type = "button";
+        detailsBtn.className = "poll-participants-btn";
+        detailsBtn.textContent = "👥 عرض المشاركين وتفاصيل الإجابات";
+        detailsBtn.addEventListener("click", e => {
+            e.preventDefault();
+            e.stopPropagation();
+            openPollResultsModal(message);
+        });
+        card.appendChild(detailsBtn);
+    }
+
     return card;
 }
+
+async function openPollResultsModal(message) {
+    if (!db || !pollResultsModal || currentProfile?.role !== "admin" || !message?.id) return;
+
+    const data = message.poll_data || {};
+    const options = Array.isArray(data.options) ? data.options : [];
+    const correctIndex = Number.isInteger(data.correct_index) ? data.correct_index : -1;
+    const isQuiz = correctIndex >= 0;
+
+    if (pollResultsModalTitle) {
+        pollResultsModalTitle.textContent = isQuiz ? "تفاصيل إجابات الاختبار" : "تفاصيل المشاركين في الاستطلاع";
+    }
+    if (pollResultsSummary) pollResultsSummary.innerHTML = "";
+    if (pollResultsList) pollResultsList.innerHTML = `<div class="members-empty">جارٍ تحميل إجابات التلاميذ...</div>`;
+
+    pollResultsModal.classList.remove("hidden");
+
+    try {
+        const { data: votes, error } = await db
+            .from("poll_votes")
+            .select("user_id, option_index, created_at")
+            .eq("message_id", message.id)
+            .order("created_at", { ascending: true });
+
+        if (error) throw error;
+
+        const allVotes = Array.isArray(votes) ? votes : [];
+        pollVotesCache.set(String(message.id), allVotes);
+
+        const total = allVotes.length;
+        const correctCount = isQuiz ? allVotes.filter(v => v.option_index === correctIndex).length : 0;
+        const wrongCount = isQuiz ? total - correctCount : 0;
+        const accuracy = isQuiz && total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+        if (pollResultsSummary) {
+            pollResultsSummary.innerHTML = isQuiz
+                ? `<span class="poll-stat-pill">👥 المشاركون: ${total}</span>
+                   <span class="poll-stat-pill correct">✅ صحيح: ${correctCount} (${accuracy}%)</span>
+                   <span class="poll-stat-pill wrong">❌ خطأ: ${wrongCount}</span>`
+                : `<span class="poll-stat-pill">👥 إجمالي المصوّتين: ${total}</span>`;
+        }
+
+        if (pollResultsList) pollResultsList.innerHTML = "";
+
+        for (let idx = 0; idx < options.length; idx++) {
+            const optVotes = allVotes.filter(v => v.option_index === idx);
+            const pct = total > 0 ? Math.round((optVotes.length / total) * 100) : 0;
+            const isCorrectOption = isQuiz && idx === correctIndex;
+
+            const group = document.createElement("div");
+            group.className = `poll-result-group${isCorrectOption ? " is-correct" : ""}`;
+
+            const header = document.createElement("div");
+            header.className = "poll-result-group-header";
+            header.innerHTML = `
+                <span>${isCorrectOption ? "✅ " : ""}${escapeHtml(options[idx])}</span>
+                <span class="poll-result-count">${optVotes.length} (${pct}%)</span>
+            `;
+            group.appendChild(header);
+
+            const votersWrap = document.createElement("div");
+            votersWrap.className = "poll-result-voters";
+
+            if (optVotes.length === 0) {
+                votersWrap.innerHTML = `<div class="poll-result-empty">لم يختر أحد هذا الخيار.</div>`;
+            } else {
+                for (const vote of optVotes) {
+                    const prof = await getProfile(vote.user_id);
+                    const name = prof?.display_name || "عضو";
+                    const voterEl = document.createElement("div");
+                    voterEl.className = "poll-result-voter";
+                    voterEl.innerHTML = `
+                        <div class="reader-avatar" style="background:${getAvatarColor(name)}">${escapeHtml(getInitial(name))}</div>
+                        <div class="reader-info">
+                            <span class="reader-name">${escapeHtml(name)}</span>
+                            <span class="reader-time">${escapeHtml(vote.created_at ? formatDate(vote.created_at) : "")}</span>
+                        </div>
+                    `;
+                    votersWrap.appendChild(voterEl);
+                }
+            }
+
+            group.appendChild(votersWrap);
+            pollResultsList.appendChild(group);
+        }
+    } catch (error) {
+        console.error("Load poll results error:", error);
+        if (pollResultsList) pollResultsList.innerHTML = `<div class="members-empty">تعذر تحميل تفاصيل الإجابات.</div>`;
+    }
+}
+
+function closePollResultsModal() {
+    pollResultsModal?.classList.add("hidden");
+}
+
 /* =========================================================
    SECTION ARCHIVE MODAL (FULL CONVERSATION QUERY)
 ========================================================= */
@@ -2337,7 +2939,6 @@ async function loadOlderMessages() {
         currentMessages = [...older, ...currentMessages];
         oldestLoadedTimestamp = older[0]?.created_at || oldestLoadedTimestamp;
 
-        // إعادة رسم القائمة المرتبة مع الحفاظ على موقع التمرير
         messagesContainer.innerHTML = "";
         renderLoadOlderButton();
 
@@ -2668,7 +3269,6 @@ async function renderMessage(message, options = {}) {
 
         bubble.appendChild(content);
 
-        // التذييل: مُعدّلة + التوقيت + علامات القراءة
         const footer = document.createElement("div");
         footer.className = "message-footer";
 
@@ -2709,6 +3309,7 @@ async function renderMessage(message, options = {}) {
                 event.target.closest(".message-reply") ||
                 event.target.closest(".message-file-card") ||
                 event.target.closest(".poll-option-btn") ||
+                event.target.closest(".poll-participants-btn") ||
                 event.target.closest("audio") ||
                 event.target.closest("img")
             ) {
@@ -2716,13 +3317,13 @@ async function renderMessage(message, options = {}) {
             }
             event.preventDefault();
             event.stopPropagation();
-            openMessageMenu(message, event.clientX, event.clientY);
+            openMessageMenu(message, event.clientX, event.clientY, sender);
         });
 
         bubble.addEventListener("contextmenu", event => {
             event.preventDefault();
             event.stopPropagation();
-            openMessageMenu(message, event.clientX, event.clientY);
+            openMessageMenu(message, event.clientX, event.clientY, sender);
         });
 
         wrapper.appendChild(bubble);
@@ -2760,7 +3361,7 @@ function closeImageLightbox() {
     document.querySelector(".image-lightbox")?.remove();
 }
 
-function openMessageMenu(message, x, y) {
+function openMessageMenu(message, x, y, senderProfile = null) {
     closeContextMenu();
     closeAllReactionPickers();
 
@@ -2772,14 +3373,22 @@ function openMessageMenu(message, x, y) {
     const canEdit = isMine && message.message_type === "text";
     const canDelete = isMine || isAdmin;
     const pinned = isPinnedMessage(message);
+    const canQuickMute =
+        isAdmin &&
+        currentConversation?.type === "group" &&
+        !isMine &&
+        senderProfile?.role === "customer";
 
     contextMenu.innerHTML = `
         <button type="button" data-action="copy">نسخ</button>
         <button type="button" data-action="reply">رد</button>
         <button type="button" data-action="reaction">تفاعل</button>
         ${canEdit ? `<button type="button" data-action="edit">تعديل الرسالة</button>` : ""}
+        ${isAdmin && message.message_type === "poll" ? `<button type="button" data-action="poll-results">👥 تفاصيل إجابات الاختبار</button>` : ""}
         ${isAdmin ? `<button type="button" data-action="pin">${pinned ? "فك التثبيت للجميع" : "تثبيت الرسالة للجميع"}</button>` : ""}
         ${isAdmin ? `<button type="button" data-action="readers">👁️ من قرأ الرسالة؟</button>` : ""}
+        ${canQuickMute ? `<button type="button" data-action="mute-1h">🔇 كتم ${escapeHtml(senderProfile.display_name || "التلميذ")} (ساعة)</button>` : ""}
+        ${canQuickMute ? `<button type="button" data-action="mute-24h">🔇 كتم ${escapeHtml(senderProfile.display_name || "التلميذ")} (24 ساعة)</button>` : ""}
         ${canDelete ? `<button type="button" data-action="delete" class="danger">حذف</button>` : ""}
     `;
 
@@ -2797,6 +3406,9 @@ function openMessageMenu(message, x, y) {
     contextMenu.querySelector('[data-action="edit"]')?.addEventListener("click", e => {
         e.preventDefault(); e.stopPropagation(); closeContextMenu(); startEdit(message);
     });
+    contextMenu.querySelector('[data-action="poll-results"]')?.addEventListener("click", e => {
+        e.preventDefault(); e.stopPropagation(); closeContextMenu(); openPollResultsModal(message);
+    });
     contextMenu.querySelector('[data-action="pin"]')?.addEventListener("click", e => {
         e.preventDefault(); e.stopPropagation(); closeContextMenu();
         if (isPinnedMessage(message)) unpinMessage(currentConversation?.id);
@@ -2804,6 +3416,14 @@ function openMessageMenu(message, x, y) {
     });
     contextMenu.querySelector('[data-action="readers"]')?.addEventListener("click", e => {
         e.preventDefault(); e.stopPropagation(); closeContextMenu(); openReadersModal(message);
+    });
+    contextMenu.querySelector('[data-action="mute-1h"]')?.addEventListener("click", e => {
+        e.preventDefault(); e.stopPropagation(); closeContextMenu();
+        quickMuteStudent(message.sender_id, senderProfile?.display_name || "التلميذ", "1h");
+    });
+    contextMenu.querySelector('[data-action="mute-24h"]')?.addEventListener("click", e => {
+        e.preventDefault(); e.stopPropagation(); closeContextMenu();
+        quickMuteStudent(message.sender_id, senderProfile?.display_name || "التلميذ", "24h");
     });
     contextMenu.querySelector('[data-action="delete"]')?.addEventListener("click", e => {
         e.preventDefault(); e.stopPropagation(); closeContextMenu(); deleteMessage(message);
@@ -2914,18 +3534,19 @@ async function sendMessage(event) {
     event?.preventDefault();
     if (!db || !currentUser || !currentConversation) return;
 
-    if (
-        currentProfile?.role !== "admin" &&
-        currentConversation.type === "group" &&
-        currentConversation.is_locked
-    ) {
-        showChatError("هذه المحادثة في وضع الإعلانات حاليًا.");
-        return;
+    if (currentProfile?.role !== "admin" && currentConversation.type === "group") {
+        if (currentConversation.is_locked) {
+            showChatError("هذه المحادثة في وضع الإعلانات حاليًا.");
+            return;
+        }
+        if (isMuteActive(currentUserMutedUntil)) {
+            showChatError("حسابك مكتوم مؤقتًا في هذا القسم.");
+            return;
+        }
     }
 
     const text = messageInput?.value?.trim() || "";
 
-    // حفظ تعديل رسالة قائمة
     if (editingMessage) {
         if (!text) { cancelEdit(); return; }
         setMessageSending(true);
@@ -3350,7 +3971,7 @@ async function refreshRenderedMessage(messageId) {
 }
 
 /* =========================================================
-   SHARED PINNED MESSAGES (STORED IN SUPABASE FOR EVERYONE)
+   SHARED PINNED MESSAGES (SUPABASE)
 ========================================================= */
 
 function isPinnedMessage(message) {
@@ -3456,7 +4077,7 @@ function scrollToMessage(messageId) {
 }
 
 /* =========================================================
-   REALTIME (MESSAGES, READS, POLLS, PINS, TYPING & SOUND)
+   REALTIME (MESSAGES, READS, POLLS, PINS, SETTINGS, MUTE)
 ========================================================= */
 
 async function subscribeGlobalRealtime() {
@@ -3484,6 +4105,22 @@ async function subscribeGlobalRealtime() {
             if (String(currentConversation?.id) !== convId) {
                 unreadCounts.set(convId, (unreadCounts.get(convId) || 0) + 1);
                 renderUnreadBadges();
+            }
+        }
+    );
+
+    channel.on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "app_settings" },
+        payload => {
+            const rec = payload?.new;
+            if (!rec?.key) return;
+            if (rec.key === "word_of_day") {
+                wordOfDayData = rec.value || null;
+                renderWordOfDayCard();
+            } else if (rec.key === "bac_countdown") {
+                bacCountdownData = rec.value || null;
+                renderBacCountdownBanner();
             }
         }
     );
@@ -3566,6 +4203,17 @@ async function subscribeRealtime(conversationId) {
                 currentConversation.pinned_message_id = updated.pinned_message_id || null;
                 await restorePinnedMessage(currentConversation);
             }
+        }
+    );
+
+    channel.on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "conversation_members", filter: `conversation_id=eq.${conversationId}` },
+        payload => {
+            const rec = payload?.new;
+            if (!rec || rec.user_id !== currentUser?.id) return;
+            setCurrentUserMutedUntil(rec.muted_until || null);
+            applyConversationLockUI(Boolean(currentConversation?.is_locked));
         }
     );
 
@@ -3765,6 +4413,20 @@ function formatDate(value) {
     }
 }
 
+function showModalMessage(el, text, type = "error") {
+    if (!el) return;
+    el.textContent = text;
+    el.classList.remove("hidden", "error", "success");
+    el.classList.add(type);
+}
+
+function hideModalMessage(el) {
+    if (!el) return;
+    el.textContent = "";
+    el.classList.add("hidden");
+    el.classList.remove("error", "success");
+}
+
 function setLoginLoading(loading) {
     if (!loginButton) return;
     loginButton.disabled = loading;
@@ -3803,6 +4465,18 @@ function showChatError(message) {
     messagesContainer.appendChild(el);
     scrollMessagesToBottom();
     setTimeout(() => el.remove(), 5000);
+}
+
+function showChatInfo(message) {
+    if (!messagesContainer) return;
+    const el = document.createElement("div");
+    el.className = "chat-error";
+    el.style.color = "var(--wa-teal)";
+    el.style.borderColor = "rgba(0, 168, 132, 0.35)";
+    el.textContent = message || "";
+    messagesContainer.appendChild(el);
+    scrollMessagesToBottom();
+    setTimeout(() => el.remove(), 4000);
 }
 
 function isNearBottom() {
@@ -3864,6 +4538,7 @@ function authMessage(error) {
 
 window.addEventListener("beforeunload", () => {
     try { clearLocalTyping(); } catch {}
+    try { clearMuteExpireTimer(); } catch {}
     try { recordingStream?.getTracks().forEach(t => t.stop()); } catch {}
     try { if (activeRealtimeChannel && db) db.removeChannel(activeRealtimeChannel); } catch {}
     try { if (globalRealtimeChannel && db) db.removeChannel(globalRealtimeChannel); } catch {}
