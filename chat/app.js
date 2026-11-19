@@ -12,9 +12,12 @@ let currentConversation = null;
 
 let conversations = [];
 let customers = [];
+let currentMessages = [];
 
 const profileCache = new Map();
 const reactionCache = new Map();
+const readCache = new Map(); // Map<messageId, Set<userId>>
+const unreadCounts = new Map(); // Map<conversationId, number>
 const renderingMessageIds = new Set();
 
 const GROUP_CONFIG = {
@@ -30,8 +33,19 @@ const GROUP_CONFIG = {
     }
 };
 
+const MESSAGE_TAGS = {
+    lesson: { label: "📖 درس", className: "tag-lesson" },
+    exercise: { label: "✍️ تمرين", className: "tag-exercise" },
+    pronunciation: { label: "🎧 نطق", className: "tag-pronunciation" },
+    announcement: { label: "📢 إعلان", className: "tag-announcement" }
+};
+
+// تفاعلات تعليمية + اجتماعية
+const REACTIONS = ["✅", "❓", "👏", "📌", "👍", "❤️"];
+
 let replyingToMessage = null;
-let selectedImage = null;
+let selectedFile = null;
+let selectedTag = "";
 
 let mediaRecorder = null;
 let recordingChunks = [];
@@ -40,6 +54,7 @@ let recordingStream = null;
 let contextMenu = null;
 
 let activeRealtimeChannel = null;
+let globalRealtimeChannel = null;
 let authSubscription = null;
 let messageSyncTimer = null;
 let messageSyncInProgress = false;
@@ -48,11 +63,29 @@ let initialized = false;
 let startingApplicationPromise = null;
 let startingApplicationUserId = null;
 
-// حالة نافذة إدارة أعضاء القسم
+// حالة نافذة الأعضاء
 let modalConversationId = null;
 let modalInitialMemberIds = new Set();
 let modalSelectedMemberIds = new Set();
 let modalAllStudents = [];
+
+// حالة الأرشيف
+let currentArchiveFilter = "file";
+
+const MIC_SVG = `
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        <line x1="12" y1="19" x2="12" y2="23"></line>
+        <line x1="8" y1="23" x2="16" y2="23"></line>
+    </svg>
+`;
+
+const STOP_SVG = `
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+        <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+    </svg>
+`;
 
 /* =========================================================
    DOM REFERENCES
@@ -76,15 +109,21 @@ let conversationSubtitle = null;
 let conversationList = null;
 let customersList = null;
 let messagesContainer = null;
+let lockedBanner = null;
 
 let messageForm = null;
 let messageInput = null;
 let sendButton = null;
 
-let imageInput = null;
-let imageButton = null;
+let fileInput = null;
+let fileButton = null;
 let filePreview = null;
 let recordButton = null;
+
+let spanishToggleButton = null;
+let spanishBar = null;
+let tagToggleButton = null;
+let tagBar = null;
 
 let replyPreview = null;
 let replyPreviewSender = null;
@@ -95,8 +134,10 @@ let logoutButton = null;
 let groupsSectionTitle = null;
 let groupButtons = [];
 
-// عناصر إدارة الأعضاء
+let archiveButton = null;
+let lockChatButton = null;
 let manageMembersButton = null;
+
 let membersModal = null;
 let membersModalTitle = null;
 let membersModalClose = null;
@@ -106,6 +147,12 @@ let membersChecklist = null;
 let membersModalMessage = null;
 let saveMembersButton = null;
 let cancelMembersButton = null;
+
+let archiveModal = null;
+let archiveModalTitle = null;
+let archiveModalClose = null;
+let archiveTabs = null;
+let archiveList = null;
 
 /* =========================================================
    INITIALIZATION
@@ -131,10 +178,6 @@ async function initialize() {
     }
 }
 
-/* =========================================================
-   DOM
-========================================================= */
-
 function cacheDomElements() {
     loginScreen = document.getElementById("loginScreen");
     loginBox = document.querySelector(".login-box");
@@ -154,15 +197,21 @@ function cacheDomElements() {
     conversationList = document.getElementById("conversationList");
     customersList = document.getElementById("customersList");
     messagesContainer = document.getElementById("messages");
+    lockedBanner = document.getElementById("lockedBanner");
 
     messageForm = document.getElementById("messageForm");
     messageInput = document.getElementById("messageInput");
     sendButton = document.querySelector("#messageForm .send-button");
 
-    imageInput = document.getElementById("imageInput");
-    imageButton = document.getElementById("imageButton");
+    fileInput = document.getElementById("imageInput");
+    fileButton = document.getElementById("imageButton");
     filePreview = document.getElementById("filePreview");
     recordButton = document.getElementById("recordButton");
+
+    spanishToggleButton = document.getElementById("spanishToggleButton");
+    spanishBar = document.getElementById("spanishBar");
+    tagToggleButton = document.getElementById("tagToggleButton");
+    tagBar = document.getElementById("tagBar");
 
     replyPreview = document.getElementById("replyPreview");
     replyPreviewSender = document.getElementById("replyPreviewSender");
@@ -173,7 +222,10 @@ function cacheDomElements() {
     groupsSectionTitle = document.getElementById("groupsSectionTitle");
     groupButtons = Array.from(document.querySelectorAll(".group-button[data-group-key]"));
 
+    archiveButton = document.getElementById("archiveButton");
+    lockChatButton = document.getElementById("lockChatButton");
     manageMembersButton = document.getElementById("manageMembersButton");
+
     membersModal = document.getElementById("membersModal");
     membersModalTitle = document.getElementById("membersModalTitle");
     membersModalClose = document.getElementById("membersModalClose");
@@ -183,6 +235,12 @@ function cacheDomElements() {
     membersModalMessage = document.getElementById("membersModalMessage");
     saveMembersButton = document.getElementById("saveMembersButton");
     cancelMembersButton = document.getElementById("cancelMembersButton");
+
+    archiveModal = document.getElementById("archiveModal");
+    archiveModalTitle = document.getElementById("archiveModalTitle");
+    archiveModalClose = document.getElementById("archiveModalClose");
+    archiveTabs = document.getElementById("archiveTabs");
+    archiveList = document.getElementById("archiveList");
 }
 
 function validateRequiredDom() {
@@ -208,25 +266,21 @@ function validateRequiredDom() {
     }
 }
 
-/* =========================================================
-   SUPABASE
-========================================================= */
-
 function initializeSupabase() {
     const supabaseApi = window.supabase;
     if (!supabaseApi || typeof supabaseApi.createClient !== "function") {
-        throw new Error("لم يتم تحميل مكتبة Supabase. تأكد من إضافة supabase-js قبل app.js.");
+        throw new Error("لم يتم تحميل مكتبة Supabase.");
     }
 
     const supabaseUrl = window.SUPABASE_URL;
     const supabaseAnonKey = window.SUPABASE_ANON_KEY;
 
     if (typeof supabaseUrl !== "string" || !supabaseUrl.trim()) {
-        throw new Error("SUPABASE_URL غير موجود. تأكد من ملف config.js.");
+        throw new Error("SUPABASE_URL غير موجود.");
     }
 
     if (typeof supabaseAnonKey !== "string" || !supabaseAnonKey.trim()) {
-        throw new Error("SUPABASE_ANON_KEY غير موجود. تأكد من ملف config.js.");
+        throw new Error("SUPABASE_ANON_KEY غير موجود.");
     }
 
     db = supabaseApi.createClient(supabaseUrl.trim(), supabaseAnonKey.trim());
@@ -256,34 +310,84 @@ function bindEvents() {
         }
     });
 
-    imageButton?.addEventListener("click", event => {
-        if (imageButton.tagName.toLowerCase() === "label") return;
+    fileButton?.addEventListener("click", event => {
+        if (fileButton.tagName.toLowerCase() === "label") return;
         event.preventDefault();
-        imageInput?.click();
+        fileInput?.click();
     });
 
-    imageInput?.addEventListener("change", handleImageSelection);
+    fileInput?.addEventListener("change", handleFileSelection);
     recordButton?.addEventListener("click", toggleRecording);
     cancelReplyButton?.addEventListener("click", cancelReply);
     logoutButton?.addEventListener("click", logout);
 
+    // شريط الأحرف الإسبانية
+    spanishToggleButton?.addEventListener("click", () => {
+        const isHidden = spanishBar?.classList.toggle("hidden");
+        spanishToggleButton.classList.toggle("active", !isHidden);
+        if (!isHidden) {
+            tagBar?.classList.add("hidden");
+            tagToggleButton?.classList.remove("active");
+        }
+        messageInput?.focus();
+    });
+
+    spanishBar?.addEventListener("click", event => {
+        const keyBtn = event.target.closest(".spanish-key");
+        if (!keyBtn) return;
+        insertTextAtCursor(keyBtn.dataset.char || "");
+    });
+
+    // شريط وسوم الأستاذ
+    tagToggleButton?.addEventListener("click", () => {
+        const isHidden = tagBar?.classList.toggle("hidden");
+        tagToggleButton.classList.toggle("active", !isHidden || Boolean(selectedTag));
+        if (!isHidden) {
+            spanishBar?.classList.add("hidden");
+            spanishToggleButton?.classList.remove("active");
+        }
+    });
+
+    tagBar?.addEventListener("click", event => {
+        const chip = event.target.closest(".tag-chip");
+        if (!chip) return;
+        setSelectedTag(chip.dataset.tag || "");
+    });
+
+    // أزرار الأقسام
     groupButtons.forEach(button => {
         button.addEventListener("click", () => {
             openGroupConversation(button.dataset.groupKey);
         });
     });
 
-    // أحداث نافذة إدارة الأعضاء
+    // قفل المحادثة
+    lockChatButton?.addEventListener("click", toggleConversationLock);
+
+    // إدارة الأعضاء
     manageMembersButton?.addEventListener("click", openMembersModal);
     membersModalClose?.addEventListener("click", closeMembersModal);
     cancelMembersButton?.addEventListener("click", closeMembersModal);
     saveMembersButton?.addEventListener("click", saveGroupMembers);
     membersSearchInput?.addEventListener("input", renderMembersChecklist);
+    membersModal?.addEventListener("click", e => {
+        if (e.target === membersModal) closeMembersModal();
+    });
 
-    membersModal?.addEventListener("click", event => {
-        if (event.target === membersModal) {
-            closeMembersModal();
-        }
+    // أرشيف القسم
+    archiveButton?.addEventListener("click", openArchiveModal);
+    archiveModalClose?.addEventListener("click", closeArchiveModal);
+    archiveModal?.addEventListener("click", e => {
+        if (e.target === archiveModal) closeArchiveModal();
+    });
+    archiveTabs?.addEventListener("click", event => {
+        const tab = event.target.closest(".archive-tab");
+        if (!tab) return;
+        currentArchiveFilter = tab.dataset.filter || "file";
+        archiveTabs.querySelectorAll(".archive-tab").forEach(btn => {
+            btn.classList.toggle("active", btn === tab);
+        });
+        renderArchiveItems();
     });
 
     document.addEventListener("click", handleDocumentClick);
@@ -294,6 +398,7 @@ function bindEvents() {
             closeAllReactionPickers();
             closeImageLightbox();
             closeMembersModal();
+            closeArchiveModal();
         }
     });
 
@@ -322,6 +427,29 @@ function handleDocumentClick(event) {
     }
 }
 
+function insertTextAtCursor(char) {
+    if (!messageInput || !char) return;
+    const start = messageInput.selectionStart ?? messageInput.value.length;
+    const end = messageInput.selectionEnd ?? messageInput.value.length;
+    const value = messageInput.value;
+
+    messageInput.value = value.slice(0, start) + char + value.slice(end);
+    const nextPos = start + char.length;
+    messageInput.focus();
+    messageInput.setSelectionRange(nextPos, nextPos);
+}
+
+function setSelectedTag(tag) {
+    selectedTag = tag || "";
+    tagBar?.querySelectorAll(".tag-chip").forEach(chip => {
+        chip.classList.toggle("active", (chip.dataset.tag || "") === selectedTag);
+    });
+    if (tagToggleButton) {
+        const barOpen = !tagBar?.classList.contains("hidden");
+        tagToggleButton.classList.toggle("active", Boolean(selectedTag) || barOpen);
+    }
+}
+
 /* =========================================================
    AUTH
 ========================================================= */
@@ -337,9 +465,7 @@ async function initializeAuth() {
             }
 
             if (event === "SIGNED_IN" && session?.user) {
-                if (loginBox?.dataset.passwordRecovery === "true") {
-                    return;
-                }
+                if (loginBox?.dataset.passwordRecovery === "true") return;
                 startApplication(session.user).catch(error => {
                     console.error("startApplication error:", error);
                 });
@@ -364,10 +490,6 @@ async function initializeAuth() {
         window.showLoginScreen();
     }
 }
-
-/* =========================================================
-   LOGIN / LOGOUT / PASSWORD RESET
-========================================================= */
 
 async function login() {
     if (!db) {
@@ -403,7 +525,6 @@ async function login() {
         const { data, error } = await db.auth.signInWithPassword({ email, password });
         if (error) throw error;
         if (!data?.user) throw new Error("تعذر تسجيل الدخول.");
-
         await startApplication(data.user);
     } catch (error) {
         console.error("Login error:", error);
@@ -415,7 +536,6 @@ async function login() {
 
 async function logout() {
     if (!db) return;
-
     try {
         const { error } = await db.auth.signOut();
         if (error) throw error;
@@ -432,14 +552,9 @@ async function sendPasswordReset() {
     }
 
     const email = emailInput?.value?.trim() || "";
-    if (!email) {
-        showLoginError("أدخل البريد الإلكتروني أولًا.");
+    if (!email || !isValidEmail(email)) {
+        showLoginError("أدخل بريدًا إلكترونيًا صحيحًا أولًا.");
         emailInput?.focus();
-        return;
-    }
-
-    if (!isValidEmail(email)) {
-        showLoginError("أدخل بريدًا إلكترونيًا صحيحًا.");
         return;
     }
 
@@ -450,7 +565,6 @@ async function sendPasswordReset() {
             redirectTo: `${window.location.origin}${window.location.pathname}`
         });
         if (error) throw error;
-
         showLoginSuccess("تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.");
     } catch (error) {
         console.error("Password reset error:", error);
@@ -488,7 +602,6 @@ function showPasswordUpdateScreen() {
             if (updateError) updateError.textContent = "كلمة المرور يجب أن تحتوي على 6 أحرف على الأقل.";
             return;
         }
-
         if (password !== confirm) {
             if (updateError) updateError.textContent = "كلمتا المرور غير متطابقتين.";
             return;
@@ -502,7 +615,6 @@ function showPasswordUpdateScreen() {
         try {
             const { error } = await db.auth.updateUser({ password });
             if (error) throw error;
-
             delete loginBox.dataset.passwordRecovery;
             await db.auth.signOut();
             window.location.reload();
@@ -517,9 +629,9 @@ function showPasswordUpdateScreen() {
     };
 
     updateButton?.addEventListener("click", updatePassword);
-    confirmPassword?.addEventListener("keydown", event => {
-        if (event.key === "Enter") {
-            event.preventDefault();
+    confirmPassword?.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
             updatePassword();
         }
     });
@@ -554,19 +666,23 @@ async function startApplication(user) {
                 .maybeSingle();
 
             if (error) throw error;
-
             if (!profile) {
-                throw new Error("تم تسجيل الدخول بنجاح، لكن لم يتم العثور على ملف المستخدم في جدول profiles.");
+                throw new Error("لم يتم العثور على ملف المستخدم في جدول profiles.");
             }
 
             currentUser = user;
             currentProfile = profile;
             profileCache.set(user.id, profile);
 
+            // إظهار زر الوسوم للأستاذ فقط
+            tagToggleButton?.classList.toggle("hidden", profile.role !== "admin");
+
             window.showAppScreen();
 
             await loadConversations();
             await loadCustomers();
+            await loadUnreadCounts();
+            await subscribeGlobalUnread();
 
             if (currentProfile.role === "customer") {
                 const assignedGroup = conversations.find(c => c.type === "group");
@@ -588,12 +704,7 @@ async function startApplication(user) {
             currentProfile = null;
             window.showLoginScreen();
             showLoginError(error?.message || "تعذر تحميل بيانات المستخدم.");
-
-            try {
-                await db.auth.signOut();
-            } catch (signOutError) {
-                console.error(signOutError);
-            }
+            try { await db.auth.signOut(); } catch (e) { console.error(e); }
         }
     })();
 
@@ -619,7 +730,9 @@ window.showLoginScreen = function () {
     currentConversation = null;
     removePinnedBanner();
     manageMembersButton?.classList.add("hidden");
+    lockChatButton?.classList.add("hidden");
     closeMembersModal();
+    closeArchiveModal();
 };
 
 function resetApplication() {
@@ -629,19 +742,24 @@ function resetApplication() {
     currentProfile = null;
     conversations = [];
     customers = [];
+    currentMessages = [];
 
     profileCache.clear();
     reactionCache.clear();
+    readCache.clear();
+    unreadCounts.clear();
     renderingMessageIds.clear();
 
     currentConversation = null;
     replyingToMessage = null;
-    selectedImage = null;
+    selectedFile = null;
+    setSelectedTag("");
 
     closeContextMenu();
     closeAllReactionPickers();
     closeImageLightbox();
     closeMembersModal();
+    closeArchiveModal();
     cleanupRecording();
     cancelReply();
     clearFilePreview();
@@ -649,6 +767,10 @@ function resetApplication() {
     if (activeRealtimeChannel && db) {
         db.removeChannel(activeRealtimeChannel);
         activeRealtimeChannel = null;
+    }
+    if (globalRealtimeChannel && db) {
+        db.removeChannel(globalRealtimeChannel);
+        globalRealtimeChannel = null;
     }
 
     renderEmptyState();
@@ -659,12 +781,16 @@ function resetApplication() {
     });
     groupsSectionTitle?.classList.add("hidden");
     manageMembersButton?.classList.add("hidden");
+    lockChatButton?.classList.add("hidden");
+    tagToggleButton?.classList.add("hidden");
+    tagBar?.classList.add("hidden");
+    spanishBar?.classList.add("hidden");
+    lockedBanner?.classList.add("hidden");
 
-    if (conversationList) conversationList.innerHTML = "";
     if (customersList) customersList.innerHTML = "";
     if (conversationTitle) conversationTitle.textContent = "فضاء الإسبانية";
     if (conversationSubtitle) conversationSubtitle.textContent = "الأستاذ عبد الكريم";
-    if (chatAvatar) chatAvatar.textContent = "👥";
+    if (chatAvatar) chatAvatar.textContent = "🎓";
 
     window.showLoginScreen();
 }
@@ -681,13 +807,134 @@ function renderEmptyState() {
 }
 
 /* =========================================================
-   CONVERSATIONS & GROUP VISIBILITY
+   UNREAD COUNTS & MESSAGE READS
+========================================================= */
+
+async function loadUnreadCounts() {
+    if (!db || !currentUser) return;
+
+    const { data, error } = await db.rpc("get_unread_counts");
+    if (error) {
+        console.warn("Load unread counts warning:", error);
+        return;
+    }
+
+    unreadCounts.clear();
+    (data || []).forEach(row => {
+        const count = Number(row.unread_count) || 0;
+        if (count > 0) {
+            unreadCounts.set(String(row.conversation_id), count);
+        }
+    });
+
+    renderUnreadBadges();
+}
+
+function renderUnreadBadges() {
+    // شارات الأقسام الدراسية
+    groupButtons.forEach(btn => {
+        const key = btn.dataset.groupKey;
+        const badge = btn.querySelector(".unread-badge");
+        if (!badge) return;
+
+        const conv = conversations.find(c => c.type === "group" && c.group_key === key);
+        const count = conv ? (unreadCounts.get(String(conv.id)) || 0) : 0;
+
+        badge.textContent = count > 99 ? "99+" : String(count);
+        badge.classList.toggle("hidden", count === 0);
+    });
+
+    // شارات المحادثات الخاصة
+    if (customersList) {
+        customersList.querySelectorAll(".customer-button").forEach(btn => {
+            const badge = btn.querySelector(".unread-badge");
+            if (!badge) return;
+
+            const targetId = btn.dataset.customerId;
+            let conv = null;
+
+            if (currentProfile?.role === "customer") {
+                conv = conversations.find(
+                    c => c.type === "private" && c.customer_id === currentUser?.id
+                );
+            } else {
+                conv = conversations.find(
+                    c => c.type === "private" && String(c.customer_id) === String(targetId)
+                );
+            }
+
+            const count = conv ? (unreadCounts.get(String(conv.id)) || 0) : 0;
+            badge.textContent = count > 99 ? "99+" : String(count);
+            badge.classList.toggle("hidden", count === 0);
+        });
+    }
+}
+
+async function markMessagesAsRead(messages) {
+    if (!db || !currentUser || !Array.isArray(messages) || messages.length === 0) return;
+
+    const unreadIds = messages
+        .filter(m => m.sender_id !== currentUser.id)
+        .filter(m => {
+            const readers = readCache.get(String(m.id));
+            return !readers || !readers.has(currentUser.id);
+        })
+        .map(m => m.id);
+
+    if (currentConversation) {
+        unreadCounts.delete(String(currentConversation.id));
+        renderUnreadBadges();
+    }
+
+    if (unreadIds.length === 0) return;
+
+    const rows = unreadIds.map(messageId => ({
+        message_id: messageId,
+        user_id: currentUser.id,
+        read_at: new Date().toISOString()
+    }));
+
+    const { error } = await db
+        .from("message_reads")
+        .upsert(rows, { onConflict: "message_id,user_id" });
+
+    if (error) {
+        console.warn("Mark read warning:", error);
+        return;
+    }
+
+    unreadIds.forEach(id => {
+        const key = String(id);
+        if (!readCache.has(key)) readCache.set(key, new Set());
+        readCache.get(key).add(currentUser.id);
+    });
+}
+
+function isMessageReadByOthers(message) {
+    if (!message || message.sender_id !== currentUser?.id) return false;
+    const readers = readCache.get(String(message.id));
+    if (!readers) return false;
+    for (const uid of readers) {
+        if (uid !== currentUser.id) return true;
+    }
+    return false;
+}
+
+function updateMessageTickUI(messageId) {
+    const el = messagesContainer?.querySelector(
+        `[data-message-id="${cssEscape(String(messageId))}"] .message-ticks`
+    );
+    if (!el) return;
+    el.classList.add("read");
+    el.title = "تمت القراءة";
+}
+
+/* =========================================================
+   CONVERSATIONS & LOCK MODE
 ========================================================= */
 
 async function loadConversations() {
     if (!db || !currentUser) return;
-
-    if (conversationList) conversationList.innerHTML = "";
 
     const { data, error } = await db
         .from("conversations")
@@ -702,7 +949,6 @@ async function loadConversations() {
 
     let loaded = Array.isArray(data) ? data : [];
 
-    // للتأكيد المزدوج: لا يحتفظ التلميذ في الواجهة إلا بالمجموعات التي هو عضو فيها فعليًا
     if (currentProfile?.role === "customer") {
         const { data: myMemberships, error: memError } = await db
             .from("conversation_members")
@@ -729,7 +975,7 @@ async function loadConversations() {
     }
 
     updateVisibleGroupButtons();
-    renderConversationList();
+    renderUnreadBadges();
 }
 
 function updateVisibleGroupButtons() {
@@ -754,27 +1000,6 @@ function updateVisibleGroupButtons() {
     }
 }
 
-function renderConversationList() {
-    if (!conversationList) return;
-    conversationList.innerHTML = "";
-
-    for (const conversation of conversations) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "conversation-button";
-        button.dataset.conversationId = String(conversation.id);
-        button.textContent = getConversationTitle(conversation);
-
-        button.addEventListener("click", () => selectConversation(conversation));
-
-        if (String(currentConversation?.id) === String(conversation.id)) {
-            button.classList.add("active");
-        }
-
-        conversationList.appendChild(button);
-    }
-}
-
 function getConversationTitle(conversation) {
     if (!conversation) return "محادثة";
 
@@ -788,15 +1013,13 @@ function getConversationTitle(conversation) {
 
     if (conversation.type === "private") {
         if (currentProfile?.role === "customer") {
-            const adminBtn = customersList?.querySelector(".customer-button");
-            return adminBtn?.textContent?.trim() || "الأستاذ عبد الكريم";
+            const adminName = customersList?.querySelector(".customer-button-name");
+            return adminName?.textContent?.trim() || "الأستاذ عبد الكريم";
         }
-
         if (conversation.customer_id) {
             const customer = profileCache.get(conversation.customer_id);
             return customer?.display_name || "محادثة خاصة";
         }
-
         return "محادثة خاصة";
     }
 
@@ -832,7 +1055,9 @@ async function selectConversation(conversation) {
     stopMessageSync();
 
     currentConversation = { ...conversation };
+    currentMessages = [];
     reactionCache.clear();
+    readCache.clear();
     renderingMessageIds.clear();
 
     const groupMeta = GROUP_CONFIG[conversation.group_key];
@@ -850,26 +1075,20 @@ async function selectConversation(conversation) {
 
     if (chatAvatar) {
         chatAvatar.textContent =
-            conversation.type === "group"
-                ? (groupMeta?.icon || "👥")
-                : "👤";
+            conversation.type === "group" ? (groupMeta?.icon || "👥") : "👤";
     }
 
-    // إظهار زر إدارة الأعضاء للأستاذ فقط عند فتح قسم دراسي
-    if (manageMembersButton) {
-        const showManage =
-            currentProfile?.role === "admin" && conversation.type === "group";
-        manageMembersButton.classList.toggle("hidden", !showManage);
-    }
+    const isAdminGroup =
+        currentProfile?.role === "admin" && conversation.type === "group";
 
+    manageMembersButton?.classList.toggle("hidden", !isAdminGroup);
+    lockChatButton?.classList.toggle("hidden", !isAdminGroup);
+
+    applyConversationLockUI(Boolean(conversation.is_locked));
     updateSidebarActiveState(conversation);
 
     if (activeRealtimeChannel && db) {
-        try {
-            await db.removeChannel(activeRealtimeChannel);
-        } catch (error) {
-            console.error("Remove old realtime channel error:", error);
-        }
+        try { await db.removeChannel(activeRealtimeChannel); } catch (e) { console.warn(e); }
         activeRealtimeChannel = null;
     }
 
@@ -878,6 +1097,67 @@ async function selectConversation(conversation) {
     if (String(currentConversation?.id) === String(conversation.id)) {
         await subscribeRealtime(conversation.id);
         startMessageSync(conversation.id);
+    }
+}
+
+function applyConversationLockUI(isLocked) {
+    const isAdmin = currentProfile?.role === "admin";
+    const isGroup = currentConversation?.type === "group";
+
+    if (lockChatButton && isAdmin && isGroup) {
+        lockChatButton.classList.toggle("locked", isLocked);
+        lockChatButton.title = isLocked
+            ? "فتح المحادثة للتلاميذ"
+            : "قفل المحادثة (وضع الإعلانات)";
+        const label = lockChatButton.querySelector("span");
+        if (label) {
+            label.textContent = isLocked ? "فتح القسم" : "وضع الإعلانات";
+        }
+    }
+
+    const studentLocked = !isAdmin && isGroup && isLocked;
+    lockedBanner?.classList.toggle("hidden", !studentLocked);
+    messageForm?.classList.toggle("hidden", studentLocked);
+
+    if (studentLocked) {
+        spanishBar?.classList.add("hidden");
+        spanishToggleButton?.classList.remove("active");
+    }
+}
+
+async function toggleConversationLock() {
+    if (
+        !db ||
+        currentProfile?.role !== "admin" ||
+        !currentConversation ||
+        currentConversation.type !== "group"
+    ) {
+        return;
+    }
+
+    const nextLocked = !Boolean(currentConversation.is_locked);
+    if (lockChatButton) lockChatButton.disabled = true;
+
+    try {
+        const { data, error } = await db
+            .from("conversations")
+            .update({ is_locked: nextLocked })
+            .eq("id", currentConversation.id)
+            .select("*")
+            .single();
+
+        if (error) throw error;
+
+        currentConversation.is_locked = Boolean(data.is_locked);
+        const idx = conversations.findIndex(c => String(c.id) === String(data.id));
+        if (idx !== -1) conversations[idx].is_locked = currentConversation.is_locked;
+
+        applyConversationLockUI(currentConversation.is_locked);
+    } catch (error) {
+        console.error("Toggle lock error:", error);
+        showChatError(error.message || "تعذر تغيير حالة قفل القسم.");
+    } finally {
+        if (lockChatButton) lockChatButton.disabled = false;
     }
 }
 
@@ -904,20 +1184,7 @@ function updateSidebarActiveState(conversation) {
             }
         });
     }
-
-    if (conversationList) {
-        conversationList.querySelectorAll(".conversation-button").forEach(button => {
-            button.classList.toggle(
-                "active",
-                button.dataset.conversationId === String(conversation?.id)
-            );
-        });
-    }
 }
-
-/* =========================================================
-   PRIVATE & GROUP CONVERSATIONS
-========================================================= */
 
 async function openPrivateConversation(customer) {
     if (!db || !currentUser || !customer) return;
@@ -934,7 +1201,6 @@ async function openPrivateConversation(customer) {
         .limit(1);
 
     if (error) {
-        console.error("Find private conversation error:", error);
         showChatError(error.message);
         return;
     }
@@ -954,38 +1220,28 @@ async function openPrivateConversation(customer) {
             .single();
 
         if (result.error) {
-            console.error("Create private conversation error:", result.error);
             showChatError(result.error.message);
             return;
         }
 
         conversation = result.data;
         conversations.push(conversation);
-        renderConversationList();
     }
 
     if (currentProfile?.role === "admin") {
-        const { data: existingMembers, error: membersCheckError } = await db
+        const { data: existingMembers } = await db
             .from("conversation_members")
             .select("user_id")
             .eq("conversation_id", conversation.id)
             .in("user_id", [currentUser.id, customerId]);
 
-        if (!membersCheckError) {
-            const existingIds = new Set((existingMembers || []).map(m => m.user_id));
-            const missingMembers = [currentUser.id, customerId]
-                .filter(uid => !existingIds.has(uid))
-                .map(uid => ({ conversation_id: conversation.id, user_id: uid }));
+        const existingIds = new Set((existingMembers || []).map(m => m.user_id));
+        const missingMembers = [currentUser.id, customerId]
+            .filter(uid => !existingIds.has(uid))
+            .map(uid => ({ conversation_id: conversation.id, user_id: uid }));
 
-            if (missingMembers.length > 0) {
-                const { error: membersError } = await db
-                    .from("conversation_members")
-                    .insert(missingMembers);
-
-                if (membersError) {
-                    console.warn("Conversation members warning:", membersError);
-                }
-            }
+        if (missingMembers.length > 0) {
+            await db.from("conversation_members").insert(missingMembers);
         }
     }
 
@@ -1011,12 +1267,8 @@ async function openCustomerPrivateConversation() {
 async function openGroupConversation(groupKey) {
     if (!db || !currentUser || typeof groupKey !== "string" || !groupKey) return;
 
-    // 1) تحقق أولاً من المجموعات المحملة في الذاكرة
-    let group = conversations.find(
-        c => c.type === "group" && c.group_key === groupKey
-    );
+    let group = conversations.find(c => c.type === "group" && c.group_key === groupKey);
 
-    // 2) إن لم تكن في الذاكرة، اطلبها من Supabase
     if (!group) {
         const { data: groups, error } = await db
             .from("conversations")
@@ -1026,15 +1278,12 @@ async function openGroupConversation(groupKey) {
             .limit(1);
 
         if (error) {
-            console.error("Find group error:", error);
             showChatError(error.message);
             return;
         }
-
         group = groups?.[0] || null;
     }
 
-    // 3) إن لم توجد في قاعدة البيانات، ينشئها الأستاذ تلقائيًا
     if (!group) {
         if (currentProfile?.role !== "admin") {
             showChatError("لست مسجلًا في هذا القسم.");
@@ -1052,13 +1301,11 @@ async function openGroupConversation(groupKey) {
             .single();
 
         if (result.error) {
-            console.error("Create group error:", result.error);
             showChatError(result.error.message);
             return;
         }
 
         group = result.data;
-
         await db.from("conversation_members").insert({
             conversation_id: group.id,
             user_id: currentUser.id
@@ -1068,14 +1315,13 @@ async function openGroupConversation(groupKey) {
     if (!conversations.some(c => String(c.id) === String(group.id))) {
         conversations.push(group);
         updateVisibleGroupButtons();
-        renderConversationList();
     }
 
     await selectConversation(group);
 }
 
 /* =========================================================
-   MANAGE GROUP MEMBERS MODAL (ADMIN ONLY)
+   MANAGE GROUP MEMBERS MODAL
 ========================================================= */
 
 async function openMembersModal() {
@@ -1096,10 +1342,7 @@ async function openMembersModal() {
     if (membersModalTitle) {
         membersModalTitle.textContent = `أعضاء ${getConversationTitle(currentConversation)}`;
     }
-
-    if (membersSearchInput) {
-        membersSearchInput.value = "";
-    }
+    if (membersSearchInput) membersSearchInput.value = "";
 
     hideMembersModalMessage();
     membersModal.classList.remove("hidden");
@@ -1126,10 +1369,7 @@ async function openMembersModal() {
         if (membersRes.error) throw membersRes.error;
 
         modalAllStudents = Array.isArray(studentsRes.data) ? studentsRes.data : [];
-
-        const currentMemberSet = new Set(
-            (membersRes.data || []).map(row => row.user_id)
-        );
+        const currentMemberSet = new Set((membersRes.data || []).map(r => r.user_id));
 
         modalAllStudents.forEach(student => {
             if (currentMemberSet.has(student.id)) {
@@ -1153,8 +1393,8 @@ function renderMembersChecklist() {
     if (!membersChecklist) return;
 
     const query = (membersSearchInput?.value || "").trim().toLowerCase();
-    const filtered = modalAllStudents.filter(student =>
-        (student.display_name || "تلميذ").toLowerCase().includes(query)
+    const filtered = modalAllStudents.filter(s =>
+        (s.display_name || "تلميذ").toLowerCase().includes(query)
     );
 
     if (membersCount) {
@@ -1176,14 +1416,9 @@ function renderMembersChecklist() {
         checkbox.type = "checkbox";
         checkbox.checked = modalSelectedMemberIds.has(student.id);
         checkbox.addEventListener("change", () => {
-            if (checkbox.checked) {
-                modalSelectedMemberIds.add(student.id);
-            } else {
-                modalSelectedMemberIds.delete(student.id);
-            }
-            if (membersCount) {
-                membersCount.textContent = `${modalSelectedMemberIds.size} محدد`;
-            }
+            if (checkbox.checked) modalSelectedMemberIds.add(student.id);
+            else modalSelectedMemberIds.delete(student.id);
+            if (membersCount) membersCount.textContent = `${modalSelectedMemberIds.size} محدد`;
         });
 
         const nameSpan = document.createElement("span");
@@ -1207,11 +1442,8 @@ async function saveGroupMembers() {
             toAdd.push({ conversation_id: modalConversationId, user_id: uid });
         }
     }
-
     for (const uid of modalInitialMemberIds) {
-        if (!modalSelectedMemberIds.has(uid)) {
-            toRemove.push(uid);
-        }
+        if (!modalSelectedMemberIds.has(uid)) toRemove.push(uid);
     }
 
     if (toAdd.length === 0 && toRemove.length === 0) {
@@ -1227,33 +1459,24 @@ async function saveGroupMembers() {
 
     try {
         if (toAdd.length > 0) {
-            const { error: insertError } = await db
-                .from("conversation_members")
-                .insert(toAdd);
-            if (insertError) throw insertError;
+            const { error } = await db.from("conversation_members").insert(toAdd);
+            if (error) throw error;
         }
-
         if (toRemove.length > 0) {
-            const { error: deleteError } = await db
+            const { error } = await db
                 .from("conversation_members")
                 .delete()
                 .eq("conversation_id", modalConversationId)
                 .in("user_id", toRemove);
-            if (deleteError) throw deleteError;
+            if (error) throw error;
         }
 
         modalInitialMemberIds = new Set(modalSelectedMemberIds);
         showMembersModalMessage("تم تحديث أعضاء القسم بنجاح.", "success");
-
-        setTimeout(() => {
-            closeMembersModal();
-        }, 700);
+        setTimeout(closeMembersModal, 700);
     } catch (error) {
         console.error("Save group members error:", error);
-        showMembersModalMessage(
-            error?.message || "تعذر حفظ التغييرات. تحقق من صلاحيات قاعدة البيانات.",
-            "error"
-        );
+        showMembersModalMessage(error?.message || "تعذر حفظ التغييرات.", "error");
     } finally {
         if (saveMembersButton) {
             saveMembersButton.disabled = false;
@@ -1283,7 +1506,102 @@ function hideMembersModalMessage() {
 }
 
 /* =========================================================
-   CUSTOMERS
+   SECTION ARCHIVE MODAL
+========================================================= */
+
+function openArchiveModal() {
+    if (!archiveModal || !currentConversation) return;
+    if (archiveModalTitle) {
+        archiveModalTitle.textContent = `أرشيف ${getConversationTitle(currentConversation)}`;
+    }
+    archiveModal.classList.remove("hidden");
+    renderArchiveItems();
+}
+
+function closeArchiveModal() {
+    archiveModal?.classList.add("hidden");
+}
+
+async function renderArchiveItems() {
+    if (!archiveList) return;
+
+    const filtered = currentMessages.filter(m => {
+        if (currentArchiveFilter === "file") return m.message_type === "file";
+        if (currentArchiveFilter === "image") return m.message_type === "image";
+        if (currentArchiveFilter === "audio") return m.message_type === "audio";
+        if (currentArchiveFilter === "tagged") return Boolean(m.tag && MESSAGE_TAGS[m.tag]);
+        return true;
+    }).slice().reverse();
+
+    if (filtered.length === 0) {
+        archiveList.innerHTML = `<div class="members-empty">لا توجد عناصر في هذا القسم من الأرشيف حتى الآن.</div>`;
+        return;
+    }
+
+    archiveList.innerHTML = "";
+
+    for (const msg of filtered) {
+        const sender = await getProfile(msg.sender_id);
+        const senderName = sender?.display_name || "مستخدم";
+
+        const item = document.createElement("div");
+        item.className = "archive-item";
+
+        const tagPrefix = msg.tag && MESSAGE_TAGS[msg.tag]
+            ? `${MESSAGE_TAGS[msg.tag].label} · `
+            : "";
+
+        const title = msg.message_type === "file"
+            ? (msg.content || extractFileNameFromPath(msg.file_path))
+            : getMessagePreview(msg);
+
+        item.innerHTML = `
+            <div class="archive-item-body">
+                <div class="archive-item-title">${escapeHtml(tagPrefix + title)}</div>
+                <div class="archive-item-meta">${escapeHtml(senderName)} · ${escapeHtml(formatDate(msg.created_at))}</div>
+            </div>
+            <div class="archive-item-actions"></div>
+        `;
+
+        const actions = item.querySelector(".archive-item-actions");
+
+        if (msg.file_path && (msg.message_type === "file" || msg.message_type === "image")) {
+            const openBtn = document.createElement("button");
+            openBtn.type = "button";
+            openBtn.className = "archive-btn";
+            openBtn.textContent = msg.message_type === "file" ? "تحميل" : "عرض";
+            openBtn.addEventListener("click", async () => {
+                try {
+                    const url = await signedUrl(msg.file_path);
+                    if (!url) return;
+                    if (msg.message_type === "image") {
+                        openImageLightbox(url, title);
+                    } else {
+                        window.open(url, "_blank", "noopener");
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            });
+            actions.appendChild(openBtn);
+        }
+
+        const jumpBtn = document.createElement("button");
+        jumpBtn.type = "button";
+        jumpBtn.className = "archive-btn";
+        jumpBtn.textContent = "الرسالة";
+        jumpBtn.addEventListener("click", () => {
+            closeArchiveModal();
+            scrollToMessage(msg.id);
+        });
+        actions.appendChild(jumpBtn);
+
+        archiveList.appendChild(item);
+    }
+}
+
+/* =========================================================
+   CUSTOMERS LIST
 ========================================================= */
 
 async function loadCustomers() {
@@ -1298,7 +1616,6 @@ async function loadCustomers() {
             .order("display_name", { ascending: true });
 
         if (error) {
-            console.error("Load customers error:", error);
             showChatError(error.message);
             return;
         }
@@ -1312,11 +1629,14 @@ async function loadCustomers() {
             button.type = "button";
             button.className = "customer-button";
             button.dataset.customerId = String(customer.id);
-            button.textContent = customer.display_name || "تلميذ";
+            button.innerHTML = `
+                <span class="customer-button-name">${escapeHtml(customer.display_name || "تلميذ")}</span>
+                <span class="unread-badge hidden">0</span>
+            `;
             button.addEventListener("click", () => openPrivateConversation(customer));
-
             customersList.appendChild(button);
         }
+        renderUnreadBadges();
         return;
     }
 
@@ -1331,11 +1651,7 @@ async function loadCustomers() {
             .select("user_id")
             .eq("conversation_id", privateConversation.id);
 
-        if (membersError) {
-            console.error("Load private conversation members error:", membersError);
-            showChatError(membersError.message);
-            return;
-        }
+        if (membersError) return;
 
         const adminMember = (members || []).find(m => m.user_id !== currentUser.id);
         if (!adminMember) return;
@@ -1354,15 +1670,18 @@ async function loadCustomers() {
         button.type = "button";
         button.className = "customer-button";
         button.dataset.customerId = String(adminProfile.id);
-        button.textContent = adminProfile.display_name || "الأستاذ";
+        button.innerHTML = `
+            <span class="customer-button-name">${escapeHtml(adminProfile.display_name || "الأستاذ عبد الكريم")}</span>
+            <span class="unread-badge hidden">0</span>
+        `;
         button.addEventListener("click", openCustomerPrivateConversation);
-
         customersList.appendChild(button);
+        renderUnreadBadges();
     }
 }
 
 /* =========================================================
-   MESSAGES & SAFE SYNC
+   MESSAGES & BATCH PRELOADING
 ========================================================= */
 
 async function loadMessages() {
@@ -1371,6 +1690,7 @@ async function loadMessages() {
     const conversationId = currentConversation.id;
     messagesContainer.innerHTML = "";
     reactionCache.clear();
+    readCache.clear();
     renderingMessageIds.clear();
 
     const { data, error } = await db
@@ -1388,14 +1708,22 @@ async function loadMessages() {
     if (String(currentConversation?.id) !== String(conversationId)) return;
 
     const messages = Array.isArray(data) ? data : [];
+    currentMessages = messages;
 
     if (messages.length === 0) {
         renderEmptyState();
         removePinnedBanner();
+        unreadCounts.delete(String(conversationId));
+        renderUnreadBadges();
         return;
     }
 
-    await loadReplyMessages(messages);
+    // تحميل مجمّع وسريع (الردود + التفاعلات + القراءات في 3 استعلامات بدل مئات)
+    await Promise.all([
+        loadReplyMessages(messages),
+        preloadReactions(messages),
+        preloadReads(messages)
+    ]);
 
     if (String(currentConversation?.id) !== String(conversationId)) return;
 
@@ -1406,6 +1734,43 @@ async function loadMessages() {
 
     await restorePinnedMessage(messages);
     scrollMessagesToBottom();
+    await markMessagesAsRead(messages);
+}
+
+async function preloadReactions(messages) {
+    const ids = messages.map(m => m.id).filter(Boolean);
+    if (ids.length === 0) return;
+
+    const { data, error } = await db
+        .from("message_reactions")
+        .select("*")
+        .in("message_id", ids);
+
+    if (error) return;
+
+    ids.forEach(id => reactionCache.set(id, []));
+    (data || []).forEach(row => {
+        if (!reactionCache.has(row.message_id)) reactionCache.set(row.message_id, []);
+        reactionCache.get(row.message_id).push(row);
+    });
+}
+
+async function preloadReads(messages) {
+    const ids = messages.map(m => m.id).filter(Boolean);
+    if (ids.length === 0) return;
+
+    const { data, error } = await db
+        .from("message_reads")
+        .select("message_id, user_id")
+        .in("message_id", ids);
+
+    if (error) return;
+
+    (data || []).forEach(row => {
+        const key = String(row.message_id);
+        if (!readCache.has(key)) readCache.set(key, new Set());
+        readCache.get(key).add(row.user_id);
+    });
 }
 
 function stopMessageSync() {
@@ -1438,9 +1803,7 @@ function startMessageSync(conversationId) {
                 .eq("conversation_id", conversationId)
                 .order("created_at", { ascending: true });
 
-            if (error || String(currentConversation?.id) !== String(conversationId)) {
-                return;
-            }
+            if (error || String(currentConversation?.id) !== String(conversationId)) return;
 
             const newMessages = (data || []).filter(msg => {
                 const msgId = String(msg.id);
@@ -1456,19 +1819,28 @@ function startMessageSync(conversationId) {
 
                 for (const msg of newMessages) {
                     if (String(currentConversation?.id) !== String(conversationId)) break;
+                    upsertCurrentMessage(msg);
                     await renderMessage(msg, { expectedConversationId: conversationId });
                 }
 
                 if (shouldScroll || newMessages.some(m => m.sender_id === currentUser?.id)) {
                     scrollMessagesToBottom();
                 }
+
+                await markMessagesAsRead(newMessages);
             }
         } catch (error) {
             console.error("Message sync error:", error);
         } finally {
             messageSyncInProgress = false;
         }
-    }, 4000);
+    }, 5000);
+}
+
+function upsertCurrentMessage(msg) {
+    const idx = currentMessages.findIndex(m => String(m.id) === String(msg.id));
+    if (idx === -1) currentMessages.push(msg);
+    else currentMessages[idx] = msg;
 }
 
 async function loadReplyMessages(messages) {
@@ -1479,14 +1851,9 @@ async function loadReplyMessages(messages) {
 
     const uniqueIds = [...new Set(replyIds)];
     const { data, error } = await db.from("messages").select("*").in("id", uniqueIds);
-
-    if (error) {
-        console.warn("Load reply messages error:", error);
-        return;
-    }
+    if (error) return;
 
     const replyMap = new Map((data || []).map(m => [m.id, m]));
-
     for (const message of messages) {
         if (message.reply_to_message_id) {
             message.replyMessage = replyMap.get(message.reply_to_message_id) || null;
@@ -1526,9 +1893,7 @@ async function renderMessage(message, options = {}) {
         wrapper.dataset.messageId = messageId;
 
         const isMine = message.sender_id === currentUser?.id;
-        if (isMine) {
-            wrapper.classList.add("own");
-        }
+        if (isMine) wrapper.classList.add("own");
 
         const sender = await getProfile(message.sender_id);
         const senderName = sender?.display_name || "مستخدم";
@@ -1536,6 +1901,16 @@ async function renderMessage(message, options = {}) {
         const messageBubble = document.createElement("div");
         messageBubble.className = "message-bubble";
 
+        // وسم الرسالة التعليمية (درس / تمرين / نطق / إعلان)
+        if (message.tag && MESSAGE_TAGS[message.tag]) {
+            const tagInfo = MESSAGE_TAGS[message.tag];
+            const badge = document.createElement("div");
+            badge.className = `message-tag-badge ${tagInfo.className}`;
+            badge.textContent = tagInfo.label;
+            messageBubble.appendChild(badge);
+        }
+
+        // الرد المقتبس
         if (message.replyMessage) {
             const replyBox = document.createElement("div");
             replyBox.className = "message-reply";
@@ -1558,15 +1933,12 @@ async function renderMessage(message, options = {}) {
             messageBubble.appendChild(replyBox);
         }
 
+        // اسم المرسل
         const senderElement = document.createElement("div");
         senderElement.className = "message-sender";
         senderElement.textContent = senderName;
 
-        if (
-            currentProfile?.role === "admin" &&
-            sender?.role === "customer" &&
-            !isMine
-        ) {
+        if (currentProfile?.role === "admin" && sender?.role === "customer" && !isMine) {
             senderElement.classList.add("clickable");
             senderElement.title = "فتح محادثة خاصة";
             senderElement.addEventListener("click", event => {
@@ -1578,6 +1950,7 @@ async function renderMessage(message, options = {}) {
 
         messageBubble.appendChild(senderElement);
 
+        // المحتوى
         const content = document.createElement("div");
         content.className = "message-content";
 
@@ -1609,6 +1982,50 @@ async function renderMessage(message, options = {}) {
                 caption.textContent = message.content;
                 content.appendChild(caption);
             }
+        } else if (message.message_type === "file") {
+            const fileName = extractFileNameFromPath(message.file_path);
+            const ext = getFileExtension(fileName);
+            const extClass = getFileIconClass(ext);
+            const hasCustomCaption =
+                message.content && message.content.trim() !== fileName.trim();
+
+            const card = document.createElement("a");
+            card.className = "message-file-card";
+            card.target = "_blank";
+            card.rel = "noopener noreferrer";
+            card.download = fileName;
+
+            card.innerHTML = `
+                <div class="file-card-icon ${extClass}">${escapeHtml(ext.toUpperCase() || "FILE")}</div>
+                <div class="file-card-info">
+                    <span class="file-card-name">${escapeHtml(fileName)}</span>
+                    <span class="file-card-meta">اضغط للفتح أو التحميل</span>
+                </div>
+                <span class="file-card-download" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </span>
+            `;
+
+            try {
+                const url = await signedUrl(message.file_path);
+                if (url) card.href = url;
+            } catch (error) {
+                console.error("File URL error:", error);
+            }
+
+            card.addEventListener("click", e => e.stopPropagation());
+            content.appendChild(card);
+
+            if (hasCustomCaption) {
+                const caption = document.createElement("div");
+                caption.className = "message-caption";
+                caption.textContent = message.content;
+                content.appendChild(caption);
+            }
         } else if (message.message_type === "audio") {
             const audio = document.createElement("audio");
             audio.controls = true;
@@ -1635,6 +2052,7 @@ async function renderMessage(message, options = {}) {
 
         messageBubble.appendChild(content);
 
+        // التوقيت وعلامتا القراءة
         const footer = document.createElement("div");
         footer.className = "message-footer";
 
@@ -1644,15 +2062,17 @@ async function renderMessage(message, options = {}) {
         footer.appendChild(date);
 
         if (isMine) {
+            const readByOthers = isMessageReadByOthers(message);
             const ticks = document.createElement("span");
-            ticks.className = "message-ticks";
-            ticks.setAttribute("aria-hidden", "true");
+            ticks.className = `message-ticks${readByOthers ? " read" : ""}`;
+            ticks.title = readByOthers ? "تمت القراءة" : "تم التسليم";
             ticks.textContent = "✓✓";
             footer.appendChild(ticks);
         }
 
         messageBubble.appendChild(footer);
 
+        // التفاعلات
         const reactions = document.createElement("div");
         reactions.className = "message-reactions";
         await renderReactionSummary(message, reactions);
@@ -1665,6 +2085,7 @@ async function renderMessage(message, options = {}) {
                 event.target.closest(".reaction-picker") ||
                 event.target.closest(".message-sender") ||
                 event.target.closest(".message-reply") ||
+                event.target.closest(".message-file-card") ||
                 event.target.closest("audio") ||
                 event.target.closest("img")
             ) {
@@ -1705,7 +2126,7 @@ async function renderMessage(message, options = {}) {
 }
 
 /* =========================================================
-   IMAGE LIGHTBOX
+   LIGHTBOX & MESSAGE MENU
 ========================================================= */
 
 function openImageLightbox(url, alt = "") {
@@ -1720,10 +2141,6 @@ function openImageLightbox(url, alt = "") {
 function closeImageLightbox() {
     document.querySelector(".image-lightbox")?.remove();
 }
-
-/* =========================================================
-   MESSAGE MENU
-========================================================= */
 
 function openMessageMenu(message, x, y) {
     closeContextMenu();
@@ -1747,42 +2164,21 @@ function openMessageMenu(message, x, y) {
     document.body.appendChild(contextMenu);
 
     contextMenu.querySelector('[data-action="copy"]')?.addEventListener("click", e => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeContextMenu();
-        copyMessage(message);
+        e.preventDefault(); e.stopPropagation(); closeContextMenu(); copyMessage(message);
     });
-
     contextMenu.querySelector('[data-action="reply"]')?.addEventListener("click", e => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeContextMenu();
-        startReply(message);
+        e.preventDefault(); e.stopPropagation(); closeContextMenu(); startReply(message);
     });
-
     contextMenu.querySelector('[data-action="reaction"]')?.addEventListener("click", e => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeContextMenu();
-        showReactionPickerForMessage(message);
+        e.preventDefault(); e.stopPropagation(); closeContextMenu(); showReactionPickerForMessage(message);
     });
-
     contextMenu.querySelector('[data-action="pin"]')?.addEventListener("click", e => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeContextMenu();
-        if (isPinnedMessage(message)) {
-            unpinMessage(currentConversation?.id);
-        } else {
-            pinMessage(message);
-        }
+        e.preventDefault(); e.stopPropagation(); closeContextMenu();
+        if (isPinnedMessage(message)) unpinMessage(currentConversation?.id);
+        else pinMessage(message);
     });
-
     contextMenu.querySelector('[data-action="delete"]')?.addEventListener("click", e => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeContextMenu();
-        deleteMessage(message);
+        e.preventDefault(); e.stopPropagation(); closeContextMenu(); deleteMessage(message);
     });
 
     positionContextMenu(x, y);
@@ -1790,18 +2186,12 @@ function openMessageMenu(message, x, y) {
 
 function positionContextMenu(x, y) {
     if (!contextMenu) return;
-
     const rect = contextMenu.getBoundingClientRect();
     let left = Number.isFinite(x) ? x : window.innerWidth / 2;
     let top = Number.isFinite(y) ? y : window.innerHeight / 2;
 
-    if (left + rect.width > window.innerWidth) {
-        left = window.innerWidth - rect.width - 8;
-    }
-
-    if (top + rect.height > window.innerHeight) {
-        top = window.innerHeight - rect.height - 8;
-    }
+    if (left + rect.width > window.innerWidth) left = window.innerWidth - rect.width - 8;
+    if (top + rect.height > window.innerHeight) top = window.innerHeight - rect.height - 8;
 
     contextMenu.style.left = `${Math.max(8, left)}px`;
     contextMenu.style.top = `${Math.max(8, top)}px`;
@@ -1821,28 +2211,24 @@ function closeContextMenu() {
 async function copyMessage(message) {
     const text = getMessagePreview(message);
     if (!text) return;
-
     try {
-        if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        if (navigator.clipboard?.writeText) {
             await navigator.clipboard.writeText(text);
         } else {
-            const textarea = document.createElement("textarea");
-            textarea.value = text;
-            textarea.style.position = "fixed";
-            textarea.style.opacity = "0";
-            document.body.appendChild(textarea);
-            textarea.select();
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
             document.execCommand("copy");
-            textarea.remove();
+            ta.remove();
         }
-    } catch (error) {
-        console.error("Copy error:", error);
-    }
+    } catch (e) { console.error(e); }
 }
 
 async function deleteMessage(message) {
     if (!db || !message?.id) return;
-
     const isMine = message.sender_id === currentUser?.id;
     const isAdmin = currentProfile?.role === "admin";
     if (!isMine && !isAdmin) return;
@@ -1850,17 +2236,13 @@ async function deleteMessage(message) {
     if (!window.confirm("هل أنت متأكد من حذف هذه الرسالة؟")) return;
 
     const { error } = await db.from("messages").delete().eq("id", message.id);
-
     if (error) {
-        console.error("Delete message error:", error);
         showChatError(error.message);
         return;
     }
 
-    if (isPinnedMessage(message)) {
-        unpinMessage(currentConversation?.id);
-    }
-
+    if (isPinnedMessage(message)) unpinMessage(currentConversation?.id);
+    currentMessages = currentMessages.filter(m => String(m.id) !== String(message.id));
     document.querySelector(`[data-message-id="${cssEscape(message.id)}"]`)?.remove();
 
     if (messagesContainer && !messagesContainer.querySelector(".message")) {
@@ -1870,7 +2252,6 @@ async function deleteMessage(message) {
 
 async function startReply(message) {
     if (!message) return;
-
     replyingToMessage = message;
     replyPreview?.classList.remove("hidden");
 
@@ -1879,7 +2260,6 @@ async function startReply(message) {
 
     if (replyPreviewSender) replyPreviewSender.textContent = `الرد على ${senderName}`;
     if (replyPreviewText) replyPreviewText.textContent = getMessagePreview(message);
-
     messageInput?.focus();
 }
 
@@ -1893,49 +2273,33 @@ function cancelReply() {
 function ensureReplyPreview() {
     if (replyPreview && replyPreviewSender && replyPreviewText && cancelReplyButton) return;
     if (!messageForm) return;
-
-    if (!replyPreview) {
-        replyPreview = document.createElement("div");
-        replyPreview.id = "replyPreview";
-        replyPreview.className = "reply-preview hidden";
-        replyPreview.innerHTML = `
-            <div class="reply-preview-content">
-                <span class="reply-preview-icon">↩</span>
-                <div class="reply-preview-text">
-                    <strong id="replyPreviewSender">الرد على</strong>
-                    <span id="replyPreviewContent"></span>
-                </div>
-            </div>
-            <button type="button" id="cancelReplyButton" class="cancel-reply" aria-label="إلغاء الرد">×</button>
-        `;
-        messageForm.parentElement?.insertBefore(replyPreview, messageForm);
-    }
-
-    replyPreviewSender = replyPreviewSender || replyPreview.querySelector("#replyPreviewSender");
-    replyPreviewText = replyPreviewText || replyPreview.querySelector("#replyPreviewContent");
-    cancelReplyButton = cancelReplyButton || replyPreview.querySelector("#cancelReplyButton");
-
-    if (cancelReplyButton && !cancelReplyButton.dataset.bound) {
-        cancelReplyButton.dataset.bound = "true";
-        cancelReplyButton.addEventListener("click", cancelReply);
-    }
+    cancelReplyButton?.addEventListener("click", cancelReply);
 }
 
 /* =========================================================
-   SEND MESSAGE
+   SEND MESSAGE & FILE / IMAGE UPLOAD
 ========================================================= */
 
 async function sendMessage(event) {
     event?.preventDefault();
     if (!db || !currentUser || !currentConversation) return;
 
+    if (
+        currentProfile?.role !== "admin" &&
+        currentConversation.type === "group" &&
+        currentConversation.is_locked
+    ) {
+        showChatError("هذه المحادثة في وضع الإعلانات حاليًا.");
+        return;
+    }
+
     const text = messageInput?.value?.trim() || "";
 
-    if (selectedImage) {
-        const file = selectedImage;
-        selectedImage = null;
+    if (selectedFile) {
+        const file = selectedFile;
+        selectedFile = null;
         clearFilePreview();
-        await uploadImage(file, text);
+        await uploadAttachment(file, text);
         return;
     }
 
@@ -1951,9 +2315,8 @@ async function sendMessage(event) {
             message_type: "text"
         };
 
-        if (replyingToMessage?.id) {
-            payload.reply_to_message_id = replyingToMessage.id;
-        }
+        if (replyingToMessage?.id) payload.reply_to_message_id = replyingToMessage.id;
+        if (currentProfile?.role === "admin" && selectedTag) payload.tag = selectedTag;
 
         const { data: inserted, error } = await db
             .from("messages")
@@ -1966,9 +2329,11 @@ async function sendMessage(event) {
         if (messageInput) messageInput.value = "";
         const replyBackup = replyingToMessage;
         cancelReply();
+        setSelectedTag("");
 
         if (inserted) {
             if (replyBackup) inserted.replyMessage = replyBackup;
+            upsertCurrentMessage(inserted);
             await renderMessage(inserted, { expectedConversationId: currentConversation.id });
             scrollMessagesToBottom();
         }
@@ -1980,40 +2345,34 @@ async function sendMessage(event) {
     }
 }
 
-/* =========================================================
-   IMAGE UPLOAD
-========================================================= */
-
-function handleImageSelection(event) {
+function handleFileSelection(event) {
     const file = event.target?.files?.[0];
     if (!file) {
-        selectedImage = null;
+        selectedFile = null;
         clearFilePreview();
         return;
     }
 
-    if (!file.type.startsWith("image/")) {
-        showChatError("الملف المحدد ليس صورة.");
+    const maxSize = 20 * 1024 * 1024; // 20MB لملفات PDF والدروس
+    if (file.size > maxSize) {
+        showChatError("حجم الملف يجب ألا يتجاوز 20MB.");
         clearFilePreview();
         return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-        showChatError("حجم الصورة يجب ألا يتجاوز 10MB.");
-        clearFilePreview();
-        return;
-    }
-
-    selectedImage = file;
+    selectedFile = file;
     showFilePreview(file);
 }
 
 function showFilePreview(file) {
     if (!filePreview) return;
+    const isImage = file.type.startsWith("image/");
+    const icon = isImage ? "🖼️" : "📄";
+    const sizeLabel = formatFileSize(file.size);
 
     filePreview.innerHTML = `
         <div class="file-preview-item">
-            <span>📷 ${escapeHtml(file.name)}</span>
+            <span>${icon} ${escapeHtml(file.name)} (${sizeLabel})</span>
             <button type="button" id="clear-file-preview">×</button>
         </div>
     `;
@@ -2023,19 +2382,22 @@ function showFilePreview(file) {
 }
 
 function clearFilePreview() {
-    selectedImage = null;
-    if (imageInput) imageInput.value = "";
+    selectedFile = null;
+    if (fileInput) fileInput.value = "";
     if (filePreview) {
         filePreview.innerHTML = "";
         filePreview.classList.add("hidden");
     }
 }
 
-async function uploadImage(file, caption = "") {
+async function uploadAttachment(file, caption = "") {
     if (!db || !currentUser || !currentConversation || !file) return;
 
     setMessageSending(true);
-    const path = buildStoragePath("images", file.name);
+    const isImage = file.type.startsWith("image/");
+    const folder = isImage ? "images" : "files";
+    const messageType = isImage ? "image" : "file";
+    const path = buildStoragePath(folder, file.name);
     const targetConversationId = currentConversation.id;
 
     try {
@@ -2053,13 +2415,12 @@ async function uploadImage(file, caption = "") {
             conversation_id: targetConversationId,
             sender_id: currentUser.id,
             content: caption || file.name,
-            message_type: "image",
+            message_type: messageType,
             file_path: path
         };
 
-        if (replyingToMessage?.id) {
-            payload.reply_to_message_id = replyingToMessage.id;
-        }
+        if (replyingToMessage?.id) payload.reply_to_message_id = replyingToMessage.id;
+        if (currentProfile?.role === "admin" && selectedTag) payload.tag = selectedTag;
 
         const { data: inserted, error: insertError } = await db
             .from("messages")
@@ -2075,16 +2436,18 @@ async function uploadImage(file, caption = "") {
         if (messageInput) messageInput.value = "";
         const replyBackup = replyingToMessage;
         cancelReply();
+        setSelectedTag("");
 
         if (inserted) {
             if (replyBackup) inserted.replyMessage = replyBackup;
+            upsertCurrentMessage(inserted);
             await renderMessage(inserted, { expectedConversationId: targetConversationId });
             scrollMessagesToBottom();
         }
     } catch (error) {
-        console.error("Upload image error:", error);
+        console.error("Upload attachment error:", error);
         showChatError(error.message);
-        selectedImage = file;
+        selectedFile = file;
         showFilePreview(file);
     } finally {
         setMessageSending(false);
@@ -2096,21 +2459,13 @@ async function uploadImage(file, caption = "") {
 ========================================================= */
 
 async function toggleRecording() {
-    if (mediaRecorder) {
-        stopRecording();
-    } else {
-        await startRecording();
-    }
+    if (mediaRecorder) stopRecording();
+    else await startRecording();
 }
 
 async function startRecording() {
-    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
         showChatError("المتصفح لا يدعم تسجيل الصوت.");
-        return;
-    }
-
-    if (typeof MediaRecorder === "undefined") {
-        showChatError("MediaRecorder غير مدعوم في هذا المتصفح.");
         return;
     }
 
@@ -2118,13 +2473,7 @@ async function startRecording() {
 
     try {
         recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-        const mimeTypes = [
-            "audio/webm;codecs=opus",
-            "audio/webm",
-            "audio/ogg;codecs=opus",
-            "audio/mp4"
-        ];
+        const mimeTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
         const mimeType = mimeTypes.find(t => MediaRecorder.isTypeSupported(t)) || "";
 
         mediaRecorder = mimeType
@@ -2132,15 +2481,13 @@ async function startRecording() {
             : new MediaRecorder(recordingStream);
 
         recordingChunks = [];
+        const recConvId = currentConversation.id;
+        const recUserId = currentUser.id;
+        const recReplyId = replyingToMessage?.id || null;
+        const recTag = currentProfile?.role === "admin" ? selectedTag : "";
 
-        const recordingConversationId = currentConversation.id;
-        const recordingUserId = currentUser.id;
-        const recordingReplyId = replyingToMessage?.id || null;
-
-        mediaRecorder.ondataavailable = event => {
-            if (event.data && event.data.size > 0) {
-                recordingChunks.push(event.data);
-            }
+        mediaRecorder.ondataavailable = e => {
+            if (e.data && e.data.size > 0) recordingChunks.push(e.data);
         };
 
         mediaRecorder.onstop = async () => {
@@ -2149,20 +2496,16 @@ async function startRecording() {
             const recorder = mediaRecorder;
             mediaRecorder = null;
 
-            recordingStream?.getTracks().forEach(track => {
-                try { track.stop(); } catch (e) { console.warn(e); }
-            });
+            recordingStream?.getTracks().forEach(t => { try { t.stop(); } catch {} });
             recordingStream = null;
             updateRecordButton(false);
 
             if (!chunks.length) return;
-
             const blob = new Blob(chunks, { type: recorder?.mimeType || "audio/webm" });
-            await uploadAudio(blob, recordingConversationId, recordingUserId, recordingReplyId);
+            await uploadAudio(blob, recConvId, recUserId, recReplyId, recTag);
         };
 
-        mediaRecorder.onerror = event => {
-            console.error("MediaRecorder error:", event);
+        mediaRecorder.onerror = () => {
             showChatError("حدث خطأ أثناء تسجيل الصوت.");
             cleanupRecording();
         };
@@ -2170,7 +2513,6 @@ async function startRecording() {
         mediaRecorder.start();
         updateRecordButton(true);
     } catch (error) {
-        console.error("Start recording error:", error);
         cleanupRecording();
         showChatError(
             error?.name === "NotAllowedError"
@@ -2182,38 +2524,26 @@ async function startRecording() {
 
 function stopRecording() {
     if (!mediaRecorder) return;
-    try {
-        mediaRecorder.stop();
-    } catch (error) {
-        console.error("Stop recording error:", error);
-        cleanupRecording();
-    }
+    try { mediaRecorder.stop(); } catch { cleanupRecording(); }
 }
 
 function cleanupRecording() {
     try {
-        if (mediaRecorder && mediaRecorder.state !== "inactive") {
-            mediaRecorder.stop();
-        }
-    } catch (error) {
-        console.warn(error);
-    }
-
+        if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+    } catch {}
     mediaRecorder = null;
     recordingChunks = [];
-    recordingStream?.getTracks().forEach(track => {
-        try { track.stop(); } catch (e) { console.warn(e); }
-    });
+    recordingStream?.getTracks().forEach(t => { try { t.stop(); } catch {} });
     recordingStream = null;
     updateRecordButton(false);
 }
 
-async function uploadAudio(blob, conversationId, userId, replyId = null) {
+async function uploadAudio(blob, conversationId, userId, replyId = null, tag = "") {
     if (!db || !blob || !conversationId || !userId) return;
 
     setMessageSending(true);
-    const extension = getAudioExtension(blob.type);
-    const path = buildStoragePath("audio", `recording.${extension}`);
+    const ext = getAudioExtension(blob.type);
+    const path = buildStoragePath("audio", `recording.${ext}`);
 
     try {
         const { error: uploadError } = await db.storage
@@ -2235,6 +2565,7 @@ async function uploadAudio(blob, conversationId, userId, replyId = null) {
         };
 
         if (replyId) payload.reply_to_message_id = replyId;
+        if (tag) payload.tag = tag;
 
         const { data: inserted, error: insertError } = await db
             .from("messages")
@@ -2249,7 +2580,9 @@ async function uploadAudio(blob, conversationId, userId, replyId = null) {
 
         if (String(conversationId) === String(currentConversation?.id)) {
             cancelReply();
+            setSelectedTag("");
             if (inserted) {
+                upsertCurrentMessage(inserted);
                 await renderMessage(inserted, { expectedConversationId: conversationId });
                 scrollMessagesToBottom();
             }
@@ -2267,32 +2600,35 @@ function updateRecordButton(recording) {
     recordButton.classList.toggle("recording", recording);
     recordButton.setAttribute("aria-label", recording ? "إيقاف التسجيل" : "تسجيل صوتي");
     recordButton.title = recording ? "إيقاف التسجيل" : "تسجيل صوتي";
-    recordButton.textContent = recording ? "⏹" : "🎤";
+    recordButton.innerHTML = recording ? STOP_SVG : MIC_SVG;
 }
 
 /* =========================================================
-   REACTIONS
+   REACTIONS (WITH NAMES TOOLTIP)
 ========================================================= */
-
-const REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 
 async function renderReactionSummary(message, container) {
     if (!message || !container) return;
 
     const reactions = await loadReactions(message.id);
-    const counts = new Map();
+    const grouped = new Map();
 
     for (const r of reactions) {
-        counts.set(r.reaction, (counts.get(r.reaction) || 0) + 1);
+        if (!grouped.has(r.reaction)) grouped.set(r.reaction, []);
+        grouped.get(r.reaction).push(r.user_id);
     }
 
-    for (const [reaction, count] of counts) {
+    for (const [reaction, userIds] of grouped) {
+        const names = await Promise.all(
+            userIds.map(async uid => (await getProfile(uid))?.display_name || "عضو")
+        );
+
         const button = document.createElement("button");
         button.type = "button";
         button.className = "reaction-summary";
         button.dataset.reaction = reaction;
-        button.title = `${reaction} ${count}`;
-        button.textContent = `${reaction} ${count}`;
+        button.title = names.join("، ");
+        button.textContent = `${reaction} ${userIds.length}`;
         button.addEventListener("click", async event => {
             event.preventDefault();
             event.stopPropagation();
@@ -2323,22 +2659,14 @@ async function renderReactionSummary(message, container) {
 }
 
 async function loadReactions(messageId) {
-    if (reactionCache.has(messageId)) {
-        return reactionCache.get(messageId);
-    }
+    if (reactionCache.has(messageId)) return reactionCache.get(messageId);
 
     const { data, error } = await db
         .from("message_reactions")
         .select("*")
         .eq("message_id", messageId);
 
-    if (error) {
-        console.warn("Load reactions error:", error);
-        reactionCache.set(messageId, []);
-        return [];
-    }
-
-    const reactions = Array.isArray(data) ? data : [];
+    const reactions = !error && Array.isArray(data) ? data : [];
     reactionCache.set(messageId, reactions);
     return reactions;
 }
@@ -2371,22 +2699,17 @@ function showReactionPicker(message, anchor) {
     let left = rect.left;
     let top = rect.bottom + 5;
 
-    if (left + pickerRect.width > window.innerWidth) {
-        left = window.innerWidth - pickerRect.width - 8;
-    }
-
-    if (top + pickerRect.height > window.innerHeight) {
-        top = rect.top - pickerRect.height - 5;
-    }
+    if (left + pickerRect.width > window.innerWidth) left = window.innerWidth - pickerRect.width - 8;
+    if (top + pickerRect.height > window.innerHeight) top = rect.top - pickerRect.height - 5;
 
     picker.style.left = `${Math.max(8, left)}px`;
     picker.style.top = `${Math.max(8, top)}px`;
 }
 
 function showReactionPickerForMessage(message) {
-    const element = document.querySelector(`[data-message-id="${cssEscape(message.id)}"]`);
-    const button = element?.querySelector(".reaction-trigger");
-    if (button) showReactionPicker(message, button);
+    const el = document.querySelector(`[data-message-id="${cssEscape(message.id)}"]`);
+    const btn = el?.querySelector(".reaction-trigger");
+    if (btn) showReactionPicker(message, btn);
 }
 
 function closeAllReactionPickers() {
@@ -2409,16 +2732,10 @@ async function toggleReaction(message, reaction) {
 
         if (existing) {
             if (existing.reaction === reaction) {
-                const { error } = await db
-                    .from("message_reactions")
-                    .delete()
-                    .eq("id", existing.id);
+                const { error } = await db.from("message_reactions").delete().eq("id", existing.id);
                 if (error) throw error;
             } else {
-                const { error } = await db
-                    .from("message_reactions")
-                    .update({ reaction })
-                    .eq("id", existing.id);
+                const { error } = await db.from("message_reactions").update({ reaction }).eq("id", existing.id);
                 if (error) throw error;
             }
         } else {
@@ -2458,6 +2775,7 @@ async function refreshRenderedMessage(messageId) {
         message.replyMessage = replyMessage || null;
     }
 
+    upsertCurrentMessage(message);
     await renderMessage(message, {
         forceRefresh: true,
         expectedConversationId: currentConversation.id
@@ -2468,42 +2786,29 @@ async function refreshRenderedMessage(messageId) {
    PINNED MESSAGES
 ========================================================= */
 
-function getPinnedStorageKey(conversationId) {
-    return `pinned_message_${conversationId}`;
-}
+function getPinnedStorageKey(conversationId) { return `pinned_message_${conversationId}`; }
 
 function getPinnedMessage(conversationId) {
     if (!conversationId) return null;
     try {
         const value = localStorage.getItem(getPinnedStorageKey(conversationId));
         return value ? JSON.parse(value) : null;
-    } catch {
-        return null;
-    }
+    } catch { return null; }
 }
 
 function savePinnedMessage(conversationId, message) {
     if (!conversationId || !message) return;
-    try {
-        localStorage.setItem(getPinnedStorageKey(conversationId), JSON.stringify(message));
-    } catch (error) {
-        console.warn("Save pinned message error:", error);
-    }
+    try { localStorage.setItem(getPinnedStorageKey(conversationId), JSON.stringify(message)); } catch {}
 }
 
 function removePinnedStorage(conversationId) {
     if (!conversationId) return;
-    try {
-        localStorage.removeItem(getPinnedStorageKey(conversationId));
-    } catch (error) {
-        console.warn("Remove pinned message error:", error);
-    }
+    try { localStorage.removeItem(getPinnedStorageKey(conversationId)); } catch {}
 }
 
 function isPinnedMessage(message) {
     if (!currentConversation || !message) return false;
-    const pinned = getPinnedMessage(currentConversation.id);
-    return String(pinned?.id) === String(message.id);
+    return String(getPinnedMessage(currentConversation.id)?.id) === String(message.id);
 }
 
 function pinMessage(message, isRestoring = false) {
@@ -2525,11 +2830,7 @@ function removePinnedBanner() {
 async function restorePinnedMessage(messages) {
     if (!currentConversation) return;
     const pinned = getPinnedMessage(currentConversation.id);
-
-    if (!pinned?.id) {
-        removePinnedBanner();
-        return;
-    }
+    if (!pinned?.id) { removePinnedBanner(); return; }
 
     const actualMessage = messages.find(m => String(m.id) === String(pinned.id));
     if (!actualMessage) {
@@ -2537,7 +2838,6 @@ async function restorePinnedMessage(messages) {
         removePinnedBanner();
         return;
     }
-
     await renderPinnedBanner(actualMessage);
 }
 
@@ -2562,14 +2862,11 @@ async function renderPinnedBanner(message) {
 
     header.insertAdjacentElement("afterend", banner);
 
-    banner.querySelector(".unpin-message-button")?.addEventListener("click", event => {
-        event.preventDefault();
-        event.stopPropagation();
-        unpinMessage(currentConversation?.id);
+    banner.querySelector(".unpin-message-button")?.addEventListener("click", e => {
+        e.preventDefault(); e.stopPropagation(); unpinMessage(currentConversation?.id);
     });
-
-    banner.addEventListener("click", event => {
-        if (event.target.closest(".unpin-message-button")) return;
+    banner.addEventListener("click", e => {
+        if (e.target.closest(".unpin-message-button")) return;
         scrollToMessage(message.id);
     });
 }
@@ -2577,25 +2874,49 @@ async function renderPinnedBanner(message) {
 function scrollToMessage(messageId) {
     const element = document.querySelector(`[data-message-id="${cssEscape(messageId)}"]`);
     if (!element) return;
-
     element.scrollIntoView({ behavior: "smooth", block: "center" });
     element.classList.add("message-highlight");
-    setTimeout(() => element.classList.remove("message-highlight"), 1500);
+    setTimeout(() => element.classList.remove("message-highlight"), 1600);
 }
 
 /* =========================================================
-   REALTIME
+   REALTIME (CONVERSATION + READS + UNREAD BADGES)
 ========================================================= */
+
+async function subscribeGlobalUnread() {
+    if (!db || !currentUser) return;
+
+    if (globalRealtimeChannel) {
+        try { await db.removeChannel(globalRealtimeChannel); } catch {}
+        globalRealtimeChannel = null;
+    }
+
+    const channel = db.channel(`global_unread:${currentUser.id}:${Date.now()}`);
+
+    channel.on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        payload => {
+            const msg = payload?.new;
+            if (!msg || msg.sender_id === currentUser?.id) return;
+            const convId = String(msg.conversation_id);
+            if (String(currentConversation?.id) !== convId) {
+                unreadCounts.set(convId, (unreadCounts.get(convId) || 0) + 1);
+                renderUnreadBadges();
+            }
+        }
+    );
+
+    channel.subscribe(status => {
+        if (status === "SUBSCRIBED") globalRealtimeChannel = channel;
+    });
+}
 
 async function subscribeRealtime(conversationId) {
     if (!db || !conversationId) return;
 
     if (activeRealtimeChannel) {
-        try {
-            await db.removeChannel(activeRealtimeChannel);
-        } catch (error) {
-            console.warn("Remove realtime channel error:", error);
-        }
+        try { await db.removeChannel(activeRealtimeChannel); } catch {}
         activeRealtimeChannel = null;
     }
 
@@ -2620,22 +2941,37 @@ async function subscribeRealtime(conversationId) {
 
     channel.on(
         "postgres_changes",
+        { event: "INSERT", schema: "public", table: "message_reads" },
+        payload => {
+            const rec = payload?.new;
+            if (!rec?.message_id || !rec?.user_id) return;
+            const key = String(rec.message_id);
+            if (!readCache.has(key)) readCache.set(key, new Set());
+            readCache.get(key).add(rec.user_id);
+            if (rec.user_id !== currentUser?.id) {
+                updateMessageTickUI(rec.message_id);
+            }
+        }
+    );
+
+    channel.on(
+        "postgres_changes",
         {
-            event: "*",
+            event: "UPDATE",
             schema: "public",
             table: "conversations",
             filter: `id=eq.${conversationId}`
         },
-        async () => loadConversations()
+        payload => {
+            const updated = payload?.new;
+            if (!updated || String(currentConversation?.id) !== String(updated.id)) return;
+            currentConversation.is_locked = Boolean(updated.is_locked);
+            applyConversationLockUI(currentConversation.is_locked);
+        }
     );
 
     channel.subscribe(status => {
-        if (status === "SUBSCRIBED") {
-            activeRealtimeChannel = channel;
-        }
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-            console.error("Realtime status:", status);
-        }
+        if (status === "SUBSCRIBED") activeRealtimeChannel = channel;
     });
 }
 
@@ -2665,10 +3001,12 @@ async function handleRealtimeMessage(payload, conversationId) {
             message.replyMessage = replyMessage || null;
         }
 
+        upsertCurrentMessage(message);
         const shouldScroll = isNearBottom() || message.sender_id === currentUser?.id;
         await renderMessage(message, { expectedConversationId: conversationId });
 
         if (shouldScroll) scrollMessagesToBottom();
+        await markMessagesAsRead([message]);
         return;
     }
 
@@ -2679,13 +3017,10 @@ async function handleRealtimeMessage(payload, conversationId) {
 
     if (payload.eventType === "DELETE") {
         const saved = getPinnedMessage(currentConversation.id);
-        if (String(saved?.id) === String(messageId)) {
-            unpinMessage(currentConversation.id);
-        }
+        if (String(saved?.id) === String(messageId)) unpinMessage(currentConversation.id);
+        currentMessages = currentMessages.filter(m => String(m.id) !== String(messageId));
         document.querySelector(`[data-message-id="${cssEscape(messageId)}"]`)?.remove();
-        if (!messagesContainer.querySelector(".message")) {
-            renderEmptyState();
-        }
+        if (!messagesContainer.querySelector(".message")) renderEmptyState();
     }
 }
 
@@ -2702,7 +3037,7 @@ async function handleRealtimeReaction(payload) {
 }
 
 /* =========================================================
-   PROFILE & STORAGE
+   PROFILE, STORAGE & HELPERS
 ========================================================= */
 
 async function getProfile(userId) {
@@ -2716,22 +3051,14 @@ async function getProfile(userId) {
         .eq("id", userId)
         .maybeSingle();
 
-    if (error) {
-        console.warn("Get profile error:", error);
-        return null;
-    }
-
+    if (error) return null;
     if (data) profileCache.set(userId, data);
     return data;
 }
 
 async function signedUrl(path) {
     if (!db || !path) return null;
-
-    const { data, error } = await db.storage
-        .from("chat-files")
-        .createSignedUrl(path, 60 * 60);
-
+    const { data, error } = await db.storage.from("chat-files").createSignedUrl(path, 3600);
     if (error) throw error;
     return data?.signedUrl || null;
 }
@@ -2747,6 +3074,33 @@ function sanitizeFileName(fileName) {
     return String(fileName || "file").replace(/[^\w.\-]+/g, "_").slice(0, 150);
 }
 
+function extractFileNameFromPath(path) {
+    if (!path) return "ملف";
+    const lastSegment = String(path).split("/").pop() || "ملف";
+    const parts = lastSegment.split("_");
+    return parts.length >= 3 ? parts.slice(2).join("_") : lastSegment;
+}
+
+function getFileExtension(fileName) {
+    const match = String(fileName || "").match(/\.([a-zA-Z0-9]{1,6})$/);
+    return match ? match[1].toLowerCase() : "";
+}
+
+function getFileIconClass(ext) {
+    if (ext === "pdf") return "ext-pdf";
+    if (ext === "doc" || ext === "docx") return "ext-doc";
+    if (ext === "ppt" || ext === "pptx") return "ext-ppt";
+    if (ext === "xls" || ext === "xlsx") return "ext-xls";
+    return "ext-other";
+}
+
+function formatFileSize(bytes) {
+    if (!Number.isFinite(bytes) || bytes <= 0) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function getAudioExtension(mimeType) {
     const type = String(mimeType || "").toLowerCase();
     if (type.includes("ogg")) return "ogg";
@@ -2754,10 +3108,6 @@ function getAudioExtension(mimeType) {
     if (type.includes("mpeg")) return "mp3";
     return "webm";
 }
-
-/* =========================================================
-   UI HELPERS & FORMATTING
-========================================================= */
 
 function setLoginLoading(loading) {
     if (!loginButton) return;
@@ -2798,22 +3148,18 @@ function showChatError(message) {
     }
 
     if (messagesContainer) {
-        const errorElement = document.createElement("div");
-        errorElement.className = "chat-error";
-        errorElement.textContent = message || "";
-        messagesContainer.appendChild(errorElement);
+        const el = document.createElement("div");
+        el.className = "chat-error";
+        el.textContent = message || "";
+        messagesContainer.appendChild(el);
         scrollMessagesToBottom();
-        setTimeout(() => errorElement.remove(), 5000);
+        setTimeout(() => el.remove(), 5000);
     }
 }
 
 function isNearBottom() {
     if (!messagesContainer) return true;
-    const distance =
-        messagesContainer.scrollHeight -
-        messagesContainer.scrollTop -
-        messagesContainer.clientHeight;
-    return distance < 140;
+    return messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < 140;
 }
 
 function scrollMessagesToBottom() {
@@ -2824,6 +3170,7 @@ function scrollMessagesToBottom() {
 function getMessagePreview(message) {
     if (!message) return "";
     if (message.message_type === "image") return message.content || "صورة";
+    if (message.message_type === "file") return `📄 ${message.content || extractFileNameFromPath(message.file_path)}`;
     if (message.message_type === "audio") return message.content || "رسالة صوتية";
     return message.content || "";
 }
@@ -2842,9 +3189,7 @@ function formatDate(value) {
     try {
         return new Intl.DateTimeFormat(
             "ar-DZ",
-            isToday
-                ? { hour: "2-digit", minute: "2-digit" }
-                : { dateStyle: "short", timeStyle: "short" }
+            isToday ? { hour: "2-digit", minute: "2-digit" } : { dateStyle: "short", timeStyle: "short" }
         ).format(date);
     } catch {
         return date.toLocaleString();
@@ -2862,9 +3207,7 @@ function escapeHtml(value) {
 
 function cssEscape(value) {
     const str = String(value ?? "");
-    if (window.CSS && typeof window.CSS.escape === "function") {
-        return window.CSS.escape(str);
-    }
+    if (window.CSS?.escape) return window.CSS.escape(str);
     return str.replace(/[^a-zA-Z0-9_-]/g, c => `\\${c}`);
 }
 
@@ -2881,21 +3224,11 @@ function isValidEmail(email) {
 
 function authMessage(error) {
     const message = String(error?.message || "").toLowerCase();
-    if (message.includes("invalid login credentials")) {
-        return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
-    }
-    if (message.includes("email not confirmed")) {
-        return "يجب تأكيد البريد الإلكتروني أولًا.";
-    }
-    if (message.includes("user not found")) {
-        return "المستخدم غير موجود.";
-    }
-    if (message.includes("password") && message.includes("short")) {
-        return "كلمة المرور قصيرة جدًا.";
-    }
-    if (message.includes("rate limit")) {
-        return "تم تجاوز عدد المحاولات المسموح بها. حاول لاحقًا.";
-    }
+    if (message.includes("invalid login credentials")) return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+    if (message.includes("email not confirmed")) return "يجب تأكيد البريد الإلكتروني أولًا.";
+    if (message.includes("user not found")) return "المستخدم غير موجود.";
+    if (message.includes("password") && message.includes("short")) return "كلمة المرور قصيرة جدًا.";
+    if (message.includes("rate limit")) return "تم تجاوز عدد المحاولات المسموح بها. حاول لاحقًا.";
     return error?.message || "حدث خطأ غير متوقع.";
 }
 
@@ -2904,15 +3237,8 @@ function authMessage(error) {
 ========================================================= */
 
 window.addEventListener("beforeunload", () => {
-    try {
-        recordingStream?.getTracks().forEach(track => track.stop());
-    } catch (e) { console.warn(e); }
-
-    try {
-        if (activeRealtimeChannel && db) db.removeChannel(activeRealtimeChannel);
-    } catch (e) { console.warn(e); }
-
-    try {
-        authSubscription?.unsubscribe?.();
-    } catch (e) { console.warn(e); }
+    try { recordingStream?.getTracks().forEach(t => t.stop()); } catch {}
+    try { if (activeRealtimeChannel && db) db.removeChannel(activeRealtimeChannel); } catch {}
+    try { if (globalRealtimeChannel && db) db.removeChannel(globalRealtimeChannel); } catch {}
+    try { authSubscription?.unsubscribe?.(); } catch {}
 });
