@@ -1890,7 +1890,8 @@ function buildPollCardElement(message) {
     const totalVotes = votes.length;
     const myVote = votes.find(v => v.user_id === currentUser?.id);
     const hasVoted = Boolean(myVote);
-    const revealCorrect = isQuiz && (hasVoted || currentProfile?.role === "admin");
+    const showResults = hasVoted || currentProfile?.role === "admin";
+    const revealCorrect = isQuiz && showResults;
 
     const counts = options.map(() => 0);
     votes.forEach(v => {
@@ -1900,15 +1901,13 @@ function buildPollCardElement(message) {
     const card = document.createElement("div");
     card.className = "poll-card";
 
-    const badge = document.createElement("div");
-    badge.className = "poll-badge";
-    badge.textContent = isQuiz ? "📝 اختبار سريع (Quiz)" : "📊 استطلاع رأي";
-    card.appendChild(badge);
-
-    const qEl = document.createElement("div");
-    qEl.className = "poll-question";
-    qEl.textContent = data.question || message.content || "";
-    card.appendChild(qEl);
+    const header = document.createElement("div");
+    header.className = "poll-header";
+    header.innerHTML =
+        `<span class="poll-badge">${isQuiz ? "📝 اختبار سريع" : "📊 استطلاع رأي"}</span>` +
+        `<div class="poll-question">${escapeHtml(data.question || message.content || "")}</div>` +
+        `<div class="poll-subhint">${isQuiz ? "اختر الإجابة الصحيحة" : "اختر خيارًا واحدًا"}</div>`;
+    card.appendChild(header);
 
     const list = document.createElement("div");
     list.className = "poll-options-list";
@@ -1925,18 +1924,24 @@ function buildPollCardElement(message) {
         if (revealCorrect && idx === correctIndex) btn.classList.add("is-correct");
         if (revealCorrect && isMyChoice && idx !== correctIndex) btn.classList.add("is-wrong");
 
-        let statusMark = "";
-        if (revealCorrect && idx === correctIndex) statusMark = " ✅";
-        else if (revealCorrect && isMyChoice && idx !== correctIndex) statusMark = " ❌";
-        else if (isMyChoice) statusMark = " ✓";
+        let checkSymbol = "";
+        if (revealCorrect && idx === correctIndex) checkSymbol = "✓";
+        else if (revealCorrect && isMyChoice && idx !== correctIndex) checkSymbol = "✕";
+        else if (isMyChoice) checkSymbol = "✓";
 
-        btn.innerHTML = `
-            <span class="poll-option-fill" style="width:${hasVoted || currentProfile?.role === "admin" ? pct : 0}%"></span>
-            <span class="poll-option-inner">
-                <span class="poll-option-text">${escapeHtml(optText)}${statusMark}</span>
-                ${hasVoted || currentProfile?.role === "admin" ? `<span class="poll-option-percent">${pct}% (${count})</span>` : ""}
-            </span>
-        `;
+        const statsHtml = showResults
+            ? `<span class="poll-opt-stats">${pct}% (${count})</span>`
+            : "";
+
+        btn.innerHTML =
+            `<div class="poll-opt-top">` +
+                `<span class="poll-check" aria-hidden="true">${checkSymbol}</span>` +
+                `<span class="poll-opt-label">${escapeHtml(optText)}</span>` +
+                statsHtml +
+            `</div>` +
+            `<div class="poll-bar-track">` +
+                `<span class="poll-bar-fill" style="width:${showResults ? pct : 0}%"></span>` +
+            `</div>`;
 
         btn.addEventListener("click", e => {
             e.preventDefault();
@@ -1951,15 +1956,13 @@ function buildPollCardElement(message) {
 
     const meta = document.createElement("div");
     meta.className = "poll-meta";
-    meta.innerHTML = `
-        <span>${totalVotes} ${totalVotes === 1 ? "تصويت" : "تصويتات"}</span>
-        <span>${hasVoted ? "تم تسجيل إجابتك" : "اضغط لاختيار إجابتك"}</span>
-    `;
+    meta.innerHTML =
+        `<span>${totalVotes === 0 ? "لا توجد أصوات بعد" : (totalVotes === 1 ? "صوت واحد" : `${totalVotes} أصوات`)}</span>` +
+        `<span>${hasVoted ? "تم التصويت" : "اضغط للتصويت"}</span>`;
     card.appendChild(meta);
 
     return card;
 }
-
 /* =========================================================
    SECTION ARCHIVE MODAL (FULL CONVERSATION QUERY)
 ========================================================= */
