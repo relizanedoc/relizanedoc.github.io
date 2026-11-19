@@ -1793,92 +1793,253 @@ img {
     background: #e6f7f3;
     border-color: var(--wa-green);
 }
-
 /* =========================================================
-   RESPONSIVE
+   MOBILE BACK BUTTON & RESPONSIVE (WhatsApp Mobile Pattern)
 ========================================================= */
-@media (max-width: 960px) {
-    :root { --sidebar-w: 270px; }
+.mobile-back-btn {
+    display: none;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--text-2);
+    transition: background var(--transition), color var(--transition);
+}
+
+.mobile-back-btn:hover {
+    background: rgba(11, 20, 26, 0.08);
+    color: var(--wa-teal);
+}
+
+/* التابلت والشاشات المتوسطة */
+@media (max-width: 1024px) {
+    :root {
+        --sidebar-w: 290px;
+    }
+
     .header-action-btn span,
     .manage-members-button span {
         display: none;
     }
+
     .header-action-btn,
     .manage-members-button {
         padding: 7px 9px;
     }
 }
 
-@media (max-width: 720px) {
+/* الهواتف (شاشة واحدة لكل عرض: قائمة المحادثات أو الدردشة) */
+@media (max-width: 768px) {
     .app {
-        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        height: 100vh;
         height: 100dvh;
     }
 
+    /* شاشة القائمة الجانبية بملء الشاشة */
     .sidebar {
         width: 100%;
-        max-height: 33dvh;
+        height: 100%;
+        max-height: none;
         border-inline-end: none;
-        border-bottom: 1px solid var(--wa-border-strong);
+        border-bottom: none;
     }
 
     .sidebar-header {
-        height: 50px;
-        padding: 8px 14px;
+        height: 58px;
+        padding: 10px 16px;
     }
 
     .conversation-button,
     .customer-button {
-        padding: 9px 14px;
-    }
-
-    .conversation-icon,
-    .customer-button::before {
-        width: 36px;
-        height: 36px;
-        font-size: 16px;
+        padding: 13px 16px;
     }
 
     .logout {
-        padding: 9px 14px;
+        padding: 13px 16px calc(13px + env(safe-area-inset-bottom));
+    }
+
+    /* شاشة الدردشة تنزلق فوق القائمة عند فتح محادثة */
+    .chat {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        z-index: 30;
+        transform: translateX(-100%);
+        visibility: hidden;
+        pointer-events: none;
+        transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.24s;
+    }
+
+    .app.mobile-chat-open .chat {
+        transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .mobile-back-btn {
+        display: inline-grid;
+    }
+
+    /* شريط الإسبانية مدمج في سطر واحد لتوفير مساحة للرسائل */
+    .language-banner {
+        padding: 5px 12px;
+        gap: 8px;
+    }
+
+    .language-banner-content strong {
         font-size: 13px;
     }
 
-    .language-banner {
-        padding: 5px 12px;
+    .language-banner-content span {
+        font-size: 11.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .language-banner-decoration {
         display: none;
     }
 
+    /* رأس الدردشة */
     .chat-header {
-        min-height: 54px;
-        padding: 7px 10px;
+        min-height: 56px;
+        padding: 6px 10px;
         gap: 8px;
+    }
+
+    .chat-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: 17px;
+    }
+
+    .chat-heading h2 {
+        font-size: 15px;
+    }
+
+    .chat-heading p {
+        font-size: 11.5px;
+    }
+
+    .chat-header-actions {
+        gap: 5px;
     }
 
     .chat-header-status {
         display: none;
     }
 
+    /* منطقة الرسائل والفقاعات */
     .messages {
-        padding: 12px 10px 8px;
+        padding: 12px 10px 10px;
     }
 
     .messages .message-bubble {
-        max-width: 86%;
+        max-width: 88%;
+        padding: 7px 10px;
     }
 
+    .message-image {
+        max-width: min(260px, 100%);
+    }
+
+    .message-file-card {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .message-content audio {
+        width: 220px;
+        max-width: 100%;
+    }
+
+    /* منع تكبير الشاشة التلقائي في iOS عند الكتابة */
+    .login-box input,
+    .password-update-screen input,
+    .composer input[type="text"],
+    .members-search {
+        font-size: 16px;
+    }
+
+    /* شريط الكتابة السفلي */
     .composer {
-        padding: 7px 8px;
+        padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
         gap: 4px;
     }
 
-    .action-button,
-    .send-button {
+    .action-button {
         width: 36px;
         height: 36px;
+    }
+
+    .send-button {
+        width: 40px;
+        height: 40px;
+    }
+
+    .spanish-bar,
+    .tag-bar {
+        padding: 7px 10px;
+    }
+
+    .spanish-bar-label,
+    .tag-bar-label {
+        display: none;
+    }
+
+    .spanish-key {
+        min-width: 34px;
+        height: 34px;
+    }
+
+    /* تحويل نوافذ الأعضاء والأرشيف إلى Bottom Sheet مثل تطبيقات الهاتف */
+    .members-modal {
+        padding: 0;
+        align-items: end;
+    }
+
+    .members-modal-box,
+    .archive-modal-box {
+        max-width: 100%;
+        max-height: 88dvh;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .members-modal-footer {
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+
+    .reaction-picker {
+        max-width: calc(100vw - 16px);
+        gap: 2px;
+        padding: 5px 8px;
+    }
+
+    .reaction-option {
+        width: 34px;
+        height: 34px;
+        font-size: 19px;
+    }
+}
+
+/* شاشات الهواتف الصغيرة جدًا */
+@media (max-width: 380px) {
+    .login-screen {
+        padding: 14px;
+    }
+
+    .login-box {
+        padding: 28px 20px 24px;
+    }
+
+    .messages .message-bubble {
+        max-width: 92%;
     }
 }
 
