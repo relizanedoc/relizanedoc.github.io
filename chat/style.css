@@ -2596,3 +2596,391 @@ label.action-button:focus-visible {
     outline: 2px solid var(--wa-green);
     outline-offset: 2px;
 }
+/* =========================================================
+   EDUCATIONAL PACK v32
+   (Palabra del Día · BAC Countdown · Mute · Poll Details)
+========================================================= */
+
+/* 1. بطاقة كلمة / قاعدة اليوم (Palabra del Día) */
+.word-of-day-card {
+    margin: 10px 12px 8px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(0, 168, 132, 0.09), rgba(241, 191, 0, 0.1));
+    border: 1px solid rgba(0, 168, 132, 0.24);
+    border-inline-start: 4px solid #f1bf00;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+body.dark-theme .word-of-day-card {
+    background: linear-gradient(135deg, rgba(0, 168, 132, 0.14), rgba(241, 191, 0, 0.08));
+    border-color: rgba(0, 168, 132, 0.3);
+}
+
+.wod-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.wod-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--wa-teal);
+    letter-spacing: 0.2px;
+}
+
+.wod-edit-btn,
+.bac-edit-btn {
+    padding: 2px 9px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--wa-white);
+    border: 1px solid var(--wa-border-strong);
+    color: var(--wa-teal);
+    flex-shrink: 0;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+.wod-edit-btn:hover,
+.bac-edit-btn:hover {
+    background: rgba(0, 168, 132, 0.14);
+    border-color: var(--wa-green);
+}
+
+.wod-word {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-1);
+    text-align: left;
+    line-height: 1.3;
+    margin-top: 2px;
+}
+
+.wod-translation {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-2);
+}
+
+.wod-example {
+    font-size: 12px;
+    color: var(--text-3);
+    font-style: italic;
+    text-align: left;
+    line-height: 1.35;
+    padding-top: 3px;
+    border-top: 1px dashed var(--wa-border-strong);
+    margin-top: 2px;
+}
+
+.wod-example:empty {
+    display: none;
+}
+
+/* 2. شريط العدّ التنازلي للبكالوريا (قسم 3 لغات أجنبية) */
+.bac-countdown-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 7px 16px;
+    background: linear-gradient(90deg, rgba(0, 128, 105, 0.1), rgba(241, 191, 0, 0.16));
+    border-bottom: 1px solid var(--wa-border-strong);
+    flex-shrink: 0;
+    z-index: 2;
+}
+
+body.dark-theme .bac-countdown-banner {
+    background: linear-gradient(90deg, rgba(0, 168, 132, 0.16), rgba(241, 191, 0, 0.12));
+}
+
+.bac-countdown-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.bac-countdown-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.bac-countdown-info strong {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-1);
+}
+
+.bac-countdown-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 99px;
+    background: var(--wa-green);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+/* 3. شريط إشعار الكتم المؤقت للتلميذ + أدوات الكتم في نافذة الأعضاء */
+.muted-banner {
+    background: var(--danger-soft);
+    border-top-color: rgba(234, 0, 56, 0.28);
+    color: var(--danger);
+}
+
+.member-row {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.member-row-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 150px;
+    cursor: pointer;
+}
+
+.member-row-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.member-muted-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--danger);
+}
+
+.member-mute-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.member-mute-select {
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--wa-border-strong);
+    background: var(--wa-input-bg);
+    color: var(--text-2);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    outline: none;
+    cursor: pointer;
+}
+
+.member-mute-select:focus {
+    border-color: var(--wa-green);
+}
+
+.member-mute-select.is-muted {
+    border-color: var(--danger);
+    color: var(--danger);
+    background: var(--danger-soft);
+}
+
+/* 4. زر عرض المشاركين وتفاصيل إجابات الاختبار السريع (للأستاذ) */
+.poll-participants-btn {
+    margin-top: 4px;
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: rgba(0, 128, 105, 0.11);
+    color: var(--wa-teal);
+    font-size: 12.5px;
+    font-weight: 800;
+    text-align: center;
+    transition: background var(--transition);
+}
+
+.poll-participants-btn:hover {
+    background: rgba(0, 128, 105, 0.2);
+}
+
+body.dark-theme .poll-participants-btn {
+    background: rgba(255, 255, 255, 0.12);
+    color: #e9edef;
+}
+
+body.dark-theme .poll-participants-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.poll-results-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--wa-panel-header);
+    border-bottom: 1px solid var(--wa-border);
+}
+
+.poll-stat-pill {
+    padding: 4px 11px;
+    border-radius: 99px;
+    font-size: 12.5px;
+    font-weight: 800;
+    background: var(--wa-white);
+    border: 1px solid var(--wa-border-strong);
+    color: var(--text-1);
+}
+
+.poll-stat-pill.correct {
+    background: rgba(22, 163, 74, 0.14);
+    border-color: rgba(22, 163, 74, 0.35);
+    color: #15803d;
+}
+
+body.dark-theme .poll-stat-pill.correct {
+    color: #4ade80;
+}
+
+.poll-stat-pill.wrong {
+    background: var(--danger-soft);
+    border-color: rgba(234, 0, 56, 0.32);
+    color: var(--danger);
+}
+
+.poll-results-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 220px;
+}
+
+.poll-result-group {
+    border-radius: 10px;
+    border: 1px solid var(--wa-border-strong);
+    background: var(--wa-surface-alt);
+    overflow: hidden;
+}
+
+.poll-result-group.is-correct {
+    border-color: rgba(22, 163, 74, 0.45);
+}
+
+.poll-result-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 12px;
+    background: var(--wa-panel-header);
+    border-bottom: 1px solid var(--wa-border);
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--text-1);
+}
+
+.poll-result-group.is-correct .poll-result-group-header {
+    background: rgba(22, 163, 74, 0.12);
+    color: #15803d;
+}
+
+body.dark-theme .poll-result-group.is-correct .poll-result-group-header {
+    color: #4ade80;
+}
+
+.poll-result-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-3);
+    white-space: nowrap;
+}
+
+.poll-result-voters {
+    display: flex;
+    flex-direction: column;
+}
+
+.poll-result-voter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--wa-border);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-1);
+}
+
+.poll-result-voter:last-child {
+    border-bottom: none;
+}
+
+.poll-result-empty {
+    padding: 10px 12px;
+    font-size: 12.5px;
+    color: var(--text-3);
+}
+
+/* حقول التاريخ ومربع الاختيار داخل النوافذ المنبثقة */
+.poll-field input[type="date"] {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--wa-border-strong);
+    background: var(--wa-input-bg);
+    color: var(--text-1);
+    font-size: 14px;
+    outline: none;
+}
+
+.poll-field input[type="date"]:focus {
+    border-color: var(--wa-green);
+}
+
+body.dark-theme .poll-field input[type="date"] {
+    color-scheme: dark;
+}
+
+.poll-radio-none input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--wa-green);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* ضبط الميزات الجديدة على الهواتف */
+@media (max-width: 768px) {
+    .bac-countdown-banner {
+        padding: 6px 10px;
+    }
+
+    .bac-countdown-info strong {
+        font-size: 12px;
+    }
+
+    .bac-countdown-pill {
+        font-size: 11.5px;
+        padding: 2px 8px;
+    }
+
+    .poll-field input[type="date"],
+    .member-mute-select {
+        font-size: 16px;
+    }
+}
