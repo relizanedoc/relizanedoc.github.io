@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#008069">
 
-<title>فضاء الطب— الدكتورمحمد</title>
+    <title>فضاء الطب — الدكتور  محمد</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
         rel="stylesheet"
     >
 
-    <link rel="stylesheet" href="style.css?v=31">
+    <link rel="stylesheet" href="style.css?v=32">
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -134,6 +134,26 @@
             </div>
 
             <div class="sidebar-content">
+
+                <!-- PALABRA DEL DÍA (كلمة أو قاعدة اليوم) -->
+                <section id="wordOfDayCard" class="word-of-day-card hidden" aria-label="كلمة اليوم بالإسبانية">
+                    <div class="wod-top">
+                        <span class="wod-label">🇪🇸 كلمة اليوم · Palabra del Día</span>
+                        <button
+                            id="editWodButton"
+                            type="button"
+                            class="wod-edit-btn hidden"
+                            title="تعديل كلمة اليوم"
+                            aria-label="تعديل كلمة اليوم"
+                        >
+                            تعديل
+                        </button>
+                    </div>
+                    <div id="wodWord" class="wod-word" dir="ltr"></div>
+                    <div id="wodTranslation" class="wod-translation"></div>
+                    <div id="wodExample" class="wod-example" dir="ltr"></div>
+                </section>
+
                 <div id="groupsSectionTitle" class="conversation-section-title hidden">
                     الأقسام الدراسية
                 </div>
@@ -277,7 +297,7 @@
                         id="manageMembersButton"
                         type="button"
                         class="manage-members-button hidden"
-                        title="إدارة أعضاء القسم"
+                        title="إدارة أعضاء القسم والكتم المؤقت"
                     >
                         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -294,6 +314,24 @@
                     </div>
                 </div>
             </header>
+
+            <!-- BAC COUNTDOWN BAR (3AS SECTION ONLY) -->
+            <div id="bacCountdownBanner" class="bac-countdown-banner hidden" aria-live="polite">
+                <div class="bac-countdown-info">
+                    <span class="bac-countdown-icon" aria-hidden="true">⏳</span>
+                    <strong id="bacCountdownTitle">العدّ التنازلي للبكالوريا</strong>
+                    <span id="bacCountdownDays" class="bac-countdown-pill"></span>
+                </div>
+                <button
+                    id="editBacButton"
+                    type="button"
+                    class="bac-edit-btn hidden"
+                    title="تعديل العدّ التنازلي"
+                    aria-label="تعديل العدّ التنازلي"
+                >
+                    تعديل
+                </button>
+            </div>
 
             <!-- IN-CHAT SEARCH BAR -->
             <div id="chatSearchBar" class="chat-search-bar hidden">
@@ -322,6 +360,11 @@
             <!-- LOCKED NOTICE (FOR STUDENTS) -->
             <div id="lockedBanner" class="locked-banner hidden">
                 🔒 هذه المحادثة في <strong>وضع الإعلانات</strong> — يمكن للأستاذ فقط إرسال الرسائل حاليًا.
+            </div>
+
+            <!-- MUTED NOTICE (FOR TEMPORARILY MUTED STUDENT) -->
+            <div id="mutedBanner" class="locked-banner muted-banner hidden">
+                🔇 تم تقييد الكتابة لحسابك في هذا القسم مؤقتًا <strong id="mutedUntilText"></strong> — يمكنك متابعة جميع الدروس والملفات كالمعتاد.
             </div>
 
             <!-- FILE PREVIEW -->
@@ -469,9 +512,9 @@
         </main>
     </div>
 
-    <!-- MANAGE GROUP MEMBERS MODAL (ADMIN ONLY) -->
+    <!-- MANAGE GROUP MEMBERS & MUTE MODAL (ADMIN ONLY) -->
     <div id="membersModal" class="members-modal hidden" role="dialog" aria-modal="true" aria-labelledby="membersModalTitle">
-        <div class="members-modal-box">
+        <div class="members-modal-box archive-modal-box">
             <div class="members-modal-header">
                 <h3 id="membersModalTitle">إدارة أعضاء القسم</h3>
                 <button id="membersModalClose" type="button" class="members-modal-close" aria-label="إغلاق">×</button>
@@ -574,6 +617,109 @@
         </div>
     </div>
 
+    <!-- POLL / QUIZ PARTICIPANTS DETAILS MODAL (ADMIN ONLY) -->
+    <div id="pollResultsModal" class="members-modal hidden" role="dialog" aria-modal="true" aria-labelledby="pollResultsModalTitle">
+        <div class="members-modal-box archive-modal-box">
+            <div class="members-modal-header">
+                <h3 id="pollResultsModalTitle">تفاصيل إجابات الاختبار</h3>
+                <button id="pollResultsModalClose" type="button" class="members-modal-close" aria-label="إغلاق">×</button>
+            </div>
+
+            <div id="pollResultsSummary" class="poll-results-summary"></div>
+            <div id="pollResultsList" class="poll-results-list"></div>
+        </div>
+    </div>
+
+    <!-- EDIT PALABRA DEL DÍA MODAL (ADMIN ONLY) -->
+    <div id="wodModal" class="members-modal hidden" role="dialog" aria-modal="true" aria-labelledby="wodModalTitle">
+        <div class="members-modal-box">
+            <div class="members-modal-header">
+                <h3 id="wodModalTitle">تعديل كلمة / قاعدة اليوم</h3>
+                <button id="wodModalClose" type="button" class="members-modal-close" aria-label="إغلاق">×</button>
+            </div>
+
+            <div class="poll-form-body">
+                <div class="poll-field">
+                    <label for="wodWordInput">الكلمة أو القاعدة بالإسبانية (إجباري)</label>
+                    <input
+                        id="wodWordInput"
+                        type="text"
+                        dir="ltr"
+                        placeholder="مثال: Aprobar el bachillerato"
+                        maxlength="160"
+                    >
+                </div>
+
+                <div class="poll-field">
+                    <label for="wodTranslationInput">الترجمة أو الشرح بالعربية (إجباري)</label>
+                    <input
+                        id="wodTranslationInput"
+                        type="text"
+                        placeholder="مثال: النجاح في شهادة البكالوريا"
+                        maxlength="200"
+                    >
+                </div>
+
+                <div class="poll-field">
+                    <label for="wodExampleInput">مثال تطبيقي بالإسبانية (اختياري)</label>
+                    <input
+                        id="wodExampleInput"
+                        type="text"
+                        dir="ltr"
+                        placeholder="مثال: Con esfuerzo vas a aprobar el bachillerato."
+                        maxlength="240"
+                    >
+                </div>
+            </div>
+
+            <div id="wodModalMessage" class="members-modal-message hidden"></div>
+
+            <div class="members-modal-footer">
+                <button id="saveWodButton" type="button" class="members-save-button">حفظ ونشر للجميع</button>
+                <button id="cancelWodButton" type="button" class="members-cancel-button">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT BAC COUNTDOWN MODAL (ADMIN ONLY) -->
+    <div id="bacModal" class="members-modal hidden" role="dialog" aria-modal="true" aria-labelledby="bacModalTitle">
+        <div class="members-modal-box">
+            <div class="members-modal-header">
+                <h3 id="bacModalTitle">إعدادات العدّ التنازلي (قسم 3 لغات)</h3>
+                <button id="bacModalClose" type="button" class="members-modal-close" aria-label="إغلاق">×</button>
+            </div>
+
+            <div class="poll-form-body">
+                <div class="poll-field">
+                    <label for="bacTitleInput">عنوان الحدث أو الامتحان</label>
+                    <input
+                        id="bacTitleInput"
+                        type="text"
+                        placeholder="مثال: العدّ التنازلي للبكالوريا / الفرض الأول"
+                        maxlength="120"
+                    >
+                </div>
+
+                <div class="poll-field">
+                    <label for="bacDateInput">تاريخ الامتحان</label>
+                    <input id="bacDateInput" type="date">
+                </div>
+
+                <label class="poll-radio-none">
+                    <input id="bacEnabledCheckbox" type="checkbox" checked>
+                    إظهار شريط العدّ التنازلي داخل قسم 3 لغات أجنبية
+                </label>
+            </div>
+
+            <div id="bacModalMessage" class="members-modal-message hidden"></div>
+
+            <div class="members-modal-footer">
+                <button id="saveBacButton" type="button" class="members-save-button">حفظ التغييرات</button>
+                <button id="cancelBacButton" type="button" class="members-cancel-button">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MESSAGE READERS MODAL (ADMIN ONLY) -->
     <div id="readersModal" class="members-modal hidden" role="dialog" aria-modal="true" aria-labelledby="readersModalTitle">
         <div class="members-modal-box">
@@ -590,6 +736,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=31"></script>
+    <script src="app.js?v=32"></script>
 </body>
 </html>
