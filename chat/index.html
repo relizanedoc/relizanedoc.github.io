@@ -2,10 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"> 
-<meta name="theme-color" content="#008069">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#008069">
 
-    <title>فضاء الطب — الدكتور محمد</title>
+<title>فضاء الطب— الدكتورمحمد</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
         rel="stylesheet"
     >
 
-    <link rel="stylesheet" href="style.css?v=23">
+    <link rel="stylesheet" href="style.css?v=30">
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -22,6 +22,11 @@
 </head>
 
 <body>
+
+    <!-- OFFLINE STATUS BANNER -->
+    <div id="offlineBanner" class="offline-banner hidden" role="status" aria-live="assertive">
+        <span>⚠️ لا يوجد اتصال بالإنترنت — جارٍ محاولة إعادة الاتصال...</span>
+    </div>
 
     <!-- =====================================================
          LOGIN SCREEN
@@ -81,6 +86,51 @@
                     <strong>فضاء الإسبانية</strong>
                     <small>الأستاذ عبد الكريم</small>
                 </div>
+
+                <div class="sidebar-header-actions">
+                    <button
+                        id="soundToggleButton"
+                        type="button"
+                        class="icon-circle-btn"
+                        title="صوت الإشعارات (مفعّل)"
+                        aria-label="تبديل صوت الإشعارات"
+                    >
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                        </svg>
+                    </button>
+
+                    <button
+                        id="themeToggleButton"
+                        type="button"
+                        class="icon-circle-btn"
+                        title="الوضع الليلي"
+                        aria-label="تبديل الوضع الليلي"
+                    >
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SIDEBAR SEARCH -->
+            <div class="sidebar-search-wrap">
+                <div class="sidebar-search-box">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input
+                        id="sidebarSearchInput"
+                        type="search"
+                        placeholder="ابحث عن قسم أو تلميذ..."
+                        autocomplete="off"
+                        aria-label="البحث في المحادثات"
+                    >
+                </div>
             </div>
 
             <div class="sidebar-content">
@@ -96,11 +146,15 @@
                 >
                     <span class="conversation-icon" aria-hidden="true">📚</span>
                     <span class="conversation-copy">
-                        <strong>قسم 2 لغات أجنبية</strong>
-                        <small>السنة الثانية · إسبانية</small>
+                        <span class="conversation-row-top">
+                            <strong>قسم 2 لغات أجنبية</strong>
+                            <span class="conversation-time"></span>
+                        </span>
+                        <span class="conversation-row-bottom">
+                            <small class="conversation-preview">السنة الثانية · إسبانية</small>
+                            <span class="unread-badge hidden">0</span>
+                        </span>
                     </span>
-                    <span class="unread-badge hidden">0</span>
-                    <span class="active-dot" aria-hidden="true"></span>
                 </button>
 
                 <button
@@ -111,18 +165,23 @@
                 >
                     <span class="conversation-icon" aria-hidden="true">🎓</span>
                     <span class="conversation-copy">
-                        <strong>قسم 3 لغات أجنبية</strong>
-                        <small>السنة الثالثة · بكالوريا</small>
+                        <span class="conversation-row-top">
+                            <strong>قسم 3 لغات أجنبية</strong>
+                            <span class="conversation-time"></span>
+                        </span>
+                        <span class="conversation-row-bottom">
+                            <small class="conversation-preview">السنة الثالثة · بكالوريا</small>
+                            <span class="unread-badge hidden">0</span>
+                        </span>
                     </span>
-                    <span class="unread-badge hidden">0</span>
-                    <span class="active-dot" aria-hidden="true"></span>
                 </button>
 
-                <div class="conversation-section-title">
+                <div id="privateSectionTitle" class="conversation-section-title">
                     المحادثات الخاصة
                 </div>
 
                 <div id="customersList" class="customers-list"></div>
+                <div id="sidebarSearchEmpty" class="sidebar-search-empty hidden">لا توجد نتائج مطابقة</div>
             </div>
 
             <button id="logoutButton" class="logout" type="button">
@@ -175,6 +234,19 @@
 
                 <div class="chat-header-actions">
                     <button
+                        id="chatSearchButton"
+                        type="button"
+                        class="header-action-btn"
+                        title="البحث داخل المحادثة"
+                        aria-label="البحث داخل المحادثة"
+                    >
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+
+                    <button
                         id="archiveButton"
                         type="button"
                         class="header-action-btn"
@@ -223,6 +295,21 @@
                 </div>
             </header>
 
+            <!-- IN-CHAT SEARCH BAR -->
+            <div id="chatSearchBar" class="chat-search-bar hidden">
+                <input
+                    id="chatSearchInput"
+                    type="search"
+                    placeholder="ابحث داخل الرسائل والدروس..."
+                    autocomplete="off"
+                    aria-label="نص البحث داخل المحادثة"
+                >
+                <span id="chatSearchCount" class="chat-search-count">0 / 0</span>
+                <button id="chatSearchPrev" type="button" class="chat-search-nav" title="النتيجة السابقة" aria-label="السابق">▲</button>
+                <button id="chatSearchNext" type="button" class="chat-search-nav" title="النتيجة التالية" aria-label="التالي">▼</button>
+                <button id="chatSearchClose" type="button" class="chat-search-close" title="إغلاق البحث" aria-label="إغلاق">×</button>
+            </div>
+
             <!-- MESSAGES -->
             <section id="messages" class="messages" aria-live="polite">
                 <div class="empty-messages">
@@ -239,6 +326,18 @@
 
             <!-- FILE PREVIEW -->
             <div id="filePreview" class="file-preview hidden"></div>
+
+            <!-- EDIT MESSAGE PREVIEW -->
+            <div id="editPreview" class="reply-preview edit-preview hidden">
+                <div class="reply-preview-content">
+                    <span class="reply-preview-icon">✏️</span>
+                    <div class="reply-preview-text">
+                        <strong>تعديل الرسالة</strong>
+                        <span id="editPreviewContent"></span>
+                    </div>
+                </div>
+                <button id="cancelEditButton" type="button" class="cancel-reply" aria-label="إلغاء التعديل">×</button>
+            </div>
 
             <!-- REPLY PREVIEW -->
             <div id="replyPreview" class="reply-preview hidden">
@@ -324,6 +423,20 @@
                 </button>
 
                 <button
+                    id="pollButton"
+                    type="button"
+                    class="action-button hidden"
+                    title="إنشاء اختبار سريع أو استطلاع (Quiz)"
+                    aria-label="إنشاء اختبار سريع"
+                >
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                </button>
+
+                <button
                     id="recordButton"
                     type="button"
                     class="action-button"
@@ -396,6 +509,7 @@
             <div id="archiveTabs" class="archive-tabs" role="tablist">
                 <button type="button" class="archive-tab active" data-filter="file">📄 ملفات PDF</button>
                 <button type="button" class="archive-tab" data-filter="tagged">📖 دروس وتمارين</button>
+                <button type="button" class="archive-tab" data-filter="poll">📊 اختبارات</button>
                 <button type="button" class="archive-tab" data-filter="audio">🎧 صوتيات</button>
                 <button type="button" class="archive-tab" data-filter="image">🖼️ صور</button>
             </div>
@@ -404,6 +518,78 @@
         </div>
     </div>
 
-    <script src="app.js?v=23"></script>
+    <!-- CREATE MINI-QUIZ / POLL MODAL (ADMIN ONLY) -->
+    <div id="pollModal" class="members-modal hidden" role="dialog" aria-modal="true" aria-labelledby="pollModalTitle">
+        <div class="members-modal-box">
+            <div class="members-modal-header">
+                <h3 id="pollModalTitle">إنشاء اختبار سريع / استطلاع</h3>
+                <button id="pollModalClose" type="button" class="members-modal-close" aria-label="إغلاق">×</button>
+            </div>
+
+            <div class="poll-form-body">
+                <div class="poll-field">
+                    <label for="pollQuestionInput">السؤال (يمكنك كتابته بالإسبانية أو العربية)</label>
+                    <input
+                        id="pollQuestionInput"
+                        type="text"
+                        placeholder="مثال: ¿Cuál es el subjuntivo de 'tener' (yo)?"
+                        maxlength="300"
+                    >
+                </div>
+
+                <div class="poll-field">
+                    <label>الخيارات (حدّد الدائرة بجانب الإجابة الصحيحة اختياريًا)</label>
+                    <div class="poll-option-row">
+                        <input type="radio" name="pollCorrect" value="0" title="الإجابة الصحيحة">
+                        <input type="text" class="poll-option-input" placeholder="الخيار الأول (إجباري)" maxlength="140">
+                    </div>
+                    <div class="poll-option-row">
+                        <input type="radio" name="pollCorrect" value="1" title="الإجابة الصحيحة">
+                        <input type="text" class="poll-option-input" placeholder="الخيار الثاني (إجباري)" maxlength="140">
+                    </div>
+                    <div class="poll-option-row">
+                        <input type="radio" name="pollCorrect" value="2" title="الإجابة الصحيحة">
+                        <input type="text" class="poll-option-input" placeholder="الخيار الثالث (اختياري)" maxlength="140">
+                    </div>
+                    <div class="poll-option-row">
+                        <input type="radio" name="pollCorrect" value="3" title="الإجابة الصحيحة">
+                        <input type="text" class="poll-option-input" placeholder="الخيار الرابع (اختياري)" maxlength="140">
+                    </div>
+                </div>
+
+                <div class="poll-hint">
+                    <label class="poll-radio-none">
+                        <input type="radio" name="pollCorrect" value="-1" checked>
+                        استطلاع رأي عادي (بدون إجابة صحيحة محددة)
+                    </label>
+                </div>
+            </div>
+
+            <div id="pollModalMessage" class="members-modal-message hidden"></div>
+
+            <div class="members-modal-footer">
+                <button id="sendPollButton" type="button" class="members-save-button">نشر الاختبار</button>
+                <button id="cancelPollButton" type="button" class="members-cancel-button">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MESSAGE READERS MODAL (ADMIN ONLY) -->
+    <div id="readersModal" class="members-modal hidden" role="dialog" aria-modal="true" aria-labelledby="readersModalTitle">
+        <div class="members-modal-box">
+            <div class="members-modal-header">
+                <h3 id="readersModalTitle">من قرأ هذه الرسالة؟</h3>
+                <button id="readersModalClose" type="button" class="members-modal-close" aria-label="إغلاق">×</button>
+            </div>
+
+            <div id="readersCountBar" class="members-modal-toolbar">
+                <span id="readersCountText" class="members-count">0 قراءة</span>
+            </div>
+
+            <div id="readersList" class="members-checklist"></div>
+        </div>
+    </div>
+
+    <script src="app.js?v=30"></script>
 </body>
 </html>
