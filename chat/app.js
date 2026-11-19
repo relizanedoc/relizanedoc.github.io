@@ -102,6 +102,7 @@ let forgotPasswordButton = null;
 let loginError = null;
 let chatError = null;
 
+let mobileBackButton = null;
 let chatAvatar = null;
 let conversationTitle = null;
 let conversationSubtitle = null;
@@ -188,6 +189,7 @@ function cacheDomElements() {
     loginError = document.getElementById("loginError");
     chatError = document.getElementById("chatError");
 
+    mobileBackButton = document.getElementById("mobileBackButton");
     chatAvatar = document.querySelector(".chat-avatar");
     conversationTitle = document.getElementById("conversationTitle");
     conversationSubtitle = document.getElementById("conversationSubtitle");
@@ -403,7 +405,45 @@ function bindEvents() {
         closeAllReactionPickers();
     });
 
-    window.addEventListener("scroll", closeContextMenu, true);
+ window.addEventListener("scroll", closeContextMenu, true);
+
+    mobileBackButton?.addEventListener("click", () => {
+        closeMobileChatView(false);
+    });
+
+    window.addEventListener("popstate", () => {
+        if (app?.classList.contains("mobile-chat-open")) {
+            closeMobileChatView(true);
+        }
+    });
+
+    messageInput?.addEventListener("focus", () => {
+        if (window.innerWidth <= 768) {
+            setTimeout(scrollMessagesToBottom, 300);
+        }
+    });
+}
+
+function openMobileChatView() {
+    if (window.innerWidth > 768) return;
+    if (!app?.classList.contains("mobile-chat-open")) {
+        app?.classList.add("mobile-chat-open");
+        try {
+            window.history.pushState({ mobileChat: true }, "");
+        } catch {}
+    }
+}
+
+function closeMobileChatView(fromPopState = false) {
+    if (!app?.classList.contains("mobile-chat-open")) return;
+    app.classList.remove("mobile-chat-open");
+    closeContextMenu();
+    closeAllReactionPickers();
+    if (!fromPopState && window.history.state?.mobileChat) {
+        try {
+            window.history.back();
+        } catch {}
+    }
 }
 
 function handleDocumentClick(event) {
@@ -679,10 +719,10 @@ async function startApplication(user) {
                     c => c.type === "private" && c.customer_id === currentUser.id
                 );
 
-                if (assignedGroup) {
-                    await selectConversation(assignedGroup);
+              if (assignedGroup) {
+                    await selectConversation(assignedGroup, { openMobile: false });
                 } else if (privateConversation) {
-                    await selectConversation(privateConversation);
+                    await selectConversation(privateConversation, { openMobile: false });
                 }
             } else {
                 await openInitialAdminConversation();
@@ -726,7 +766,7 @@ window.showLoginScreen = function () {
 
 function resetApplication() {
     stopMessageSync();
-
+app?.classList.remove("mobile-chat-open");
     currentUser = null;
     currentProfile = null;
     conversations = [];
@@ -1021,18 +1061,22 @@ async function openInitialAdminConversation() {
         conversations.find(c => c.type === "group");
 
     if (preferredGroup) {
-        await selectConversation(preferredGroup);
+        await selectConversation(preferredGroup, { openMobile: false });
         return;
     }
 
     const privateConversation = conversations.find(c => c.type === "private");
     if (privateConversation) {
-        await selectConversation(privateConversation);
+        await selectConversation(privateConversation, { openMobile: false });
     }
 }
 
-async function selectConversation(conversation) {
+async function selectConversation(conversation, options = {}) {
     if (!conversation || !conversation.id) return;
+
+    if (options.openMobile !== false) {
+        openMobileChatView();
+    }
 
     closeContextMenu();
     closeAllReactionPickers();
