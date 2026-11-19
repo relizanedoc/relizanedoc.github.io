@@ -16,7 +16,7 @@
     >
 
    <meta name="theme-color" content="#008069">
-<link rel="stylesheet" href="style.css?v=16">
+<link rel="stylesheet" href="style.css?v=17">
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -142,13 +142,13 @@
 
 <div class="sidebar-content">
 
-                <div class="conversation-section-title">
+               <div id="groupsSectionTitle" class="conversation-section-title hidden">
                     الأقسام الدراسية
                 </div>
 
                 <button
                     id="group2Button"
-                    class="conversation-button group-button"
+                    class="conversation-button group-button hidden"
                     data-group-key="2as"
                     type="button"
                 >
@@ -266,14 +266,19 @@
 
                 </div>
 
+               <button
+                    id="manageMembersButton"
+                    type="button"
+                    class="manage-members-button hidden"
+                    title="إدارة أعضاء القسم"
+                >
+                    👥 إدارة الأعضاء
+                </button>
+
                 <div class="chat-header-status">
-
                     <span class="status-dot"></span>
-
                     متصل
-
                 </div>
-
             </header>
 
 
@@ -415,7 +420,35 @@
 
 
     <!-- APP -->
+<!-- MANAGE GROUP MEMBERS MODAL (ADMIN ONLY) -->
+    <div id="membersModal" class="members-modal hidden" role="dialog" aria-modal="true" aria-labelledby="membersModalTitle">
+        <div class="members-modal-box">
+            <div class="members-modal-header">
+                <h3 id="membersModalTitle">إدارة أعضاء القسم</h3>
+                <button id="membersModalClose" type="button" class="members-modal-close" aria-label="إغلاق">×</button>
+            </div>
 
-<script src="app.js?v=16"></script>
+            <div class="members-modal-toolbar">
+                <input
+                    id="membersSearchInput"
+                    type="search"
+                    class="members-search"
+                    placeholder="ابحث عن تلميذ بالاسم..."
+                    autocomplete="off"
+                >
+                <span id="membersCount" class="members-count">0 محدد</span>
+            </div>
+
+            <div id="membersChecklist" class="members-checklist"></div>
+
+            <div id="membersModalMessage" class="members-modal-message hidden"></div>
+
+            <div class="members-modal-footer">
+                <button id="saveMembersButton" type="button" class="members-save-button">حفظ التغييرات</button>
+                <button id="cancelMembersButton" type="button" class="members-cancel-button">إلغاء</button>
+            </div>
+        </div>
+    </div>
+<script src="app.js?v=17"></script>
 </body>
 </html>
