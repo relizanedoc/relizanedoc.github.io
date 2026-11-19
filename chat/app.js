@@ -837,7 +837,7 @@ function renderEmptyState() {
     messagesContainer.innerHTML = `
         <div class="empty-messages">
             <div class="empty-icon" aria-hidden="true">👋</div>
-            <strong>مرحبًا بك في فضاء الإسبانية</strong>
+            <strong>مرحبًا بك في فضاء الطب</strong>
             <small>ابدأ بإرسال رسالة الآن</small>
         </div>
     `;
