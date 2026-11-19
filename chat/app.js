@@ -16,8 +16,8 @@ let currentMessages = [];
 
 const profileCache = new Map();
 const reactionCache = new Map();
-const readCache = new Map(); // Map<messageId, Set<userId>>
-const unreadCounts = new Map(); // Map<conversationId, number>
+const readCache = new Map();       // Map<messageId, Set<userId>>
+const unreadCounts = new Map();    // Map<conversationId, number>
 const renderingMessageIds = new Set();
 
 const GROUP_CONFIG = {
@@ -40,7 +40,6 @@ const MESSAGE_TAGS = {
     announcement: { label: "📢 إعلان", className: "tag-announcement" }
 };
 
-// تفاعلات تعليمية + اجتماعية
 const REACTIONS = ["✅", "❓", "👏", "📌", "👍", "❤️"];
 
 let replyingToMessage = null;
@@ -63,7 +62,7 @@ let initialized = false;
 let startingApplicationPromise = null;
 let startingApplicationUserId = null;
 
-// حالة نافذة الأعضاء
+// حالة نافذة إدارة الأعضاء
 let modalConversationId = null;
 let modalInitialMemberIds = new Set();
 let modalSelectedMemberIds = new Set();
@@ -106,7 +105,6 @@ let chatError = null;
 let chatAvatar = null;
 let conversationTitle = null;
 let conversationSubtitle = null;
-let conversationList = null;
 let customersList = null;
 let messagesContainer = null;
 let lockedBanner = null;
@@ -170,7 +168,6 @@ async function initialize() {
         validateRequiredDom();
         initializeSupabase();
         bindEvents();
-        ensureReplyPreview();
         await initializeAuth();
     } catch (error) {
         console.error("Initialization error:", error);
@@ -194,7 +191,6 @@ function cacheDomElements() {
     chatAvatar = document.querySelector(".chat-avatar");
     conversationTitle = document.getElementById("conversationTitle");
     conversationSubtitle = document.getElementById("conversationSubtitle");
-    conversationList = document.getElementById("conversationList");
     customersList = document.getElementById("customersList");
     messagesContainer = document.getElementById("messages");
     lockedBanner = document.getElementById("lockedBanner");
@@ -276,11 +272,11 @@ function initializeSupabase() {
     const supabaseAnonKey = window.SUPABASE_ANON_KEY;
 
     if (typeof supabaseUrl !== "string" || !supabaseUrl.trim()) {
-        throw new Error("SUPABASE_URL غير موجود.");
+        throw new Error("SUPABASE_URL غير موجود في config.js.");
     }
 
     if (typeof supabaseAnonKey !== "string" || !supabaseAnonKey.trim()) {
-        throw new Error("SUPABASE_ANON_KEY غير موجود.");
+        throw new Error("SUPABASE_ANON_KEY غير موجود في config.js.");
     }
 
     db = supabaseApi.createClient(supabaseUrl.trim(), supabaseAnonKey.trim());
@@ -361,10 +357,10 @@ function bindEvents() {
         });
     });
 
-    // قفل المحادثة
+    // وضع الإعلانات
     lockChatButton?.addEventListener("click", toggleConversationLock);
 
-    // إدارة الأعضاء
+    // نافذة الأعضاء
     manageMembersButton?.addEventListener("click", openMembersModal);
     membersModalClose?.addEventListener("click", closeMembersModal);
     cancelMembersButton?.addEventListener("click", closeMembersModal);
@@ -374,7 +370,7 @@ function bindEvents() {
         if (e.target === membersModal) closeMembersModal();
     });
 
-    // أرشيف القسم
+    // نافذة الأرشيف
     archiveButton?.addEventListener("click", openArchiveModal);
     archiveModalClose?.addEventListener("click", closeArchiveModal);
     archiveModal?.addEventListener("click", e => {
@@ -500,13 +496,7 @@ async function login() {
     const email = emailInput?.value?.trim() || "";
     const password = passwordInput?.value || "";
 
-    if (!email) {
-        showLoginError("أدخل البريد الإلكتروني.");
-        emailInput?.focus();
-        return;
-    }
-
-    if (!isValidEmail(email)) {
+    if (!email || !isValidEmail(email)) {
         showLoginError("أدخل بريدًا إلكترونيًا صحيحًا.");
         emailInput?.focus();
         return;
@@ -674,7 +664,6 @@ async function startApplication(user) {
             currentProfile = profile;
             profileCache.set(user.id, profile);
 
-            // إظهار زر الوسوم للأستاذ فقط
             tagToggleButton?.classList.toggle("hidden", profile.role !== "admin");
 
             window.showAppScreen();
@@ -831,7 +820,6 @@ async function loadUnreadCounts() {
 }
 
 function renderUnreadBadges() {
-    // شارات الأقسام الدراسية
     groupButtons.forEach(btn => {
         const key = btn.dataset.groupKey;
         const badge = btn.querySelector(".unread-badge");
@@ -844,7 +832,6 @@ function renderUnreadBadges() {
         badge.classList.toggle("hidden", count === 0);
     });
 
-    // شارات المحادثات الخاصة
     if (customersList) {
         customersList.querySelectorAll(".customer-button").forEach(btn => {
             const badge = btn.querySelector(".unread-badge");
@@ -1321,7 +1308,7 @@ async function openGroupConversation(groupKey) {
 }
 
 /* =========================================================
-   MANAGE GROUP MEMBERS MODAL
+   MANAGE GROUP MEMBERS MODAL (ADMIN)
 ========================================================= */
 
 async function openMembersModal() {
@@ -1718,7 +1705,6 @@ async function loadMessages() {
         return;
     }
 
-    // تحميل مجمّع وسريع (الردود + التفاعلات + القراءات في 3 استعلامات بدل مئات)
     await Promise.all([
         loadReplyMessages(messages),
         preloadReactions(messages),
@@ -1901,7 +1887,7 @@ async function renderMessage(message, options = {}) {
         const messageBubble = document.createElement("div");
         messageBubble.className = "message-bubble";
 
-        // وسم الرسالة التعليمية (درس / تمرين / نطق / إعلان)
+        // وسم الرسالة التعليمية
         if (message.tag && MESSAGE_TAGS[message.tag]) {
             const tagInfo = MESSAGE_TAGS[message.tag];
             const badge = document.createElement("div");
@@ -2270,12 +2256,6 @@ function cancelReply() {
     if (replyPreviewText) replyPreviewText.textContent = "";
 }
 
-function ensureReplyPreview() {
-    if (replyPreview && replyPreviewSender && replyPreviewText && cancelReplyButton) return;
-    if (!messageForm) return;
-    cancelReplyButton?.addEventListener("click", cancelReply);
-}
-
 /* =========================================================
    SEND MESSAGE & FILE / IMAGE UPLOAD
 ========================================================= */
@@ -2353,7 +2333,7 @@ function handleFileSelection(event) {
         return;
     }
 
-    const maxSize = 20 * 1024 * 1024; // 20MB لملفات PDF والدروس
+    const maxSize = 20 * 1024 * 1024;
     if (file.size > maxSize) {
         showChatError("حجم الملف يجب ألا يتجاوز 20MB.");
         clearFilePreview();
@@ -2880,7 +2860,7 @@ function scrollToMessage(messageId) {
 }
 
 /* =========================================================
-   REALTIME (CONVERSATION + READS + UNREAD BADGES)
+   REALTIME
 ========================================================= */
 
 async function subscribeGlobalUnread() {
