@@ -16,8 +16,8 @@ let currentMessages = [];
 
 const profileCache = new Map();
 const reactionCache = new Map();
-const readCache = new Map();       // Map<messageId, Set<userId>>
-const unreadCounts = new Map();    // Map<conversationId, number>
+const readCache = new Map();
+const unreadCounts = new Map();
 const renderingMessageIds = new Set();
 
 const GROUP_CONFIG = {
@@ -62,13 +62,11 @@ let initialized = false;
 let startingApplicationPromise = null;
 let startingApplicationUserId = null;
 
-// حالة نافذة إدارة الأعضاء
 let modalConversationId = null;
 let modalInitialMemberIds = new Set();
 let modalSelectedMemberIds = new Set();
 let modalAllStudents = [];
 
-// حالة الأرشيف
 let currentArchiveFilter = "file";
 
 const MIC_SVG = `
@@ -285,6 +283,35 @@ function initializeSupabase() {
 }
 
 /* =========================================================
+   MOBILE NAVIGATION (WHATSAPP STYLE)
+========================================================= */
+
+function openMobileChatView() {
+    if (!app) return;
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    if (!app.classList.contains("mobile-chat-open")) {
+        app.classList.add("mobile-chat-open");
+        if (isMobile) {
+            try {
+                window.history.pushState({ mobileChat: true }, "");
+            } catch {}
+        }
+    }
+}
+
+function closeMobileChatView(fromPopState = false) {
+    if (!app?.classList.contains("mobile-chat-open")) return;
+    app.classList.remove("mobile-chat-open");
+    closeContextMenu();
+    closeAllReactionPickers();
+    if (!fromPopState && window.history.state?.mobileChat) {
+        try {
+            window.history.back();
+        } catch {}
+    }
+}
+
+/* =========================================================
    EVENTS
 ========================================================= */
 
@@ -308,6 +335,12 @@ function bindEvents() {
         }
     });
 
+    messageInput?.addEventListener("focus", () => {
+        if (window.matchMedia("(max-width: 768px)").matches) {
+            setTimeout(scrollMessagesToBottom, 300);
+        }
+    });
+
     fileButton?.addEventListener("click", event => {
         if (fileButton.tagName.toLowerCase() === "label") return;
         event.preventDefault();
@@ -318,6 +351,17 @@ function bindEvents() {
     recordButton?.addEventListener("click", toggleRecording);
     cancelReplyButton?.addEventListener("click", cancelReply);
     logoutButton?.addEventListener("click", logout);
+
+    // زر الرجوع على الهاتف
+    mobileBackButton?.addEventListener("click", () => {
+        closeMobileChatView(false);
+    });
+
+    window.addEventListener("popstate", () => {
+        if (app?.classList.contains("mobile-chat-open")) {
+            closeMobileChatView(true);
+        }
+    });
 
     // شريط الأحرف الإسبانية
     spanishToggleButton?.addEventListener("click", () => {
@@ -352,9 +396,10 @@ function bindEvents() {
         setSelectedTag(chip.dataset.tag || "");
     });
 
-    // أزرار الأقسام
+    // أزرار الأقسام الدراسية: فتح الشاشة فوراً على الهاتف ثم تحميل المحادثة
     groupButtons.forEach(button => {
         button.addEventListener("click", () => {
+            openMobileChatView();
             openGroupConversation(button.dataset.groupKey);
         });
     });
@@ -405,45 +450,7 @@ function bindEvents() {
         closeAllReactionPickers();
     });
 
- window.addEventListener("scroll", closeContextMenu, true);
-
-    mobileBackButton?.addEventListener("click", () => {
-        closeMobileChatView(false);
-    });
-
-    window.addEventListener("popstate", () => {
-        if (app?.classList.contains("mobile-chat-open")) {
-            closeMobileChatView(true);
-        }
-    });
-
-    messageInput?.addEventListener("focus", () => {
-        if (window.innerWidth <= 768) {
-            setTimeout(scrollMessagesToBottom, 300);
-        }
-    });
-}
-
-function openMobileChatView() {
-    if (window.innerWidth > 768) return;
-    if (!app?.classList.contains("mobile-chat-open")) {
-        app?.classList.add("mobile-chat-open");
-        try {
-            window.history.pushState({ mobileChat: true }, "");
-        } catch {}
-    }
-}
-
-function closeMobileChatView(fromPopState = false) {
-    if (!app?.classList.contains("mobile-chat-open")) return;
-    app.classList.remove("mobile-chat-open");
-    closeContextMenu();
-    closeAllReactionPickers();
-    if (!fromPopState && window.history.state?.mobileChat) {
-        try {
-            window.history.back();
-        } catch {}
-    }
+    window.addEventListener("scroll", closeContextMenu, true);
 }
 
 function handleDocumentClick(event) {
@@ -719,7 +726,7 @@ async function startApplication(user) {
                     c => c.type === "private" && c.customer_id === currentUser.id
                 );
 
-              if (assignedGroup) {
+                if (assignedGroup) {
                     await selectConversation(assignedGroup, { openMobile: false });
                 } else if (privateConversation) {
                     await selectConversation(privateConversation, { openMobile: false });
@@ -766,7 +773,8 @@ window.showLoginScreen = function () {
 
 function resetApplication() {
     stopMessageSync();
-app?.classList.remove("mobile-chat-open");
+    app?.classList.remove("mobile-chat-open");
+
     currentUser = null;
     currentProfile = null;
     conversations = [];
@@ -1664,7 +1672,10 @@ async function loadCustomers() {
                 <span class="customer-button-name">${escapeHtml(customer.display_name || "تلميذ")}</span>
                 <span class="unread-badge hidden">0</span>
             `;
-            button.addEventListener("click", () => openPrivateConversation(customer));
+            button.addEventListener("click", () => {
+                openMobileChatView();
+                openPrivateConversation(customer);
+            });
             customersList.appendChild(button);
         }
         renderUnreadBadges();
@@ -1705,7 +1716,10 @@ async function loadCustomers() {
             <span class="customer-button-name">${escapeHtml(adminProfile.display_name || "الأستاذ عبد الكريم")}</span>
             <span class="unread-badge hidden">0</span>
         `;
-        button.addEventListener("click", openCustomerPrivateConversation);
+        button.addEventListener("click", () => {
+            openMobileChatView();
+            openCustomerPrivateConversation();
+        });
         customersList.appendChild(button);
         renderUnreadBadges();
     }
@@ -1931,7 +1945,6 @@ async function renderMessage(message, options = {}) {
         const messageBubble = document.createElement("div");
         messageBubble.className = "message-bubble";
 
-        // وسم الرسالة التعليمية
         if (message.tag && MESSAGE_TAGS[message.tag]) {
             const tagInfo = MESSAGE_TAGS[message.tag];
             const badge = document.createElement("div");
@@ -1940,7 +1953,6 @@ async function renderMessage(message, options = {}) {
             messageBubble.appendChild(badge);
         }
 
-        // الرد المقتبس
         if (message.replyMessage) {
             const replyBox = document.createElement("div");
             replyBox.className = "message-reply";
@@ -1963,7 +1975,6 @@ async function renderMessage(message, options = {}) {
             messageBubble.appendChild(replyBox);
         }
 
-        // اسم المرسل
         const senderElement = document.createElement("div");
         senderElement.className = "message-sender";
         senderElement.textContent = senderName;
@@ -1974,13 +1985,13 @@ async function renderMessage(message, options = {}) {
             senderElement.addEventListener("click", event => {
                 event.preventDefault();
                 event.stopPropagation();
+                openMobileChatView();
                 openPrivateConversation(sender);
             });
         }
 
         messageBubble.appendChild(senderElement);
 
-        // المحتوى
         const content = document.createElement("div");
         content.className = "message-content";
 
@@ -2082,7 +2093,6 @@ async function renderMessage(message, options = {}) {
 
         messageBubble.appendChild(content);
 
-        // التوقيت وعلامتا القراءة
         const footer = document.createElement("div");
         footer.className = "message-footer";
 
@@ -2102,7 +2112,6 @@ async function renderMessage(message, options = {}) {
 
         messageBubble.appendChild(footer);
 
-        // التفاعلات
         const reactions = document.createElement("div");
         reactions.className = "message-reactions";
         await renderReactionSummary(message, reactions);
