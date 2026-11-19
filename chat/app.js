@@ -3,7 +3,18 @@
 /* =========================================================
    GLOBAL STATE
 ========================================================= */
-
+const GROUP_CONFIG = {
+    "2as": {
+        title: "قسم 2 لغات أجنبية",
+        subtitle: "السنة الثانية ثانوي · اللغة الإسبانية",
+        icon: "📚"
+    },
+    "3as": {
+        title: "قسم 3 لغات أجنبية",
+        subtitle: "السنة الثالثة ثانوي · بكالوريا إسبانية",
+        icon: "🎓"
+    }
+};
 let db = null;
 
 let currentUser = null;
@@ -73,7 +84,7 @@ let replyPreviewText = null;
 let cancelReplyButton = null;
 
 let logoutButton = null;
-let groupConversationButton = null;
+let groupButtons = [];
 
 /* =========================================================
    INITIALIZATION
@@ -137,8 +148,8 @@ function cacheDomElements() {
     replyPreviewText = document.getElementById("replyPreviewContent");
     cancelReplyButton = document.getElementById("cancelReplyButton");
 
-    logoutButton = document.getElementById("logoutButton");
-    groupConversationButton = document.getElementById("groupButton");
+  logoutButton = document.getElementById("logoutButton");
+    groupButtons = Array.from(document.querySelectorAll(".group-button[data-group-key]"));
 }
 
 function validateRequiredDom() {
@@ -220,9 +231,14 @@ function bindEvents() {
 
     imageInput?.addEventListener("change", handleImageSelection);
     recordButton?.addEventListener("click", toggleRecording);
-    cancelReplyButton?.addEventListener("click", cancelReply);
+  cancelReplyButton?.addEventListener("click", cancelReply);
     logoutButton?.addEventListener("click", logout);
-    groupConversationButton?.addEventListener("click", openGroupConversation);
+
+    groupButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            openGroupConversation(button.dataset.groupKey);
+        });
+    });
 
     document.addEventListener("click", handleDocumentClick);
 
@@ -661,12 +677,19 @@ function renderConversationList() {
 
 function getConversationTitle(conversation) {
     if (!conversation) return "محادثة";
-    if (conversation.type === "group") return "المجموعة العامة";
+
+    if (conversation.type === "group") {
+        return (
+            conversation.title ||
+            GROUP_CONFIG[conversation.group_key]?.title ||
+            "المجموعة العامة"
+        );
+    }
 
     if (conversation.type === "private") {
         if (currentProfile?.role === "customer") {
             const adminBtn = customersList?.querySelector(".customer-button");
-            return adminBtn?.textContent?.trim() || "عبد الكريم";
+            return adminBtn?.textContent?.trim() || "الأستاذ عبد الكريم";
         }
 
         if (conversation.customer_id) {
@@ -709,17 +732,24 @@ async function selectConversation(conversation) {
     reactionCache.clear();
     renderingMessageIds.clear();
 
+    const groupMeta = GROUP_CONFIG[conversation.group_key];
+
     if (conversationTitle) {
         conversationTitle.textContent = getConversationTitle(conversation);
     }
 
     if (conversationSubtitle) {
         conversationSubtitle.textContent =
-            conversation.type === "group" ? "المحادثة الجماعية" : "محادثة خاصة";
+            conversation.type === "group"
+                ? (groupMeta?.subtitle || "المحادثة الجماعية")
+                : "محادثة خاصة";
     }
 
     if (chatAvatar) {
-        chatAvatar.textContent = conversation.type === "group" ? "👥" : "👤";
+        chatAvatar.textContent =
+            conversation.type === "group"
+                ? (groupMeta?.icon || "👥")
+                : "👤";
     }
 
     updateSidebarActiveState(conversation);
@@ -744,9 +774,11 @@ async function selectConversation(conversation) {
 function updateSidebarActiveState(conversation) {
     const isGroup = conversation?.type === "group";
 
-    if (groupConversationButton) {
-        groupConversationButton.classList.toggle("active", isGroup);
-    }
+    groupButtons.forEach(button => {
+        const isCurrentGroup =
+            isGroup && button.dataset.groupKey === conversation?.group_key;
+        button.classList.toggle("active", isCurrentGroup);
+    });
 
     if (customersList) {
         customersList.querySelectorAll(".customer-button").forEach(button => {
@@ -762,6 +794,16 @@ function updateSidebarActiveState(conversation) {
             }
         });
     }
+
+    if (conversationList) {
+        conversationList.querySelectorAll(".conversation-button").forEach(button => {
+            button.classList.toggle(
+                "active",
+                button.dataset.conversationId === String(conversation?.id)
+            );
+        });
+    }
+}
 
     if (conversationList) {
         conversationList.querySelectorAll(".conversation-button").forEach(button => {
@@ -866,14 +908,14 @@ async function openCustomerPrivateConversation() {
     await selectConversation(conversation);
 }
 
-async function openGroupConversation() {
-    if (!db || !currentUser) return;
+async function openGroupConversation(groupKey = "3as") {
+    if (!db || !currentUser || !groupKey) return;
 
     const { data: groups, error } = await db
         .from("conversations")
         .select("*")
         .eq("type", "group")
-        .order("created_at", { ascending: false })
+        .eq("group_key", groupKey)
         .limit(1);
 
     if (error) {
@@ -886,13 +928,17 @@ async function openGroupConversation() {
 
     if (!group) {
         if (currentProfile?.role !== "admin") {
-            showChatError("المجموعة العامة غير موجودة.");
+            showChatError("هذه المجموعة غير متوفرة حاليًا.");
             return;
         }
 
         const result = await db
             .from("conversations")
-            .insert({ type: "group" })
+            .insert({
+                type: "group",
+                group_key: groupKey,
+                title: GROUP_CONFIG[groupKey]?.title || "مجموعة عامة"
+            })
             .select("*")
             .single();
 
@@ -903,8 +949,6 @@ async function openGroupConversation() {
         }
 
         group = result.data;
-        conversations.push(group);
-        renderConversationList();
     }
 
     if (!conversations.some(c => String(c.id) === String(group.id))) {
