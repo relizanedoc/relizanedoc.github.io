@@ -3,18 +3,7 @@
 /* =========================================================
    GLOBAL STATE
 ========================================================= */
-const GROUP_CONFIG = {
-    "2as": {
-        title: "قسم 2 لغات أجنبية",
-        subtitle: "السنة الثانية ثانوي · اللغة الإسبانية",
-        icon: "📚"
-    },
-    "3as": {
-        title: "قسم 3 لغات أجنبية",
-        subtitle: "السنة الثالثة ثانوي · بكالوريا إسبانية",
-        icon: "🎓"
-    }
-};
+
 let db = null;
 
 let currentUser = null;
@@ -27,6 +16,19 @@ let customers = [];
 const profileCache = new Map();
 const reactionCache = new Map();
 const renderingMessageIds = new Set();
+
+const GROUP_CONFIG = {
+    "2as": {
+        title: "قسم 2 لغات أجنبية",
+        subtitle: "السنة الثانية ثانوي · اللغة الإسبانية",
+        icon: "📚"
+    },
+    "3as": {
+        title: "قسم 3 لغات أجنبية",
+        subtitle: "السنة الثالثة ثانوي · بكالوريا إسبانية",
+        icon: "🎓"
+    }
+};
 
 let replyingToMessage = null;
 let selectedImage = null;
@@ -45,6 +47,12 @@ let messageSyncInProgress = false;
 let initialized = false;
 let startingApplicationPromise = null;
 let startingApplicationUserId = null;
+
+// حالة نافذة إدارة أعضاء القسم
+let modalConversationId = null;
+let modalInitialMemberIds = new Set();
+let modalSelectedMemberIds = new Set();
+let modalAllStudents = [];
 
 /* =========================================================
    DOM REFERENCES
@@ -84,7 +92,20 @@ let replyPreviewText = null;
 let cancelReplyButton = null;
 
 let logoutButton = null;
+let groupsSectionTitle = null;
 let groupButtons = [];
+
+// عناصر إدارة الأعضاء
+let manageMembersButton = null;
+let membersModal = null;
+let membersModalTitle = null;
+let membersModalClose = null;
+let membersSearchInput = null;
+let membersCount = null;
+let membersChecklist = null;
+let membersModalMessage = null;
+let saveMembersButton = null;
+let cancelMembersButton = null;
 
 /* =========================================================
    INITIALIZATION
@@ -148,8 +169,20 @@ function cacheDomElements() {
     replyPreviewText = document.getElementById("replyPreviewContent");
     cancelReplyButton = document.getElementById("cancelReplyButton");
 
-  logoutButton = document.getElementById("logoutButton");
+    logoutButton = document.getElementById("logoutButton");
+    groupsSectionTitle = document.getElementById("groupsSectionTitle");
     groupButtons = Array.from(document.querySelectorAll(".group-button[data-group-key]"));
+
+    manageMembersButton = document.getElementById("manageMembersButton");
+    membersModal = document.getElementById("membersModal");
+    membersModalTitle = document.getElementById("membersModalTitle");
+    membersModalClose = document.getElementById("membersModalClose");
+    membersSearchInput = document.getElementById("membersSearchInput");
+    membersCount = document.getElementById("membersCount");
+    membersChecklist = document.getElementById("membersChecklist");
+    membersModalMessage = document.getElementById("membersModalMessage");
+    saveMembersButton = document.getElementById("saveMembersButton");
+    cancelMembersButton = document.getElementById("cancelMembersButton");
 }
 
 function validateRequiredDom() {
@@ -231,13 +264,26 @@ function bindEvents() {
 
     imageInput?.addEventListener("change", handleImageSelection);
     recordButton?.addEventListener("click", toggleRecording);
-  cancelReplyButton?.addEventListener("click", cancelReply);
+    cancelReplyButton?.addEventListener("click", cancelReply);
     logoutButton?.addEventListener("click", logout);
 
     groupButtons.forEach(button => {
         button.addEventListener("click", () => {
             openGroupConversation(button.dataset.groupKey);
         });
+    });
+
+    // أحداث نافذة إدارة الأعضاء
+    manageMembersButton?.addEventListener("click", openMembersModal);
+    membersModalClose?.addEventListener("click", closeMembersModal);
+    cancelMembersButton?.addEventListener("click", closeMembersModal);
+    saveMembersButton?.addEventListener("click", saveGroupMembers);
+    membersSearchInput?.addEventListener("input", renderMembersChecklist);
+
+    membersModal?.addEventListener("click", event => {
+        if (event.target === membersModal) {
+            closeMembersModal();
+        }
     });
 
     document.addEventListener("click", handleDocumentClick);
@@ -247,6 +293,7 @@ function bindEvents() {
             closeContextMenu();
             closeAllReactionPickers();
             closeImageLightbox();
+            closeMembersModal();
         }
     });
 
@@ -522,15 +569,15 @@ async function startApplication(user) {
             await loadCustomers();
 
             if (currentProfile.role === "customer") {
+                const assignedGroup = conversations.find(c => c.type === "group");
                 const privateConversation = conversations.find(
                     c => c.type === "private" && c.customer_id === currentUser.id
                 );
-                const publicGroup = conversations.find(c => c.type === "group");
 
-                if (privateConversation) {
+                if (assignedGroup) {
+                    await selectConversation(assignedGroup);
+                } else if (privateConversation) {
                     await selectConversation(privateConversation);
-                } else if (publicGroup) {
-                    await selectConversation(publicGroup);
                 }
             } else {
                 await openInitialAdminConversation();
@@ -571,6 +618,8 @@ window.showLoginScreen = function () {
     loginScreen?.classList.remove("hidden");
     currentConversation = null;
     removePinnedBanner();
+    manageMembersButton?.classList.add("hidden");
+    closeMembersModal();
 };
 
 function resetApplication() {
@@ -592,6 +641,7 @@ function resetApplication() {
     closeContextMenu();
     closeAllReactionPickers();
     closeImageLightbox();
+    closeMembersModal();
     cleanupRecording();
     cancelReply();
     clearFilePreview();
@@ -603,10 +653,17 @@ function resetApplication() {
 
     renderEmptyState();
 
+    groupButtons.forEach(btn => {
+        btn.classList.add("hidden");
+        btn.classList.remove("active");
+    });
+    groupsSectionTitle?.classList.add("hidden");
+    manageMembersButton?.classList.add("hidden");
+
     if (conversationList) conversationList.innerHTML = "";
     if (customersList) customersList.innerHTML = "";
-    if (conversationTitle) conversationTitle.textContent = "المجموعة العامة";
-    if (conversationSubtitle) conversationSubtitle.textContent = "المحادثة الجماعية";
+    if (conversationTitle) conversationTitle.textContent = "فضاء الإسبانية";
+    if (conversationSubtitle) conversationSubtitle.textContent = "الأستاذ عبد الكريم";
     if (chatAvatar) chatAvatar.textContent = "👥";
 
     window.showLoginScreen();
@@ -617,14 +674,14 @@ function renderEmptyState() {
     messagesContainer.innerHTML = `
         <div class="empty-messages">
             <div class="empty-icon" aria-hidden="true">👋</div>
-            <strong>مرحبًا بك في مركز التواصل</strong>
+            <strong>مرحبًا بك في فضاء الإسبانية</strong>
             <small>ابدأ بإرسال رسالة الآن</small>
         </div>
     `;
 }
 
 /* =========================================================
-   CONVERSATIONS
+   CONVERSATIONS & GROUP VISIBILITY
 ========================================================= */
 
 async function loadConversations() {
@@ -643,7 +700,27 @@ async function loadConversations() {
         return;
     }
 
-    conversations = Array.isArray(data) ? data : [];
+    let loaded = Array.isArray(data) ? data : [];
+
+    // للتأكيد المزدوج: لا يحتفظ التلميذ في الواجهة إلا بالمجموعات التي هو عضو فيها فعليًا
+    if (currentProfile?.role === "customer") {
+        const { data: myMemberships, error: memError } = await db
+            .from("conversation_members")
+            .select("conversation_id")
+            .eq("user_id", currentUser.id);
+
+        if (!memError && Array.isArray(myMemberships)) {
+            const memberConvIds = new Set(myMemberships.map(m => String(m.conversation_id)));
+            loaded = loaded.filter(conv => {
+                if (conv.type === "group") {
+                    return memberConvIds.has(String(conv.id));
+                }
+                return conv.customer_id === currentUser.id || memberConvIds.has(String(conv.id));
+            });
+        }
+    }
+
+    conversations = loaded;
 
     for (const conversation of conversations) {
         if (conversation.customer_id && !profileCache.has(conversation.customer_id)) {
@@ -651,7 +728,30 @@ async function loadConversations() {
         }
     }
 
+    updateVisibleGroupButtons();
     renderConversationList();
+}
+
+function updateVisibleGroupButtons() {
+    const isAdmin = currentProfile?.role === "admin";
+    const allowedGroupKeys = new Set(
+        conversations
+            .filter(c => c.type === "group" && c.group_key)
+            .map(c => c.group_key)
+    );
+
+    let visibleCount = 0;
+
+    groupButtons.forEach(button => {
+        const key = button.dataset.groupKey;
+        const canSee = isAdmin || allowedGroupKeys.has(key);
+        button.classList.toggle("hidden", !canSee);
+        if (canSee) visibleCount++;
+    });
+
+    if (groupsSectionTitle) {
+        groupsSectionTitle.classList.toggle("hidden", visibleCount === 0);
+    }
 }
 
 function renderConversationList() {
@@ -706,9 +806,12 @@ function getConversationTitle(conversation) {
 async function openInitialAdminConversation() {
     if (currentProfile?.role !== "admin") return;
 
-    const groupConversation = conversations.find(c => c.type === "group");
-    if (groupConversation) {
-        await selectConversation(groupConversation);
+    const preferredGroup =
+        conversations.find(c => c.type === "group" && c.group_key === "3as") ||
+        conversations.find(c => c.type === "group");
+
+    if (preferredGroup) {
+        await selectConversation(preferredGroup);
         return;
     }
 
@@ -750,6 +853,13 @@ async function selectConversation(conversation) {
             conversation.type === "group"
                 ? (groupMeta?.icon || "👥")
                 : "👤";
+    }
+
+    // إظهار زر إدارة الأعضاء للأستاذ فقط عند فتح قسم دراسي
+    if (manageMembersButton) {
+        const showManage =
+            currentProfile?.role === "admin" && conversation.type === "group";
+        manageMembersButton.classList.toggle("hidden", !showManage);
     }
 
     updateSidebarActiveState(conversation);
@@ -794,16 +904,6 @@ function updateSidebarActiveState(conversation) {
             }
         });
     }
-
-    if (conversationList) {
-        conversationList.querySelectorAll(".conversation-button").forEach(button => {
-            button.classList.toggle(
-                "active",
-                button.dataset.conversationId === String(conversation?.id)
-            );
-        });
-    }
-}
 
     if (conversationList) {
         conversationList.querySelectorAll(".conversation-button").forEach(button => {
@@ -908,27 +1008,36 @@ async function openCustomerPrivateConversation() {
     await selectConversation(conversation);
 }
 
-async function openGroupConversation(groupKey = "3as") {
-    if (!db || !currentUser || !groupKey) return;
+async function openGroupConversation(groupKey) {
+    if (!db || !currentUser || typeof groupKey !== "string" || !groupKey) return;
 
-    const { data: groups, error } = await db
-        .from("conversations")
-        .select("*")
-        .eq("type", "group")
-        .eq("group_key", groupKey)
-        .limit(1);
+    // 1) تحقق أولاً من المجموعات المحملة في الذاكرة
+    let group = conversations.find(
+        c => c.type === "group" && c.group_key === groupKey
+    );
 
-    if (error) {
-        console.error("Find group error:", error);
-        showChatError(error.message);
-        return;
+    // 2) إن لم تكن في الذاكرة، اطلبها من Supabase
+    if (!group) {
+        const { data: groups, error } = await db
+            .from("conversations")
+            .select("*")
+            .eq("type", "group")
+            .eq("group_key", groupKey)
+            .limit(1);
+
+        if (error) {
+            console.error("Find group error:", error);
+            showChatError(error.message);
+            return;
+        }
+
+        group = groups?.[0] || null;
     }
 
-    let group = groups?.[0] || null;
-
+    // 3) إن لم توجد في قاعدة البيانات، ينشئها الأستاذ تلقائيًا
     if (!group) {
         if (currentProfile?.role !== "admin") {
-            showChatError("هذه المجموعة غير متوفرة حاليًا.");
+            showChatError("لست مسجلًا في هذا القسم.");
             return;
         }
 
@@ -949,14 +1058,228 @@ async function openGroupConversation(groupKey = "3as") {
         }
 
         group = result.data;
+
+        await db.from("conversation_members").insert({
+            conversation_id: group.id,
+            user_id: currentUser.id
+        });
     }
 
     if (!conversations.some(c => String(c.id) === String(group.id))) {
         conversations.push(group);
+        updateVisibleGroupButtons();
         renderConversationList();
     }
 
     await selectConversation(group);
+}
+
+/* =========================================================
+   MANAGE GROUP MEMBERS MODAL (ADMIN ONLY)
+========================================================= */
+
+async function openMembersModal() {
+    if (
+        !db ||
+        !membersModal ||
+        currentProfile?.role !== "admin" ||
+        currentConversation?.type !== "group"
+    ) {
+        return;
+    }
+
+    modalConversationId = currentConversation.id;
+    modalInitialMemberIds = new Set();
+    modalSelectedMemberIds = new Set();
+    modalAllStudents = [];
+
+    if (membersModalTitle) {
+        membersModalTitle.textContent = `أعضاء ${getConversationTitle(currentConversation)}`;
+    }
+
+    if (membersSearchInput) {
+        membersSearchInput.value = "";
+    }
+
+    hideMembersModalMessage();
+    membersModal.classList.remove("hidden");
+
+    if (membersChecklist) {
+        membersChecklist.innerHTML = `<div class="members-empty">جارٍ تحميل قائمة التلاميذ...</div>`;
+    }
+    if (saveMembersButton) saveMembersButton.disabled = true;
+
+    try {
+        const [studentsRes, membersRes] = await Promise.all([
+            db
+                .from("profiles")
+                .select("id, display_name, role")
+                .eq("role", "customer")
+                .order("display_name", { ascending: true }),
+            db
+                .from("conversation_members")
+                .select("user_id")
+                .eq("conversation_id", modalConversationId)
+        ]);
+
+        if (studentsRes.error) throw studentsRes.error;
+        if (membersRes.error) throw membersRes.error;
+
+        modalAllStudents = Array.isArray(studentsRes.data) ? studentsRes.data : [];
+
+        const currentMemberSet = new Set(
+            (membersRes.data || []).map(row => row.user_id)
+        );
+
+        modalAllStudents.forEach(student => {
+            if (currentMemberSet.has(student.id)) {
+                modalInitialMemberIds.add(student.id);
+                modalSelectedMemberIds.add(student.id);
+            }
+        });
+
+        renderMembersChecklist();
+        if (saveMembersButton) saveMembersButton.disabled = false;
+    } catch (error) {
+        console.error("Load group members error:", error);
+        if (membersChecklist) {
+            membersChecklist.innerHTML = `<div class="members-empty">تعذر تحميل الأعضاء.</div>`;
+        }
+        showMembersModalMessage(error?.message || "حدث خطأ أثناء تحميل الأعضاء.", "error");
+    }
+}
+
+function renderMembersChecklist() {
+    if (!membersChecklist) return;
+
+    const query = (membersSearchInput?.value || "").trim().toLowerCase();
+    const filtered = modalAllStudents.filter(student =>
+        (student.display_name || "تلميذ").toLowerCase().includes(query)
+    );
+
+    if (membersCount) {
+        membersCount.textContent = `${modalSelectedMemberIds.size} محدد`;
+    }
+
+    if (filtered.length === 0) {
+        membersChecklist.innerHTML = `<div class="members-empty">لا يوجد تلاميذ مطابقون للبحث.</div>`;
+        return;
+    }
+
+    membersChecklist.innerHTML = "";
+
+    for (const student of filtered) {
+        const label = document.createElement("label");
+        label.className = "member-row";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = modalSelectedMemberIds.has(student.id);
+        checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+                modalSelectedMemberIds.add(student.id);
+            } else {
+                modalSelectedMemberIds.delete(student.id);
+            }
+            if (membersCount) {
+                membersCount.textContent = `${modalSelectedMemberIds.size} محدد`;
+            }
+        });
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "member-row-name";
+        nameSpan.textContent = student.display_name || "تلميذ";
+
+        label.appendChild(checkbox);
+        label.appendChild(nameSpan);
+        membersChecklist.appendChild(label);
+    }
+}
+
+async function saveGroupMembers() {
+    if (!db || !modalConversationId || currentProfile?.role !== "admin") return;
+
+    const toAdd = [];
+    const toRemove = [];
+
+    for (const uid of modalSelectedMemberIds) {
+        if (!modalInitialMemberIds.has(uid)) {
+            toAdd.push({ conversation_id: modalConversationId, user_id: uid });
+        }
+    }
+
+    for (const uid of modalInitialMemberIds) {
+        if (!modalSelectedMemberIds.has(uid)) {
+            toRemove.push(uid);
+        }
+    }
+
+    if (toAdd.length === 0 && toRemove.length === 0) {
+        closeMembersModal();
+        return;
+    }
+
+    if (saveMembersButton) {
+        saveMembersButton.disabled = true;
+        saveMembersButton.textContent = "جارٍ الحفظ...";
+    }
+    hideMembersModalMessage();
+
+    try {
+        if (toAdd.length > 0) {
+            const { error: insertError } = await db
+                .from("conversation_members")
+                .insert(toAdd);
+            if (insertError) throw insertError;
+        }
+
+        if (toRemove.length > 0) {
+            const { error: deleteError } = await db
+                .from("conversation_members")
+                .delete()
+                .eq("conversation_id", modalConversationId)
+                .in("user_id", toRemove);
+            if (deleteError) throw deleteError;
+        }
+
+        modalInitialMemberIds = new Set(modalSelectedMemberIds);
+        showMembersModalMessage("تم تحديث أعضاء القسم بنجاح.", "success");
+
+        setTimeout(() => {
+            closeMembersModal();
+        }, 700);
+    } catch (error) {
+        console.error("Save group members error:", error);
+        showMembersModalMessage(
+            error?.message || "تعذر حفظ التغييرات. تحقق من صلاحيات قاعدة البيانات.",
+            "error"
+        );
+    } finally {
+        if (saveMembersButton) {
+            saveMembersButton.disabled = false;
+            saveMembersButton.textContent = "حفظ التغييرات";
+        }
+    }
+}
+
+function closeMembersModal() {
+    membersModal?.classList.add("hidden");
+    modalConversationId = null;
+    hideMembersModalMessage();
+}
+
+function showMembersModalMessage(text, type = "error") {
+    if (!membersModalMessage) return;
+    membersModalMessage.textContent = text;
+    membersModalMessage.classList.remove("hidden", "error", "success");
+    membersModalMessage.classList.add(type);
+}
+
+function hideMembersModalMessage() {
+    if (!membersModalMessage) return;
+    membersModalMessage.textContent = "";
+    membersModalMessage.classList.add("hidden");
+    membersModalMessage.classList.remove("error", "success");
 }
 
 /* =========================================================
@@ -989,7 +1312,7 @@ async function loadCustomers() {
             button.type = "button";
             button.className = "customer-button";
             button.dataset.customerId = String(customer.id);
-            button.textContent = customer.display_name || "عميل";
+            button.textContent = customer.display_name || "تلميذ";
             button.addEventListener("click", () => openPrivateConversation(customer));
 
             customersList.appendChild(button);
@@ -1031,7 +1354,7 @@ async function loadCustomers() {
         button.type = "button";
         button.className = "customer-button";
         button.dataset.customerId = String(adminProfile.id);
-        button.textContent = adminProfile.display_name || "مدير";
+        button.textContent = adminProfile.display_name || "الأستاذ";
         button.addEventListener("click", openCustomerPrivateConversation);
 
         customersList.appendChild(button);
@@ -1172,7 +1495,7 @@ async function loadReplyMessages(messages) {
 }
 
 /* =========================================================
-   RENDER MESSAGE (In-Place Update + No Duplicates)
+   RENDER MESSAGE
 ========================================================= */
 
 async function renderMessage(message, options = {}) {
@@ -1213,7 +1536,6 @@ async function renderMessage(message, options = {}) {
         const messageBubble = document.createElement("div");
         messageBubble.className = "message-bubble";
 
-        // Quoted Reply
         if (message.replyMessage) {
             const replyBox = document.createElement("div");
             replyBox.className = "message-reply";
@@ -1236,7 +1558,6 @@ async function renderMessage(message, options = {}) {
             messageBubble.appendChild(replyBox);
         }
 
-        // Sender Name
         const senderElement = document.createElement("div");
         senderElement.className = "message-sender";
         senderElement.textContent = senderName;
@@ -1257,7 +1578,6 @@ async function renderMessage(message, options = {}) {
 
         messageBubble.appendChild(senderElement);
 
-        // Content
         const content = document.createElement("div");
         content.className = "message-content";
 
@@ -1283,7 +1603,6 @@ async function renderMessage(message, options = {}) {
 
             content.appendChild(image);
 
-            // عرض التعليق تحت الصورة إن كان مختلفاً عن اسم الملف الخام
             if (message.content && !/\.(png|jpe?g|gif|webp|bmp|heic)$/i.test(message.content.trim())) {
                 const caption = document.createElement("div");
                 caption.className = "message-caption";
@@ -1316,7 +1635,6 @@ async function renderMessage(message, options = {}) {
 
         messageBubble.appendChild(content);
 
-        // Footer (Timestamp + WhatsApp Checkmarks)
         const footer = document.createElement("div");
         footer.className = "message-footer";
 
@@ -1335,13 +1653,11 @@ async function renderMessage(message, options = {}) {
 
         messageBubble.appendChild(footer);
 
-        // Reactions
         const reactions = document.createElement("div");
         reactions.className = "message-reactions";
         await renderReactionSummary(message, reactions);
         messageBubble.appendChild(reactions);
 
-        // Context Menu Triggers
         messageBubble.addEventListener("click", event => {
             if (
                 event.target.closest(".reaction-trigger") ||
@@ -1368,7 +1684,6 @@ async function renderMessage(message, options = {}) {
 
         wrapper.appendChild(messageBubble);
 
-        // تحقق نهائي قبل التعديل على الصفحة لمنع تسرب رسائل محادثة سابقة
         if (expectedConversationId && String(currentConversation?.id) !== expectedConversationId) {
             return;
         }
@@ -1380,7 +1695,6 @@ async function renderMessage(message, options = {}) {
         );
 
         if (currentExisting) {
-            // تحديث الرسالة في نفس مكانها بدون نقلها لأسفل المحادثة
             currentExisting.replaceWith(wrapper);
         } else {
             messagesContainer.appendChild(wrapper);
@@ -1653,7 +1967,6 @@ async function sendMessage(event) {
         const replyBackup = replyingToMessage;
         cancelReply();
 
-        // عرض الرسالة فوراً دون انتظار Realtime
         if (inserted) {
             if (replyBackup) inserted.replyMessage = replyBackup;
             await renderMessage(inserted, { expectedConversationId: currentConversation.id });
